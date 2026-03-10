@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-enum State {FOLLOW, ORBIT, WAVE}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, STATIC}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -21,6 +21,9 @@ var wave_duration: float = 0.8
 # Damage
 var damage_per_hit: float = 10.0
 var hit_range: float = 0.8
+
+# Build state
+var build_target: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -44,6 +47,10 @@ func _physics_process(delta: float) -> void:
 		State.WAVE:
 			_process_wave(delta)
 			_check_damage()
+		State.TRAVEL_TO_BUILD:
+			_process_travel_to_build(delta)
+		State.STATIC:
+			return
 
 
 func _process_follow(delta: float) -> void:
@@ -120,3 +127,30 @@ func _check_damage() -> void:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
 			enemy.take_damage(damage_per_hit, get_instance_id())
+
+
+func _process_travel_to_build(delta: float) -> void:
+	var dir := global_position.direction_to(build_target)
+	var dist := global_position.distance_to(build_target)
+
+	if dist > 0.1:
+		velocity = dir * follow_speed * 2.0
+		var target_angle := atan2(dir.x, dir.z)
+		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
+		move_and_slide()
+	else:
+		state = State.STATIC
+		global_position = build_target
+		velocity = Vector3.ZERO
+
+
+func build_at(pos: Vector3) -> void:
+	if state == State.FOLLOW:
+		state = State.TRAVEL_TO_BUILD
+		build_target = pos
+
+
+func release_rat() -> void:
+	if state == State.STATIC or state == State.TRAVEL_TO_BUILD:
+		state = State.FOLLOW
+		velocity.y = 5.0

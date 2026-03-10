@@ -21,6 +21,8 @@ func _physics_process(delta: float) -> void:
 	var input_dir := Vector3.ZERO
 	input_dir.x = Input.get_axis("move_left", "move_right")
 	input_dir.z = Input.get_axis("move_forward", "move_back")
+	# Rotate input to match isometric camera (45° around Y)
+	input_dir = input_dir.rotated(Vector3.UP, deg_to_rad(45.0))
 
 	if input_dir.length() > 0.0:
 		input_dir = input_dir.normalized()

@@ -15,6 +15,14 @@ var wave_duration: float = 1.0
 var wave_timer: float = 0.0
 var wave_pending: bool = false
 
+# Drawing
+var built_positions: Dictionary = {}
+var mouse_is_down_right: bool = false
+var last_draw_pos: Vector3 = Vector3(-1000, -1000, -1000)
+var is_drawing_line: bool = false
+var current_build_y: float = -1000.0
+var _ctrl_was_pressed: bool = false
+
 
 func _process(delta: float) -> void:
 	if orbit_active:
@@ -28,8 +36,29 @@ func _process(delta: float) -> void:
 			wave_active = false
 			wave_ended.emit()
 
+	# Detect Ctrl press to recall all placed rats
+	var ctrl_pressed := Input.is_key_pressed(KEY_CTRL)
+	if ctrl_pressed and not _ctrl_was_pressed:
+		recall_all_rats()
+	_ctrl_was_pressed = ctrl_pressed
+
+	if mouse_is_down_right:
+		_process_build_drag()
+
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Right-click drawing — always available
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			mouse_is_down_right = mb.pressed
+			if not mb.pressed:
+				current_build_y = -1000.0
+				is_drawing_line = false
+			get_viewport().set_input_as_handled()
+			return
+
+	# Wave targeting input
 	if not wave_pending:
 		return
 
@@ -125,3 +154,66 @@ func on_stratagem_activated(stratagem_id: String) -> void:
 			activate_orbit()
 		"rat_wave":
 			activate_wave()
+
+
+func recall_all_rats() -> void:
+	built_positions.clear()
+	for rat in rats:
+		rat.release_rat()
+	# Reset drawing state
+	mouse_is_down_right = false
+	is_drawing_line = false
+	current_build_y = -1000.0
+
+
+func _get_mouse_ground_hit() -> Dictionary:
+	var camera := get_viewport().get_camera_3d()
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_dir := camera.project_ray_normal(mouse_pos)
+
+	var space_state := camera.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
+	query.collision_mask = 1  # Only environment/floor
+	return space_state.intersect_ray(query)
+
+
+func _process_build_drag() -> void:
+	var hit := _get_mouse_ground_hit()
+	if not hit:
+		return
+
+	var raw_pos: Vector3 = hit.position + hit.normal * 0.25
+	if current_build_y <= -500.0:
+		current_build_y = raw_pos.y
+
+	if is_drawing_line:
+		var dist := last_draw_pos.distance_to(raw_pos)
+		var steps := maxi(1, ceili(dist / 0.125))
+		for i in range(1, steps + 1):
+			var inter_pos := last_draw_pos.lerp(raw_pos, float(i) / steps)
+			_try_build_at(inter_pos)
+	else:
+		is_drawing_line = true
+		_try_build_at(raw_pos)
+	last_draw_pos = raw_pos
+
+
+func _try_build_at(raw_pos: Vector3) -> void:
+	var build_pos := raw_pos
+	build_pos.x = snapped(build_pos.x, 0.5)
+	build_pos.y = current_build_y
+	build_pos.z = snapped(build_pos.z, 0.5)
+
+	if built_positions.has(build_pos):
+		return
+
+	var free_rat: CharacterBody3D = null
+	for rat in rats:
+		if rat.state == rat.State.FOLLOW:
+			free_rat = rat
+			break
+
+	if free_rat:
+		free_rat.build_at(build_pos)
+		built_positions[build_pos] = true
