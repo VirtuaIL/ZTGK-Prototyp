@@ -16,6 +16,8 @@ var is_active: bool = false
 var input_timeout: float = 2.0
 var time_since_last_input: float = 0.0
 
+var mode: int = 0 # 0 = COMBAT, 1 = BUILD
+
 
 func _ready() -> void:
 	register_stratagem({
@@ -37,20 +39,24 @@ func register_stratagem(data: Dictionary) -> void:
 func _process(delta: float) -> void:
 	var ctrl_held := Input.is_key_pressed(KEY_CTRL)
 
-	if ctrl_held and not is_active:
-		_activate()
-	elif not ctrl_held and is_active:
-		_deactivate()
+	if mode == 0:
+		if ctrl_held and not is_active:
+			_activate()
+		elif not ctrl_held and is_active:
+			_deactivate()
 
-	if is_active and current_input.size() > 0:
-		time_since_last_input += delta
-		if time_since_last_input > input_timeout:
-			_reset_input()
-			stratagem_failed.emit()
+		if is_active and current_input.size() > 0:
+			time_since_last_input += delta
+			if time_since_last_input > input_timeout:
+				_reset_input()
+				stratagem_failed.emit()
+	else:
+		if is_active:
+			_deactivate()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not is_active:
+	if not is_active or mode != 0:
 		return
 
 	var key_event := event as InputEventKey

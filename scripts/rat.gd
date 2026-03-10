@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -11,6 +11,10 @@ var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
 var lerp_speed: float = 8.0
+
+# Blob State (Build Mode)
+var is_following_player: bool = true
+var blob_target: Vector3 = Vector3.ZERO
 
 # Wave state
 var wave_direction: Vector3 = Vector3.ZERO
@@ -32,6 +36,10 @@ func _ready() -> void:
 		0.0,
 		randf_range(-1.5, 1.5)
 	)
+	
+	# Default: only collide with environment (Layer 1 is Player, normally Layer 2 is Environment)
+	# Assuming Environment is Layer 1 here for simplicity, or we just disable Layer 1 so player doesn't collide
+	set_collision_layer_value(1, false)
 
 
 func _physics_process(delta: float) -> void:
@@ -49,12 +57,19 @@ func _physics_process(delta: float) -> void:
 			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
+		State.WAITING_FOR_FORMATION:
+			return
 		State.STATIC:
 			return
 
 
 func _process_follow(delta: float) -> void:
-	var target := player.global_position + follow_offset
+	var target: Vector3
+	if is_following_player:
+		target = player.global_position + follow_offset
+	else:
+		target = blob_target + follow_offset
+
 	var direction := (target - global_position)
 	direction.y = 0.0
 
@@ -139,9 +154,15 @@ func _process_travel_to_build(delta: float) -> void:
 		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 		move_and_slide()
 	else:
-		state = State.STATIC
+		state = State.WAITING_FOR_FORMATION
 		global_position = build_target
 		velocity = Vector3.ZERO
+
+
+func activate_physics() -> void:
+	if state == State.WAITING_FOR_FORMATION:
+		state = State.STATIC
+		set_collision_layer_value(1, true)
 
 
 func build_at(pos: Vector3) -> void:
@@ -151,6 +172,21 @@ func build_at(pos: Vector3) -> void:
 
 
 func release_rat() -> void:
-	if state == State.STATIC or state == State.TRAVEL_TO_BUILD:
+	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
 		state = State.FOLLOW
 		velocity.y = 5.0
+		# Lose solidity
+		set_collision_layer_value(1, false)
+		show_visuals()
+
+
+func hide_visuals() -> void:
+	$Body.hide()
+	$Tail.hide()
+	$Head.hide()
+
+
+func show_visuals() -> void:
+	$Body.show()
+	$Tail.show()
+	$Head.show()
