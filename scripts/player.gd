@@ -1,9 +1,8 @@
 extends CharacterBody3D
 
-signal stratagem_activated(stratagem_id: String)
-
 @export var speed: float = 7.0
 @export var rotation_speed: float = 10.0
+@export var jump_impulse: float = 8.0
 
 var is_stratagem_mode: bool = false
 
@@ -13,8 +12,18 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Add gravity
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta
+
+	# Handle Jump
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+		velocity.y = jump_impulse
+
 	if is_stratagem_mode:
-		velocity = Vector3.ZERO
+		velocity.y = 0 # Hover during stratagem input
+		velocity.x = 0
+		velocity.z = 0
 		move_and_slide()
 		return
 
@@ -26,12 +35,14 @@ func _physics_process(delta: float) -> void:
 
 	if input_dir.length() > 0.0:
 		input_dir = input_dir.normalized()
-		velocity = input_dir * speed
+		velocity.x = input_dir.x * speed
+		velocity.z = input_dir.z * speed
 
 		var target_angle := atan2(input_dir.x, input_dir.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 	else:
-		velocity = velocity.move_toward(Vector3.ZERO, speed * delta * 5.0)
+		velocity.x = move_toward(velocity.x, 0, speed * delta * 5.0)
+		velocity.z = move_toward(velocity.z, 0, speed * delta * 5.0)
 
 	move_and_slide()
 

@@ -21,10 +21,10 @@ albedo_color = Color(0.25, 0.22, 0.2, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_1"]
 material = SubResource("StandardMaterial3D_1")
-size = Vector2(40, 40)
+size = Vector2(20, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(40, 0.1, 40)
+size = Vector3(20.020508, 0.1, 40)
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
@@ -47,10 +47,20 @@ size = 16.0
 mesh = SubResource("PlaneMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=2044005794]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Floor2" type="StaticBody3D" parent="." unique_id=137119182]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.882624, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor2" unique_id=1067065333]
+mesh = SubResource("PlaneMesh_1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor2" unique_id=161447630]
 shape = SubResource("BoxShape3D_1")
 
 [node name="Player" parent="." unique_id=2089137054 instance=ExtResource("2_player")]
+collision_layer = 1
+collision_mask = 1
 
 [node name="Enemy" parent="." unique_id=742202268 instance=ExtResource("3_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)

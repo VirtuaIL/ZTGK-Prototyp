@@ -1,6 +1,7 @@
 extends CharacterBody3D
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, STATIC, RUN_TO_CONSUME}
+signal fallen_into_abyss(rat: CharacterBody3D)
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -24,6 +25,7 @@ var hit_range: float = 0.8
 
 # Build state
 var build_target: Vector3 = Vector3.ZERO
+var build_rot_y: float = 0.0
 
 
 func _ready() -> void:
@@ -38,6 +40,25 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 
+	# Apply gravity - only for moving/following rats
+	var needs_gravity := (state != State.STATIC and state != State.TRAVEL_TO_BUILD and state != State.RUN_TO_CONSUME)
+	if needs_gravity and not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta
+	elif state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.RUN_TO_CONSUME:
+		velocity.y = 0 # Maintain height for bridges/consumption run
+	
+	# Abyss detection
+	if global_position.y < -10.0:
+		fallen_into_abyss.emit(self)
+		return
+
+	match state:
+		State.STATIC:
+			collision_layer = 4 # Layer 3: Solid for players
+			return
+		_:
+			collision_layer = 0 # No layer: Players walk through
+
 	match state:
 		State.FOLLOW:
 			_process_follow(delta)
@@ -49,8 +70,23 @@ func _physics_process(delta: float) -> void:
 			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
-		State.STATIC:
-			return
+		State.RUN_TO_CONSUME:
+			_process_consume(delta)
+
+
+func _process_consume(delta: float) -> void:
+	var move_step := follow_speed * 3.0 * delta
+	var dist := global_position.distance_to(build_target)
+
+	if dist > move_step:
+		global_position = global_position.move_toward(build_target, move_step)
+		# Face target
+		var dir := global_position.direction_to(build_target)
+		if dir.length() > 0.1:
+			var target_angle := atan2(dir.x, dir.z)
+			rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
+	else:
+		fallen_into_abyss.emit(self) # Re-use abyss signal to mark rat as "dead/consumed"
 
 
 func _process_follow(delta: float) -> void:
@@ -60,11 +96,13 @@ func _process_follow(delta: float) -> void:
 
 	if direction.length() > 0.3:
 		var move_dir := direction.normalized()
-		velocity = move_dir * follow_speed
+		velocity.x = move_dir.x * follow_speed
+		velocity.z = move_dir.z * follow_speed
 		var target_angle := atan2(move_dir.x, move_dir.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 	else:
-		velocity = velocity.move_toward(Vector3.ZERO, follow_speed * delta * 5.0)
+		velocity.x = move_toward(velocity.x, 0, follow_speed * delta * 5.0)
+		velocity.z = move_toward(velocity.z, 0, follow_speed * delta * 5.0)
 
 	move_and_slide()
 
@@ -130,27 +168,37 @@ func _check_damage() -> void:
 
 
 func _process_travel_to_build(delta: float) -> void:
-	var dir := global_position.direction_to(build_target)
+	var move_step := follow_speed * 3.0 * delta
 	var dist := global_position.distance_to(build_target)
 
-	if dist > 0.1:
-		velocity = dir * follow_speed * 2.0
-		var target_angle := atan2(dir.x, dir.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
-		move_and_slide()
+	if dist > move_step:
+		global_position = global_position.move_toward(build_target, move_step)
+		rotation.y = lerp_angle(rotation.y, build_rot_y, lerp_speed * delta)
 	else:
 		state = State.STATIC
 		global_position = build_target
+		rotation.y = build_rot_y
 		velocity = Vector3.ZERO
 
 
-func build_at(pos: Vector3) -> void:
+func build_at(pos: Vector3, rot_y: float = 0.0) -> void:
 	if state == State.FOLLOW:
 		state = State.TRAVEL_TO_BUILD
 		build_target = pos
+		build_rot_y = rot_y
 
+func run_to_consume(pos: Vector3) -> void:
+	if state == State.FOLLOW:
+		state = State.RUN_TO_CONSUME
+		build_target = pos
 
 func release_rat() -> void:
 	if state == State.STATIC or state == State.TRAVEL_TO_BUILD:
 		state = State.FOLLOW
 		velocity.y = 5.0
+
+
+func respawn_at(pos: Vector3) -> void:
+	state = State.FOLLOW
+	global_position = pos
+	velocity = Vector3.ZERO

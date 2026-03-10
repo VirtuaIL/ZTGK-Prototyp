@@ -18,6 +18,7 @@ var camera_offset: Vector3 = Vector3(10, 12, 10)
 
 
 func _ready() -> void:
+	player.add_to_group("player")
 	_setup_input_map()
 	_init_game()
 	_update_mode_state()
@@ -48,6 +49,9 @@ func _init_game() -> void:
 	stratagem_system.stratagem_completed.connect(_on_stratagem_completed)
 	stratagem_system.stratagem_failed.connect(_on_stratagem_failed)
 	
+	# Connect rat manager signals
+	rat_manager.rat_count_changed.connect(_on_rat_count_changed)
+	
 	# Setup Ability HUD
 	ability_hud.rat_manager = rat_manager
 
@@ -58,6 +62,9 @@ func _setup_input_map() -> void:
 	_add_action("move_left", KEY_A)
 	_add_action("move_right", KEY_D)
 	_add_action("toggle_mode", KEY_TAB)
+	_add_action("jump", KEY_SPACE)
+	_add_action("rotate_left", KEY_Q)
+	_add_action("rotate_right", KEY_E)
 
 
 func _input(event: InputEvent) -> void:
@@ -113,6 +120,10 @@ func _on_stratagem_completed(stratagem_id: String) -> void:
 
 func _on_stratagem_failed() -> void:
 	stratagem_hud.flash_fail()
+
+
+func _on_rat_count_changed(active: int, total: int) -> void:
+	mode_hud.get_node("%RatLabel").text = "Rats: %d/%d" % [active, total]
 
 
 func _process(delta: float) -> void:

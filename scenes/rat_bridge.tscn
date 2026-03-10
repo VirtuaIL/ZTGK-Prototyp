@@ -1,0 +1,350 @@
+[gd_scene format=3 uid="uid://cx6a8vpeg25d2"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1, 0.3, 8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.14406255, 0.14406255, 0.14406255, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.2, 0.15, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.55, 0.38, 0.25, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+material = SubResource("StandardMaterial3D_2")
+top_radius = 0.015
+bottom_radius = 0.025
+height = 0.3
+
+[node name="RatBridge" type="StaticBody3D" unique_id=1990036832]
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1094804479]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Visuals" type="Node3D" parent="." unique_id=1841619312]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3.8)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Visuals" unique_id=274963060]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 0)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail" type="MeshInstance3D" parent="Visuals/MeshInstance3D" unique_id=1490569634]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Visuals" unique_id=1166994509]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 0.4000001)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail2" type="MeshInstance3D" parent="Visuals/MeshInstance3D2" unique_id=868373245]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Visuals" unique_id=1768331397]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 0.79999995)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail3" type="MeshInstance3D" parent="Visuals/MeshInstance3D3" unique_id=952231593]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Visuals" unique_id=1317305402]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 1.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail4" type="MeshInstance3D" parent="Visuals/MeshInstance3D4" unique_id=607988154]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Visuals" unique_id=1090564916]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 1.6000001)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail5" type="MeshInstance3D" parent="Visuals/MeshInstance3D5" unique_id=1410411119]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Visuals" unique_id=2050670754]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail6" type="MeshInstance3D" parent="Visuals/MeshInstance3D6" unique_id=265634145]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="Visuals" unique_id=82712577]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 2.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail7" type="MeshInstance3D" parent="Visuals/MeshInstance3D7" unique_id=2139703240]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="Visuals" unique_id=577874552]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 2.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail8" type="MeshInstance3D" parent="Visuals/MeshInstance3D8" unique_id=1991716658]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="Visuals" unique_id=1533962470]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 3.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail9" type="MeshInstance3D" parent="Visuals/MeshInstance3D9" unique_id=2104393136]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="Visuals" unique_id=179032191]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 3.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail10" type="MeshInstance3D" parent="Visuals/MeshInstance3D10" unique_id=1305014816]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="Visuals" unique_id=1975906241]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail11" type="MeshInstance3D" parent="Visuals/MeshInstance3D11" unique_id=791095950]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="Visuals" unique_id=1610359813]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 4.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail12" type="MeshInstance3D" parent="Visuals/MeshInstance3D12" unique_id=1894070959]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D13" type="MeshInstance3D" parent="Visuals" unique_id=2043732670]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 4.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail13" type="MeshInstance3D" parent="Visuals/MeshInstance3D13" unique_id=348143958]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D14" type="MeshInstance3D" parent="Visuals" unique_id=2039151168]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 5.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail14" type="MeshInstance3D" parent="Visuals/MeshInstance3D14" unique_id=912925596]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D15" type="MeshInstance3D" parent="Visuals" unique_id=1627301042]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 5.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail15" type="MeshInstance3D" parent="Visuals/MeshInstance3D15" unique_id=1633384791]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D16" type="MeshInstance3D" parent="Visuals" unique_id=319965054]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail16" type="MeshInstance3D" parent="Visuals/MeshInstance3D16" unique_id=658019406]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D17" type="MeshInstance3D" parent="Visuals" unique_id=843756291]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 6.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail17" type="MeshInstance3D" parent="Visuals/MeshInstance3D17" unique_id=903440246]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D18" type="MeshInstance3D" parent="Visuals" unique_id=116564619]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 6.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail18" type="MeshInstance3D" parent="Visuals/MeshInstance3D18" unique_id=1761537296]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D19" type="MeshInstance3D" parent="Visuals" unique_id=1653922928]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 7.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail19" type="MeshInstance3D" parent="Visuals/MeshInstance3D19" unique_id=785759472]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D20" type="MeshInstance3D" parent="Visuals" unique_id=1589494010]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0.25, 0.075, 7.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail20" type="MeshInstance3D" parent="Visuals/MeshInstance3D20" unique_id=831536729]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D21" type="MeshInstance3D" parent="Visuals" unique_id=989886848]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 0)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail" type="MeshInstance3D" parent="Visuals/MeshInstance3D21" unique_id=1966261850]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D22" type="MeshInstance3D" parent="Visuals" unique_id=964195239]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 0.4000001)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail2" type="MeshInstance3D" parent="Visuals/MeshInstance3D22" unique_id=1783921914]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D23" type="MeshInstance3D" parent="Visuals" unique_id=467618648]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 0.79999995)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail3" type="MeshInstance3D" parent="Visuals/MeshInstance3D23" unique_id=192228157]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D24" type="MeshInstance3D" parent="Visuals" unique_id=319496024]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 1.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail4" type="MeshInstance3D" parent="Visuals/MeshInstance3D24" unique_id=1635576803]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D25" type="MeshInstance3D" parent="Visuals" unique_id=1982364359]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 1.6000001)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail5" type="MeshInstance3D" parent="Visuals/MeshInstance3D25" unique_id=59386821]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D26" type="MeshInstance3D" parent="Visuals" unique_id=251943482]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail6" type="MeshInstance3D" parent="Visuals/MeshInstance3D26" unique_id=1159404414]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D27" type="MeshInstance3D" parent="Visuals" unique_id=71273080]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 2.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail7" type="MeshInstance3D" parent="Visuals/MeshInstance3D27" unique_id=1024798294]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D28" type="MeshInstance3D" parent="Visuals" unique_id=2037499675]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 2.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail8" type="MeshInstance3D" parent="Visuals/MeshInstance3D28" unique_id=1382403330]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D29" type="MeshInstance3D" parent="Visuals" unique_id=612474258]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 3.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail9" type="MeshInstance3D" parent="Visuals/MeshInstance3D29" unique_id=433032153]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D30" type="MeshInstance3D" parent="Visuals" unique_id=1699498786]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 3.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail10" type="MeshInstance3D" parent="Visuals/MeshInstance3D30" unique_id=313458449]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D31" type="MeshInstance3D" parent="Visuals" unique_id=876802988]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail11" type="MeshInstance3D" parent="Visuals/MeshInstance3D31" unique_id=1094784739]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D32" type="MeshInstance3D" parent="Visuals" unique_id=1203990262]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 4.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail12" type="MeshInstance3D" parent="Visuals/MeshInstance3D32" unique_id=207511789]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D33" type="MeshInstance3D" parent="Visuals" unique_id=2114167640]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 4.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail13" type="MeshInstance3D" parent="Visuals/MeshInstance3D33" unique_id=840618992]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D34" type="MeshInstance3D" parent="Visuals" unique_id=2135787509]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 5.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail14" type="MeshInstance3D" parent="Visuals/MeshInstance3D34" unique_id=1182463568]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D35" type="MeshInstance3D" parent="Visuals" unique_id=568226098]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 5.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail15" type="MeshInstance3D" parent="Visuals/MeshInstance3D35" unique_id=337823290]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D36" type="MeshInstance3D" parent="Visuals" unique_id=667624317]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail16" type="MeshInstance3D" parent="Visuals/MeshInstance3D36" unique_id=1954549051]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D37" type="MeshInstance3D" parent="Visuals" unique_id=2032274286]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 6.4)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail17" type="MeshInstance3D" parent="Visuals/MeshInstance3D37" unique_id=192354055]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D38" type="MeshInstance3D" parent="Visuals" unique_id=1397339917]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 6.8)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail18" type="MeshInstance3D" parent="Visuals/MeshInstance3D38" unique_id=1595325704]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D39" type="MeshInstance3D" parent="Visuals" unique_id=575444968]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 7.2)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail19" type="MeshInstance3D" parent="Visuals/MeshInstance3D39" unique_id=1631816265]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
+
+[node name="MeshInstance3D40" type="MeshInstance3D" parent="Visuals" unique_id=727208946]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.25, 0.075, 7.6)
+mesh = SubResource("BoxMesh_1")
+
+[node name="Tail20" type="MeshInstance3D" parent="Visuals/MeshInstance3D40" unique_id=28808281]
+transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, -0.015, -0.3)
+mesh = SubResource("CylinderMesh_1")
