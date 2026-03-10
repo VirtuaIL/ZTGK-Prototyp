@@ -31,7 +31,7 @@ func _ready() -> void:
 
 	# Label
 	label = Label.new()
-	label.text = "🌀 Szczurza Orbita"
+	label.text = "Szczurza Orbita"
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7))
 	vbox.add_child(label)

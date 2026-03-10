@@ -1,18 +1,31 @@
 extends Node3D
 
-const RAT_COUNT := 12
+const RAT_COUNT := 60
 
 var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
+enum GameMode { COMBAT, BUILD }
+var current_mode: GameMode = GameMode.COMBAT
+
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
 @onready var stratagem_system: Node = $StratagemSystem
 @onready var stratagem_hud: CanvasLayer = $StratagemHUD
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
+@onready var mode_hud: CanvasLayer = $ModeHUD
+
+
+var camera_offset: Vector3 = Vector3(10, 12, 10)
 
 
 func _ready() -> void:
 	_setup_input_map()
 	_init_game()
+	_update_mode_state()
+	
+	# Capture initial camera offset if possible
+	var cam := get_viewport().get_camera_3d()
+	if cam and player:
+		camera_offset = cam.position - player.position
 
 
 func _init_game() -> void:
@@ -44,6 +57,33 @@ func _setup_input_map() -> void:
 	_add_action("move_back", KEY_S)
 	_add_action("move_left", KEY_A)
 	_add_action("move_right", KEY_D)
+	_add_action("toggle_mode", KEY_TAB)
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_mode"):
+		if current_mode == GameMode.COMBAT:
+			current_mode = GameMode.BUILD
+		else:
+			current_mode = GameMode.COMBAT
+		_update_mode_state()
+
+
+func _update_mode_state() -> void:
+	var is_build := (current_mode == GameMode.BUILD)
+	
+	# Update systems
+	stratagem_system.set_enabled(!is_build)
+	rat_manager.set_build_mode(is_build)
+	
+	# Visual/UI feedback could go here
+	if is_build:
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+		stratagem_hud.hide_menu()
+		mode_hud.get_node("%Label").text = "MODE: BUILD (TAB to switch)"
+	else:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		mode_hud.get_node("%Label").text = "MODE: COMBAT (TAB to switch)"
 
 
 func _add_action(action_name: String, key: Key) -> void:
@@ -75,9 +115,8 @@ func _on_stratagem_failed() -> void:
 	stratagem_hud.flash_fail()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam and player:
-		var offset := Vector3(10, 12, 10)
-		cam.position = cam.position.lerp(player.position + offset, 0.05)
-		cam.look_at(player.position)
+		var target_pos := player.position + camera_offset
+		cam.position = cam.position.lerp(target_pos, 1.0 - exp(-10.0 * delta))

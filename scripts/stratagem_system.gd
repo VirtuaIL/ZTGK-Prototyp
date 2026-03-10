@@ -14,6 +14,7 @@ var stratagems: Array[Dictionary] = []
 var current_input: Array[String] = []
 var is_active: bool = false
 var input_timeout: float = 2.0
+var is_enabled: bool = true
 var time_since_last_input: float = 0.0
 
 
@@ -35,6 +36,11 @@ func register_stratagem(data: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	if not is_enabled:
+		if is_active:
+			_deactivate()
+		return
+
 	var ctrl_held := Input.is_key_pressed(KEY_CTRL)
 
 	if ctrl_held and not is_active:
@@ -50,7 +56,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not is_active:
+	if not is_active or not is_enabled:
 		return
 
 	var key_event := event as InputEventKey
@@ -133,3 +139,9 @@ func _reset_input() -> void:
 
 func get_stratagems() -> Array[Dictionary]:
 	return stratagems
+
+
+func set_enabled(enabled: bool) -> void:
+	is_enabled = enabled
+	if not is_enabled:
+		_deactivate()

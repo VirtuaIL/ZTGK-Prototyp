@@ -22,6 +22,26 @@ var last_draw_pos: Vector3 = Vector3(-1000, -1000, -1000)
 var is_drawing_line: bool = false
 var current_build_y: float = -1000.0
 var _ctrl_was_pressed: bool = false
+var is_build_mode: bool = false
+var brush_node: MeshInstance3D
+
+
+func _ready() -> void:
+	_setup_brush()
+
+
+func _setup_brush() -> void:
+	brush_node = MeshInstance3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.45
+	ring.outer_radius = 0.5
+	brush_node.mesh = ring
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 0.8, 1.0)
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	brush_node.material_override = mat
+	add_child(brush_node)
+	brush_node.visible = false
 
 
 func _process(delta: float) -> void:
@@ -42,20 +62,26 @@ func _process(delta: float) -> void:
 		recall_all_rats()
 	_ctrl_was_pressed = ctrl_pressed
 
-	if mouse_is_down_right:
+	if mouse_is_down_right or (is_build_mode and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
 		_process_build_drag()
+
+	if is_build_mode:
+		_update_brush_pos()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Right-click drawing — always available
+	# Right-click drawing — only in Build Mode
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			mouse_is_down_right = mb.pressed
-			if not mb.pressed:
-				current_build_y = -1000.0
-				is_drawing_line = false
-			get_viewport().set_input_as_handled()
+			if is_build_mode:
+				mouse_is_down_right = mb.pressed
+				if not mb.pressed:
+					current_build_y = -1000.0
+					is_drawing_line = false
+				get_viewport().set_input_as_handled()
+			else:
+				mouse_is_down_right = false
 			return
 
 	# Wave targeting input
@@ -65,6 +91,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			if is_build_mode:
+				get_viewport().set_input_as_handled()
+				return # Drag logic handles it in _process
+			
 			_fire_wave_at_mouse(mb.position)
 			wave_pending = false
 			get_viewport().set_input_as_handled()
@@ -84,12 +114,29 @@ func activate_orbit() -> void:
 
 	orbit_active = true
 	orbit_timer = orbit_duration
-	var count := rats.size()
-	# Scale radius based on rat count: min 1.5, grows with more rats
-	var radius: float = maxf(1.5, count * 0.5)
-	for i in range(count):
-		var angle := (TAU / count) * i
+	
+	var total_rats := rats.size()
+	var rats_per_ring := 15
+	var ring_spacing := 1.2
+	var base_radius := 2.0
+	
+	for i in range(total_rats):
+		var ring_index := floori(float(i) / rats_per_ring)
+		var index_in_ring := i % rats_per_ring
+		
+		# Get actual count for THIS ring to spread evenly
+		var current_ring_count := rats_per_ring
+		if (ring_index + 1) * rats_per_ring > total_rats:
+			current_ring_count = total_rats % rats_per_ring
+		
+		var radius := base_radius + (ring_index * ring_spacing)
+		var angle := (TAU / current_ring_count) * index_in_ring
+		
+		# Offset angle per ring for better visual distribution
+		angle += ring_index * 0.5
+		
 		rats[i].set_orbit(angle, radius)
+	
 	orbit_started.emit()
 
 
@@ -217,3 +264,21 @@ func _try_build_at(raw_pos: Vector3) -> void:
 	if free_rat:
 		free_rat.build_at(build_pos)
 		built_positions[build_pos] = true
+
+
+func set_build_mode(enabled: bool) -> void:
+	is_build_mode = enabled
+	brush_node.visible = enabled
+	if not enabled:
+		mouse_is_down_right = false
+		is_drawing_line = false
+		current_build_y = -1000.0
+
+
+func _update_brush_pos() -> void:
+	var hit := _get_mouse_ground_hit()
+	if hit:
+		brush_node.global_position = hit.position + Vector3(0, 0.1, 0)
+		brush_node.visible = true
+	else:
+		brush_node.visible = false
