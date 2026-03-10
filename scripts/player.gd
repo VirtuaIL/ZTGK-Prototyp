@@ -9,26 +9,7 @@ var is_stratagem_mode: bool = false
 
 
 func _ready() -> void:
-	# Body mesh (capsule)
-	var body_mesh := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.4
-	capsule.height = 1.6
-	body_mesh.mesh = capsule
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.7, 0.3)
-	body_mesh.material_override = mat
-	body_mesh.position.y = 0.8
-	add_child(body_mesh)
-
-	# Collision shape
-	var col := CollisionShape3D.new()
-	var shape := CapsuleShape3D.new()
-	shape.radius = 0.4
-	shape.height = 1.6
-	col.shape = shape
-	col.position.y = 0.8
-	add_child(col)
+	pass
 
 
 func _physics_process(delta: float) -> void:

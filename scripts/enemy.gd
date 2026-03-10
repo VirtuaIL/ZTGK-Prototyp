@@ -12,37 +12,6 @@ var damage_cooldowns: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# Body (red box)
-	var body_mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.8, 1.4, 0.8)
-	body_mesh.mesh = box
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.8, 0.15, 0.15)
-	body_mesh.material_override = mat
-	body_mesh.position.y = 0.7
-	add_child(body_mesh)
-
-	# Head (dark sphere on top)
-	var head_mesh := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.3
-	sphere.height = 0.6
-	head_mesh.mesh = sphere
-	var head_mat := StandardMaterial3D.new()
-	head_mat.albedo_color = Color(0.6, 0.1, 0.1)
-	head_mesh.material_override = head_mat
-	head_mesh.position.y = 1.7
-	add_child(head_mesh)
-
-	# Collision shape
-	var col := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(0.8, 1.4, 0.8)
-	col.shape = shape
-	col.position.y = 0.7
-	add_child(col)
-
 	# HP Bar (billboard above enemy)
 	_create_hp_bar()
 

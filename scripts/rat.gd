@@ -30,43 +30,6 @@ func _ready() -> void:
 		randf_range(-1.5, 1.5)
 	)
 
-	# Body mesh (small box = rat body)
-	var body_mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.2, 0.15, 0.4)
-	body_mesh.mesh = box
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.45, 0.3, 0.18)
-	body_mesh.material_override = mat
-	body_mesh.position.y = 0.075
-	add_child(body_mesh)
-
-	# Tail (thin cylinder)
-	var tail_mesh := MeshInstance3D.new()
-	var tail := CylinderMesh.new()
-	tail.top_radius = 0.015
-	tail.bottom_radius = 0.025
-	tail.height = 0.3
-	tail_mesh.mesh = tail
-	var tail_mat := StandardMaterial3D.new()
-	tail_mat.albedo_color = Color(0.55, 0.38, 0.25)
-	tail_mesh.material_override = tail_mat
-	tail_mesh.position = Vector3(0, 0.06, -0.3)
-	tail_mesh.rotation_degrees = Vector3(70, 0, 0)
-	add_child(tail_mesh)
-
-	# Head (small sphere)
-	var head_mesh := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.08
-	sphere.height = 0.14
-	head_mesh.mesh = sphere
-	var head_mat := StandardMaterial3D.new()
-	head_mat.albedo_color = Color(0.5, 0.35, 0.2)
-	head_mesh.material_override = head_mat
-	head_mesh.position = Vector3(0, 0.1, 0.2)
-	add_child(head_mesh)
-
 
 func _physics_process(delta: float) -> void:
 	if player == null:
