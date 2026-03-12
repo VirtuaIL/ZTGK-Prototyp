@@ -87,10 +87,10 @@ func _update_mode_state() -> void:
 	if is_build:
 		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 		stratagem_hud.hide_menu()
-		mode_hud.get_node("%Label").text = "MODE: BUILD (TAB to switch)"
+		mode_hud.get_node("%Label").text = "MODE: BUILD"
 	else:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		mode_hud.get_node("%Label").text = "MODE: COMBAT (TAB to switch)"
+		mode_hud.get_node("%Label").text = "MODE: COMBAT"
 
 
 func _add_action(action_name: String, key: Key) -> void:
