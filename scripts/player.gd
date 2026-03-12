@@ -5,14 +5,23 @@ signal stratagem_activated(stratagem_id: String)
 @export var speed: float = 7.0
 @export var rotation_speed: float = 10.0
 
+@export var fall_death_y: float = -1.0
+
 var is_stratagem_mode: bool = false
+var _spawn_position: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
-	pass
+	_spawn_position = global_position
 
 
 func _physics_process(delta: float) -> void:
+	# Fall reset
+	if global_position.y < fall_death_y:
+		global_position = _spawn_position
+		velocity = Vector3.ZERO
+		return
+
 	if is_stratagem_mode:
 		velocity = Vector3.ZERO
 		move_and_slide()
@@ -26,12 +35,20 @@ func _physics_process(delta: float) -> void:
 
 	if input_dir.length() > 0.0:
 		input_dir = input_dir.normalized()
-		velocity = input_dir * speed
+		velocity.x = input_dir.x * speed
+		velocity.z = input_dir.z * speed
 
 		var target_angle := atan2(input_dir.x, input_dir.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 	else:
-		velocity = velocity.move_toward(Vector3.ZERO, speed * delta * 5.0)
+		velocity.x = move_toward(velocity.x, 0.0, speed * delta * 5.0)
+		velocity.z = move_toward(velocity.z, 0.0, speed * delta * 5.0)
+
+	# Gravity — accumulated independently of horizontal movement
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5
+	else:
+		velocity.y = 0.0
 
 	move_and_slide()
 

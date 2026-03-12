@@ -26,6 +26,9 @@ radius = 0.08
 height = 0.14
 material = SubResource("StandardMaterial3D_3")
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_rat"]
+size = Vector3(0.2, 0.15, 0.4)
+
 [node name="Rat" type="CharacterBody3D"]
 script = ExtResource("1_script")
 
@@ -40,4 +43,8 @@ mesh = SubResource("CylinderMesh_1")
 [node name="Head" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.2)
 mesh = SubResource("SphereMesh_1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+shape = SubResource("BoxShape3D_rat")
 

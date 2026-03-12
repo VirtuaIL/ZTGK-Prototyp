@@ -1,6 +1,12 @@
 extends Node3D
 
-const RAT_COUNT := 12
+const RAT_COUNT := 50
+
+enum RatMode { COMBAT, BUILD }
+var current_mode: RatMode = RatMode.COMBAT
+
+var combat_mode_rect: ColorRect
+var build_mode_rect: ColorRect
 
 var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
 @onready var player: CharacterBody3D = $Player
@@ -16,6 +22,8 @@ func _ready() -> void:
 
 
 func _init_game() -> void:
+	_setup_mode_ui()
+	
 	# Setup Rats
 	for i in range(RAT_COUNT):
 		var rat := rat_scene.instantiate()
@@ -27,6 +35,8 @@ func _init_game() -> void:
 		)
 		rat.player = player
 		add_child(rat)
+		rat.add_collision_exception_with(player)
+		player.add_collision_exception_with(rat)
 		rat_manager.register_rat(rat)
 	
 	# Connect stratagem signals
@@ -44,6 +54,51 @@ func _setup_input_map() -> void:
 	_add_action("move_back", KEY_S)
 	_add_action("move_left", KEY_A)
 	_add_action("move_right", KEY_D)
+	_add_action("toggle_mode", KEY_F)
+
+
+func _setup_mode_ui() -> void:
+	var mode_hud = CanvasLayer.new()
+	var hbox = HBoxContainer.new()
+	hbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	# anchoring bottom right, adjust position upwards/leftwards
+	hbox.position = Vector2(-150, -80) 
+	
+	combat_mode_rect = ColorRect.new()
+	combat_mode_rect.custom_minimum_size = Vector2(50, 50)
+	
+	build_mode_rect = ColorRect.new()
+	build_mode_rect.custom_minimum_size = Vector2(50, 50)
+	
+	# spacing
+	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_child(combat_mode_rect)
+	hbox.add_child(build_mode_rect)
+	
+	mode_hud.add_child(hbox)
+	add_child(mode_hud)
+	
+	_update_mode_ui()
+
+
+func _update_mode_ui() -> void:
+	if current_mode == RatMode.COMBAT:
+		combat_mode_rect.color = Color.WHITE
+		build_mode_rect.color = Color.hex(0x666666ff) # gray
+	else:
+		combat_mode_rect.color = Color.hex(0x666666ff) # gray
+		build_mode_rect.color = Color.WHITE
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_mode"):
+		if current_mode == RatMode.COMBAT:
+			current_mode = RatMode.BUILD
+		else:
+			current_mode = RatMode.COMBAT
+		stratagem_system.mode = current_mode
+		rat_manager.mode = current_mode
+		_update_mode_ui()
 
 
 func _add_action(action_name: String, key: Key) -> void:

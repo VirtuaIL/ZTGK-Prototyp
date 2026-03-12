@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bqxwbpahonh57"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_5f452"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(5, 1.4, 0.8)
+
+[node name="door" type="CharacterBody3D" unique_id=1981168902]
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=333239315]
+transform = Transform3D(6.1, 0, 0, 0, 2.0511682, 0, 0, 0, 1, 0.08307457, 1.4189832, 0)
+mesh = SubResource("BoxMesh_5f452")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=499049586]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.099999905, 0.7, 0)
+shape = SubResource("BoxShape3D_1")

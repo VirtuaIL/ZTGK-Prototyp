@@ -8,9 +8,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
-[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
-[ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/button.tscn" id="10_choun"]
-[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/wall.tscn" id="11_ya4ey"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -49,12 +46,8 @@ size = 16.0
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1979710427]
 mesh = SubResource("PlaneMesh_1")
 
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="Floor" unique_id=779158016]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0, 0)
-mesh = SubResource("PlaneMesh_1")
-
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="Floor" unique_id=1106394961]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, 0, -40)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -44)
 mesh = SubResource("PlaneMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=2072745988]
@@ -62,11 +55,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="Floor" unique_id=265497335]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, -0.05, -42)
-shape = SubResource("BoxShape3D_1")
-
-[node name="CollisionShape3D3" type="CollisionShape3D" parent="Floor" unique_id=997533133]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44, -0.05, -1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, -42)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
@@ -88,18 +77,3 @@ script = ExtResource("7_ability_hud")
 
 [node name="box" parent="." unique_id=2050762637 instance=ExtResource("8_tipki")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0744858, -4.7683716e-07, -14.699141)
-
-[node name="door" parent="." unique_id=1981168902 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.711378)
-
-[node name="button" parent="." unique_id=435181818 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.385296, 0.02200041, -9.328043)
-
-[node name="door2" parent="." unique_id=835811555 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(9.355132, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -54.454422, 0.016834497, -22.652693)
-
-[node name="door3" parent="." unique_id=1493423040 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(12.639169, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, 1.8837137, 0.016834497, -22.652693)
-
-[node name="door4" parent="." unique_id=1297455916 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-4.1361946e-07, 0, -1.4528499, 0, 1.4941561, 0, 9.462509, 0, -6.350608e-08, 20.536297, 0.016834497, -0.5746975)
