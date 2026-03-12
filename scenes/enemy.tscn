@@ -1,37 +1,36 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://mytwo0gomcwv"]
 
-[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://c06iquryk3iy4" path="res://scripts/enemy.gd" id="1_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.8, 0.15, 0.15, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
-size = Vector3(0.8, 1.4, 0.8)
 material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.8, 1.4, 0.8)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
 albedo_color = Color(0.6, 0.1, 0.1, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_1"]
+material = SubResource("StandardMaterial3D_2")
 radius = 0.3
 height = 0.6
-material = SubResource("StandardMaterial3D_2")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.8, 1.4, 0.8)
+size = Vector3(1.2986084, 2.0663695, 1.2631104)
 
-[node name="Enemy" type="StaticBody3D"]
+[node name="Enemy" type="StaticBody3D" unique_id=338018000]
 script = ExtResource("1_script")
 
-[node name="Body" type="MeshInstance3D" parent="."]
+[node name="Body" type="MeshInstance3D" parent="." unique_id=1134539062]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 mesh = SubResource("BoxMesh_1")
 
-[node name="Head" type="MeshInstance3D" parent="."]
+[node name="Head" type="MeshInstance3D" parent="." unique_id=719875542]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
 mesh = SubResource("SphereMesh_1")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=956714235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.008727998, 1.0331848, -0.0686401)
 shape = SubResource("BoxShape3D_1")
-
