@@ -1,6 +1,6 @@
 extends Node3D
 
-const RAT_COUNT := 50
+const RAT_COUNT := 60
 
 enum RatMode { COMBAT, BUILD }
 var current_mode: RatMode = RatMode.COMBAT
