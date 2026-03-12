@@ -5,10 +5,10 @@ class_name door
 @export var doorId: int = 0
 
 # How far (in local X units) the door slides when opened
-@export var slide_distance: float = 3.0
+@export var slide_distance: float = 9.0
 
 # Duration of the slide animation in seconds
-@export var slide_duration: float = 0.6
+@export var slide_duration: float = 1.8
 
 var _closed_position: Vector3
 var _open_position: Vector3

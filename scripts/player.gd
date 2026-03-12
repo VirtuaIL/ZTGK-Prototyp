@@ -1,4 +1,5 @@
 extends CharacterBody3D
+class_name player
 
 signal stratagem_activated(stratagem_id: String)
 
