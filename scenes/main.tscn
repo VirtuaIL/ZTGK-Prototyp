@@ -4,10 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_rat_man"]
-[ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
-[ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="PackedScene" path="res://scenes/ui/mode_hud.tscn" id="8_mode_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mode_hud.tscn" id="5_mode_hud"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -26,54 +23,46 @@ size = Vector2(20, 40)
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(20.020508, 0.1, 40)
 
-[node name="Main" type="Node3D" unique_id=709470400]
+[node name="Main" type="Node3D" unique_id=1270577080]
 script = ExtResource("1_script")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=703666338]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1749467097]
 environment = SubResource("Environment_1")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=484087018]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1747635227]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 5, 10, 5)
 shadow_enabled = true
 
-[node name="Camera3D" type="Camera3D" parent="." unique_id=2080818045]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1782312821]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 10, 12, 10)
 projection = 1
 size = 16.0
 
-[node name="Floor" type="StaticBody3D" parent="." unique_id=943434758]
+[node name="Floor" type="StaticBody3D" parent="." unique_id=1766851304]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=236387365]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor" unique_id=1773131968]
 mesh = SubResource("PlaneMesh_1")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=2044005794]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=2131826939]
 shape = SubResource("BoxShape3D_1")
 
-[node name="Floor2" type="StaticBody3D" parent="." unique_id=137119182]
+[node name="Floor2" type="StaticBody3D" parent="." unique_id=462600949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.882624, 0, 0)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor2" unique_id=1067065333]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor2" unique_id=469820158]
 mesh = SubResource("PlaneMesh_1")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor2" unique_id=161447630]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor2" unique_id=1795778827]
 shape = SubResource("BoxShape3D_1")
 
-[node name="Player" parent="." unique_id=2089137054 instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=1463437371 instance=ExtResource("2_player")]
 collision_layer = 1
 collision_mask = 1
 
-[node name="Enemy" parent="." unique_id=742202268 instance=ExtResource("3_enemy")]
+[node name="Enemy" parent="." unique_id=707294497 instance=ExtResource("3_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
 
-[node name="RatManager" type="Node3D" parent="." unique_id=14539072]
+[node name="RatManager" type="Node3D" parent="." unique_id=55716020]
 script = ExtResource("4_rat_man")
 
-[node name="StratagemSystem" type="Node" parent="." unique_id=2022662945]
-script = ExtResource("5_strat_sys")
-
-[node name="StratagemHUD" parent="." unique_id=878340194 instance=ExtResource("6_strat_hud")]
-
-[node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=160650565]
-script = ExtResource("7_ability_hud")
-
-[node name="ModeHUD" parent="." unique_id=187163102 instance=ExtResource("8_mode_hud")]
+[node name="ModeHUD" parent="." unique_id=1250867742 instance=ExtResource("5_mode_hud")]

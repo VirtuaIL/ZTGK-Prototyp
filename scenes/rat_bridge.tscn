@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cx6a8vpeg25d2"]
+[gd_scene format=3 uid="uid://ck2dts0ki1lgx"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(1, 0.3, 8)
