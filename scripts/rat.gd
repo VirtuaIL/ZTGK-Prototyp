@@ -39,7 +39,7 @@ var is_carrier: bool = false
 # Bridge anchoring — when true, gravity and fall-recovery are suppressed
 # so rats can float in mid-air to form bridges
 var is_anchored: bool = false
-@export var anchor_radius: float = 3.0
+@export var anchor_radius: float = 2.0
 
 
 func _ready() -> void:
@@ -194,9 +194,11 @@ func _process_travel_to_build(delta: float) -> void:
 	var flat_target := Vector2(build_target.x, build_target.z)
 	var dist := flat_self.distance_to(flat_target)
 
-	# Anchor (disable gravity) once close enough to float as a bridge piece
 	if dist <= anchor_radius:
 		is_anchored = true
+
+	# Also check proximity to own build_target for anchoring
+	# (additional positions are checked by rat_manager against the full brush)
 
 	if dist > 0.1:
 		var dir := Vector2(flat_target - flat_self).normalized()

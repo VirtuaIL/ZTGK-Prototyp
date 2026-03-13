@@ -47,6 +47,10 @@ var _ctrl_was_pressed: bool = false
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
 
+# All positions in the most recently issued build command.
+# Used so any traveling rat can anchor near any brush point, not just its own.
+var active_build_positions: Array[Vector3] = []
+
 const DRAW_MODE_PATH := 0
 const DRAW_MODE_CIRCLE := 1
 
@@ -147,7 +151,13 @@ func _process(delta: float) -> void:
 					current_build_y = raw_pos.y
 				raw_pos.y = current_build_y
 				current_circle_center = raw_pos
-				_update_circle_preview()
+				_update_circle_preview(false)
+			elif current_build_y > -500.0:
+				# No geometry under cursor — project onto last valid Y plane and show preview in red
+				var fallback := _get_mouse_pos_at_y(current_build_y)
+				if fallback != Vector3.ZERO:
+					current_circle_center = fallback
+					_update_circle_preview(true)
 
 	_ctrl_was_pressed = ctrl_pressed
 
@@ -156,12 +166,32 @@ func _process(delta: float) -> void:
 		mouse_is_down_right = false
 		is_drawing_line = false
 		current_build_y = -1000.0
+		active_build_positions.clear() # Clear active build positions when leaving build mode
 
 	_check_formation_sync()
 	_check_carrier_arrival()
+	_check_travel_anchoring()
 
 	# Keep carrier rats' blob_target synced to the box position every frame
 	_update_carrier_rat_targets()
+
+
+## Anchors any rat that is traveling and comes within anchor_radius of any
+## active brush position, so rats can float as bridge pieces mid-path.
+func _check_travel_anchoring() -> void:
+	if active_build_positions.is_empty():
+		return
+	for rat in rats:
+		if rat.state != rat.State.TRAVEL_TO_BUILD:
+			continue
+		if rat.is_anchored:
+			continue
+		var flat_rat := Vector2(rat.global_position.x, rat.global_position.z)
+		for bp in active_build_positions:
+			var flat_bp := Vector2(bp.x, bp.z)
+			if flat_rat.distance_to(flat_bp) <= rat.anchor_radius:
+				rat.is_anchored = true
+				break
 
 
 func _check_formation_sync() -> void:
@@ -438,6 +468,7 @@ func recall_all_rats() -> void:
 		grabbed_box_last_pos = Vector3.ZERO
 		mouse_is_down_middle = false
 
+	active_build_positions.clear()
 	built_positions.clear()
 	carrier_rats.clear()
 	carrier_rat_offsets.clear()
@@ -527,14 +558,14 @@ func _process_build_drag() -> void:
 		_update_circle_preview()
 
 
-func _update_drawn_line(end_pos: Vector3) -> void:
+func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void:
 	immediate_mesh.clear_surfaces()
 	
 	if current_drawn_path.size() == 0:
 		return
 
 	if line_material:
-		line_material.albedo_color = Color.WHITE
+		line_material.albedo_color = Color(1, 0, 0) if invalid_surface else Color.WHITE
 	
 	# Small vertical offset to prevent z-fighting with the ground
 	var offset := Vector3(0, 0.1, 0)
@@ -653,7 +684,7 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 	return positions
 
 
-func _update_circle_preview() -> void:
+func _update_circle_preview(invalid_surface: bool = false) -> void:
 	immediate_mesh.clear_surfaces()
 
 	var center := current_circle_center
@@ -672,7 +703,10 @@ func _update_circle_preview() -> void:
 	var enough_rats := total_rats >= required
 
 	if line_material:
-		line_material.albedo_color = Color.WHITE if enough_rats else Color(1, 0, 0)
+		if invalid_surface:
+			line_material.albedo_color = Color(1, 0, 0) # Red: hovering over invalid/empty area
+		else:
+			line_material.albedo_color = Color.WHITE if enough_rats else Color(1, 0, 0)
 
 	# Draw circle outline
 	var segments := 32
@@ -720,10 +754,12 @@ func _build_circle_if_possible() -> void:
 	var available_rats: Array = _get_available_follow_rats()
 
 	var count: int = min(available_rats.size(), fill_positions.size())
+	active_build_positions.clear()
 	for i in range(count):
 		var rat = available_rats[i]
 		var pos = fill_positions[i]
 		rat.build_at(pos)
+		active_build_positions.append(pos)
 
 
 func _distribute_rats_on_path() -> void:
