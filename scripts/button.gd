@@ -23,6 +23,11 @@ func _ready() -> void:
 	if p is button:
 		_visual = p as button
 		_rest_y = _visual.position.y
+	
+	# Set Area3D mask to detect Player (Layer 2) and Movable Objects (Layer 3)
+	var area = get_node_or_null("Area3D")
+	if area:
+		area.collision_mask = 6 # 2 (Player) + 4 (Movable Objects)
 
 
 func _find_target_door() -> door:
@@ -43,8 +48,8 @@ func _set_pressed(pressed: bool) -> void:
 
 
 func _on_area_3d_body_entered(body: Node3D) -> void:
-	# Only a box activates the button
-	if not (body is box || body is player):
+	# Activated by boxes, players, or turrets
+	if not (body is box or body is player or body is turret or body is hitscan_turret):
 		return
 	_bodies_on_button += 1
 	if _bodies_on_button == 1:
@@ -55,7 +60,7 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 
 
 func _on_area_3d_body_exited(body: Node3D) -> void:
-	if not (body is box || body is player):
+	if not (body is box or body is player or body is turret or body is hitscan_turret):
 		return
 	_bodies_on_button = max(0, _bodies_on_button - 1)
 	if _bodies_on_button == 0:

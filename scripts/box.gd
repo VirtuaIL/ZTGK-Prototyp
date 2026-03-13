@@ -5,7 +5,7 @@ class_name box
 @export var fall_death_y: float = -1.0
 @export var gravity_multiplier: float = 5.0
 
-signal box_reset
+signal object_reset
 
 var is_surrounded: bool = false
 var carrier_rats: Array[CharacterBody3D] = []
@@ -14,6 +14,8 @@ var _spawn_position: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
+	collision_layer = 4 # Layer 3: Movable Objects
+	collision_mask = 7  # Layer 1 (Env) + Layer 2 (Player) + Layer 3 (Objects)
 	_spawn_position = global_position
 
 
@@ -22,7 +24,7 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < fall_death_y:
 		global_position = _spawn_position
 		velocity = Vector3.ZERO
-		box_reset.emit()
+		object_reset.emit()
 		return
 
 	if not is_on_floor():

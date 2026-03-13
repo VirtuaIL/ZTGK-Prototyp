@@ -76,8 +76,8 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 
 var current_circle_center: Vector3 = Vector3.ZERO
 
-var grabbed_box: box = null
-var grabbed_box_last_pos: Vector3 = Vector3.ZERO
+var grabbed_object: CharacterBody3D = null
+var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var mmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.008
@@ -139,11 +139,11 @@ func _process(delta: float) -> void:
 		if mouse_is_down_right:
 			_process_blob_follow()
 
-		if mouse_is_down_middle and grabbed_box:
-			_process_box_drag()
+		if mouse_is_down_middle and grabbed_object:
+			_process_object_drag()
 
-		# Always show circular brush preview when in circle mode, even when not dragging
-		if build_draw_mode == DRAW_MODE_CIRCLE and not mouse_is_down_left:
+	# Always show circular brush preview when in circle mode, even when not dragging
+	if build_draw_mode == DRAW_MODE_CIRCLE and not mouse_is_down_left:
 			var hit := _get_mouse_ground_hit()
 			if hit:
 				var raw_pos: Vector3 = hit.position + hit.normal * 0.25
@@ -315,19 +315,18 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			return
 
-		# Middle-click: box interaction (surround / grab / release)
+		# Middle-click: object interaction (surround / grab / release)
 		if mb.button_index == MOUSE_BUTTON_MIDDLE:
 			if mode == 1:
 				if mb.pressed:
 					mmb_press_screen_pos = mb.position
-					if grabbed_box != null:
-						# Box already grabbed — just start/resume dragging immediately.
-						# Release is handled on MMB release if the mouse barely moved (click).
+					if grabbed_object != null:
+						# Object already grabbed — just start/resume dragging immediately.
 						mouse_is_down_middle = true
 						get_viewport().set_input_as_handled()
 						return
 
-					# No box currently grabbed — raycast to find one
+					# No object currently grabbed — raycast to find one
 					var camera_m: Camera3D = get_viewport().get_camera_3d()
 					var ray_origin_m: Vector3 = camera_m.project_ray_origin(mb.position)
 					var ray_dir_m: Vector3 = camera_m.project_ray_normal(mb.position)
@@ -335,30 +334,31 @@ func _unhandled_input(event: InputEvent) -> void:
 					var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
 					var hit_m := space_state_m.intersect_ray(query_m)
 
-					if hit_m and hit_m.collider is box:
-						var b: box = hit_m.collider
-						mouse_is_down_middle = true
-						if not b.is_surrounded:
-							_surround_box_with_rats(b)
-						grabbed_box = b
-						grabbed_box_last_pos = b.global_position
-						get_viewport().set_input_as_handled()
-						return
+					if hit_m:
+						var obj = hit_m.collider
+						if obj is box or obj is turret or obj is hitscan_turret:
+							mouse_is_down_middle = true
+							if not obj.is_surrounded:
+								_surround_object_with_rats(obj)
+							grabbed_object = obj
+							grabbed_object_last_pos = obj.global_position
+							get_viewport().set_input_as_handled()
+							return
 
-					# No box hit – ignore
+					# No grabbable object hit – ignore
 					mouse_is_down_middle = false
 				else:
 					# MMB released — check if this was a quick click (tiny mouse movement)
-					# or a real drag. Only release the box on a click, not after dragging.
+					# or a real drag. Only release the object on a click, not after dragging.
 					mouse_is_down_middle = false
-					if grabbed_box != null:
+					if grabbed_object != null:
 						var moved_sq := mmb_press_screen_pos.distance_squared_to(mb.position)
 						if moved_sq < drag_threshold_squared:
-							# Short click — release the box
-							_release_box_carriers(grabbed_box)
-							grabbed_box = null
-							grabbed_box_last_pos = Vector3.ZERO
-						# else: was a drag — keep the box grabbed for the next drag
+							# Short click — release the object
+							_release_object_carriers(grabbed_object)
+							grabbed_object = null
+							grabbed_object_last_pos = Vector3.ZERO
+						# else: was a drag — keep the object grabbed for the next drag
 				get_viewport().set_input_as_handled()
 			return
 
@@ -461,11 +461,11 @@ func on_stratagem_activated(stratagem_id: String) -> void:
 
 
 func recall_all_rats() -> void:
-	# Release any grabbed box and its carrier rats first
-	if grabbed_box != null:
-		_release_box_carriers(grabbed_box)
-		grabbed_box = null
-		grabbed_box_last_pos = Vector3.ZERO
+	# Release any grabbed object and its carrier rats first
+	if grabbed_object != null:
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
 		mouse_is_down_middle = false
 
 	active_build_positions.clear()
@@ -919,8 +919,8 @@ func _send_horde_to_point() -> void:
 		built_positions[build_pos] = true
 
 
-func _surround_box_with_rats(b: box) -> void:
-	var center: Vector3 = b.global_position
+func _surround_object_with_rats(obj: CharacterBody3D) -> void:
+	var center: Vector3 = obj.global_position
 
 	var available_rats: Array[CharacterBody3D] = []
 	for rat in rats:
@@ -931,7 +931,7 @@ func _surround_box_with_rats(b: box) -> void:
 	if count == 0:
 		return
 
-	var needed: int = min(b.carriers_required, count)
+	var needed: int = min(obj.get("carriers_required"), count)
 	if needed <= 0:
 		return
 
@@ -939,41 +939,32 @@ func _surround_box_with_rats(b: box) -> void:
 	if needed > 8:
 		ring_radius = 1.5
 
-	b.carrier_rats.clear()
+	obj.get("carrier_rats").clear()
 
 	for i in range(needed):
 		var angle := (TAU / needed) * i
-		# Offset is relative to the box center so it can be reapplied as the box moves
 		var offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
 		var pos := center + offset
 		var r: CharacterBody3D = available_rats[i]
-		# Make this rat a carrier without entering the build/static pipeline.
-		# Keep it in FOLLOW state but have it follow its offset around the box.
-		# Zero out follow_offset so the rat targets its exact ring position
-		# (arrival check in _check_carrier_arrival compares against blob_target directly).
 		r.state = r.State.FOLLOW
 		r.is_following_player = false
 		r.follow_offset = Vector3.ZERO
 		r.blob_target = pos
 		r.is_carrier = true
-		b.carrier_rats.append(r)
-		# Remember the offset so we can update blob_target every frame as the box moves
+		obj.get("carrier_rats").append(r)
 		carrier_rat_offsets[r] = offset
 
-	# Rats are on their way — dragging is locked until they arrive
-	b.is_surrounded = false
+	obj.set("is_surrounded", false)
 
-	# Connect to box_reset so we can release carriers if the box falls
-	if not b.box_reset.is_connected(_on_box_reset):
-		b.box_reset.connect(_on_box_reset.bind(b))
+	if not obj.object_reset.is_connected(_on_object_reset):
+		obj.object_reset.connect(_on_object_reset.bind(obj))
 
 
-func _on_box_reset(b: box) -> void:
-	# Box fell and teleported back — release its carriers and reset grab state
-	_release_box_carriers(b)
-	if grabbed_box == b:
-		grabbed_box = null
-		grabbed_box_last_pos = Vector3.ZERO
+func _on_object_reset(obj: CharacterBody3D) -> void:
+	_release_object_carriers(obj)
+	if grabbed_object == obj:
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
 		mouse_is_down_middle = false
 
 
@@ -991,74 +982,62 @@ func _process_blob_follow() -> void:
 
 
 func _check_carrier_arrival() -> void:
-	# Once all carrier rats on the grabbed box have reached their positions,
-	# snap them precisely and mark the box as surrounded to unlock dragging.
-	if grabbed_box == null or grabbed_box.is_surrounded:
+	if grabbed_object == null or grabbed_object.get("is_surrounded"):
 		return
-	# Snap rats to their target once they are close — prevents them getting stuck
-	# on the box collider and never fully arriving.
 	var snap_dist_sq := 5.5 * 5.5
-	for r in grabbed_box.carrier_rats:
+	for r in grabbed_object.get("carrier_rats"):
 		if r == null:
 			continue
 		var flat_pos := Vector2(r.global_position.x, r.global_position.z)
 		var flat_target := Vector2(r.blob_target.x, r.blob_target.z)
 		if flat_pos.distance_squared_to(flat_target) <= snap_dist_sq:
-			# Teleport the rat to its exact slot so it can't be blocked
 			r.global_position = Vector3(r.blob_target.x, r.global_position.y, r.blob_target.z)
 			r.velocity = Vector3.ZERO
 
-	# Now check if every rat is at its target
 	var arrival_dist_sq := 0.05 * 0.05
-	for r in grabbed_box.carrier_rats:
+	for r in grabbed_object.get("carrier_rats"):
 		if r == null:
 			continue
 		var flat_pos := Vector2(r.global_position.x, r.global_position.z)
 		var flat_target := Vector2(r.blob_target.x, r.blob_target.z)
 		if flat_pos.distance_squared_to(flat_target) > arrival_dist_sq:
-			return  # at least one rat hasn't snapped yet
-	grabbed_box.is_surrounded = true
+			return
+	grabbed_object.set("is_surrounded", true)
 
 
-func _process_box_drag() -> void:
-	if grabbed_box == null:
+func _process_object_drag() -> void:
+	if grabbed_object == null:
 		return
 
-	# Block dragging until all carrier rats have reached the box
-	if not grabbed_box.is_surrounded:
+	if not grabbed_object.get("is_surrounded"):
 		return
 
 	var hit := _get_mouse_ground_hit()
 	if not hit:
 		return
 
-	var current_pos: Vector3 = grabbed_box.global_position
+	var current_pos: Vector3 = grabbed_object.global_position
 	var target_pos: Vector3 = hit.position
 	target_pos.y = current_pos.y
 
-	# Move box towards target slowly for a carried feel
 	var new_pos: Vector3 = current_pos.lerp(target_pos, box_drag_lerp_factor)
-
-	grabbed_box.global_position = new_pos
-	# Carrier rats' blob_target is updated in _update_carrier_rat_targets() each frame
+	grabbed_object.global_position = new_pos
 
 
 func _update_carrier_rat_targets() -> void:
-	# Update blob_target for carrier rats on the grabbed box so they
-	# continuously follow the box as it moves during drag.
-	if grabbed_box == null or not grabbed_box.is_surrounded:
+	if grabbed_object == null or not grabbed_object.get("is_surrounded"):
 		return
-	var box_pos: Vector3 = grabbed_box.global_position
-	for r in grabbed_box.carrier_rats:
+	var obj_pos: Vector3 = grabbed_object.global_position
+	for r in grabbed_object.get("carrier_rats"):
 		if r and carrier_rat_offsets.has(r):
-			r.blob_target = box_pos + carrier_rat_offsets[r]
+			r.blob_target = obj_pos + carrier_rat_offsets[r]
 
 
-func _release_box_carriers(b: box) -> void:
-	if b == null:
+func _release_object_carriers(obj: CharacterBody3D) -> void:
+	if obj == null:
 		return
 
-	for r in b.carrier_rats:
+	for r in obj.get("carrier_rats"):
 		if r:
 			r.is_carrier = false
 			r.is_following_player = true
@@ -1066,8 +1045,8 @@ func _release_box_carriers(b: box) -> void:
 			if carrier_rats.has(r):
 				carrier_rats.erase(r)
 			carrier_rat_offsets.erase(r)
-	b.carrier_rats.clear()
-	b.is_surrounded = false
+	obj.get("carrier_rats").clear()
+	obj.set("is_surrounded", false)
 
 
 func _try_build_at(raw_pos: Vector3) -> void:

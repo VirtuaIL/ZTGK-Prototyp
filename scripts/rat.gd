@@ -49,9 +49,9 @@ func _ready() -> void:
 		randf_range(-1.5, 1.5)
 	)
 	
-	# Default: only collide with environment (Layer 1 is Player, normally Layer 2 is Environment)
-	# Assuming Environment is Layer 1 here for simplicity, or we just disable Layer 1 so player doesn't collide
-	set_collision_layer_value(1, false)
+	# Layer 1 = Environment, Layer 2 = Player, Layer 3 = Movable Objects
+	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles (using masks there)
+	collision_mask = 1  # Only collide with Environment
 
 
 func _physics_process(delta: float) -> void:

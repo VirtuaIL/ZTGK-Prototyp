@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cc6a8vpeg25d1"]
 
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player.gd" id="1_script"]
+[ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -14,6 +15,12 @@ height = 1.6
 radius = 0.4
 height = 1.6
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
+shader = ExtResource("2_shader")
+shader_parameter/vignette_color = Color(1, 0, 0, 1)
+shader_parameter/intensity = 0.0
+
+
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
 
@@ -24,3 +31,14 @@ mesh = SubResource("CapsuleMesh_1")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1970706798]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_1")
+
+[node name="PlayerHUD" type="CanvasLayer" parent="."]
+
+[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD"]
+material = SubResource("ShaderMaterial_Vignette")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
