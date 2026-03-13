@@ -1,0 +1,39 @@
+[gd_scene load_steps=8 format=3 uid="uid://dmj6b1wixm4x"]
+
+[ext_resource type="Script" path="res://scripts/laser_emitter.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_base"]
+size = Vector3(0.4, 0.4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_emitter"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_laser"]
+transparency = 1
+albedo_color = Color(1, 0, 0, 0.6)
+emission_enabled = true
+emission = Color(1, 0, 0, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_laser"]
+material = SubResource("StandardMaterial3D_laser")
+top_radius = 0.05
+bottom_radius = 0.05
+height = 2.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_emitter"]
+size = Vector3(0.4, 0.4, 0.4)
+
+[node name="LaserEmitter" type="StaticBody3D"]
+script = ExtResource("1_script")
+
+[node name="BaseMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_base")
+surface_material_override/0 = SubResource("StandardMaterial3D_emitter")
+
+[node name="LaserMesh" type="MeshInstance3D" parent="."]
+top_level = true
+mesh = SubResource("CylinderMesh_laser")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_emitter")

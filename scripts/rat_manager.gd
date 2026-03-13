@@ -81,6 +81,20 @@ var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var mmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.008
+@export var object_rotation_step: float = 22.5 # Degrees to rotate on side button click
+@export var smooth_rotation_mode: bool = false
+@export var smooth_rotation_speed: float = 90.0 # Degrees per second
+
+@export var rats_collide_with_walls: bool = true:
+	set(value):
+		rats_collide_with_walls = value
+		for rat in rats:
+			if rat.has_method("set_wall_collision"):
+				rat.set_wall_collision(value)
+
+var _is_rotating_left: bool = false
+var _is_rotating_right: bool = false
+var _hovered_object: Node3D = null
 
 var line_mesh_instance: MeshInstance3D
 var immediate_mesh: ImmediateMesh
@@ -141,6 +155,11 @@ func _process(delta: float) -> void:
 
 		if mouse_is_down_middle and grabbed_object:
 			_process_object_drag()
+			if smooth_rotation_mode:
+				if _is_rotating_left:
+					grabbed_object.rotate_y(deg_to_rad(smooth_rotation_speed * delta))
+				if _is_rotating_right:
+					grabbed_object.rotate_y(deg_to_rad(-smooth_rotation_speed * delta))
 
 	# Always show circular brush preview when in circle mode, even when not dragging
 	if build_draw_mode == DRAW_MODE_CIRCLE and not mouse_is_down_left:
@@ -174,6 +193,8 @@ func _process(delta: float) -> void:
 
 	# Keep carrier rats' blob_target synced to the box position every frame
 	_update_carrier_rat_targets()
+	
+	_process_hover()
 
 
 ## Anchors any rat that is traveling and comes within anchor_radius of any
@@ -362,6 +383,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			return
 
+		# Side Mouse Buttons: Rotate carried object
+		if mb.button_index == MOUSE_BUTTON_XBUTTON1:
+			_is_rotating_left = mb.pressed
+			if _is_rotating_left and grabbed_object and not smooth_rotation_mode:
+				grabbed_object.rotate_y(deg_to_rad(object_rotation_step))
+			get_viewport().set_input_as_handled()
+			return
+		if mb.button_index == MOUSE_BUTTON_XBUTTON2:
+			_is_rotating_right = mb.pressed
+			if _is_rotating_right and grabbed_object and not smooth_rotation_mode:
+				grabbed_object.rotate_y(deg_to_rad(-object_rotation_step))
+			get_viewport().set_input_as_handled()
+			return
+
 	# Wave targeting input (Combat Mode)
 	if not wave_pending:
 		return
@@ -376,6 +411,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func register_rat(rat: CharacterBody3D) -> void:
 	rats.append(rat)
+	if rat.has_method("set_wall_collision"):
+		rat.set_wall_collision(rats_collide_with_walls)
 
 
 func activate_orbit() -> void:
@@ -489,6 +526,44 @@ func recall_all_rats() -> void:
 	immediate_mesh.clear_surfaces()
 	for rat in rats:
 		rat.is_following_player = true
+
+
+func _process_hover() -> void:
+	if mode != 1:
+		if _hovered_object:
+			if _hovered_object.has_method("set_highlight"):
+				_hovered_object.set_highlight(false)
+			_hovered_object = null
+		return
+
+	var camera := get_viewport().get_camera_3d()
+	if not camera: return
+	
+	var mouse_pos := get_viewport().get_mouse_position()
+	var ray_origin := camera.project_ray_origin(mouse_pos)
+	var ray_dir := camera.project_ray_normal(mouse_pos)
+	
+	var space_state := camera.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
+	# Hitting Layer 4 (Movable Objects)
+	query.collision_mask = 4 
+	
+	var hit := space_state.intersect_ray(query)
+	var new_hover: Node3D = null
+	
+	if hit:
+		var obj = hit.collider
+		if obj.has_method("set_highlight"):
+			new_hover = obj
+			
+	if new_hover != _hovered_object:
+		if _hovered_object and _hovered_object.has_method("set_highlight"):
+			_hovered_object.set_highlight(false)
+		
+		_hovered_object = new_hover
+		
+		if _hovered_object:
+			_hovered_object.set_highlight(true)
 
 
 func _get_mouse_ground_hit() -> Dictionary:
@@ -943,16 +1018,17 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 
 	for i in range(needed):
 		var angle := (TAU / needed) * i
-		var offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
-		var pos := center + offset
+		# Offset is in local space relative to the object
+		var local_offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
+		var world_pos := obj.global_transform * local_offset
 		var r: CharacterBody3D = available_rats[i]
 		r.state = r.State.FOLLOW
 		r.is_following_player = false
 		r.follow_offset = Vector3.ZERO
-		r.blob_target = pos
+		r.blob_target = world_pos
 		r.is_carrier = true
 		obj.get("carrier_rats").append(r)
-		carrier_rat_offsets[r] = offset
+		carrier_rat_offsets[r] = local_offset
 
 	obj.set("is_surrounded", false)
 
@@ -1027,10 +1103,10 @@ func _process_object_drag() -> void:
 func _update_carrier_rat_targets() -> void:
 	if grabbed_object == null or not grabbed_object.get("is_surrounded"):
 		return
-	var obj_pos: Vector3 = grabbed_object.global_position
+	var obj_transform: Transform3D = grabbed_object.global_transform
 	for r in grabbed_object.get("carrier_rats"):
 		if r and carrier_rat_offsets.has(r):
-			r.blob_target = obj_pos + carrier_rat_offsets[r]
+			r.blob_target = obj_transform * carrier_rat_offsets[r]
 
 
 func _release_object_carriers(obj: CharacterBody3D) -> void:

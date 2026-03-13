@@ -22,7 +22,7 @@ var _spawn_position: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	collision_layer = 2 # Layer 2: Player
-	collision_mask = 5  # Layer 1 (Env) + Layer 3 (Movable Objects)
+	collision_mask = 13 # Floor (1) + Movable (4) + Walls (8)
 	_spawn_position = global_position
 	current_hp = max_hp
 

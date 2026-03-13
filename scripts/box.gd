@@ -14,8 +14,8 @@ var _spawn_position: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
-	collision_layer = 4 # Layer 3: Movable Objects
-	collision_mask = 7  # Layer 1 (Env) + Layer 2 (Player) + Layer 3 (Objects)
+	collision_layer = 4 # Layer 3: Movable
+	collision_mask = 31  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16)
 	_spawn_position = global_position
 
 
@@ -33,3 +33,25 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	move_and_slide()
+
+
+func set_highlight(enabled: bool) -> void:
+	var mesh_instance: MeshInstance3D = get_node_or_null("Body")
+	if not mesh_instance:
+		return
+		
+	if enabled:
+		if mesh_instance.material_overlay:
+			return # Already highlighted
+			
+		var highlight_mat = StandardMaterial3D.new()
+		highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		highlight_mat.albedo_color = Color.YELLOW
+		highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+		highlight_mat.no_depth_test = true
+		highlight_mat.grow = true
+		highlight_mat.grow_amount = 0.03
+		
+		mesh_instance.material_overlay = highlight_mat
+	else:
+		mesh_instance.material_overlay = null

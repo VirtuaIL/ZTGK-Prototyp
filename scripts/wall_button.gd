@@ -34,14 +34,14 @@ func on_projectile_hit() -> void:
 	# Button sinks along local Z if oriented towards wall
 	tween.tween_property(_button_mesh, "position:z", _original_pos.z - press_depth, press_duration)
 	
-	# Permanently open the target door
-	var target := _find_target_door()
-	if target:
+	# Permanently open the target doors
+	for target in _get_target_doors():
 		target.open()
 
 
-func _find_target_door() -> door:
+func _get_target_doors() -> Array[door]:
+	var result: Array[door] = []
 	for d in get_tree().get_nodes_in_group("doors"):
 		if d is door and d.doorId == doorId:
-			return d
-	return null
+			result.append(d)
+	return result

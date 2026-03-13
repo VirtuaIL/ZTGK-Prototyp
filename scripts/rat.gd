@@ -49,9 +49,9 @@ func _ready() -> void:
 		randf_range(-1.5, 1.5)
 	)
 	
-	# Layer 1 = Environment, Layer 2 = Player, Layer 3 = Movable Objects
-	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles (using masks there)
-	collision_mask = 1  # Only collide with Environment
+	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
+	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
+	collision_mask = 9  # Collide with Floor (1) and Walls (8) by default
 
 
 func _physics_process(delta: float) -> void:
@@ -249,3 +249,7 @@ func show_visuals() -> void:
 	$Body.show()
 	$Tail.show()
 	$Head.show()
+
+
+func set_wall_collision(enabled: bool) -> void:
+	set_collision_mask_value(4, enabled)

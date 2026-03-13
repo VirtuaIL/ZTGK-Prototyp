@@ -30,11 +30,12 @@ func _ready() -> void:
 		area.collision_mask = 6 # 2 (Player) + 4 (Movable Objects)
 
 
-func _find_target_door() -> door:
+func _get_target_doors() -> Array[door]:
+	var result: Array[door] = []
 	for d in get_tree().get_nodes_in_group("doors"):
 		if d is door and d.doorId == doorId:
-			return d
-	return null
+			result.append(d)
+	return result
 
 
 func _set_pressed(pressed: bool) -> void:
@@ -54,8 +55,7 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 	_bodies_on_button += 1
 	if _bodies_on_button == 1:
 		_set_pressed(true)
-		var target := _find_target_door()
-		if target:
+		for target in _get_target_doors():
 			target.open()
 
 
@@ -65,6 +65,5 @@ func _on_area_3d_body_exited(body: Node3D) -> void:
 	_bodies_on_button = max(0, _bodies_on_button - 1)
 	if _bodies_on_button == 0:
 		_set_pressed(false)
-		var target := _find_target_door()
-		if target:
+		for target in _get_target_doors():
 			target.close()

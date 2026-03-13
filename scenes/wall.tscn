@@ -9,7 +9,8 @@ size = Vector3(0.8, 1.4, 0.8)
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(5, 1.4, 0.8)
 
-[node name="door" type="CharacterBody3D" unique_id=1981168902]
+[node name="wall" type="CharacterBody3D" unique_id=1981168902]
+collision_layer = 129
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=333239315]
 transform = Transform3D(6.1, 0, 0, 0, 2.0511682, 0, 0, 0, 1, 0.08307457, 1.4189832, 0)

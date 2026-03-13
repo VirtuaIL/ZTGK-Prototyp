@@ -20,8 +20,8 @@ var player_node: player = null
 @onready var laser_mesh: MeshInstance3D = $LaserMesh
 
 func _ready() -> void:
-	collision_layer = 4 # Layer 3: Movable Objects
-	collision_mask = 7  # Layer 1 (Env) + Layer 2 (Player) + Layer 3 (Objects)
+	collision_layer = 4 # Layer 3: Movable
+	collision_mask = 31  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16)
 	_spawn_position = global_position
 	# Find the player in the scene
 	var players = get_tree().get_nodes_in_group("player")
@@ -87,12 +87,13 @@ func _process_laser(delta: float) -> void:
 	target_pos.y += 0.5 # Aim slightly above ground, at player's center
 	
 	var dir = (target_pos - start_pos).normalized()
+	start_pos = global_position + fire_point + (dir * 0.01)
 	var ray_end = start_pos + dir * attack_range
 	
 	var query := PhysicsRayQueryParameters3D.create(start_pos, ray_end)
+	query.collision_mask = 15 # Floor (1) + Player (2) + Movable (4) + Walls (8)
 	# Exclude self if needed, but the laser originates from outside the collision shape usually 
 	query.exclude = [self.get_rid()]
-	# You can set collision mask if needed to only hit player and walls, for now default hits everything solid
 	
 	var hit := space_state.intersect_ray(query)
 	
@@ -100,13 +101,34 @@ func _process_laser(delta: float) -> void:
 		var hit_pos: Vector3 = hit.position
 		_update_laser_visuals(start_pos, hit_pos)
 		
-		# If we hit the player, apply damage
-		if hit.collider is player:
-			var hit_player: player = hit.collider
-			hit_player.take_damage(damage_per_second * delta)
+		# Chain redirection or damage
+		if hit.collider.has_method("receive_laser"):
+			hit.collider.receive_laser(delta)
+		elif hit.collider.has_method("take_damage"):
+			hit.collider.take_damage(damage_per_second * delta)
 	else:
 		# If we hit nothing, draw laser to max range (shouldn't realistically happen if enclosed)
 		_update_laser_visuals(start_pos, ray_end)
+
+
+func set_highlight(enabled: bool) -> void:
+	for child in get_children():
+		if child is MeshInstance3D:
+			# Skip the laser mesh itself
+			if child.name == "LaserMesh": continue
+			
+			if enabled:
+				if child.material_overlay: continue
+				var highlight_mat = StandardMaterial3D.new()
+				highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				highlight_mat.albedo_color = Color.YELLOW
+				highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+				highlight_mat.no_depth_test = true
+				highlight_mat.grow = true
+				highlight_mat.grow_amount = 0.03
+				child.material_overlay = highlight_mat
+			else:
+				child.material_overlay = null
 
 func _update_laser_visuals(start_pos: Vector3, end_pos: Vector3) -> void:
 	laser_mesh.visible = true

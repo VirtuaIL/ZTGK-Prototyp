@@ -22,8 +22,8 @@ var fire_timer: float = 0.0
 @onready var fire_point: Vector3 = Vector3(0, 0.7, 0) # Adjust based on the turret mesh
 
 func _ready() -> void:
-	collision_layer = 4 # Layer 3: Movable Objects
-	collision_mask = 7  # Layer 1 (Env) + Layer 2 (Player) + Layer 3 (Objects)
+	collision_layer = 4 # Layer 3: Movable
+	collision_mask = 31  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16)
 	_spawn_position = global_position
 	# Find the player in the scene
 	var players = get_tree().get_nodes_in_group("player")
@@ -92,3 +92,21 @@ func _shoot() -> void:
 	# Place slightly in front to avoid immediate self-collision
 	proj.global_position = fire_origin + dir * 0.8
 	proj.velocity = dir * projectile_speed
+
+
+func set_highlight(enabled: bool) -> void:
+	# Turrets might have multiple meshes, but let's try to find a main one or highlight all
+	for child in get_children():
+		if child is MeshInstance3D:
+			if enabled:
+				if child.material_overlay: continue
+				var highlight_mat = StandardMaterial3D.new()
+				highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				highlight_mat.albedo_color = Color.YELLOW
+				highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+				highlight_mat.no_depth_test = true
+				highlight_mat.grow = true
+				highlight_mat.grow_amount = 0.03
+				child.material_overlay = highlight_mat
+			else:
+				child.material_overlay = null
