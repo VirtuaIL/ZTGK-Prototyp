@@ -1205,21 +1205,42 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 	if count == 0:
 		return
 
-	var needed: int = min(obj.get("carriers_required"), count)
+	# Dynamically calculate required rats based on object's bounding box volume
+	var obj_volume := 1.0
+	var obj_max_extent := 0.5
+	var shape_owner_id := obj.shape_find_owner(0)
+	if shape_owner_id != -1:
+		var shape_owner := obj.shape_owner_get_owner(shape_owner_id) as CollisionShape3D
+		if shape_owner and shape_owner.shape:
+			var aabb := shape_owner.shape.get_debug_mesh().get_aabb()
+			obj_volume = aabb.size.x * aabb.size.y * aabb.size.z
+			# Scale by object's global scale if necessary
+			var scl := obj.global_transform.basis.get_scale()
+			obj_volume *= scl.x * scl.y * scl.z
+			
+			obj_max_extent = maxf(aabb.size.x * scl.x, aabb.size.z * scl.z) * 0.5
+
+	# Map volume to a rat count between 3 and 8
+	var mapped_required: int = int(round(remap(clampf(obj_volume, 0.5, 10.0), 0.5, 10.0, 3.0, 8.0)))
+	var needed: int = min(mapped_required, count)
+	
 	if needed <= 0:
 		return
 
-	var ring_radius := 1.0
-	if needed > 8:
-		ring_radius = 1.5
+	# Make radius just outside the object
+	var ring_radius := obj_max_extent + 0.3
 
 	obj.get("carrier_rats").clear()
+
+	# Pick random rats from the available pool
+	available_rats.shuffle()
 
 	for i in range(needed):
 		var angle := (TAU / needed) * i
 		var local_offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
-		var world_pos := obj.global_transform * local_offset
-		var r: CharacterBody3D = available_rats[i]
+		var world_pos := _carrier_offset_world_pos(obj.global_transform, local_offset)
+		var r: CharacterBody3D = available_rats[i] # already shuffled
+		
 		r.state = r.State.FOLLOW
 		r.is_following_player = false
 		r.follow_offset = Vector3.ZERO
@@ -1292,9 +1313,15 @@ func _update_carrier_rat_targets() -> void:
 	var obj_transform: Transform3D = grabbed_object.global_transform
 	for r in grabbed_object.get("carrier_rats"):
 		if r and carrier_rat_offsets.has(r):
-			var target_pos: Vector3 = obj_transform * (carrier_rat_offsets[r] as Vector3)
+			var target_pos: Vector3 = _carrier_offset_world_pos(obj_transform, carrier_rat_offsets[r] as Vector3)
 			r.blob_target = target_pos
 			r.set_target(target_pos)
+
+
+func _carrier_offset_world_pos(obj_transform: Transform3D, local_offset: Vector3) -> Vector3:
+	# Apply rotation only; local_offset is already in world units.
+	var rot_basis := obj_transform.basis.orthonormalized()
+	return obj_transform.origin + rot_basis * local_offset
 
 
 func _release_object_carriers(obj: CharacterBody3D) -> void:
