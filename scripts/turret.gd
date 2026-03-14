@@ -13,6 +13,8 @@ signal object_reset
 
 var is_surrounded: bool = false
 var carrier_rats: Array[CharacterBody3D] = []
+var carrier_available_max: int = 0
+var carrier_brush_desired: int = 0
 var _spawn_position: Vector3 = Vector3.ZERO
 
 var projectile_scene: PackedScene = preload("res://scenes/projectile.tscn")

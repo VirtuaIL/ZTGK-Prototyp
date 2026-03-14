@@ -6,6 +6,7 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var orbit_radius: float = 4.0
 @export var orbit_speed: float = 4.0
 @export var max_follow_distance: float = 22.0
+@export var travel_timeout: float = 3.0
 
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 12.0
@@ -42,6 +43,7 @@ var hit_range: float = 0.8
 
 # Build state
 var build_target: Vector3 = Vector3.ZERO
+var _travel_timer: float = 0.0
 
 # Carrier flag — set while this rat is assigned to carry a box;
 # prevents brush operations from reassigning it
@@ -236,6 +238,12 @@ func _process_travel_to_build(delta: float) -> void:
 	var flat_self := Vector2(global_position.x, global_position.z)
 	var flat_target := Vector2(build_target.x, build_target.z)
 	var dist := flat_self.distance_to(flat_target)
+	_travel_timer += delta
+	if travel_timeout > 0.0 and _travel_timer >= travel_timeout:
+		state = State.WAITING_FOR_FORMATION
+		global_position = build_target
+		velocity = Vector3.ZERO
+		return
 
 	if dist <= anchor_radius:
 		is_anchored = true
@@ -266,6 +274,7 @@ func build_at(pos: Vector3) -> void:
 	if state == State.FOLLOW:
 		state = State.TRAVEL_TO_BUILD
 		build_target = pos
+		_travel_timer = 0.0
 
 
 func release_rat() -> void:
@@ -275,8 +284,10 @@ func release_rat() -> void:
 		is_carrier = false
 		_spring_velocity = Vector3.ZERO
 		velocity.y = 5.0
+		_travel_timer = 0.0
 		# Lose solidity
 		set_collision_layer_value(1, false)
+		show_visuals()
 
 
 func _teleport_to_player() -> void:

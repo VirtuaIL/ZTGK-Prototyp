@@ -84,9 +84,9 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.008
 @export var carrier_min_count: int = 1
-@export var carrier_drag_speed_min_mult: float = 0.15
-@export var carrier_drag_speed_max_mult: float = 5.0
-@export var carrier_drag_speed_curve: float = 1.6
+@export var carrier_drag_speed_min_mult: float = 0.08
+@export var carrier_drag_speed_max_mult: float = 0.5
+@export var carrier_drag_speed_curve: float = 2.2
 @export var carrier_pick_radius: float = 6.0
 @export var object_rotation_step: float = 22.5
 @export var smooth_rotation_mode: bool = false
@@ -120,6 +120,7 @@ const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
 var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
+var _build_in_progress: bool = false
 
 
 
@@ -192,12 +193,15 @@ func _process(delta: float) -> void:
 		mouse_is_down_right = false
 		is_drawing_line = false
 		current_build_y = -1000.0
-		active_build_positions.clear()
+		_build_in_progress = _has_build_in_progress()
+		if not _build_in_progress:
+			active_build_positions.clear()
 
 	_check_formation_sync()
 	_check_carrier_arrival()
 	_check_travel_anchoring()
 	_update_carrier_rat_targets()
+	_update_free_rats_follow_player()
 	_process_hover()
 
 	# ── Neighbor throttle ──
@@ -318,6 +322,43 @@ func _update_combat_mouse_follow() -> void:
 		active[i].set_target(final_target)
 
 
+func _update_free_rats_follow_player() -> void:
+	if mode != 1:
+		return
+	if grabbed_object == null:
+		return
+	if mouse_is_down_left or is_dragging_left:
+		return
+
+	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
+	if player_node == null:
+		return
+
+	var active: Array[CharacterBody3D] = []
+	for rat in rats:
+		if rat.is_carrier:
+			continue
+		if rat.is_anchored:
+			continue
+		if rat.state != rat.State.FOLLOW:
+			continue
+		active.append(rat)
+
+	var count := active.size()
+	if count == 0:
+		return
+
+	if _blob_offsets.size() != rats.size():
+		build_blob_offsets()
+
+	for i in range(count):
+		var target := player_node.global_position
+		if i < _blob_offsets.size():
+			target += _blob_offsets[i]
+		target.y = player_node.global_position.y
+		active[i].set_target(target)
+
+
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
 	var lo := 0
 	var hi := arc.size() - 1
@@ -355,6 +396,13 @@ func _assign_neighbors() -> void:
 			if pos_i.distance_to(rats[j].global_position) < NEIGHBOR_RADIUS:
 				nb.append(rats[j])
 		rats[i].set_neighbors(nb)
+
+
+func _has_build_in_progress() -> bool:
+	for rat in rats:
+		if rat.state == rat.State.TRAVEL_TO_BUILD or rat.state == rat.State.WAITING_FOR_FORMATION:
+			return true
+	return false
 
 
 # ── Mouse → world raycast ─────────────────────────────────────────────────────
@@ -408,7 +456,7 @@ func _check_travel_anchoring() -> void:
 
 
 func _check_formation_sync() -> void:
-	if mode != 1:
+	if not _has_build_in_progress():
 		return
 		
 	var any_traveling = false
@@ -426,6 +474,7 @@ func _check_formation_sync() -> void:
 			if rat.state == rat.State.WAITING_FOR_FORMATION:
 				rat.activate_physics()
 		_form_unified_mesh()
+		_build_in_progress = false
 
 
 func _form_unified_mesh() -> void:
@@ -542,15 +591,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 					_rmb_dragging_object = false
 				else:
-					# RMB released — check click vs drag
+					# RMB released - drop object and return carriers immediately
 					_rmb_dragging_object = false
 					if grabbed_object != null:
-						var moved_sq := rmb_press_screen_pos.distance_squared_to(mb.position)
-						if moved_sq < drag_threshold_squared:
-							# Short click — release the object
-							_release_object_carriers(grabbed_object)
-							grabbed_object = null
-							grabbed_object_last_pos = Vector3.ZERO
+						_release_object_carriers(grabbed_object)
+						grabbed_object = null
+						grabbed_object_last_pos = Vector3.ZERO
 				get_viewport().set_input_as_handled()
 			return
 
@@ -1217,9 +1263,9 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 			obj_max_extent = maxf(aabb.size.x * scl.x, aabb.size.z * scl.z) * 0.5
 
 	# Rat count is driven by current brush thickness
-	var brush_t: float = _get_brush_thickness_t()
-	var target_carriers: int = _get_brush_target_carriers(count)
-	var needed: int = clampi(target_carriers, 1, count)
+	var total_count: int = rats.size()
+	var desired_carriers: int = _get_brush_desired_carriers(total_count)
+	var needed: int = clampi(desired_carriers, 1, count)
 	
 	if needed <= 0:
 		return
@@ -1229,8 +1275,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 
 	obj.get("carrier_rats").clear()
 	obj.set("carrier_available_max", count)
-	obj.set("carrier_brush_target", target_carriers)
-	obj.set("carrier_brush_t", brush_t)
+	obj.set("carrier_brush_desired", desired_carriers)
 
 	# Pick random rats from the available pool
 	available_rats.shuffle()
@@ -1310,12 +1355,16 @@ func _process_object_drag() -> void:
 		carrier_max = int(carrier_max_val)
 	if carrier_max <= 0:
 		carrier_max = max(1, carrier_count)
-	var brush_t_val: Variant = grabbed_object.get("carrier_brush_t")
+	var carrier_desired_val: Variant = grabbed_object.get("carrier_brush_desired")
+	var carrier_desired: int = carrier_max
+	if carrier_desired_val != null:
+		carrier_desired = int(carrier_desired_val)
+	if carrier_desired <= 0:
+		carrier_desired = max(1, carrier_max)
+
 	var speed_t: float = 0.0
-	if brush_t_val != null:
-		speed_t = clampf(float(brush_t_val), 0.0, 1.0)
-	elif carrier_max > 1:
-		speed_t = clampf(float(carrier_count - 1) / float(carrier_max - 1), 0.0, 1.0)
+	if carrier_desired > 1:
+		speed_t = clampf(float(carrier_count - 1) / float(carrier_desired - 1), 0.0, 1.0)
 	var curved_t: float = pow(speed_t, carrier_drag_speed_curve)
 	var speed_mult: float = lerpf(carrier_drag_speed_min_mult, carrier_drag_speed_max_mult, curved_t)
 	var lerp_factor: float = clampf(box_drag_lerp_factor * speed_mult, 0.0, 1.0)
@@ -1337,17 +1386,17 @@ func _get_brush_thickness_t() -> float:
 	return _get_brush_ratio(brush_half_width, brush_half_width_min, brush_half_width_max)
 
 
-func _get_brush_target_carriers(available_count: int) -> int:
-	if available_count <= 0:
+func _get_brush_desired_carriers(total_count: int) -> int:
+	if total_count <= 0:
 		return 0
 	if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
 		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 		var lane_count := 1 + pairs * 2
-		return clampi(lane_count, 1, available_count)
+		return clampi(lane_count, 1, total_count)
 	var t: float = _get_brush_thickness_t()
-	var min_c: int = clampi(carrier_min_count, 1, available_count)
-	var desired: int = int(round(lerpf(float(min_c), float(available_count), t)))
-	return clampi(desired, 1, available_count)
+	var min_c: int = clampi(carrier_min_count, 1, total_count)
+	var desired: int = int(round(lerpf(float(min_c), float(total_count), t)))
+	return clampi(desired, 1, total_count)
 
 
 func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
