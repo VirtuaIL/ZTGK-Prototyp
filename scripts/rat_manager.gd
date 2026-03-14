@@ -405,6 +405,19 @@ func _has_build_in_progress() -> bool:
 	return false
 
 
+func _has_static_rats() -> bool:
+	for rat in rats:
+		if rat.state == rat.State.STATIC:
+			return true
+	return false
+
+
+func _cancel_active_build_orders() -> void:
+	for rat in rats:
+		if rat.state == rat.State.TRAVEL_TO_BUILD or rat.state == rat.State.WAITING_FOR_FORMATION:
+			rat.release_rat()
+
+
 # ── Mouse → world raycast ─────────────────────────────────────────────────────
 
 func _mouse_to_world() -> Vector3:
@@ -1087,10 +1100,10 @@ func _build_circle_if_possible() -> void:
 		return
 
 	built_positions.clear()
-	for child in unified_shape_combiner.get_children():
-		child.queue_free()
-	for rat in rats:
-		rat.release_rat()
+	if not _has_static_rats():
+		for child in unified_shape_combiner.get_children():
+			child.queue_free()
+	_cancel_active_build_orders()
 
 	var available_rats: Array = _get_available_follow_rats()
 
@@ -1115,12 +1128,11 @@ func _distribute_rats_on_path() -> void:
 		segs.append(segment_len)
 		
 	built_positions.clear()
-	
-	for child in unified_shape_combiner.get_children():
-		child.queue_free()
-		
-	for rat in rats:
-		rat.release_rat()
+	if not _has_static_rats():
+		for child in unified_shape_combiner.get_children():
+			child.queue_free()
+
+	_cancel_active_build_orders()
 		
 	var available_rats: Array = []
 	for rat in rats:
@@ -1212,12 +1224,11 @@ func _send_horde_to_point() -> void:
 	target_pos.z = snapped(target_pos.z, 0.5)
 
 	built_positions.clear()
-	
-	for child in unified_shape_combiner.get_children():
-		child.queue_free()
-		
-	for rat in rats:
-		rat.release_rat()
+	if not _has_static_rats():
+		for child in unified_shape_combiner.get_children():
+			child.queue_free()
+
+	_cancel_active_build_orders()
 
 	var available_rats: Array = []
 	for rat in rats:
