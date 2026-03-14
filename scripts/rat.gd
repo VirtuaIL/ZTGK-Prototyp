@@ -5,6 +5,7 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
 @export var orbit_speed: float = 4.0
+@export var max_follow_distance: float = 22.0
 
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 12.0
@@ -71,6 +72,13 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 
+	# Distance recovery — if a follower gets too far (e.g., stuck behind doors), snap near player.
+	if state == State.FOLLOW and not is_carrier and not is_anchored:
+		var dist_sq: float = global_position.distance_squared_to(player.global_position)
+		if dist_sq > max_follow_distance * max_follow_distance:
+			_teleport_to_player()
+			return
+
 	# Gravity and fall-recovery are skipped for anchored rats (near build target)
 	# so they can float as bridge pieces
 	if is_anchored:
@@ -84,16 +92,7 @@ func _physics_process(delta: float) -> void:
 
 		# Fall recovery — cancel orders and return to player if fallen off the world.
 		if global_position.y < fall_death_y:
-			is_anchored = false
-			state = State.FOLLOW
-			is_following_player = true
-			_spring_velocity = Vector3.ZERO
-			velocity = Vector3.ZERO
-			set_collision_layer_value(1, false)
-			show_visuals()
-			global_position = player.global_position + Vector3(
-				randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
-			)
+			_teleport_to_player()
 			return
 
 	match state:
@@ -278,7 +277,19 @@ func release_rat() -> void:
 		velocity.y = 5.0
 		# Lose solidity
 		set_collision_layer_value(1, false)
-		show_visuals()
+
+
+func _teleport_to_player() -> void:
+	is_anchored = false
+	state = State.FOLLOW
+	is_following_player = true
+	_spring_velocity = Vector3.ZERO
+	velocity = Vector3.ZERO
+	set_collision_layer_value(1, false)
+	show_visuals()
+	global_position = player.global_position + Vector3(
+		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+	)
 
 
 func hide_visuals() -> void:

@@ -83,6 +83,11 @@ var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.008
+@export var carrier_min_count: int = 1
+@export var carrier_drag_speed_min_mult: float = 0.15
+@export var carrier_drag_speed_max_mult: float = 5.0
+@export var carrier_drag_speed_curve: float = 1.6
+@export var carrier_pick_radius: float = 6.0
 @export var object_rotation_step: float = 22.5
 @export var smooth_rotation_mode: bool = false
 @export var smooth_rotation_speed: float = 90.0
@@ -1196,33 +1201,25 @@ func _send_horde_to_point() -> void:
 func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 	var center: Vector3 = obj.global_position
 
-	var available_rats: Array[CharacterBody3D] = []
-	for rat in rats:
-		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
-			available_rats.append(rat)
+	var available_rats: Array[CharacterBody3D] = _get_nearest_available_rats(center)
 
 	var count: int = available_rats.size()
 	if count == 0:
 		return
 
-	# Dynamically calculate required rats based on object's bounding box volume
-	var obj_volume := 1.0
 	var obj_max_extent := 0.5
 	var shape_owner_id := obj.shape_find_owner(0)
 	if shape_owner_id != -1:
 		var shape_owner := obj.shape_owner_get_owner(shape_owner_id) as CollisionShape3D
 		if shape_owner and shape_owner.shape:
 			var aabb := shape_owner.shape.get_debug_mesh().get_aabb()
-			obj_volume = aabb.size.x * aabb.size.y * aabb.size.z
-			# Scale by object's global scale if necessary
 			var scl := obj.global_transform.basis.get_scale()
-			obj_volume *= scl.x * scl.y * scl.z
-			
 			obj_max_extent = maxf(aabb.size.x * scl.x, aabb.size.z * scl.z) * 0.5
 
-	# Map volume to a rat count between 3 and 8
-	var mapped_required: int = int(round(remap(clampf(obj_volume, 0.5, 10.0), 0.5, 10.0, 3.0, 8.0)))
-	var needed: int = min(mapped_required, count)
+	# Rat count is driven by current brush thickness
+	var brush_t: float = _get_brush_thickness_t()
+	var target_carriers: int = _get_brush_target_carriers(count)
+	var needed: int = clampi(target_carriers, 1, count)
 	
 	if needed <= 0:
 		return
@@ -1231,6 +1228,9 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 	var ring_radius := obj_max_extent + 0.3
 
 	obj.get("carrier_rats").clear()
+	obj.set("carrier_available_max", count)
+	obj.set("carrier_brush_target", target_carriers)
+	obj.set("carrier_brush_t", brush_t)
 
 	# Pick random rats from the available pool
 	available_rats.shuffle()
@@ -1303,8 +1303,81 @@ func _process_object_drag() -> void:
 	var target_pos: Vector3 = hit.position
 	target_pos.y = current_pos.y
 
-	var new_pos: Vector3 = current_pos.lerp(target_pos, box_drag_lerp_factor)
+	var carrier_count: int = grabbed_object.get("carrier_rats").size()
+	var carrier_max_val: Variant = grabbed_object.get("carrier_available_max")
+	var carrier_max: int = 1
+	if carrier_max_val != null:
+		carrier_max = int(carrier_max_val)
+	if carrier_max <= 0:
+		carrier_max = max(1, carrier_count)
+	var brush_t_val: Variant = grabbed_object.get("carrier_brush_t")
+	var speed_t: float = 0.0
+	if brush_t_val != null:
+		speed_t = clampf(float(brush_t_val), 0.0, 1.0)
+	elif carrier_max > 1:
+		speed_t = clampf(float(carrier_count - 1) / float(carrier_max - 1), 0.0, 1.0)
+	var curved_t: float = pow(speed_t, carrier_drag_speed_curve)
+	var speed_mult: float = lerpf(carrier_drag_speed_min_mult, carrier_drag_speed_max_mult, curved_t)
+	var lerp_factor: float = clampf(box_drag_lerp_factor * speed_mult, 0.0, 1.0)
+	var new_pos: Vector3 = current_pos.lerp(target_pos, lerp_factor)
 	grabbed_object.global_position = new_pos
+
+
+func _get_brush_ratio(value: float, min_v: float, max_v: float) -> float:
+	if max_v <= min_v:
+		return 0.0
+	return clampf((value - min_v) / (max_v - min_v), 0.0, 1.0)
+
+
+func _get_brush_thickness_t() -> float:
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		return _get_brush_ratio(circle_radius, circle_radius_min, circle_radius_max)
+	if use_wide_brush:
+		return _get_brush_ratio(float(brush_lane_pairs), float(brush_lane_pairs_min), float(brush_lane_pairs_max))
+	return _get_brush_ratio(brush_half_width, brush_half_width_min, brush_half_width_max)
+
+
+func _get_brush_target_carriers(available_count: int) -> int:
+	if available_count <= 0:
+		return 0
+	if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		var lane_count := 1 + pairs * 2
+		return clampi(lane_count, 1, available_count)
+	var t: float = _get_brush_thickness_t()
+	var min_c: int = clampi(carrier_min_count, 1, available_count)
+	var desired: int = int(round(lerpf(float(min_c), float(available_count), t)))
+	return clampi(desired, 1, available_count)
+
+
+func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
+	var nearby: Array[CharacterBody3D] = []
+	var others: Array[CharacterBody3D] = []
+	var radius_sq := carrier_pick_radius * carrier_pick_radius
+
+	for rat in rats:
+		if rat.is_carrier:
+			continue
+		if rat.is_anchored:
+			continue
+		if rat.state == rat.State.STATIC or rat.state == rat.State.WAITING_FOR_FORMATION:
+			continue
+		if rat.state == rat.State.TRAVEL_TO_BUILD:
+			continue
+		var dist_sq := rat.global_position.distance_squared_to(center)
+		if dist_sq <= radius_sq:
+			nearby.append(rat)
+		else:
+			others.append(rat)
+
+	# Prefer rats already near the object; if not enough, allow other free rats.
+	nearby.sort_custom(func(a, b): return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
+	others.sort_custom(func(a, b): return a.global_position.distance_squared_to(center) < b.global_position.distance_squared_to(center))
+
+	var result: Array[CharacterBody3D] = []
+	result.append_array(nearby)
+	result.append_array(others)
+	return result
 
 
 func _update_carrier_rat_targets() -> void:
