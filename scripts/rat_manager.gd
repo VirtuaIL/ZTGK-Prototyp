@@ -27,7 +27,11 @@ var mode: int = 0: # 0 = COMBAT, 1 = BUILD
 					rat.is_following_player = true
 			mouse_is_down_left = false
 			mouse_is_down_right = false
+			combat_lmb_down = false
+			combat_rmb_down = false
 		if mode == 1 and old_mode == 0:
+			combat_lmb_down = false
+			combat_rmb_down = false
 			pass
 
 # Drawing & Blob
@@ -38,6 +42,8 @@ var is_dragging_left: bool = false
 var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 
 var mouse_is_down_right: bool = false
+var combat_lmb_down: bool = false
+var combat_rmb_down: bool = false
 
 # Rats that are currently acting as box carriers
 var carrier_rats: Dictionary = {}
@@ -91,6 +97,9 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var object_rotation_step: float = 22.5
 @export var smooth_rotation_mode: bool = false
 @export var smooth_rotation_speed: float = 90.0
+@export var combat_circle_radius: float = 2.5
+@export var combat_circle_rotation_speed: float = 2.5
+@export var combat_spin_speed: float = 10.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -121,6 +130,7 @@ const MOUSE_TRAIL_MAX: int = 500
 var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
+var _combat_circle_angle: float = 0.0
 
 
 
@@ -165,7 +175,7 @@ func _process(delta: float) -> void:
 
 	# ── COMBAT mode: rats follow cursor in arc/stream ──
 	if mode == 0:
-		_update_combat_mouse_follow()
+		_update_combat_mouse_follow(delta)
 	
 	# ── BUILD mode (Ctrl held) ──
 	if mode == 1:
@@ -216,7 +226,7 @@ func _process(delta: float) -> void:
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
 
-func _update_combat_mouse_follow() -> void:
+func _update_combat_mouse_follow(delta: float) -> void:
 	var mouse_world := _mouse_to_world()
 	if mouse_world == Vector3.ZERO:
 		return
@@ -231,20 +241,6 @@ func _update_combat_mouse_follow() -> void:
 		if _mouse_trail.size() > MOUSE_TRAIL_MAX:
 			_mouse_trail.pop_front()
 
-	# Need at least 2 points for arc distribution
-	if _mouse_trail.size() < 2:
-		# Fallback: set all rats to mouse position
-		for rat in rats:
-			if not rat.is_carrier and rat.state == rat.State.FOLLOW:
-				rat.set_target(mouse_world)
-		return
-
-	# Arc-length parameterization of the trail
-	var arc: Array[float] = [0.0]
-	for i in range(1, _mouse_trail.size()):
-		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
-	var total: float = arc[-1]
-
 	# Collect active rats
 	var active: Array[CharacterBody3D] = []
 	for rat in rats:
@@ -252,6 +248,43 @@ func _update_combat_mouse_follow() -> void:
 			active.append(rat)
 
 	var count := active.size()
+	if count == 0:
+		return
+
+	# Apply per-rat spin when RMB is held without LMB
+	var spin_speed := 0.0
+	if combat_rmb_down and not combat_lmb_down:
+		spin_speed = combat_spin_speed
+	for rat in rats:
+		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
+			rat.extra_spin_speed = spin_speed
+		else:
+			rat.extra_spin_speed = 0.0
+
+	# LMB: circle around cursor
+	if combat_lmb_down:
+		if combat_rmb_down:
+			_combat_circle_angle += combat_circle_rotation_speed * delta
+		var angle_step := TAU / float(count)
+		for i in range(count):
+			var angle := _combat_circle_angle + angle_step * float(i)
+			var target := mouse_world + Vector3(cos(angle) * combat_circle_radius, 0.0, sin(angle) * combat_circle_radius)
+			target.y = mouse_world.y
+			active[i].set_target(target)
+		return
+
+	# Need at least 2 points for arc distribution
+	if _mouse_trail.size() < 2:
+		# Fallback: set all rats to mouse position
+		for rat in active:
+			rat.set_target(mouse_world)
+		return
+
+	# Arc-length parameterization of the trail
+	var arc: Array[float] = [0.0]
+	for i in range(1, _mouse_trail.size()):
+		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
+	var total: float = arc[-1]
 
 	# Calculate how much to resemble a blob based on brush size
 	var blob_blend := 0.0
@@ -320,7 +353,6 @@ func _update_combat_mouse_follow() -> void:
 		# 3) Blend based on brush size
 		var final_target = t_stream.lerp(t_blob, blob_blend)
 		active[i].set_target(final_target)
-
 
 func _update_free_rats_follow_player() -> void:
 	if mode != 1:
@@ -523,6 +555,14 @@ func _form_unified_mesh() -> void:
 # ── Input handling ────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	if wave_pending and event is InputEventMouseButton:
+		var mb_wave := event as InputEventMouseButton
+		if mb_wave.button_index == MOUSE_BUTTON_LEFT and mb_wave.pressed:
+			_fire_wave_at_mouse(mb_wave.position)
+			wave_pending = false
+			get_viewport().set_input_as_handled()
+			return
+
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		
@@ -570,6 +610,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					current_drawn_path.clear()
 					immediate_mesh.clear_surfaces()
 				get_viewport().set_input_as_handled()
+			elif mode == 0:
+				combat_lmb_down = mb.pressed
+				get_viewport().set_input_as_handled()
 			return
 			
 		# ── BUILD mode: RMB = object interaction (surround / grab / release) ──
@@ -610,6 +653,9 @@ func _unhandled_input(event: InputEvent) -> void:
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
+				get_viewport().set_input_as_handled()
+			elif mode == 0:
+				combat_rmb_down = mb.pressed
 				get_viewport().set_input_as_handled()
 			return
 

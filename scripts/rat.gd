@@ -20,6 +20,7 @@ var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
 var lerp_speed: float = 8.0
+var extra_spin_speed: float = 0.0
 
 # Spring-damp internal state
 var _spring_velocity: Vector3 = Vector3.ZERO
@@ -114,6 +115,9 @@ func _physics_process(delta: float) -> void:
 		State.STATIC:
 			return
 
+	if extra_spin_speed != 0.0:
+		rotation.y += extra_spin_speed * delta
+
 
 func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:
@@ -155,10 +159,11 @@ func _process_follow_spring(delta: float) -> void:
 	_spring_velocity.x = velocity.x
 	_spring_velocity.z = velocity.z
 
-	# Face direction of travel
-	var move_dir := Vector3(velocity.x, 0.0, velocity.z)
-	if move_dir.length() > 0.4:
-		rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
+	# Face direction of travel (skip if spinning in combat)
+	if extra_spin_speed == 0.0:
+		var move_dir := Vector3(velocity.x, 0.0, velocity.z)
+		if move_dir.length() > 0.4:
+			rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
 
 
 func set_target(pos: Vector3) -> void:
