@@ -39,6 +39,9 @@ func _init_game() -> void:
 		player.add_collision_exception_with(rat)
 		rat_manager.register_rat(rat)
 	
+	# Build initial blob offsets for the swarm
+	rat_manager.build_blob_offsets()
+	
 	# Connect stratagem signals
 	stratagem_system.stratagem_menu_toggled.connect(_on_stratagem_menu_toggled)
 	stratagem_system.stratagem_input_received.connect(_on_stratagem_input)
@@ -54,14 +57,13 @@ func _setup_input_map() -> void:
 	_add_action("move_back", KEY_S)
 	_add_action("move_left", KEY_A)
 	_add_action("move_right", KEY_D)
-	_add_action("toggle_mode", KEY_F)
+	_add_action_key("recall_rats", KEY_SPACE)
 
 
 func _setup_mode_ui() -> void:
 	var mode_hud = CanvasLayer.new()
 	var hbox = HBoxContainer.new()
 	hbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	# anchoring bottom right, adjust position upwards/leftwards
 	hbox.position = Vector2(-150, -80) 
 	
 	combat_mode_rect = ColorRect.new()
@@ -70,7 +72,6 @@ func _setup_mode_ui() -> void:
 	build_mode_rect = ColorRect.new()
 	build_mode_rect.custom_minimum_size = Vector2(50, 50)
 	
-	# spacing
 	hbox.add_theme_constant_override("separation", 20)
 	hbox.add_child(combat_mode_rect)
 	hbox.add_child(build_mode_rect)
@@ -84,24 +85,46 @@ func _setup_mode_ui() -> void:
 func _update_mode_ui() -> void:
 	if current_mode == RatMode.COMBAT:
 		combat_mode_rect.color = Color.WHITE
-		build_mode_rect.color = Color.hex(0x666666ff) # gray
+		build_mode_rect.color = Color.hex(0x666666ff)
 	else:
-		combat_mode_rect.color = Color.hex(0x666666ff) # gray
+		combat_mode_rect.color = Color.hex(0x666666ff)
 		build_mode_rect.color = Color.WHITE
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_mode"):
-		if current_mode == RatMode.COMBAT:
-			current_mode = RatMode.BUILD
-		else:
-			current_mode = RatMode.COMBAT
+func _process(delta: float) -> void:
+	# ── Ctrl-based mode switching ──
+	var ctrl_held := Input.is_key_pressed(KEY_CTRL)
+	var new_mode: RatMode = RatMode.BUILD if ctrl_held else RatMode.COMBAT
+	
+	if new_mode != current_mode:
+		current_mode = new_mode
 		stratagem_system.mode = current_mode
 		rat_manager.mode = current_mode
 		_update_mode_ui()
+	
+	# ── Camera follow ──
+	var cam := get_viewport().get_camera_3d()
+	if cam and player:
+		var offset := Vector3(10, 12, 10)
+		cam.position = cam.position.lerp(player.position + offset, 0.05)
+		cam.look_at(player.position)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Space = recall all rats (including carriers)
+	if event.is_action_pressed("recall_rats"):
+		rat_manager.recall_all_rats()
 
 
 func _add_action(action_name: String, key: Key) -> void:
+	if not InputMap.has_action(action_name):
+		InputMap.add_action(action_name)
+		var event := InputEventKey.new()
+		event.keycode = key
+		InputMap.action_add_event(action_name, event)
+
+
+func _add_action_key(action_name: String, key: Key) -> void:
 	if not InputMap.has_action(action_name):
 		InputMap.add_action(action_name)
 		var event := InputEventKey.new()
@@ -128,11 +151,3 @@ func _on_stratagem_completed(stratagem_id: String) -> void:
 
 func _on_stratagem_failed() -> void:
 	stratagem_hud.flash_fail()
-
-
-func _process(_delta: float) -> void:
-	var cam := get_viewport().get_camera_3d()
-	if cam and player:
-		var offset := Vector3(10, 12, 10)
-		cam.position = cam.position.lerp(player.position + offset, 0.05)
-		cam.look_at(player.position)

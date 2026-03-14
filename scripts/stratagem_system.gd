@@ -37,22 +37,18 @@ func register_stratagem(data: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
-	var ctrl_held := Input.is_key_pressed(KEY_CTRL)
-
-	if mode == 0:
-		if ctrl_held and not is_active:
-			_activate()
-		elif not ctrl_held and is_active:
-			_deactivate()
-
-		if is_active and current_input.size() > 0:
-			time_since_last_input += delta
-			if time_since_last_input > input_timeout:
-				_reset_input()
-				stratagem_failed.emit()
-	else:
+	# Ctrl is now used for BUILD mode — stratagem activation is handled externally
+	# When mode != 0, deactivate stratagems
+	if mode != 0:
 		if is_active:
 			_deactivate()
+		return
+
+	if is_active and current_input.size() > 0:
+		time_since_last_input += delta
+		if time_since_last_input > input_timeout:
+			_reset_input()
+			stratagem_failed.emit()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

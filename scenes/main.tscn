@@ -14,10 +14,10 @@
 [ext_resource type="PackedScene" uid="uid://pg0re2o56m0l" path="res://scenes/turret.tscn" id="12_eb6dy"]
 [ext_resource type="PackedScene" uid="uid://df234dghx" path="res://scenes/hitscan_turret.tscn" id="13_trceg"]
 [ext_resource type="PackedScene" path="res://scenes/wall_button.tscn" id="14_a8y0u"]
-[ext_resource type="PackedScene" path="res://scenes/laser_emitter.tscn" id="15_jkv2x"]
-[ext_resource type="PackedScene" path="res://scenes/redirection_box.tscn" id="16_jbj1t"]
+[ext_resource type="PackedScene" uid="uid://dmj6b1wixm4x" path="res://scenes/laser_emitter.tscn" id="15_jkv2x"]
+[ext_resource type="PackedScene" uid="uid://djm6b1wixm4x" path="res://scenes/redirection_box.tscn" id="16_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cqhnnnuu3tl5h" path="res://scenes/laser_button.tscn" id="17_muem4"]
-[ext_resource type="PackedScene" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
+[ext_resource type="PackedScene" uid="uid://cbp1g7n8h5m2p" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -133,7 +133,7 @@ shape = SubResource("BoxShape3D_1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.23569, -3.8146973e-06, -32.524307)
 
 [node name="Enemy" parent="." unique_id=1812332728 instance=ExtResource("3_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.51749, 0, -34.760807)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -151,7 +151,10 @@ script = ExtResource("7_ability_hud")
 [node name="box" parent="." unique_id=2050762637 instance=ExtResource("8_tipki")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.972961, 3.33786e-06, 3.0759583)
 
-[node name="box2" parent="." unique_id=1981168902 instance=ExtResource("8_tipki")]
+[node name="box5" parent="." unique_id=1981168902 instance=ExtResource("8_tipki")]
+transform = Transform3D(2.5600002, 0, 0, 0, 1, 0, 0, 0, 2.89, -35.57315, 0.57371044, -43.29595)
+
+[node name="box2" parent="." unique_id=1877253401 instance=ExtResource("8_tipki")]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -31.397541, -4.7683716e-07, -25.599928)
 
 [node name="box3" parent="." unique_id=1636467884 instance=ExtResource("8_tipki")]

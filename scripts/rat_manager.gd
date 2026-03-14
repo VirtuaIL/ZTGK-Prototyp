@@ -17,13 +17,18 @@ var wave_pending: bool = false
 
 var mode: int = 0: # 0 = COMBAT, 1 = BUILD
 	set(new_mode):
+		var old_mode := mode
 		mode = new_mode
-		if mode == 0:
-			# Return rats to player
+		if mode == 0 and old_mode == 1:
+			# Returning from BUILD to COMBAT:
+			# carrier rats stay with their object, free rats resume mouse follow
 			for rat in rats:
-				rat.is_following_player = true
+				if not rat.is_carrier:
+					rat.is_following_player = true
 			mouse_is_down_left = false
 			mouse_is_down_right = false
+		if mode == 1 and old_mode == 0:
+			pass
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -33,7 +38,6 @@ var is_dragging_left: bool = false
 var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 
 var mouse_is_down_right: bool = false
-var mouse_is_down_middle: bool = false
 
 # Rats that are currently acting as box carriers
 var carrier_rats: Dictionary = {}
@@ -42,13 +46,11 @@ var carrier_rat_offsets: Dictionary = {}
 var last_draw_pos: Vector3 = Vector3(-1000, -1000, -1000)
 var is_drawing_line: bool = false
 var current_build_y: float = -1000.0
-var _ctrl_was_pressed: bool = false
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
 
 # All positions in the most recently issued build command.
-# Used so any traveling rat can anchor near any brush point, not just its own.
 var active_build_positions: Array[Vector3] = []
 
 const DRAW_MODE_PATH := 0
@@ -63,10 +65,10 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 @export var brush_half_width_max: float = 1.5
 @export var brush_half_width_step: float = 0.05
 
-@export var brush_lane_pairs: int = 1 # number of extra line pairs (left/right)
+@export var brush_lane_pairs: int = 1
 @export var brush_lane_pairs_min: int = 0
 @export var brush_lane_pairs_max: int = 4
-@export var brush_lane_spacing: float = 0.3 # distance between parallel lines
+@export var brush_lane_spacing: float = 0.3
 
 @export var circle_radius: float = 0.5
 @export var circle_radius_min: float = 0.25
@@ -78,12 +80,12 @@ var current_circle_center: Vector3 = Vector3.ZERO
 
 var grabbed_object: CharacterBody3D = null
 var grabbed_object_last_pos: Vector3 = Vector3.ZERO
-var mmb_press_screen_pos: Vector2 = Vector2.ZERO
+var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.008
-@export var object_rotation_step: float = 22.5 # Degrees to rotate on side button click
+@export var object_rotation_step: float = 22.5
 @export var smooth_rotation_mode: bool = false
-@export var smooth_rotation_speed: float = 90.0 # Degrees per second
+@export var smooth_rotation_speed: float = 90.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -102,6 +104,28 @@ var line_material: StandardMaterial3D
 
 var unified_shape_combiner: CSGCombiner3D
 
+# ── Blob offsets (sunflower pattern) ──────────────────────────────────────────
+const BLOB_RADIUS_BASE: float = 1.8
+const BLOB_SPREAD: float = 0.22
+var _blob_offsets: Array[Vector3] = []
+
+# ── Combat draw (stream/arc) ──────────────────────────────────────────────────
+const STREAM_SPACING: float = 0.42
+const DRAW_SAMPLE_DIST: float = 0.2
+const MOUSE_TRAIL_MAX: int = 500
+var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
+var _mouse_trail_last: Vector3 = Vector3.ZERO
+
+
+
+# ── Neighbor throttle ─────────────────────────────────────────────────────────
+const NEIGHBOR_RADIUS: float = 1.1
+const NEIGHBOR_TICK: int = 3
+var _neighbor_tick: int = 0
+
+# ── Dragging object state (RMB in BUILD) ─────────────────────────────────────
+var _rmb_dragging_object: bool = false
+
 
 func _ready() -> void:
 	immediate_mesh = ImmediateMesh.new()
@@ -109,15 +133,13 @@ func _ready() -> void:
 	
 	unified_shape_combiner = CSGCombiner3D.new()
 	unified_shape_combiner.use_collision = true
-	unified_shape_combiner.collision_layer = 1 # layer 1 is solid to player
+	unified_shape_combiner.collision_layer = 1
 	add_child(unified_shape_combiner)
 	line_mesh_instance.mesh = immediate_mesh
 	
 	line_material = StandardMaterial3D.new()
 	line_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	line_material.albedo_color = Color.WHITE
-	# Slight thickness isn't supported out of the box with standard lines easily in Godot 4, 
-	# but unshaded white will be very visible.
 	line_mesh_instance.material_override = line_material
 	
 	add_child(line_mesh_instance)
@@ -135,12 +157,12 @@ func _process(delta: float) -> void:
 			wave_active = false
 			wave_ended.emit()
 
-	# Detect Ctrl press to recall all placed rats
-	var ctrl_pressed := Input.is_key_pressed(KEY_CTRL)
+	# ── COMBAT mode: rats follow cursor in arc/stream ──
+	if mode == 0:
+		_update_combat_mouse_follow()
+	
+	# ── BUILD mode (Ctrl held) ──
 	if mode == 1:
-		if ctrl_pressed and not _ctrl_was_pressed:
-			recall_all_rats()
-
 		if mouse_is_down_left:
 			if not is_dragging_left:
 				var current_mouse_pos := get_viewport().get_mouse_position()
@@ -150,10 +172,7 @@ func _process(delta: float) -> void:
 			if is_dragging_left:
 				_process_build_drag()
 		
-		if mouse_is_down_right:
-			_process_blob_follow()
-
-		if mouse_is_down_middle and grabbed_object:
+		if _rmb_dragging_object and grabbed_object:
 			_process_object_drag()
 			if smooth_rotation_mode:
 				if _is_rotating_left:
@@ -161,44 +180,212 @@ func _process(delta: float) -> void:
 				if _is_rotating_right:
 					grabbed_object.rotate_y(deg_to_rad(-smooth_rotation_speed * delta))
 
-	# Always show circular brush preview when in circle mode, even when not dragging
-	if build_draw_mode == DRAW_MODE_CIRCLE and not mouse_is_down_left:
-			var hit := _get_mouse_ground_hit()
-			if hit:
-				var raw_pos: Vector3 = hit.position + hit.normal * 0.25
-				if current_build_y <= -500.0:
-					current_build_y = raw_pos.y
-				raw_pos.y = current_build_y
-				current_circle_center = raw_pos
-				_update_circle_preview(false)
-			elif current_build_y > -500.0:
-				# No geometry under cursor — project onto last valid Y plane and show preview in red
-				var fallback := _get_mouse_pos_at_y(current_build_y)
-				if fallback != Vector3.ZERO:
-					current_circle_center = fallback
-					_update_circle_preview(true)
 
-	_ctrl_was_pressed = ctrl_pressed
 
 	if mode != 1:
 		mouse_is_down_left = false
 		mouse_is_down_right = false
 		is_drawing_line = false
 		current_build_y = -1000.0
-		active_build_positions.clear() # Clear active build positions when leaving build mode
+		active_build_positions.clear()
 
 	_check_formation_sync()
 	_check_carrier_arrival()
 	_check_travel_anchoring()
-
-	# Keep carrier rats' blob_target synced to the box position every frame
 	_update_carrier_rat_targets()
-	
 	_process_hover()
 
+	# ── Neighbor throttle ──
+	_neighbor_tick += 1
+	if _neighbor_tick >= NEIGHBOR_TICK:
+		_neighbor_tick = 0
+		_assign_neighbors()
 
-## Anchors any rat that is traveling and comes within anchor_radius of any
-## active brush position, so rats can float as bridge pieces mid-path.
+	# ── Cursor Preview ──
+	_update_cursor_preview()
+
+
+# ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
+
+func _update_combat_mouse_follow() -> void:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
+		return
+
+	# Track mouse position as a trail
+	if _mouse_trail.is_empty():
+		_mouse_trail.append(mouse_world)
+		_mouse_trail_last = mouse_world
+	elif mouse_world.distance_to(_mouse_trail_last) >= DRAW_SAMPLE_DIST:
+		_mouse_trail.append(mouse_world)
+		_mouse_trail_last = mouse_world
+		if _mouse_trail.size() > MOUSE_TRAIL_MAX:
+			_mouse_trail.pop_front()
+
+	# Need at least 2 points for arc distribution
+	if _mouse_trail.size() < 2:
+		# Fallback: set all rats to mouse position
+		for rat in rats:
+			if not rat.is_carrier and rat.state == rat.State.FOLLOW:
+				rat.set_target(mouse_world)
+		return
+
+	# Arc-length parameterization of the trail
+	var arc: Array[float] = [0.0]
+	for i in range(1, _mouse_trail.size()):
+		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
+	var total: float = arc[-1]
+
+	# Collect active rats
+	var active: Array[CharacterBody3D] = []
+	for rat in rats:
+		if not rat.is_carrier and rat.state == rat.State.FOLLOW:
+			active.append(rat)
+
+	var count := active.size()
+
+	# Calculate how much to resemble a blob based on brush size
+	var blob_blend := 0.0
+	var blob_scale := 1.0
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
+		blob_scale = circle_radius / 0.5
+	elif build_draw_mode == DRAW_MODE_PATH:
+		blob_blend = clampf(float(brush_lane_pairs - brush_lane_pairs_min) / maxf(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min)), 0.0, 1.0)
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		blob_scale = float(1 + pairs * 2) / 2.5
+
+	if _blob_offsets.size() != count:
+		build_blob_offsets()
+
+	for i in range(count):
+		# 1) Calculate Arc/Stream Target
+		var dist_back := float(i) * STREAM_SPACING
+		var arc_pos := total - dist_back
+
+		var t_stream: Vector3
+		var lateral_dir := Vector3.ZERO
+		
+		if arc_pos <= 0.0:
+			t_stream = _mouse_trail[0]
+			if _mouse_trail.size() >= 2:
+				var dir := _mouse_trail[1] - _mouse_trail[0]
+				dir.y = 0.0
+				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
+		else:
+			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
+			
+			var lo := 0
+			var hi := arc.size() - 1
+			while lo < hi - 1:
+				var mid := (lo + hi) / 2
+				if arc[mid] <= arc_pos:
+					lo = mid
+				else:
+					hi = mid
+			
+			var dir := _mouse_trail[hi] - _mouse_trail[lo]
+			dir.y = 0.0
+			lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
+
+		# Apply brush width to arc target
+		if lateral_dir != Vector3.ZERO:
+			if build_draw_mode == DRAW_MODE_PATH:
+				var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+				if pairs > 0:
+					var lane_count := 1 + pairs * 2
+					var center_index := float(lane_count - 1) / 2.0
+					var lane_index := i % lane_count
+					var factor := float(lane_index) - center_index
+					t_stream += lateral_dir * (brush_lane_spacing / 1.5) * factor
+			elif build_draw_mode == DRAW_MODE_CIRCLE:
+				var pseudo_rand := fmod(float(active[i].get_instance_id()) * 0.6180339887, 2.0) - 1.0
+				t_stream += lateral_dir * (pseudo_rand * circle_radius / 1.5)
+
+		# 2) Calculate Blob Target
+		var t_blob := mouse_world
+		if i < _blob_offsets.size():
+			t_blob += _blob_offsets[i] * blob_scale
+		t_blob.y = mouse_world.y
+
+		# 3) Blend based on brush size
+		var final_target = t_stream.lerp(t_blob, blob_blend)
+		active[i].set_target(final_target)
+
+
+func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
+	var lo := 0
+	var hi := arc.size() - 1
+	while lo < hi - 1:
+		var mid := (lo + hi) / 2
+		if arc[mid] <= want:
+			lo = mid
+		else:
+			hi = mid
+	var seg: float = arc[hi] - arc[lo]
+	if seg < 0.0001:
+		return path[lo]
+	var t: float = (want - arc[lo]) / seg
+	return (path[lo] as Vector3).lerp(path[hi] as Vector3, t)
+
+
+func build_blob_offsets() -> void:
+	_blob_offsets.clear()
+	var count := rats.size()
+	var golden_angle := PI * (3.0 - sqrt(5.0))
+	for i in range(count):
+		var r := BLOB_RADIUS_BASE * sqrt(float(i + 1) / float(count)) + BLOB_SPREAD * float(i) * 0.04
+		var a := golden_angle * float(i)
+		_blob_offsets.append(Vector3(cos(a) * r, 0.0, sin(a) * r))
+
+
+func _assign_neighbors() -> void:
+	var count := rats.size()
+	for i in range(count):
+		var nb: Array = []
+		var pos_i := rats[i].global_position
+		for j in range(count):
+			if i == j:
+				continue
+			if pos_i.distance_to(rats[j].global_position) < NEIGHBOR_RADIUS:
+				nb.append(rats[j])
+		rats[i].set_neighbors(nb)
+
+
+# ── Mouse → world raycast ─────────────────────────────────────────────────────
+
+func _mouse_to_world() -> Vector3:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return Vector3.ZERO
+
+	var mp := get_viewport().get_mouse_position()
+	var ro := cam.project_ray_origin(mp)
+	var rd := cam.project_ray_normal(mp)
+
+	# Physics hit
+	var ss := cam.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ro, ro + rd * 1000.0)
+	query.collision_mask = 0xFFFFFFFF
+	var hit := ss.intersect_ray(query)
+	if hit:
+		return hit.position
+
+	# Fallback plane at player Y
+	var player_ref: Node3D = get_tree().get_first_node_in_group("player") as Node3D
+	if player_ref:
+		var py: float = player_ref.global_position.y
+		var denom := Vector3.UP.dot(rd)
+		if abs(denom) > 0.0001:
+			var tt := (py - Vector3.UP.dot(ro)) / denom
+			if tt > 0.0:
+				return ro + rd * tt
+
+	return Vector3.ZERO
+
+
+# ── Anchoring, formation, carrier ─────────────────────────────────────────────
+
 func _check_travel_anchoring() -> void:
 	if active_build_positions.is_empty():
 		return
@@ -229,7 +416,6 @@ func _check_formation_sync() -> void:
 		elif rat.state == rat.State.WAITING_FOR_FORMATION:
 			any_waiting = true
 			
-	# If no rats are traveling, but some are waiting, they have all arrived.
 	if not any_traveling and any_waiting:
 		for rat in rats:
 			if rat.state == rat.State.WAITING_FOR_FORMATION:
@@ -238,50 +424,43 @@ func _check_formation_sync() -> void:
 
 
 func _form_unified_mesh() -> void:
-	# Clear the existing unified mesh components
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
-	# Find all rats in STATIC state (acting as build structure)
 	var static_rats: Array = []
 	for rat in rats:
-		# Skip rats that are currently carrying boxes
 		if carrier_rats.has(rat):
 			continue
 		if rat.state == rat.State.STATIC:
 			static_rats.append(rat)
 			rat.hide_visuals()
-			# Disable individual collision so player only collides with the CSG
 			rat.set_collision_layer_value(1, false)
 
 	if static_rats.is_empty():
 		return
 
-	# Add CSG primitives for each rat
-	# Since rats are placed closely based on step size, slightly thickened shapes blend well
 	for rat in static_rats:
-		# Use a CSGSphere3D to get an organic blob look
-		# It's slightly larger than the rat visual bounds to fuse with neighbors
 		var sphere = CSGSphere3D.new()
 		sphere.radius = 0.35 
 		sphere.radial_segments = 12
 		sphere.rings = 6
 		sphere.global_position = rat.global_position + Vector3(0, -0.35, 0)
 		
-		# Apply rat material color (brown)
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.45, 0.30, 0.18) # Matches standard rat brown
+		mat.albedo_color = Color(0.45, 0.30, 0.18)
 		sphere.material = mat
 		
 		unified_shape_combiner.add_child(sphere)
 
 
+# ── Input handling ────────────────────────────────────────────────────────────
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		
-		# Scroll wheel controls brush in build modes
-		if mode == 1 and mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+		# Scroll wheel controls brush/arc width in both modes
+		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 			if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
 				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 					brush_lane_pairs += 1
@@ -300,7 +479,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		
-		# Left-click drawing
+		# ── BUILD mode: LMB = drawing structures ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mode == 1:
 				if mb.pressed:
@@ -308,7 +487,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					left_click_start_pos = mb.position
 					is_dragging_left = false
 					current_drawn_path.clear()
-					current_build_y = -1000.0  # Always lock Y from the actual drag-start hit
+					current_build_y = -1000.0
 				else:
 					if not is_dragging_left:
 						_send_horde_to_point()
@@ -326,24 +505,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			return
 			
-		# Right-click: blob control (as before)
+		# ── BUILD mode: RMB = object interaction (surround / grab / release) ──
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mode == 1:
 				if mb.pressed:
-					mouse_is_down_right = true
-				else:
-					mouse_is_down_right = false
-				get_viewport().set_input_as_handled()
-			return
-
-		# Middle-click: object interaction (surround / grab / release)
-		if mb.button_index == MOUSE_BUTTON_MIDDLE:
-			if mode == 1:
-				if mb.pressed:
-					mmb_press_screen_pos = mb.position
+					rmb_press_screen_pos = mb.position
 					if grabbed_object != null:
-						# Object already grabbed — just start/resume dragging immediately.
-						mouse_is_down_middle = true
+						# Object already grabbed — start/resume dragging
+						_rmb_dragging_object = true
 						get_viewport().set_input_as_handled()
 						return
 
@@ -358,7 +527,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					if hit_m:
 						var obj = hit_m.collider
 						if obj is box or obj is turret or obj is hitscan_turret:
-							mouse_is_down_middle = true
+							_rmb_dragging_object = true
 							if not obj.is_surrounded:
 								_surround_object_with_rats(obj)
 							grabbed_object = obj
@@ -366,20 +535,17 @@ func _unhandled_input(event: InputEvent) -> void:
 							get_viewport().set_input_as_handled()
 							return
 
-					# No grabbable object hit – ignore
-					mouse_is_down_middle = false
+					_rmb_dragging_object = false
 				else:
-					# MMB released — check if this was a quick click (tiny mouse movement)
-					# or a real drag. Only release the object on a click, not after dragging.
-					mouse_is_down_middle = false
+					# RMB released — check click vs drag
+					_rmb_dragging_object = false
 					if grabbed_object != null:
-						var moved_sq := mmb_press_screen_pos.distance_squared_to(mb.position)
+						var moved_sq := rmb_press_screen_pos.distance_squared_to(mb.position)
 						if moved_sq < drag_threshold_squared:
 							# Short click — release the object
 							_release_object_carriers(grabbed_object)
 							grabbed_object = null
 							grabbed_object_last_pos = Vector3.ZERO
-						# else: was a drag — keep the object grabbed for the next drag
 				get_viewport().set_input_as_handled()
 			return
 
@@ -420,13 +586,11 @@ func activate_orbit() -> void:
 		deactivate_orbit()
 		return
 
-	# Cancel targeting if pending
 	wave_pending = false
 
 	orbit_active = true
 	orbit_timer = orbit_duration
 	var count := rats.size()
-	# Scale radius based on rat count: min 1.5, grows with more rats
 	var radius: float = maxf(1.5, count * 0.5)
 	for i in range(count):
 		var angle := (TAU / count) * i
@@ -449,11 +613,8 @@ func get_orbit_progress() -> float:
 
 
 func activate_wave() -> void:
-	# Cancel orbit if active
 	if orbit_active:
 		deactivate_orbit()
-
-	# Enter targeting mode — wait for click
 	wave_pending = true
 
 
@@ -464,7 +625,6 @@ func _fire_wave_at_mouse(screen_pos: Vector2) -> void:
 	var player_node: Node3D = rats[0].player
 	var player_pos: Vector3 = player_node.global_position
 
-	# Raycast mouse to ground plane (Y=0)
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	var ray_origin: Vector3 = camera.project_ray_origin(screen_pos)
 	var ray_dir: Vector3 = camera.project_ray_normal(screen_pos)
@@ -503,7 +663,7 @@ func recall_all_rats() -> void:
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
-		mouse_is_down_middle = false
+		_rmb_dragging_object = false
 
 	active_build_positions.clear()
 	built_positions.clear()
@@ -520,12 +680,14 @@ func recall_all_rats() -> void:
 	mouse_is_down_left = false
 	is_dragging_left = false
 	mouse_is_down_right = false
+	_rmb_dragging_object = false
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
 	immediate_mesh.clear_surfaces()
 	for rat in rats:
 		rat.is_following_player = true
+		rat.is_carrier = false
 
 
 func _process_hover() -> void:
@@ -545,7 +707,6 @@ func _process_hover() -> void:
 	
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	# Hitting Layer 4 (Movable Objects)
 	query.collision_mask = 4 
 	
 	var hit := space_state.intersect_ray(query)
@@ -574,19 +735,15 @@ func _get_mouse_ground_hit() -> Dictionary:
 
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	#query.collision_mask = 1  # Only environment/floor
 	return space_state.intersect_ray(query)
 
 
-# Projects the mouse ray to a horizontal plane at the given Y level.
-# Used as a fallback when dragging over gaps (no collision beneath cursor).
 func _get_mouse_pos_at_y(y: float) -> Vector3:
 	var camera := get_viewport().get_camera_3d()
 	var mouse_pos := get_viewport().get_mouse_position()
 	var ray_origin := camera.project_ray_origin(mouse_pos)
 	var ray_dir := camera.project_ray_normal(mouse_pos)
 	if abs(ray_dir.y) < 0.0001:
-		# Ray nearly horizontal — can't intersect a horizontal plane
 		return Vector3.ZERO
 	var t := (y - ray_origin.y) / ray_dir.y
 	return ray_origin + ray_dir * t
@@ -602,14 +759,11 @@ func _process_build_drag() -> void:
 			current_build_y = raw_pos.y
 		raw_pos.y = current_build_y
 	elif current_build_y > -500.0:
-		# No ground under cursor but drag is already in progress —
-		# project to the locked Y plane so the path continues over gaps.
 		var fallback := _get_mouse_pos_at_y(current_build_y)
 		if fallback == Vector3.ZERO:
 			return
 		raw_pos = fallback
 	else:
-		# Drag hasn't started on ground yet — ignore
 		return
 
 	if build_draw_mode == DRAW_MODE_PATH:
@@ -642,21 +796,17 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	if line_material:
 		line_material.albedo_color = Color(1, 0, 0) if invalid_surface else Color.WHITE
 	
-	# Small vertical offset to prevent z-fighting with the ground
 	var offset := Vector3(0, 0.1, 0)
 
-	# Center line strip (original behavior)
 	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 	for pos in current_drawn_path:
 		immediate_mesh.surface_add_vertex(pos + offset)
-	# Add the current cursor pos as the uncommitted end of the line
 	immediate_mesh.surface_add_vertex(end_pos + offset)
 	immediate_mesh.surface_end()
 
 	if not use_wide_brush:
 		return
 
-	# Precompute lateral direction for each point along the path (XZ plane)
 	var count := current_drawn_path.size()
 	var laterals: Array[Vector3] = []
 	laterals.resize(count)
@@ -682,7 +832,6 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 
 		laterals[i] = dir.cross(Vector3.UP).normalized()
 
-	# Lateral for the uncommitted end point
 	var end_dir: Vector3 = end_pos - current_drawn_path[count - 1]
 	end_dir.y = 0.0
 	if end_dir.length() < 0.001:
@@ -691,7 +840,6 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 		end_dir = end_dir.normalized()
 	var end_lateral := end_dir.cross(Vector3.UP).normalized()
 
-	# Draw multiple parallel strips with constant spacing; scroll wheel changes how many
 	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 	if pairs <= 0:
 		return
@@ -701,7 +849,7 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 
 	for lane_index in range(lane_count):
 		if lane_index == int(center_index):
-			continue # center line already drawn above
+			continue
 
 		var factor := float(lane_index) - center_index
 		var lateral_offset_scale := factor * brush_lane_spacing
@@ -733,9 +881,9 @@ func _compute_circle_fill_positions(center: Vector3) -> Array[Vector3]:
 	var max_steps: int = int(ceil(radius / spacing))
 	for ix in range(-max_steps, max_steps + 1):
 		for iz in range(-max_steps, max_steps + 1):
-			var offset := Vector3(float(ix) * spacing, 0.0, float(iz) * spacing)
-			if offset.x * offset.x + offset.z * offset.z <= radius * radius + 0.001:
-				positions.append(center + offset)
+			var off := Vector3(float(ix) * spacing, 0.0, float(iz) * spacing)
+			if off.x * off.x + off.z * off.z <= radius * radius + 0.001:
+				positions.append(center + off)
 	return positions
 
 
@@ -750,13 +898,85 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 	for center in path:
 		var circle_positions := _compute_circle_fill_positions(center)
 		for p in circle_positions:
-			# Quantize to grid to deduplicate overlapping points from neighboring circles
 			var key := Vector2i(int(round(p.x / spacing)), int(round(p.z / spacing)))
 			if not used.has(key):
 				used[key] = true
 				positions.append(p)
 
 	return positions
+
+
+# ── Brush UI Preview ─────────────────────────────────────────────────────────
+
+func _update_cursor_preview() -> void:
+	# Ignore if we are actively drawing a path in BUILD mode
+	if mode == 1 and mouse_is_down_left:
+		return
+
+	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
+	var hit: Dictionary = _get_mouse_ground_hit()
+	var raw_pos: Vector3
+	
+	if hit:
+		raw_pos = hit.position + hit.normal * 0.25
+		if mode == 1:
+			if current_build_y <= -500.0:
+				current_build_y = raw_pos.y
+			raw_pos.y = current_build_y
+		else:
+			# In combat mode, follow ground Y or fallback to player Y
+			if player_node:
+				raw_pos.y = player_node.global_position.y
+	elif mode == 1 and current_build_y > -500.0:
+		var fallback := _get_mouse_pos_at_y(current_build_y)
+		if fallback == Vector3.ZERO:
+			immediate_mesh.clear_surfaces()
+			return
+		raw_pos = fallback
+	elif mode == 0 and player_node:
+		# Combat fallback
+		var fallback := _get_mouse_pos_at_y(player_node.global_position.y)
+		if fallback == Vector3.ZERO:
+			immediate_mesh.clear_surfaces()
+			return
+		raw_pos = fallback
+	else:
+		immediate_mesh.clear_surfaces()
+		return
+
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		current_circle_center = raw_pos
+		var old_path = current_drawn_path.duplicate()
+		current_drawn_path.clear()
+		_update_circle_preview(!hit.is_empty() if mode == 1 else false)
+		current_drawn_path = old_path
+		
+	elif build_draw_mode == DRAW_MODE_PATH:
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		if pairs <= 0:
+			immediate_mesh.clear_surfaces()
+			return
+
+		var lane_count := 1 + pairs * 2
+		var width := float(lane_count - 1) * brush_lane_spacing
+		
+		# Determine lateral direction
+		var lateral := Vector3.RIGHT
+		if mode == 1 and current_drawn_path.size() >= 2:
+			var dir: Vector3 = current_drawn_path[-1] - current_drawn_path[-2]
+			dir.y = 0.0
+			if dir.length() > 0.001:
+				lateral = dir.normalized().cross(Vector3.UP).normalized()
+				
+		immediate_mesh.clear_surfaces()
+		if line_material:
+			line_material.albedo_color = Color.WHITE
+		
+		var offset := Vector3(0, 0.1, 0)
+		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		immediate_mesh.surface_add_vertex(raw_pos - lateral * (width / 2.0) + offset)
+		immediate_mesh.surface_add_vertex(raw_pos + lateral * (width / 2.0) + offset)
+		immediate_mesh.surface_end()
 
 
 func _update_circle_preview(invalid_surface: bool = false) -> void:
@@ -770,7 +990,6 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 
 	var fill_positions := _compute_circle_path_fill_positions(path_for_preview)
 	var required := fill_positions.size()
-	# Count only non-carrier rats for the preview
 	var total_rats := 0
 	for rat in rats:
 		if not rat.is_carrier:
@@ -779,11 +998,10 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 
 	if line_material:
 		if invalid_surface:
-			line_material.albedo_color = Color(1, 0, 0) # Red: hovering over invalid/empty area
+			line_material.albedo_color = Color(1, 0, 0)
 		else:
 			line_material.albedo_color = Color.WHITE if enough_rats else Color(1, 0, 0)
 
-	# Draw circle outline
 	var segments := 32
 	var offset := Vector3(0, 0.1, 0)
 	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
@@ -794,7 +1012,6 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 		immediate_mesh.surface_add_vertex(center + Vector3(x, 0, z) + offset)
 	immediate_mesh.surface_end()
 
-	# Highlight the area that can actually be built with current available rats
 	if required == 0:
 		return
 
@@ -818,14 +1035,12 @@ func _build_circle_if_possible() -> void:
 	if fill_positions.is_empty():
 		return
 
-	# Destroy previous build
 	built_positions.clear()
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 	for rat in rats:
 		rat.release_rat()
 
-	# Recompute available rats after release
 	var available_rats: Array = _get_available_follow_rats()
 
 	var count: int = min(available_rats.size(), fill_positions.size())
@@ -842,15 +1057,14 @@ func _distribute_rats_on_path() -> void:
 		return
 		
 	var path_length: float = 0.0
-	var segments: Array[float] = []
+	var segs: Array[float] = []
 	for i in range(1, current_drawn_path.size()):
 		var segment_len = current_drawn_path[i-1].distance_to(current_drawn_path[i])
 		path_length += segment_len
-		segments.append(segment_len)
+		segs.append(segment_len)
 		
 	built_positions.clear()
 	
-	# Destroy the unified mesh from any previous build
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
@@ -869,7 +1083,6 @@ func _distribute_rats_on_path() -> void:
 	if rat_count == 1:
 		var single_pos := current_drawn_path[0]
 		if use_wide_brush:
-			# Push lone rat to center lane of a theoretical wide brush
 			var dir_single := (current_drawn_path[1] - current_drawn_path[0])
 			dir_single.y = 0.0
 			if dir_single.length() < 0.001:
@@ -877,7 +1090,7 @@ func _distribute_rats_on_path() -> void:
 			else:
 				dir_single = dir_single.normalized()
 			var lateral_single := dir_single.cross(Vector3.UP).normalized() * brush_half_width
-			single_pos = current_drawn_path[0]  # center; could be adjusted if needed
+			single_pos = current_drawn_path[0]
 		available_rats[0].build_at(single_pos)
 		return
 		
@@ -885,46 +1098,39 @@ func _distribute_rats_on_path() -> void:
 	var current_dist_on_path: float = 0.0
 	
 	for i in range(rat_count):
-		# Start and end snap exactly
 		if i == 0:
 			var start_pos := current_drawn_path[0]
 			if use_wide_brush and rat_count > 2:
-				# Determine lane based on index
-				var lane_idx := 0 # center by default
-				# For first rat we keep it center to anchor the path
+				var lane_idx := 0
 				start_pos = current_drawn_path[0]
 			available_rats[0].build_at(start_pos)
 			continue
 		elif i == rat_count - 1:
 			var end_pos := current_drawn_path[-1]
 			if use_wide_brush and rat_count > 2:
-				# Keep last rat on center for consistency
 				end_pos = current_drawn_path[-1]
 			available_rats[i].build_at(end_pos)
 			continue
 			
 		var target_dist = i * dist_between_rats
 		
-		# Find segment containing target_dist
 		var accum: float = 0.0
 		var segment_idx: int = 0
 		var segment_start: float = 0.0
 		
-		for j in range(segments.size()):
-			if accum + segments[j] >= target_dist:
+		for j in range(segs.size()):
+			if accum + segs[j] >= target_dist:
 				segment_idx = j
 				segment_start = accum
 				break
-			accum += segments[j]
+			accum += segs[j]
 			
-		# Interpolate
-		var segment_t = (target_dist - segment_start) / max(0.0001, segments[segment_idx])
+		var segment_t = (target_dist - segment_start) / max(0.0001, segs[segment_idx])
 		var point_a: Vector3 = current_drawn_path[segment_idx]
 		var point_b: Vector3 = current_drawn_path[segment_idx + 1]
 		var interp_pos = point_a.lerp(point_b, segment_t)
 		
 		if use_wide_brush:
-			# Compute local forward direction and lateral base direction
 			var dir := point_b - point_a
 			dir.y = 0.0
 			if dir.length() < 0.001:
@@ -933,8 +1139,6 @@ func _distribute_rats_on_path() -> void:
 				dir = dir.normalized()
 			var lateral_dir := dir.cross(Vector3.UP).normalized()
 
-			# Distribute rats across a variable number of lanes.
-			# Lane count is 1 center lane plus left/right pairs, with constant spacing.
 			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 			if pairs > 0:
 				var lane_count := 1 + pairs * 2
@@ -956,20 +1160,16 @@ func _send_horde_to_point() -> void:
 	target_pos.y = hit.position.y
 	target_pos.z = snapped(target_pos.z, 0.5)
 
-	# Free all currently built rats to rally them
 	built_positions.clear()
 	
-	# Destroy the unified mesh from any previous build
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
 	for rat in rats:
 		rat.release_rat()
 
-	# Arrange rats in a small circle/grid around target
 	var available_rats: Array = []
 	for rat in rats:
-		# all should be follow state after release, but filter just in case
 		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
 			available_rats.append(rat)
 			
@@ -977,7 +1177,6 @@ func _send_horde_to_point() -> void:
 	if count == 0:
 		return
 
-	# simple circle formation
 	var ring_radius = 0.5
 	if count > 8:
 		ring_radius = 1.0
@@ -1018,7 +1217,6 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 
 	for i in range(needed):
 		var angle := (TAU / needed) * i
-		# Offset is in local space relative to the object
 		var local_offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
 		var world_pos := obj.global_transform * local_offset
 		var r: CharacterBody3D = available_rats[i]
@@ -1026,6 +1224,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 		r.is_following_player = false
 		r.follow_offset = Vector3.ZERO
 		r.blob_target = world_pos
+		r.set_target(world_pos)
 		r.is_carrier = true
 		obj.get("carrier_rats").append(r)
 		carrier_rat_offsets[r] = local_offset
@@ -1041,20 +1240,7 @@ func _on_object_reset(obj: CharacterBody3D) -> void:
 	if grabbed_object == obj:
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
-		mouse_is_down_middle = false
-
-
-func _process_blob_follow() -> void:
-	var hit := _get_mouse_ground_hit()
-	if not hit:
-		return
-
-	var raw_pos: Vector3 = hit.position
-	
-	for rat in rats:
-		if rat.state == rat.State.FOLLOW:
-			rat.is_following_player = false
-			rat.blob_target = raw_pos
+		_rmb_dragging_object = false
 
 
 func _check_carrier_arrival() -> void:
@@ -1106,7 +1292,9 @@ func _update_carrier_rat_targets() -> void:
 	var obj_transform: Transform3D = grabbed_object.global_transform
 	for r in grabbed_object.get("carrier_rats"):
 		if r and carrier_rat_offsets.has(r):
-			r.blob_target = obj_transform * carrier_rat_offsets[r]
+			var target_pos: Vector3 = obj_transform * (carrier_rat_offsets[r] as Vector3)
+			r.blob_target = target_pos
+			r.set_target(target_pos)
 
 
 func _release_object_carriers(obj: CharacterBody3D) -> void:

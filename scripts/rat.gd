@@ -6,13 +6,26 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var orbit_radius: float = 4.0
 @export var orbit_speed: float = 4.0
 
+# Spring-damp parameters (used in FOLLOW state)
+@export var spring_stiffness: float = 12.0
+@export var damping:          float = 0.86
+@export var separation_dist:  float = 0.5
+@export var separation_force: float = 12.0
+@export var max_speed:        float = 20.0
+
 var state: State = State.FOLLOW
 var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
 var lerp_speed: float = 8.0
 
-# Blob State (Build Mode)
+# Spring-damp internal state
+var _spring_velocity: Vector3 = Vector3.ZERO
+var _target_position: Vector3 = Vector3.ZERO
+var _target_ready:    bool    = false
+var _neighbors:       Array   = []
+
+# Blob State (Build Mode) — kept for blob_target compat
 var is_following_player: bool = true
 var blob_target: Vector3 = Vector3.ZERO
 
@@ -70,16 +83,14 @@ func _physics_process(delta: float) -> void:
 			velocity.y = 0.0
 
 		# Fall recovery — cancel orders and return to player if fallen off the world.
-		# Bypasses release_rat() which has a state guard and silently does nothing
-		# for FOLLOW/WAVE/ORBIT rats.
 		if global_position.y < fall_death_y:
 			is_anchored = false
 			state = State.FOLLOW
 			is_following_player = true
+			_spring_velocity = Vector3.ZERO
 			velocity = Vector3.ZERO
 			set_collision_layer_value(1, false)
 			show_visuals()
-			# Teleport back near the player so the rat can resume following
 			global_position = player.global_position + Vector3(
 				randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
 			)
@@ -87,7 +98,8 @@ func _physics_process(delta: float) -> void:
 
 	match state:
 		State.FOLLOW:
-			_process_follow(delta)
+			_process_follow_spring(delta)
+			_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
 			_check_damage()
@@ -102,27 +114,59 @@ func _physics_process(delta: float) -> void:
 			return
 
 
-func _process_follow(delta: float) -> void:
-	var target: Vector3
-	if is_following_player:
-		target = player.global_position + follow_offset
-	else:
-		target = blob_target + follow_offset
+func _process_follow_spring(delta: float) -> void:
+	if not _target_ready:
+		return
 
-	var direction := (target - global_position)
-	direction.y = 0.0
+	# Spring toward target — flatten Y so it doesn't bounce vertically
+	var to_target := _target_position - global_position
+	to_target.y *= 0.2
+	_spring_velocity += to_target * spring_stiffness * delta
 
-	if direction.length() > 0.3:
-		var move_dir := direction.normalized()
-		velocity.x = move_dir.x * follow_speed
-		velocity.z = move_dir.z * follow_speed
-		var target_angle := atan2(move_dir.x, move_dir.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, follow_speed * delta * 5.0)
-		velocity.z = move_toward(velocity.z, 0.0, follow_speed * delta * 5.0)
+	# Separation from neighbors
+	for neighbor in _neighbors:
+		if not is_instance_valid(neighbor):
+			continue
+		var nb := neighbor as Node3D
+		if nb == null:
+			continue
+		var diff: Vector3 = global_position - nb.global_position
+		diff.y = 0.0
+		var dist: float = diff.length()
+		if dist < separation_dist and dist > 0.001:
+			_spring_velocity += diff.normalized() * (separation_dist - dist) * separation_force * delta
 
+	# Framerate-independent damping
+	_spring_velocity *= pow(damping, delta * 60.0)
+
+	# Clamp horizontal speed
+	var hvel := Vector2(_spring_velocity.x, _spring_velocity.z)
+	if hvel.length() > max_speed:
+		hvel = hvel.normalized() * max_speed
+		_spring_velocity.x = hvel.x
+		_spring_velocity.z = hvel.y
+
+	# Preserve gravity-driven vertical velocity, add spring horizontal
+	velocity.x = _spring_velocity.x
+	velocity.z = _spring_velocity.z
 	move_and_slide()
+	# Sync spring velocity with collision response (horizontal only)
+	_spring_velocity.x = velocity.x
+	_spring_velocity.z = velocity.z
+
+	# Face direction of travel
+	var move_dir := Vector3(velocity.x, 0.0, velocity.z)
+	if move_dir.length() > 0.4:
+		rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
+
+
+func set_target(pos: Vector3) -> void:
+	_target_position = pos
+	_target_ready    = true
+
+
+func set_neighbors(n: Array) -> void:
+	_neighbors = n
 
 
 func _process_orbit(delta: float) -> void:
@@ -197,9 +241,6 @@ func _process_travel_to_build(delta: float) -> void:
 	if dist <= anchor_radius:
 		is_anchored = true
 
-	# Also check proximity to own build_target for anchoring
-	# (additional positions are checked by rat_manager against the full brush)
-
 	if dist > 0.1:
 		var dir := Vector2(flat_target - flat_self).normalized()
 		velocity.x = dir.x * follow_speed * 2.0
@@ -233,6 +274,7 @@ func release_rat() -> void:
 		state = State.FOLLOW
 		is_anchored = false
 		is_carrier = false
+		_spring_velocity = Vector3.ZERO
 		velocity.y = 5.0
 		# Lose solidity
 		set_collision_layer_value(1, false)
