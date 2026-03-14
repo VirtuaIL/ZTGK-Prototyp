@@ -99,7 +99,7 @@ func _fire_wave_at_mouse(screen_pos: Vector2, speed_mult: float = 1.0) -> void:
 
 	var count := rats.size()
 	for i in range(count):
-		var spread: float = deg_to_rad(remap(i, 0, count - 1, -30.0, 30.0))
+		var spread: float = deg_to_rad(remap(i, 0, count, -30.0, 30.0))
 		var dir: Vector3 = forward.rotated(Vector3.UP, spread)
 		var delay: float = randf_range(0.0, 0.15)
 		rats[i].set_wave(dir, delay, speed_mult)
@@ -137,7 +137,7 @@ func activate_orbit() -> void:
 	orbit_active = true
 	orbit_timer = orbit_duration
 	var count := rats.size()
-	var radius: float = maxf(1.5, count * 0.5)
+	var radius: float = maxf(1.5, count * 0.3)
 	for i in range(count):
 		var angle := (TAU / count) * i
 		rats[i].set_orbit(angle, radius)

@@ -1,7 +1,7 @@
 # main.gd — z podpięciem note_hud
 extends Node3D
 
-const RAT_COUNT := 40
+const RAT_COUNT := 20
 var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
 
 @onready var player: CharacterBody3D = $Player

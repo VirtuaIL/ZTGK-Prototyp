@@ -27,7 +27,7 @@ var direct_timer: float = 0.0
 
 # Damage
 var damage_per_hit: float = 10.0
-var hit_range: float = 0.8
+var hit_range: float = 1.2 
 
 # Build
 var build_target: Vector3 = Vector3.ZERO
