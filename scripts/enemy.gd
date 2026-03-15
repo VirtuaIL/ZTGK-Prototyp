@@ -1,19 +1,32 @@
 extends StaticBody3D
 
 @export var max_health: float = 100.0
+@export var respawn_time: float = 3.0
 var health: float = max_health
 
 var hp_bar_bg: MeshInstance3D
 var hp_bar_fill: MeshInstance3D
 var hp_bar_fill_mat: StandardMaterial3D
+var hp_label: Label3D
+
+var _spawn_transform: Transform3D
+var _is_dead: bool = false
+var _collision_layer: int
+var _collision_mask: int
 
 var damage_cooldowns: Dictionary = {}
 
 
 func _ready() -> void:
 	add_to_group("enemies")
+	_spawn_transform = global_transform
+	_collision_layer = collision_layer
+	_collision_mask = collision_mask
+	health = max_health
 	# HP Bar (billboard above enemy)
 	_create_hp_bar()
+	_create_hp_label()
+	_update_hp_bar()
 
 
 func _create_hp_bar() -> void:
@@ -52,8 +65,19 @@ func _create_hp_bar() -> void:
 	hp_bar_fill.position.y = 2.2
 	add_child(hp_bar_fill)
 
+func _create_hp_label() -> void:
+	hp_label = Label3D.new()
+	hp_label.text = str(int(health))
+	hp_label.position.y = 2.4
+	hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	hp_label.pixel_size = 0.01
+	hp_label.outline_size = 6
+	hp_label.outline_modulate = Color(0, 0, 0, 0.9)
+	add_child(hp_label)
 
 func _process(delta: float) -> void:
+	if _is_dead:
+		return
 	# Tick cooldowns
 	var to_remove: Array = []
 	for key in damage_cooldowns:
@@ -65,6 +89,8 @@ func _process(delta: float) -> void:
 
 
 func take_damage(amount: float, source_id: int = -1) -> void:
+	if _is_dead:
+		return
 	# Per-source cooldown to prevent damage spam
 	if source_id >= 0:
 		if damage_cooldowns.has(source_id):
@@ -98,6 +124,9 @@ func _update_hp_bar() -> void:
 	else:
 		hp_bar_fill_mat.albedo_color = Color(0.9, 0.2, 0.15)
 
+	if hp_label:
+		hp_label.text = str(int(ceil(health)))
+
 
 func _flash_hit() -> void:
 	# Quick white flash on body
@@ -110,7 +139,30 @@ func _flash_hit() -> void:
 
 
 func _die() -> void:
+	if _is_dead:
+		return
+	_is_dead = true
+	damage_cooldowns.clear()
+	collision_layer = 0
+	collision_mask = 0
+
 	# Shrink and disappear
 	var tween := create_tween()
 	tween.tween_property(self , "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
-	tween.tween_callback(queue_free)
+	tween.tween_callback(func() -> void:
+		visible = false
+	)
+
+	await get_tree().create_timer(respawn_time).timeout
+	_respawn()
+
+
+func _respawn() -> void:
+	_is_dead = false
+	visible = true
+	scale = Vector3.ONE
+	global_transform = _spawn_transform
+	health = max_health
+	_update_hp_bar()
+	collision_layer = _collision_layer
+	collision_mask = _collision_mask

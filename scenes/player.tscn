@@ -20,6 +20,18 @@ shader = ExtResource("2_shader")
 shader_parameter/vignette_color = Color(1, 0, 0, 1)
 shader_parameter/intensity = 0.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_HealthPanel"]
+bg_color = Color(0, 0, 0, 0.65)
+border_color = Color(0.9, 0.9, 0.9, 0.6)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
@@ -41,4 +53,46 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+
+[node name="HealthBar" type="Panel" parent="PlayerHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -90.0
+offset_right = 240.0
+offset_bottom = -30.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
+
+[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox"]
+text = "ZDROWIE"
+mouse_filter = 2
+
+[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox"]
+custom_minimum_size = Vector2(0, 18)
+max_value = 100.0
+value = 100.0
+show_percentage = false
 mouse_filter = 2

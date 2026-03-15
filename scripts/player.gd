@@ -16,6 +16,7 @@ var current_hp: float = 100.0
 var time_since_last_damage: float = 0.0
 
 @onready var damage_overlay: ColorRect = $PlayerHUD/DamageOverlay
+@onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
 
 var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -25,6 +26,7 @@ func _ready() -> void:
 	collision_mask = 13 # Floor (1) + Movable (4) + Walls (8)
 	_spawn_position = global_position
 	current_hp = max_hp
+	_update_health_bar()
 
 
 func _physics_process(delta: float) -> void:
@@ -32,6 +34,7 @@ func _physics_process(delta: float) -> void:
 	time_since_last_damage += delta
 	if time_since_last_damage >= regen_delay and current_hp < max_hp:
 		current_hp = min(current_hp + hp_regen_rate * delta, max_hp)
+		_update_health_bar()
 		
 	# Update Damage Vignette Overlay
 	if damage_overlay and damage_overlay.material:
@@ -84,6 +87,7 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: float) -> void:
 	current_hp -= amount
 	time_since_last_damage = 0.0
+	_update_health_bar()
 	
 	if current_hp <= 0:
 		die()
@@ -94,7 +98,15 @@ func die() -> void:
 	velocity = Vector3.ZERO
 	current_hp = max_hp
 	time_since_last_damage = 0.0
+	_update_health_bar()
 
 
 func set_stratagem_mode(active: bool) -> void:
 	is_stratagem_mode = active
+
+
+func _update_health_bar() -> void:
+	if not health_bar:
+		return
+	health_bar.max_value = max_hp
+	health_bar.value = clampf(current_hp, 0.0, max_hp)
