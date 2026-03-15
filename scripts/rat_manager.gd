@@ -691,6 +691,18 @@ func register_rat(rat: CharacterBody3D) -> void:
 		rat.set_wall_collision(rats_collide_with_walls)
 
 
+func get_active_rat_count() -> int:
+	var count := 0
+	for rat in rats:
+		if rat == null:
+			continue
+		var r := rat as Rat
+		if r != null and r.is_fallen:
+			continue
+		count += 1
+	return count
+
+
 func activate_orbit() -> void:
 	if orbit_active:
 		deactivate_orbit()

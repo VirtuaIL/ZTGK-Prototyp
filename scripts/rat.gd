@@ -1,4 +1,5 @@
 extends CharacterBody3D
+class_name Rat
 
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
@@ -52,11 +53,15 @@ var is_carrier: bool = false
 
 # Fall recovery
 @export var fall_death_y: float = -1.0
+@export var respawn_time: float = 1.0
+@export var spawn_player_distance: float = 3.0
 
 # Bridge anchoring — when true, gravity and fall-recovery are suppressed
 # so rats can float in mid-air to form bridges
 var is_anchored: bool = false
 @export var anchor_radius: float = 2.0
+
+var is_fallen: bool = false
 
 
 func _ready() -> void:
@@ -75,9 +80,15 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 
+	# Fall recovery first so distance check doesn't pull rats to player mid-fall.
+	if not is_anchored and global_position.y < fall_death_y:
+		_start_respawn()
+		return
+
 	# Distance recovery — if a follower gets too far (e.g., stuck behind doors), snap near player.
-	if state == State.FOLLOW and not is_carrier and not is_anchored:
-		var dist_sq: float = global_position.distance_squared_to(player.global_position)
+	# Avoid snapping while falling off the world.
+	if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
+		var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
 		if dist_sq > max_follow_distance * max_follow_distance:
 			_teleport_to_player()
 			return
@@ -93,10 +104,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity.y = 0.0
 
-		# Fall recovery — cancel orders and return to player if fallen off the world.
-		if global_position.y < fall_death_y:
-			_teleport_to_player()
-			return
+		# Fall recovery is handled above before distance checks.
 
 	match state:
 		State.FOLLOW:
@@ -296,6 +304,80 @@ func release_rat() -> void:
 
 
 func _teleport_to_player() -> void:
+	_reset_to_follow()
+	global_position = player.global_position + Vector3(
+		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+	)
+
+
+func _start_respawn() -> void:
+	if is_fallen:
+		return
+	is_fallen = true
+	_reset_to_follow()
+	hide_visuals()
+	set_physics_process(false)
+	await get_tree().create_timer(respawn_time).timeout
+	_respawn_at_spawn_point()
+
+
+func _respawn_at_spawn_point() -> void:
+	var spawn := _get_nearest_spawn(global_position)
+	if spawn == null:
+		_teleport_to_player()
+		_finish_respawn()
+		return
+	if player == null:
+		global_position = spawn.global_position + Vector3(
+			randf_range(-0.6, 0.6), 0.2, randf_range(-0.6, 0.6)
+		)
+		_finish_respawn()
+		return
+	var player_dist := _flat_distance(player.global_position, spawn.global_position)
+	if player_dist <= spawn_player_distance:
+		global_position = player.global_position + Vector3(
+			randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+		)
+	else:
+		global_position = spawn.global_position + Vector3(
+			randf_range(-0.6, 0.6), 0.2, randf_range(-0.6, 0.6)
+		)
+	_finish_respawn()
+
+
+func _get_nearest_spawn(pos: Vector3) -> Node3D:
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var best: Node3D = null
+	var best_dist := INF
+	for s in spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		var d := _flat_distance_squared(n.global_position, pos)
+		if d < best_dist:
+			best_dist = d
+			best = n
+	return best
+
+
+func _flat_distance(a: Vector3, b: Vector3) -> float:
+	return sqrt(_flat_distance_squared(a, b))
+
+
+func _flat_distance_squared(a: Vector3, b: Vector3) -> float:
+	var dx := a.x - b.x
+	var dz := a.z - b.z
+	return dx * dx + dz * dz
+
+
+func _finish_respawn() -> void:
+	is_fallen = false
+	show_visuals()
+	set_physics_process(true)
+
+
+
+func _reset_to_follow() -> void:
 	is_anchored = false
 	state = State.FOLLOW
 	is_following_player = true
@@ -303,9 +385,6 @@ func _teleport_to_player() -> void:
 	velocity = Vector3.ZERO
 	set_collision_layer_value(1, false)
 	show_visuals()
-	global_position = player.global_position + Vector3(
-		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
-	)
 
 
 func hide_visuals() -> void:

@@ -179,7 +179,12 @@ func _setup_rat_count_ui() -> void:
 func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
-	rat_count_label.text = "Szczury: " + str(rat_manager.rats.size()) + " / " + str(RAT_COUNT)
+	var current_count := 0
+	if rat_manager.has_method("get_active_rat_count"):
+		current_count = rat_manager.get_active_rat_count()
+	else:
+		current_count = rat_manager.rats.size()
+	rat_count_label.text = "Szczury: " + str(current_count) + " / " + str(RAT_COUNT)
 
 
 func _update_mode_ui() -> void:
