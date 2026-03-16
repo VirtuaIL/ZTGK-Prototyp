@@ -59,6 +59,10 @@ var min_point_dist_squared: float = 0.05
 # All positions in the most recently issued build command.
 var active_build_positions: Array[Vector3] = []
 
+# Vertical offset applied to build positions sampled from the surface.
+# Default aligns rat collision bottom with the surface (rat height is 0.15).
+@export var build_surface_offset: float = 0.1
+
 const DRAW_MODE_PATH := 0
 const DRAW_MODE_CIRCLE := 1
 
@@ -876,7 +880,7 @@ func _process_build_drag() -> void:
 
 	var raw_pos: Vector3
 	if hit:
-		raw_pos = hit.position + hit.normal * 0.25
+		raw_pos = hit.position + hit.normal * build_surface_offset
 		if current_build_y <= -500.0:
 			current_build_y = raw_pos.y
 		raw_pos.y = current_build_y
@@ -1040,7 +1044,7 @@ func _update_cursor_preview() -> void:
 	var raw_pos: Vector3
 	
 	if hit:
-		raw_pos = hit.position + hit.normal * 0.25
+		raw_pos = hit.position + hit.normal * build_surface_offset
 		if mode == 1:
 			if current_build_y <= -500.0:
 				current_build_y = raw_pos.y
