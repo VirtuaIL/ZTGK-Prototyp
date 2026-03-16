@@ -1059,6 +1059,8 @@ func recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 
+	_respawn_min_cap_near_player()
+
 
 func _process_hover() -> void:
 	if mode != 1:
