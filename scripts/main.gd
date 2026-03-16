@@ -1,7 +1,5 @@
 extends Node3D
 
-const RAT_COUNT := 60
-
 enum RatMode { COMBAT, BUILD }
 var current_mode: RatMode = RatMode.COMBAT
 
@@ -11,7 +9,6 @@ var cheatsheet_panel: Panel
 var goal_label: Label
 var rat_count_label: Label
 
-var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
 @onready var stratagem_system: Node = $StratagemSystem
@@ -30,23 +27,8 @@ func _init_game() -> void:
 	_setup_goal_ui()
 	_setup_rat_count_ui()
 	
-	# Setup Rats
-	for i in range(RAT_COUNT):
-		var rat := rat_scene.instantiate()
-		var angle := (TAU / RAT_COUNT) * i
-		rat.position = player.position + Vector3(
-			cos(angle) * 2.0,
-			0,
-			sin(angle) * 2.0
-		)
-		rat.player = player
-		add_child(rat)
-		rat.add_collision_exception_with(player)
-		player.add_collision_exception_with(rat)
-		rat_manager.register_rat(rat)
-	
-	# Build initial blob offsets for the swarm
-	rat_manager.build_blob_offsets()
+	rat_manager.setup_player(player)
+	rat_manager.ensure_min_cap()
 	
 	# Connect stratagem signals
 	stratagem_system.stratagem_menu_toggled.connect(_on_stratagem_menu_toggled)
@@ -166,7 +148,10 @@ func _setup_rat_count_ui() -> void:
 	var layer = CanvasLayer.new()
 	var label = Label.new()
 	rat_count_label = label
-	label.text = "Szczury: 0 / " + str(RAT_COUNT)
+	var max_cap := 0
+	if rat_manager and rat_manager.has_method("get_max_cap"):
+		max_cap = rat_manager.get_max_cap()
+	label.text = "Szczury: 0 / " + str(max_cap)
 	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	label.offset_left = 20
 	label.offset_top = 60
@@ -180,11 +165,16 @@ func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
 	var current_count := 0
+	var max_cap := 0
 	if rat_manager.has_method("get_active_rat_count"):
 		current_count = rat_manager.get_active_rat_count()
 	else:
 		current_count = rat_manager.rats.size()
-	rat_count_label.text = "Szczury: " + str(current_count) + " / " + str(RAT_COUNT)
+	if rat_manager.has_method("get_max_cap"):
+		max_cap = rat_manager.get_max_cap()
+	else:
+		max_cap = rat_manager.rats.size()
+	rat_count_label.text = "Szczury: " + str(current_count) + " / " + str(max_cap)
 
 
 func _update_mode_ui() -> void:

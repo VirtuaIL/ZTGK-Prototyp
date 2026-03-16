@@ -55,6 +55,7 @@ var is_carrier: bool = false
 @export var fall_death_y: float = -1.0
 @export var respawn_time: float = 1.0
 @export var spawn_player_distance: float = 3.0
+@export var respawn_near_player_when_near_spawn: bool = true
 
 # Bridge anchoring — when true, gravity and fall-recovery are suppressed
 # so rats can float in mid-air to form bridges
@@ -333,15 +334,40 @@ func _respawn_at_spawn_point() -> void:
 		)
 		_finish_respawn()
 		return
-	var player_dist := _flat_distance(player.global_position, spawn.global_position)
-	if player_dist <= spawn_player_distance:
-		global_position = player.global_position + Vector3(
-			randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
-		)
-	else:
-		global_position = spawn.global_position + Vector3(
-			randf_range(-0.6, 0.6), 0.2, randf_range(-0.6, 0.6)
-		)
+	global_position = spawn.global_position + Vector3(
+		randf_range(-0.6, 0.6), 0.2, randf_range(-0.6, 0.6)
+	)
+	if not respawn_near_player_when_near_spawn:
+		_finish_respawn()
+		return
+	_wait_for_player_near_spawn(spawn)
+
+
+func _wait_for_player_near_spawn(spawn: Node3D) -> void:
+	while player != null and spawn != null:
+		var player_dist := _flat_distance(player.global_position, spawn.global_position)
+		if player_dist <= spawn_player_distance:
+			global_position = player.global_position + Vector3(
+				randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+			)
+			break
+		await get_tree().process_frame
+	_finish_respawn()
+
+
+func force_respawn_near_player() -> void:
+	if player == null:
+		return
+	_reset_to_follow()
+	global_position = player.global_position + Vector3(
+		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+	)
+	_finish_respawn()
+
+
+func force_respawn_at_position(pos: Vector3) -> void:
+	_reset_to_follow()
+	global_position = pos
 	_finish_respawn()
 
 

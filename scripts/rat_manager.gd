@@ -15,6 +15,21 @@ var wave_duration: float = 1.0
 var wave_timer: float = 0.0
 var wave_pending: bool = false
 
+@export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
+@export var min_cap: int = 30
+@export var max_cap: int = 60
+@export var start_with_min: bool = true
+@export var spawn_radius_min: float = 0.8
+@export var spawn_radius_max: float = 2.2
+@export var auto_respawn_if_empty: bool = true
+@export var rat_spawn_bonus_amount: int = 5
+@export var rat_spawn_bonus_radius: float = 2.5
+@export var rat_spawn_one_shot: bool = true
+
+var _player: CharacterBody3D = null
+var _empty_respawn_triggered: bool = false
+var _rat_spawn_used: Dictionary = {}
+
 var mode: int = 0: # 0 = COMBAT, 1 = BUILD
 	set(new_mode):
 		var old_mode := mode
@@ -148,6 +163,9 @@ var _rmb_dragging_object: bool = false
 
 
 func _ready() -> void:
+	add_to_group("rat_manager")
+	_clamp_caps()
+
 	immediate_mesh = ImmediateMesh.new()
 	line_mesh_instance = MeshInstance3D.new()
 	
@@ -163,6 +181,230 @@ func _ready() -> void:
 	line_mesh_instance.material_override = line_material
 	
 	add_child(line_mesh_instance)
+
+func setup_player(player: CharacterBody3D) -> void:
+	_player = player
+	if _player and not _player.is_in_group("player"):
+		_player.add_to_group("player")
+	if start_with_min and rats.is_empty():
+		ensure_min_cap()
+
+
+func _clamp_caps() -> void:
+	if max_cap < 0:
+		max_cap = 0
+	if min_cap < 0:
+		min_cap = 0
+	if min_cap > max_cap:
+		min_cap = max_cap
+
+
+func get_total_rat_count() -> int:
+	var count := 0
+	for rat in rats:
+		if rat != null:
+			count += 1
+	return count
+
+
+func get_max_cap() -> int:
+	return max_cap
+
+
+func get_min_cap() -> int:
+	return min_cap
+
+
+func increase_min_cap(amount: int) -> void:
+	if amount <= 0:
+		return
+	min_cap = clampi(min_cap + amount, 0, max_cap)
+	ensure_min_cap()
+
+
+func restore_to_min(require_empty: bool = false) -> void:
+	if require_empty and get_active_rat_count() > 0:
+		return
+	ensure_min_cap()
+
+
+func ensure_min_cap() -> void:
+	_clamp_caps()
+	var total := get_total_rat_count()
+	var target := min_cap
+	if total >= target:
+		return
+	var spawn_count := target - total
+	_spawn_rats(spawn_count)
+
+
+func _spawn_rats(count: int) -> void:
+	if count <= 0:
+		return
+	if rat_scene == null:
+		push_error("rat_scene is not set in RatManager.")
+		return
+	var capacity := max_cap - get_total_rat_count()
+	if capacity <= 0:
+		return
+	count = min(count, capacity)
+
+	var parent_node := get_parent()
+	if parent_node == null:
+		parent_node = self
+
+	var base_pos := global_position
+	if _player:
+		base_pos = _player.global_position
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var spawn_nodes: Array[Node3D] = []
+	for s in spawns:
+		var n := s as Node3D
+		if n != null:
+			spawn_nodes.append(n)
+	if spawn_nodes.size() > 1 and _player:
+		spawn_nodes.sort_custom(func(a: Node3D, b: Node3D) -> bool:
+			return a.global_position.distance_squared_to(_player.global_position) < b.global_position.distance_squared_to(_player.global_position)
+		)
+
+	for i in range(count):
+		var rat := rat_scene.instantiate()
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		var spawn_center := base_pos
+		if not spawn_nodes.is_empty():
+			var idx := i % spawn_nodes.size()
+			spawn_center = spawn_nodes[idx].global_position
+		rat.position = spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		rat.player = _player
+		parent_node.add_child(rat)
+		if _player:
+			rat.add_collision_exception_with(_player)
+			_player.add_collision_exception_with(rat)
+		register_rat(rat)
+
+	build_blob_offsets()
+
+
+func _spawn_rats_at_center(count: int, center: Vector3) -> void:
+	if count <= 0:
+		return
+	if rat_scene == null:
+		push_error("rat_scene is not set in RatManager.")
+		return
+	var capacity := max_cap - get_total_rat_count()
+	if capacity <= 0:
+		return
+	count = min(count, capacity)
+
+	var parent_node := get_parent()
+	if parent_node == null:
+		parent_node = self
+
+	for i in range(count):
+		var rat := rat_scene.instantiate()
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		rat.position = center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		rat.player = _player
+		parent_node.add_child(rat)
+		if _player:
+			rat.add_collision_exception_with(_player)
+			_player.add_collision_exception_with(rat)
+		register_rat(rat)
+
+	build_blob_offsets()
+
+
+func _spawn_rats_near_player(count: int) -> void:
+	if _player == null:
+		return
+	_spawn_rats_at_center(count, _player.global_position)
+
+
+func _get_fallen_rats() -> Array[Rat]:
+	var fallen: Array[Rat] = []
+	for rat in rats:
+		var r := rat as Rat
+		if r != null and r.is_fallen:
+			fallen.append(r)
+	return fallen
+
+
+func _check_empty_respawn() -> void:
+	if not auto_respawn_if_empty:
+		return
+	var active := get_active_rat_count()
+	if active == 0:
+		if _empty_respawn_triggered:
+			return
+		_empty_respawn_triggered = true
+		_respawn_min_cap_near_player()
+	else:
+		_empty_respawn_triggered = false
+
+
+func _respawn_min_cap_near_player() -> void:
+	_clamp_caps()
+	if _player == null:
+		return
+	var target := min_cap
+	if target <= 0:
+		return
+	var active := get_active_rat_count()
+	var needed := target - active
+	if needed <= 0:
+		return
+
+	var fallen := _get_fallen_rats()
+	for r in fallen:
+		if needed <= 0:
+			break
+		r.force_respawn_near_player()
+		needed -= 1
+
+	if needed > 0:
+		_spawn_rats_near_player(needed)
+
+
+func _check_rat_spawn_bonus() -> void:
+	if _player == null:
+		return
+	if rat_spawn_bonus_amount <= 0:
+		return
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	for s in spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		if rat_spawn_one_shot and _rat_spawn_used.has(n):
+			continue
+		if n.global_position.distance_to(_player.global_position) > rat_spawn_bonus_radius:
+			continue
+		_give_rat_spawn_bonus(n.global_position)
+		if rat_spawn_one_shot:
+			_rat_spawn_used[n] = true
+
+
+func _give_rat_spawn_bonus(spawn_center: Vector3) -> void:
+	var add := rat_spawn_bonus_amount
+	var capacity := max_cap - get_total_rat_count()
+	if capacity <= 0:
+		return
+	add = min(add, capacity)
+
+	var fallen := _get_fallen_rats()
+	for r in fallen:
+		if add <= 0:
+			break
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		r.force_respawn_at_position(pos)
+		add -= 1
+
+	if add > 0:
+		_spawn_rats_at_center(add, spawn_center)
 
 
 func _process(delta: float) -> void:
@@ -226,6 +468,8 @@ func _process(delta: float) -> void:
 
 	# ── Cursor Preview ──
 	_update_cursor_preview()
+	_check_empty_respawn()
+	_check_rat_spawn_bonus()
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
