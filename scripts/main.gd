@@ -219,7 +219,7 @@ func _process(delta: float) -> void:
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
 	if cam and player:
-		var offset := Vector3(10, 12, 10)
+		var offset := Vector3(10, 18, 10)
 		cam.position = cam.position.lerp(player.position + offset, 0.05)
 		cam.look_at(player.position)
 
