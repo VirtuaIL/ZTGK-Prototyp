@@ -494,6 +494,8 @@ func set_wall_collision(enabled: bool) -> void:
 func _should_block_edge(hvel: Vector2) -> bool:
 	if not edge_avoidance_enabled:
 		return false
+	if is_carrier:
+		return false
 	if _recall_boost_timer > 0.0:
 		return false
 	if is_anchored:

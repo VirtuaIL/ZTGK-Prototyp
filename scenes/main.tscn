@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/button.tscn" id="10_choun"]
@@ -21,10 +21,10 @@
 [ext_resource type="PackedScene" uid="uid://cbp1g7n8h5m2p" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
 [ext_resource type="PackedScene" path="res://scenes/boss_nav_node.tscn" id="21_og1vs"]
-[ext_resource type="PackedScene" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
+[ext_resource type="PackedScene" uid="uid://cgn1bdrpc4gku" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
 [ext_resource type="PackedScene" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
 [ext_resource type="PackedScene" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
-[ext_resource type="PackedScene" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
+[ext_resource type="PackedScene" uid="uid://dof0pvkxrxt75" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -117,7 +117,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.679695, -1.1444092e-05, -171.51611)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.338514, -1.1444092e-05, -11.514845)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")

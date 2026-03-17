@@ -1267,6 +1267,7 @@ func _get_mouse_ground_hit() -> Dictionary:
 
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
+	query.collision_mask = 1
 	return space_state.intersect_ray(query)
 
 
@@ -1827,13 +1828,18 @@ func _process_object_drag() -> void:
 	if not grabbed_object.get("is_surrounded"):
 		return
 
-	var hit := _get_mouse_ground_hit()
-	if not hit:
-		return
-
 	var current_pos: Vector3 = grabbed_object.global_position
-	var target_pos: Vector3 = hit.position
-	target_pos.y = current_pos.y
+	var target_pos: Vector3
+	
+	var hit := _get_mouse_ground_hit()
+	if hit:
+		target_pos = hit.position
+		target_pos.y = current_pos.y
+	else:
+		var fallback := _get_mouse_pos_at_y(current_pos.y)
+		if fallback == Vector3.ZERO:
+			return
+		target_pos = fallback
 
 	var carrier_count: int = grabbed_object.get("carrier_rats").size()
 	var carrier_max_val: Variant = grabbed_object.get("carrier_available_max")
