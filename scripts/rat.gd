@@ -10,11 +10,11 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var travel_timeout: float = 3.0
 
 # Spring-damp parameters (used in FOLLOW state)
-@export var spring_stiffness: float = 12.0
-@export var damping:          float = 0.86
+@export var spring_stiffness: float = 30.0
+@export var damping:          float = 0.8
 @export var separation_dist:  float = 0.5
 @export var separation_force: float = 12.0
-@export var max_speed:        float = 20.0
+@export var max_speed:        float = 26.0
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
@@ -48,6 +48,7 @@ var wave_duration: float = 0.8
 # Damage
 var damage_per_hit: float = 10.0
 var hit_range: float = 0.8
+var attack_cooldown: float = 0.0
 
 # Build state
 var build_target: Vector3 = Vector3.ZERO
@@ -90,6 +91,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if player == null:
 		return
+		
+	if attack_cooldown > 0.0:
+		attack_cooldown = maxf(0.0, attack_cooldown - delta)
 
 	if _recall_boost_timer > 0.0:
 		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
@@ -278,11 +282,16 @@ func _process_wave(delta: float) -> void:
 
 
 func _check_damage() -> void:
+	if attack_cooldown > 0.0:
+		return
+		
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	for enemy in enemies:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
-			enemy.take_damage(damage_per_hit, get_instance_id())
+			enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
+			attack_cooldown = 1.0
+			break
 
 
 func _process_travel_to_build(delta: float) -> void:
