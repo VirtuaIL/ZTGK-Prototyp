@@ -8,6 +8,10 @@ var build_mode_rect: ColorRect
 var cheatsheet_panel: Panel
 var goal_label: Label
 var rat_count_label: Label
+var recall_indicator: Control
+var recall_indicator_layer: CanvasLayer
+var _recall_hold_time: float = 0.0
+var _recall_triggered: bool = false
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
@@ -26,6 +30,7 @@ func _init_game() -> void:
 	_setup_cheatsheet_ui()
 	_setup_goal_ui()
 	_setup_rat_count_ui()
+	_setup_recall_indicator_ui()
 	
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
@@ -113,7 +118,7 @@ func _setup_cheatsheet_ui() -> void:
 	body.text = \
 		"WASD – ruch\n" + \
 		"CTRL (trzymaj) – tryb budowy, puść – tryb walki\n" + \
-		"SPACJA – przywołaj wszystkie szczury\n\n" + \
+		"SPACJA (przytrzymaj 1.5s) – przywołaj wszystkie szczury\n\n" + \
 		"MYSZ (Tryb walki)\n" + \
 		"LPM (przytrzymaj) – formacja wokół kursora\n" + \
 		"PPM (przytrzymaj) – obrót formacji\n\n" + \
@@ -161,6 +166,14 @@ func _setup_rat_count_ui() -> void:
 	layer.add_child(label)
 	add_child(layer)
 
+func _setup_recall_indicator_ui() -> void:
+	recall_indicator_layer = CanvasLayer.new()
+	var indicator_scene = preload("res://scripts/ui/hold_recall_indicator.gd")
+	recall_indicator = indicator_scene.new()
+	recall_indicator.visible = false
+	recall_indicator_layer.add_child(recall_indicator)
+	add_child(recall_indicator_layer)
+
 func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
@@ -198,6 +211,7 @@ func _process(delta: float) -> void:
 		_update_mode_ui()
 
 	_update_rat_count_ui()
+	_update_recall_hold(delta)
 	
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
@@ -208,17 +222,33 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Space = recall all rats (including carriers)
-	if event.is_action_pressed("recall_rats"):
-		rat_manager.recall_all_rats()
-		get_viewport().set_input_as_handled()
-		return
-
 	if event.is_action_pressed("toggle_cheatsheet"):
 		if cheatsheet_panel:
 			cheatsheet_panel.visible = not cheatsheet_panel.visible
 		get_viewport().set_input_as_handled()
 		return
+
+
+func _update_recall_hold(delta: float) -> void:
+	var holding := Input.is_action_pressed("recall_rats")
+	if holding and not _recall_triggered:
+		_recall_hold_time = min(_recall_hold_time + delta, 1.5)
+		if _recall_hold_time >= 1.5:
+			rat_manager.recall_all_rats()
+			_recall_triggered = true
+	else:
+		_recall_hold_time = 0.0
+		_recall_triggered = false
+
+	if recall_indicator:
+		if holding and not _recall_triggered:
+			recall_indicator.visible = true
+			recall_indicator.set("progress", _recall_hold_time / 1.5)
+			var mp := get_viewport().get_mouse_position()
+			var sz := recall_indicator.size
+			recall_indicator.position = mp + Vector2(-sz.x * 0.5, -sz.y - 14.0)
+		else:
+			recall_indicator.visible = false
 
 
 func _add_action(action_name: String, key: Key) -> void:

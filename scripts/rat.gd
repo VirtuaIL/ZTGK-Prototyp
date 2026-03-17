@@ -18,8 +18,8 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
-@export var release_boost_speed: float = 7.5
-@export var release_boost_up: float = 8.0
+@export var release_boost_speed: float = 15.0
+@export var release_boost_up: float = 22.0
 
 var state: State = State.FOLLOW
 var player: Node3D = null
@@ -320,8 +320,10 @@ func release_rat(with_boost: bool = false) -> void:
 			to_player.y = 0.0
 			if to_player.length() > 0.001:
 				var dir := to_player.normalized()
-				velocity.x = dir.x * release_boost_speed
-				velocity.z = dir.z * release_boost_speed
+				_spring_velocity.x = dir.x * release_boost_speed
+				_spring_velocity.z = dir.z * release_boost_speed
+				velocity.x = _spring_velocity.x
+				velocity.z = _spring_velocity.z
 			velocity.y = release_boost_up
 		else:
 			velocity.y = 5.0

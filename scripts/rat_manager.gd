@@ -79,6 +79,7 @@ var active_build_positions: Array[Vector3] = []
 # Vertical offset applied to build positions sampled from the surface.
 # Default aligns rat collision bottom with the surface (rat height is 0.15).
 @export var build_surface_offset: float = 0.1
+@export var build_force_timeout: float = 2.5
 
 const DRAW_MODE_PATH := 0
 const DRAW_MODE_CIRCLE := 1
@@ -104,6 +105,7 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 @export var circle_fill_spacing: float = 0.5
 
 var current_circle_center: Vector3 = Vector3.ZERO
+var _build_force_timer: float = 0.0
 
 var grabbed_object: CharacterBody3D = null
 var grabbed_object_last_pos: Vector3 = Vector3.ZERO
@@ -412,6 +414,8 @@ func _give_rat_spawn_bonus(spawn_center: Vector3) -> void:
 
 
 func _process(delta: float) -> void:
+	if _build_force_timer > 0.0:
+		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
 	_update_edge_avoidance()
@@ -768,7 +772,13 @@ func _check_travel_anchoring() -> void:
 func _check_formation_sync() -> void:
 	if not _has_build_in_progress():
 		return
-		
+	if _build_force_timer <= 0.0:
+		for rat in rats:
+			if rat.state == rat.State.TRAVEL_TO_BUILD:
+				rat.state = rat.State.WAITING_FOR_FORMATION
+				rat.global_position = rat.build_target
+				rat.velocity = Vector3.ZERO
+
 	var any_traveling = false
 	var any_waiting = false
 	
@@ -1439,6 +1449,8 @@ func _build_circle_if_possible() -> void:
 		var pos = fill_positions[i]
 		rat.build_at(pos)
 		active_build_positions.append(pos)
+	if count > 0:
+		_build_force_timer = max(0.1, build_force_timeout)
 
 
 func _distribute_rats_on_path() -> void:
@@ -1536,6 +1548,8 @@ func _distribute_rats_on_path() -> void:
 				interp_pos += lateral_dir * brush_lane_spacing * factor
 
 		available_rats[i].build_at(interp_pos)
+	if rat_count > 0:
+		_build_force_timer = max(0.1, build_force_timeout)
 
 
 func _send_horde_to_point() -> void:
@@ -1578,6 +1592,8 @@ func _send_horde_to_point() -> void:
 		var rat = available_rats[i]
 		rat.build_at(build_pos)
 		built_positions[build_pos] = true
+	if count > 0:
+		_build_force_timer = max(0.1, build_force_timeout)
 
 
 func _surround_object_with_rats(obj: CharacterBody3D) -> void:

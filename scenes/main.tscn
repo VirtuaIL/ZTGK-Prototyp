@@ -383,7 +383,7 @@ transform = Transform3D(1, 0, 0, 0, 0.7, 0, 0, 0, 1.453, -16.998837, 0, -54.6736
 transform = Transform3D(4, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -18.215405, 0, -62.783516)
 
 [node name="door21" parent="walls" unique_id=967211899 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.007889, 0, -78.280365)
+transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.007889, 0, -78.22751)
 
 [node name="door23" parent="walls" unique_id=1494699162 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(2, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -24.489746, 0, -82.1588)
