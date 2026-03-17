@@ -17,7 +17,6 @@ var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
 @export var min_cap: int = 40
-@export var max_cap: int = 60
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -203,12 +202,8 @@ func setup_player(player: CharacterBody3D) -> void:
 
 
 func _clamp_caps() -> void:
-	if max_cap < 0:
-		max_cap = 0
 	if min_cap < 0:
 		min_cap = 0
-	if min_cap > max_cap:
-		min_cap = max_cap
 
 
 func get_total_rat_count() -> int:
@@ -219,10 +214,6 @@ func get_total_rat_count() -> int:
 	return count
 
 
-func get_max_cap() -> int:
-	return max_cap
-
-
 func get_min_cap() -> int:
 	return min_cap
 
@@ -230,14 +221,14 @@ func get_min_cap() -> int:
 func increase_min_cap(amount: int) -> void:
 	if amount <= 0:
 		return
-	min_cap = clampi(min_cap + amount, 0, max_cap)
-	ensure_min_cap()
+	min_cap = max(0, min_cap + amount)
 
 
 func restore_to_min(require_empty: bool = false) -> void:
 	if require_empty and get_active_rat_count() > 0:
 		return
-	ensure_min_cap()
+	var spawn_center := _get_nearest_spawn_pos()
+	_restore_to_min_at_spawn(spawn_center)
 
 
 func ensure_min_cap() -> void:
@@ -256,10 +247,6 @@ func _spawn_rats(count: int) -> void:
 	if rat_scene == null:
 		push_error("rat_scene is not set in RatManager.")
 		return
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	count = min(count, capacity)
 
 	var parent_node := get_parent()
 	if parent_node == null:
@@ -298,16 +285,32 @@ func _spawn_rats(count: int) -> void:
 	build_blob_offsets()
 
 
+func _get_nearest_spawn_pos() -> Vector3:
+	var base_pos := global_position
+	if _player:
+		base_pos = _player.global_position
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var nearest: Node3D = null
+	var best_dist := INF
+	for s in spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		var d := n.global_position.distance_squared_to(base_pos)
+		if d < best_dist:
+			best_dist = d
+			nearest = n
+	if nearest:
+		return nearest.global_position
+	return base_pos
+
+
 func _spawn_rats_at_center(count: int, center: Vector3) -> void:
 	if count <= 0:
 		return
 	if rat_scene == null:
 		push_error("rat_scene is not set in RatManager.")
 		return
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	count = min(count, capacity)
 
 	var parent_node := get_parent()
 	if parent_node == null:
@@ -344,24 +347,12 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var active := get_active_rat_count()
-	if auto_respawn_if_empty and active == 0:
-		if _empty_respawn_triggered:
-			return
-		_empty_respawn_triggered = true
-		_respawn_min_cap_near_player()
-	else:
-		_empty_respawn_triggered = false
-
-	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_respawn_min_cap_near_player()
-		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+	# Respawn is handled only at rat_spawn points now.
+	return
 
 
-func _respawn_min_cap_near_player() -> void:
+func _restore_to_min_at_spawn(spawn_center: Vector3) -> void:
 	_clamp_caps()
-	if _player == null:
-		return
 	var target := min_cap
 	if target <= 0:
 		return
@@ -374,51 +365,31 @@ func _respawn_min_cap_near_player() -> void:
 	for r in fallen:
 		if needed <= 0:
 			break
-		r.force_respawn_near_player()
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		r.force_respawn_at_position(pos)
 		needed -= 1
 
 	if needed > 0:
-		_spawn_rats_near_player(needed)
+		_spawn_rats_at_center(needed, spawn_center)
 
 
 func _check_rat_spawn_bonus() -> void:
 	if _player == null:
 		return
-	if rat_spawn_bonus_amount <= 0:
+	if _min_respawn_cooldown > 0.0:
 		return
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	for s in spawns:
 		var n := s as Node3D
 		if n == null:
 			continue
-		if rat_spawn_one_shot and _rat_spawn_used.has(n):
-			continue
 		if n.global_position.distance_to(_player.global_position) > rat_spawn_bonus_radius:
 			continue
-		_give_rat_spawn_bonus(n.global_position)
-		if rat_spawn_one_shot:
-			_rat_spawn_used[n] = true
-
-
-func _give_rat_spawn_bonus(spawn_center: Vector3) -> void:
-	var add := rat_spawn_bonus_amount
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	add = min(add, capacity)
-
-	var fallen := _get_fallen_rats()
-	for r in fallen:
-		if add <= 0:
-			break
-		var angle := randf() * TAU
-		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-		r.force_respawn_at_position(pos)
-		add -= 1
-
-	if add > 0:
-		_spawn_rats_at_center(add, spawn_center)
+		_restore_to_min_at_spawn(n.global_position)
+		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+		break
 
 
 func _process(delta: float) -> void:
@@ -1116,6 +1087,11 @@ func get_active_rat_count() -> int:
 	return count
 
 
+func get_available_rat_count() -> int:
+	var available := _get_available_follow_rats()
+	return available.size()
+
+
 func activate_orbit() -> void:
 	if orbit_active:
 		deactivate_orbit()
@@ -1242,7 +1218,7 @@ func recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 
-	_respawn_min_cap_near_player()
+	# Respawn only at rat_spawn now.
 
 
 func _process_hover() -> void:

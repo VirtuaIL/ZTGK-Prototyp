@@ -3,13 +3,13 @@ extends CharacterBody3D
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 
 # ── Health ──
-@export var max_health: float = 150.0
+@export var max_health: float = 120.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
 # ── Movement ──
-@export var move_speed: float = 1.8
-@export var chase_speed: float = 3.2
+@export var move_speed: float = 1.4
+@export var chase_speed: float = 2.6
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
