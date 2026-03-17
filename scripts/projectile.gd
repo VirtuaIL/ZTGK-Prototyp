@@ -21,9 +21,8 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is player:
-		# Reset player
-		body.global_position = body._spawn_position
-		body.velocity = Vector3.ZERO
+		if body.has_method("take_damage"):
+			body.take_damage(body.max_hp * 0.5)
 		queue_free()
 	elif not (body is turret or body is hitscan_turret):
 		# Hit wall, box, floor, or wall button
