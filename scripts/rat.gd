@@ -18,8 +18,9 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
-@export var release_boost_speed: float = 15.0
-@export var release_boost_up: float = 22.0
+@export var release_boost_speed: float = 14.0
+@export var release_boost_up: float = 20.0
+@export var release_boost_time: float = 0.25
 
 var state: State = State.FOLLOW
 var player: Node3D = null
@@ -68,6 +69,7 @@ var is_anchored: bool = false
 @export var anchor_radius: float = 2.0
 
 var is_fallen: bool = false
+var _recall_boost_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -84,6 +86,21 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if player == null:
+		return
+
+	if _recall_boost_timer > 0.0:
+		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
+		var to_player := player.global_position - global_position
+		to_player.y = 0.0
+		if to_player.length() > 0.001:
+			var dir := to_player.normalized()
+			velocity.x = dir.x * release_boost_speed
+			velocity.z = dir.z * release_boost_speed
+		if not is_on_floor():
+			velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+		else:
+			velocity.y = 0.0
+		move_and_slide()
 		return
 
 	# Fall recovery first so distance check doesn't pull rats to player mid-fall.
@@ -325,6 +342,7 @@ func release_rat(with_boost: bool = false) -> void:
 				velocity.x = _spring_velocity.x
 				velocity.z = _spring_velocity.z
 			velocity.y = release_boost_up
+			_recall_boost_timer = release_boost_time
 		else:
 			velocity.y = 5.0
 		_travel_timer = 0.0
@@ -460,6 +478,8 @@ func set_wall_collision(enabled: bool) -> void:
 
 func _should_block_edge(hvel: Vector2) -> bool:
 	if not edge_avoidance_enabled:
+		return false
+	if _recall_boost_timer > 0.0:
 		return false
 	if is_anchored:
 		return false
