@@ -374,7 +374,7 @@ func _update_recall_hold(delta: float) -> void:
 	var holding := Input.is_action_pressed("recall_rats")
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 1.5)
-		if _recall_hold_time >= 1.5:
+		if _recall_hold_time >= 1:
 			rat_manager.recall_all_rats()
 			_recall_triggered = true
 	else:
