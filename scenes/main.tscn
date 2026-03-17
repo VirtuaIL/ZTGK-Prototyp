@@ -70,22 +70,22 @@ size = Vector3(36.53528, 0.001, 32.270782)
 size = Vector3(12.072998, 0.001, 9.516235)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pm3ni"]
-size = Vector3(20.378418, 0.001, 12.112671)
+size = Vector3(20.378418, 0.001, 13.085144)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_y6deb"]
 size = Vector3(32.32611, 0.001, 23.777954)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_og1vs"]
-size = Vector3(16.62384, 0.001, 43.01416)
+size = Vector3(16.62384, 0.001, 43.66638)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2wyq8"]
 size = Vector3(10.629028, 0.001, 19.249512)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vxglm"]
-size = Vector3(22.615479, 0.001, 28.152527)
+size = Vector3(22.615479, 0.001, 29.702362)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2f3dj"]
-size = Vector3(16.5401, 0.001, 35.1521)
+size = Vector3(16.5401, 0.001, 35.97107)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
@@ -284,7 +284,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.578, 0, -92.65)
 shape = SubResource("BoxShape3D_jscy8")
 
 [node name="CollisionShape3D6" type="CollisionShape3D" parent="Floor" unique_id=1810951742]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45.603104, 0, -91.59156)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45.603104, 0, -92.0778)
 shape = SubResource("BoxShape3D_pm3ni")
 
 [node name="CollisionShape3D7" type="CollisionShape3D" parent="Floor" unique_id=1386623464]
@@ -292,7 +292,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.804375, 0, -110.12535)
 shape = SubResource("BoxShape3D_y6deb")
 
 [node name="CollisionShape3D8" type="CollisionShape3D" parent="Floor" unique_id=549523408]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.590843, 0, -143.7284)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.590843, 0, -143.40228)
 shape = SubResource("BoxShape3D_og1vs")
 
 [node name="CollisionShape3D9" type="CollisionShape3D" parent="Floor" unique_id=2002776409]
@@ -300,11 +300,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -49.55577, 0, -132.34348)
 shape = SubResource("BoxShape3D_2wyq8")
 
 [node name="CollisionShape3D10" type="CollisionShape3D" parent="Floor" unique_id=774283220]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.128662, 0, -180.1536)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.128662, 0, -179.37868)
 shape = SubResource("BoxShape3D_vxglm")
 
 [node name="CollisionShape3D11" type="CollisionShape3D" parent="Floor" unique_id=2064322300]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.642292, 0, -212.16472)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.642292, 0, -211.75523)
 shape = SubResource("BoxShape3D_2f3dj")
 
 [node name="walls" type="Node3D" parent="." unique_id=54958019]
@@ -491,19 +491,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.585457, 0, -28.243254)
 doorId = 1
 
 [node name="door10" parent="doors" unique_id=2627827 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.400368, 0, -75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.400368, 0, -74.84566)
 doorId = 3
 
 [node name="door13" parent="doors" unique_id=63013407 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.961315, 0, -99.72233)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.961315, 0, -99.70198)
 doorId = 4
 
 [node name="door18" parent="doors" unique_id=2003140082 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -143)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -142.96257)
 doorId = 5
 
 [node name="door26" parent="doors" unique_id=1223185519 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -171.81993)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -171.62376)
 doorId = 7
 
 [node name="door24" parent="doors" unique_id=1759815341 instance=ExtResource("9_85g3d")]
@@ -558,7 +558,7 @@ transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -7.1
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2, 0.99, -7.844)
 
 [node name="LaserEmitter3" parent="lasers" unique_id=1284436546 instance=ExtResource("15_jkv2x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.528717, 0.98987484, -50.764656)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1572533, 0.98987484, -50.764656)
 damage_per_second = 80.0
 
 [node name="RedirectionBox2" parent="lasers" unique_id=1837366872 instance=ExtResource("16_jbj1t")]
