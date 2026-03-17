@@ -181,7 +181,8 @@ func _ready() -> void:
 	
 	unified_shape_combiner = CSGCombiner3D.new()
 	unified_shape_combiner.use_collision = true
-	unified_shape_combiner.collision_layer = 9
+	# Put structures on layer 9 (bit 9), not layer mask "9" (which includes floor).
+	unified_shape_combiner.collision_layer = 1 << 8
 	unified_shape_combiner.add_to_group("rat_structures")
 	add_child(unified_shape_combiner)
 	line_mesh_instance.mesh = immediate_mesh
@@ -846,7 +847,10 @@ func _form_unified_mesh() -> void:
 		var query = PhysicsRayQueryParameters3D.create(pos + Vector3(0, 0.5, 0), pos + Vector3(0, -1.5, 0))
 		query.collision_mask = 1 # Floor
 		var hit = space_state.intersect_ray(query)
-		var on_floor = not hit.is_empty()
+		var on_floor = false
+		if not hit.is_empty():
+			var floor_dist: float = pos.y - (hit.position as Vector3).y
+			on_floor = floor_dist <= 0.4
 		rat_on_floor.append(on_floor)
 
 	var connection_threshold = 1.3
@@ -865,6 +869,9 @@ func _form_unified_mesh() -> void:
 		for j in range(num_rats):
 			if i == j: continue
 			var pos_b = rat_positions[j]
+			var y_diff = abs(pos_a.y - pos_b.y)
+			if y_diff > 0.6:
+				continue
 			var dist = pos_a.distance_to(pos_b)
 			if dist < connection_threshold:
 				neighbors.append({"index": j, "dist": dist})

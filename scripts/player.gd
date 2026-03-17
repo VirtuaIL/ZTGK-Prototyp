@@ -25,7 +25,7 @@ var _spawn_position: Vector3 = Vector3.ZERO
 func _ready() -> void:
 	add_to_group("player")
 	collision_layer = 2 # Layer 2: Player
-	collision_mask = 13 # Floor (1) + Movable (4) + Walls (8)
+	collision_mask = 13 | (1 << 8) # Floor (1) + Movable (4) + Walls (8) + RatStructures (9)
 	_spawn_position = global_position
 	current_hp = max_hp
 	_update_health_bar()
