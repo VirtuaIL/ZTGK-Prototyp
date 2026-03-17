@@ -3,7 +3,7 @@ extends CharacterBody3D
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 
 # ── Health ──
-@export var max_health: float = 100.0
+@export var max_health: float = 250.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
@@ -13,8 +13,8 @@ var health: float = max_health
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
-@export var detection_range: float = 10.0
-@export var lose_range: float = 14.0
+@export var detection_range: float = 16.0
+@export var lose_range: float = 22.0
 @export var attack_range: float = 1.8
 @export var attack_damage: float = 8.0
 @export var attack_cooldown: float = 1.0
@@ -39,6 +39,7 @@ var _attack_timer: float = 0.0
 var _player_ref: CharacterBody3D = null
 
 var damage_cooldowns: Dictionary = {}
+var _knockback: Vector3 = Vector3.ZERO
 
 # ── HP bar visuals ──
 var hp_bar_bg: MeshInstance3D
@@ -111,6 +112,10 @@ func _physics_process(delta: float) -> void:
 			_process_chase(delta)
 		AIState.ATTACK:
 			_process_attack(delta)
+
+	# Apply and decay knockback
+	_knockback = _knockback.lerp(Vector3.ZERO, 10.0 * delta)
+	velocity += _knockback
 
 	move_and_slide()
 
@@ -259,7 +264,7 @@ func is_passive() -> bool:
 # ═══════════════════════════════════════════════
 #  DAMAGE & DEATH (preserved from original)
 # ═══════════════════════════════════════════════
-func take_damage(amount: float, source_id: int = -1) -> void:
+func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO) -> void:
 	if _is_dead or ai_state == AIState.PASSIVE:
 		return
 	if source_id >= 0:
@@ -271,6 +276,12 @@ func take_damage(amount: float, source_id: int = -1) -> void:
 	health = maxf(health, 0.0)
 	_update_hp_bar()
 	_flash_hit()
+
+	if hit_pos != Vector3.ZERO:
+		var dir := (global_position - hit_pos)
+		dir.y = 0.0
+		if dir.length() > 0.01:
+			_knockback += dir.normalized() * 18.0
 
 	# Being hit by rats? Chase that player!
 	if ai_state == AIState.WANDER:

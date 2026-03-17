@@ -121,8 +121,8 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var smooth_rotation_mode: bool = false
 @export var smooth_rotation_speed: float = 90.0
 @export var combat_circle_radius: float = 2.5
-@export var combat_circle_rotation_speed: float = 2.5
-@export var combat_spin_speed: float = 10.0
+@export var combat_circle_rotation_speed: float = 7.0
+@export var combat_spin_speed: float = 18.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -532,12 +532,16 @@ func _update_combat_mouse_follow(delta: float) -> void:
 
 	# LMB: circle around cursor
 	if combat_lmb_down:
+		var effect_radius := combat_circle_radius
 		if combat_rmb_down:
 			_combat_circle_angle += combat_circle_rotation_speed * delta
+			# Increase the target radius significantly so that the spring's inward
+			# lag naturally resolves to the true visual radius of the combat circle.
+			effect_radius += 1.3
 		var angle_step := TAU / float(count)
 		for i in range(count):
 			var angle := _combat_circle_angle + angle_step * float(i)
-			var target := mouse_world + Vector3(cos(angle) * combat_circle_radius, 0.0, sin(angle) * combat_circle_radius)
+			var target := mouse_world + Vector3(cos(angle) * effect_radius, 0.0, sin(angle) * effect_radius)
 			target.y = mouse_world.y
 			active[i].set_target(target)
 		return
