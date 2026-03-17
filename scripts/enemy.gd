@@ -265,6 +265,7 @@ func is_passive() -> bool:
 #  DAMAGE & DEATH (preserved from original)
 # ═══════════════════════════════════════════════
 func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO) -> void:
+	
 	if _is_dead or ai_state == AIState.PASSIVE:
 		return
 	if source_id >= 0:

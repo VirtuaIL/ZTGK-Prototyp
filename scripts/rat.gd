@@ -286,7 +286,11 @@ func _check_damage() -> void:
 		return
 		
 	var enemies := get_tree().get_nodes_in_group("enemies")
+	enemies += (get_tree().get_nodes_in_group("bosses"))
+	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
+	
 	for enemy in enemies:
+		print("ENEMY HIT")
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
 			enemy.take_damage(damage_per_hit, get_instance_id(), global_position)

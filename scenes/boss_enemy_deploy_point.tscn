@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://rnbix2vvjl4m"]
+
+[ext_resource type="Script" uid="uid://cag6u5kjwsdsa" path="res://scripts/boss_enemy_deploy_point.gd" id="1_nbeya"]
+
+[node name="boss_enemy_deploy_point" type="Node3D" unique_id=1230759990]
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, 0, 0, 0)
+script = ExtResource("1_nbeya")

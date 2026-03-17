@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://csp7jwbmufl4w"]
+
+[ext_resource type="Script" uid="uid://bd16dqfeh8338" path="res://scripts/boss_turret.gd" id="1_jhawc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.9, 0.6, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_x3mc5"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Laser"]
+transparency = 1
+albedo_color = Color(1, 0, 0, 0.8)
+emission_enabled = true
+emission = Color(1, 0, 0, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Laser"]
+material = SubResource("StandardMaterial3D_Laser")
+top_radius = 0.05
+bottom_radius = 0.05
+radial_segments = 8
+rings = 1
+
+[node name="boss_turret" type="CharacterBody3D" unique_id=634753806]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+script = ExtResource("1_jhawc")
+sweep_speed = 0.2
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=1592998955]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("BoxMesh_x3mc5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1904930622]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="LaserMesh" type="MeshInstance3D" parent="." unique_id=1849487818]
+visible = false
+mesh = SubResource("CylinderMesh_Laser")
