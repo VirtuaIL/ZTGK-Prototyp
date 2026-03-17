@@ -779,6 +779,8 @@ func _check_formation_sync() -> void:
 	if _build_force_timer <= 0.0:
 		for rat in rats:
 			if rat.state == rat.State.TRAVEL_TO_BUILD:
+				if not is_instance_valid(rat) or not rat.is_inside_tree():
+					continue
 				rat.state = rat.State.WAITING_FOR_FORMATION
 				rat.global_position = rat.build_target
 				rat.velocity = Vector3.ZERO
@@ -807,6 +809,8 @@ func _form_unified_mesh() -> void:
 		
 	var static_rats: Array = []
 	for rat in rats:
+		if not is_instance_valid(rat) or not rat.is_inside_tree():
+			continue
 		if carrier_rats.has(rat):
 			continue
 		if rat.state == rat.State.STATIC:
@@ -832,9 +836,9 @@ func _form_unified_mesh() -> void:
 		cyl.radius = radius
 		cyl.height = height
 		cyl.sides = 12
-		cyl.global_position = rat.global_position + Vector3(0, y_offset, 0)
 		cyl.material = mat
 		unified_shape_combiner.add_child(cyl)
+		cyl.global_position = rat.global_position + Vector3(0, y_offset, 0)
 
 	var connection_threshold = 1.3
 	var max_connections_per_rat = 4
@@ -862,6 +866,7 @@ func _form_unified_mesh() -> void:
 			var box = CSGBox3D.new()
 			box.size = Vector3(radius * 2.0, height, dist)
 			var center = (pos_a + pos_b) / 2.0
+			unified_shape_combiner.add_child(box)
 			box.global_position = center + Vector3(0, y_offset, 0)
 			
 			if dist > 0.001:
@@ -872,7 +877,6 @@ func _form_unified_mesh() -> void:
 				box.look_at_from_position(box.global_position, box.global_position + forward, up)
 			
 			box.material = mat
-			unified_shape_combiner.add_child(box)
 			connections_made += 1
 
 
