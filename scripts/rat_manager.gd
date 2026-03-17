@@ -813,18 +813,63 @@ func _form_unified_mesh() -> void:
 	if static_rats.is_empty():
 		return
 
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.30, 0.18)
+	
+	var height = 0.4
+	var radius = 0.35
+	var y_offset = -0.3
+
+	var rat_positions = []
 	for rat in static_rats:
-		var sphere = CSGSphere3D.new()
-		sphere.radius = 0.35 
-		sphere.radial_segments = 12
-		sphere.rings = 6
-		sphere.global_position = rat.global_position + Vector3(0, -0.35, 0)
+		rat_positions.append(rat.global_position)
 		
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.45, 0.30, 0.18)
-		sphere.material = mat
+		var cyl = CSGCylinder3D.new()
+		cyl.radius = radius
+		cyl.height = height
+		cyl.sides = 12
+		cyl.global_position = rat.global_position + Vector3(0, y_offset, 0)
+		cyl.material = mat
+		unified_shape_combiner.add_child(cyl)
+
+	var connection_threshold = 1.3
+	var max_connections_per_rat = 4
+
+	for i in range(rat_positions.size()):
+		var pos_a = rat_positions[i]
 		
-		unified_shape_combiner.add_child(sphere)
+		var neighbors = []
+		for j in range(i + 1, rat_positions.size()):
+			var pos_b = rat_positions[j]
+			var dist = pos_a.distance_to(pos_b)
+			if dist < connection_threshold:
+				neighbors.append({"index": j, "dist": dist})
+		
+		neighbors.sort_custom(func(a, b): return a["dist"] < b["dist"])
+		
+		var connections_made = 0
+		for nb in neighbors:
+			if connections_made >= max_connections_per_rat:
+				break
+			
+			var dist = nb["dist"]
+			var pos_b = rat_positions[nb["index"]]
+			
+			var box = CSGBox3D.new()
+			box.size = Vector3(radius * 2.0, height, dist)
+			var center = (pos_a + pos_b) / 2.0
+			box.global_position = center + Vector3(0, y_offset, 0)
+			
+			if dist > 0.001:
+				var forward = (pos_b - pos_a).normalized()
+				var up = Vector3.UP
+				if abs(forward.y) > 0.99:
+					up = Vector3.RIGHT
+				box.look_at_from_position(box.global_position, box.global_position + forward, up)
+			
+			box.material = mat
+			unified_shape_combiner.add_child(box)
+			connections_made += 1
 
 
 # ── Input handling ────────────────────────────────────────────────────────────

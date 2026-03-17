@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/button.tscn" id="10_choun"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://djm6b1wixm4x" path="res://scenes/redirection_box.tscn" id="16_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cqhnnnuu3tl5h" path="res://scenes/laser_button.tscn" id="17_muem4"]
 [ext_resource type="PackedScene" uid="uid://cbp1g7n8h5m2p" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
+[ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -85,6 +86,8 @@ size = Vector3(22.615479, 0.001, 28.152527)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2f3dj"]
 size = Vector3(16.5401, 0.001, 35.1521)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
@@ -587,3 +590,53 @@ attack_range = 40.0
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8.338631, 1, -73.04954)
 damage_per_second = 68.0
 attack_range = 40.0
+
+[node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+
+[node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -53.196114, 1.855777, -25.726896)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=1826712052]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -35.34131, 1.855777, -54.068657)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=929105882]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=1079629283]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -52.766537, 1.855777, -100.69345)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=490960081]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D4" type="Area3D" parent="checkpoints" unique_id=694511305]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -34.662205, 1.855777, -125.50915)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D4" unique_id=169961679]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D5" type="Area3D" parent="checkpoints" unique_id=1600236314]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -29.37447, 1.855777, -168.54019)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D5" unique_id=1917184772]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D6" type="Area3D" parent="checkpoints" unique_id=1536316830]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -29.768959, 1.855777, -197.53705)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D6" unique_id=1384776938]
+shape = SubResource("BoxShape3D_yq6so")
