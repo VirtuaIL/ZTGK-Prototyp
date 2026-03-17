@@ -29,12 +29,15 @@ func _ready() -> void:
 	if area:
 		area.collision_mask = 6 # 2 (Player) + 4 (Movable Objects)
 
-
-func _get_target_doors() -> Array[door]:
-	var result: Array[door] = []
-	for d in get_tree().get_nodes_in_group("doors"):
-		if d is door and d.doorId == doorId:
+#changed from Array[Door] to array[Node] to accomodate different entity types being triggered
+func _get_target_doors() -> Array[Node]:
+	var result: Array[Node] = []
+	var objects := get_tree().get_nodes_in_group("doors") + get_tree().get_nodes_in_group("bosses")
+	print(objects)
+	for d in (objects):
+		if ((d is Node) || (d is bossTurret)) and d.doorId == doorId:
 			result.append(d)
+	print(result)
 	return result
 
 

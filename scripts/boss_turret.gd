@@ -1,6 +1,9 @@
 extends CharacterBody3D
 class_name bossTurret
 
+# The ID used by buttons to target this entity
+@export var doorId: int = 0
+
 enum State { IDLE, LASER_SWEEP, PROJECTILE_BARRAGE, ENEMY_DEPLOY, RETREAT_HEAL, DEAD }
 
 var current_state: State = State.IDLE
@@ -103,6 +106,13 @@ func _ready() -> void:
 	mode_timer = mode_switch_time
 	current_state = State.IDLE
 
+func open() -> void:
+	print("BOSS ACTIVATED")
+	self.is_active = true
+	
+func close() -> void:
+	pass
+	
 func find_nav_nodes(node: Node) -> void:
 	if not node: return
 	if node is bossNavNode:
@@ -371,9 +381,7 @@ func set_highlight(enabled: bool) -> void:
 				child.material_overlay = null
 
 func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO) -> void:
-	print("TAKING DAMAGE")
 	if current_state == State.DEAD:
-		print("KIA")
 		return
 		
 	health -= amount

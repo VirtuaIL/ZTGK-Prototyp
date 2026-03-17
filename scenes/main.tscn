@@ -10,8 +10,6 @@
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
-[ext_resource type="PackedScene" uid="uid://xdkpt36dqji0" path="res://scenes/healing_crystal.tscn" id="9_vxglm"]
-[ext_resource type="PackedScene" uid="uid://byiv2kydvlgt7" path="res://scenes/boss_platform.tscn" id="9_yc10j"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/button.tscn" id="10_choun"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/wall.tscn" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://pg0re2o56m0l" path="res://scenes/turret.tscn" id="12_eb6dy"]
@@ -22,10 +20,11 @@
 [ext_resource type="PackedScene" uid="uid://cqhnnnuu3tl5h" path="res://scenes/laser_button.tscn" id="17_muem4"]
 [ext_resource type="PackedScene" uid="uid://cbp1g7n8h5m2p" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
-[ext_resource type="PackedScene" uid="uid://csp7jwbmufl4w" path="res://scenes/boss_turret.tscn" id="21_jscy8"]
-[ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/floor_tile.tscn" id="22_pm3ni"]
-[ext_resource type="PackedScene" uid="uid://craq2km8g200o" path="res://scenes/boss_nav_node.tscn" id="23_y6deb"]
-[ext_resource type="PackedScene" uid="uid://rnbix2vvjl4m" path="res://scenes/boss_enemy_deploy_point.tscn" id="26_2wyq8"]
+[ext_resource type="PackedScene" uid="uid://craq2km8g200o" path="res://scenes/boss_nav_node.tscn" id="21_og1vs"]
+[ext_resource type="PackedScene" uid="uid://rnbix2vvjl4m" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
+[ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
+[ext_resource type="PackedScene" uid="uid://xdkpt36dqji0" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
+[ext_resource type="PackedScene" uid="uid://csp7jwbmufl4w" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -54,7 +53,7 @@ height = 1.5
 radial_segments = 16
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.2509804, 0.21960784, 0.2, 1)
+albedo_color = Color(0.25, 0.22, 0.2, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_1"]
 material = SubResource("StandardMaterial3D_1")
@@ -91,14 +90,14 @@ size = Vector3(10.629028, 0.001, 19.249512)
 size = Vector3(22.615479, 0.001, 29.702362)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2f3dj"]
-size = Vector3(16.5401, 0.001, 35.97107)
+size = Vector3(16.5401, 0.001, 45.74774)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fv21b"]
 size = Vector3(41.459656, 0.001, 29.254395)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_fv21b"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_tel4y"]
 size = Vector3(5.9259033, 0.001, 5.899353)
 
 [node name="Main" type="Node3D" unique_id=709470400]
@@ -118,7 +117,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.7245, 2.0556917, -246.20596)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.24587, -1.1444092e-05, -41.207825)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -276,7 +275,7 @@ transform = Transform3D(0.5628099, 0, 0, 0, 1, 0, 0, 0, 0.27648002, -32, 0, -189
 mesh = SubResource("PlaneMesh_1")
 
 [node name="MeshInstance3D11" type="MeshInstance3D" parent="Floor" unique_id=1767721345]
-transform = Transform3D(0.38999996, 0, 0, 0, 0.9923851, 0, 0, 0, 0.8640001, -32, 0, -212.2145)
+transform = Transform3D(0.38999996, 0, 0, 0, 0.9923851, 0, 0, 0, 1.1933378, -32, 0, -215.88365)
 mesh = SubResource("PlaneMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=845706992]
@@ -320,7 +319,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.128662, 0, -179.37868)
 shape = SubResource("BoxShape3D_vxglm")
 
 [node name="CollisionShape3D11" type="CollisionShape3D" parent="Floor" unique_id=2064322300]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.642292, 0, -211.75523)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.642292, 0, -216.64357)
 shape = SubResource("BoxShape3D_2f3dj")
 
 [node name="CollisionShape3D12" type="CollisionShape3D" parent="Floor" unique_id=947386320]
@@ -477,8 +476,11 @@ transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, -20
 [node name="door27" parent="walls" unique_id=467581967 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(3, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -10.745499, 0, -134.76125)
 
-[node name="door37" parent="walls" unique_id=1820272702 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(9.355132, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -3.5282516, 0, -169.76897)
+[node name="door52" parent="walls" unique_id=808151652 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(1.5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 4.1438465, 0, -175.19228)
+
+[node name="door53" parent="walls" unique_id=1194731751 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(3, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -10.745499, 0, -175.19228)
 
 [node name="MovableBarrier" parent="walls" unique_id=1635682387 instance=ExtResource("18_dp3eg")]
 transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 1, -1.2791481, 0.9831655, -77.82944)
@@ -518,6 +520,10 @@ carriers_required = 5
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -26.905994, -3.8146973e-06, -180.01694)
 carriers_required = 5
 
+[node name="box10" parent="boxes" unique_id=106995478 instance=ExtResource("8_tipki")]
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -26.905994, -3.8146973e-06, -232.01694)
+carriers_required = 5
+
 [node name="doors" type="Node3D" parent="." unique_id=268508132]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.711378)
 
@@ -544,6 +550,10 @@ doorId = 5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -171.62376)
 doorId = 7
 
+[node name="door27" parent="doors" unique_id=33028763 instance=ExtResource("9_85g3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -212.0548)
+doorId = 55
+
 [node name="door24" parent="doors" unique_id=1759815341 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -10.289955, 0, -165.05446)
 doorId = 7
@@ -565,6 +575,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.385296, 0.02200041, -16.3
 
 [node name="button" parent="buttons" unique_id=435181818 instance=ExtResource("10_choun")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.338669, 0, 8.384188)
+
+[node name="button3" parent="buttons" unique_id=385665962 instance=ExtResource("10_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9110241, 0, -213.13321)
+doorId = 55
 
 [node name="button2" parent="buttons" unique_id=557643948 instance=ExtResource("10_choun")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8321114, 0, -22.567791)
@@ -629,165 +643,6 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8.33
 damage_per_second = 68.0
 attack_range = 40.0
 
-[node name="hitscan_turret6" parent="lasers" unique_id=887538464 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 120.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret7" parent="lasers" unique_id=45419229 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret9" parent="lasers" unique_id=901336776 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret8" parent="lasers" unique_id=713043954 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret10" parent="lasers" unique_id=1272073595 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -128.06796)
-
-[node name="hitscan_turret11" parent="lasers" unique_id=159958352 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret12" parent="lasers" unique_id=1806499233 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 110.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret13" parent="lasers" unique_id=569322130 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.78706, -1.4567537, -127.90719)
-
-[node name="hitscan_turret14" parent="lasers" unique_id=1619555057 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 120.796196, -1.4567499, -138.06796)
-
-[node name="hitscan_turret15" parent="lasers" unique_id=708646115 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -138.06796)
-
-[node name="hitscan_turret22" parent="lasers" unique_id=734938191 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-30.399988, 0, -4.2278843e-06, 0, 1, 0, 4.5902707e-06, 0, -28.000013, 139.78706, -1.4567537, -87.90719)
-
-[node name="hitscan_turret16" parent="lasers" unique_id=1324250649 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -138.06796)
-
-[node name="hitscan_turret17" parent="lasers" unique_id=10105569 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -138.06796)
-
-[node name="hitscan_turret18" parent="lasers" unique_id=1577175252 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -138.06796)
-
-[node name="hitscan_turret19" parent="lasers" unique_id=179483437 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -138.06796)
-
-[node name="hitscan_turret20" parent="lasers" unique_id=730678944 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 110.796196, -1.4567499, -138.06796)
-
-[node name="hitscan_turret21" parent="lasers" unique_id=2060683839 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -138.06796)
-
-[node name="hitscan_turret23" parent="lasers" unique_id=575361473 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -148.06796)
-
-[node name="hitscan_turret24" parent="lasers" unique_id=1110068825 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -148.06796)
-
-[node name="hitscan_turret25" parent="lasers" unique_id=1512378100 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -148.06796)
-
-[node name="hitscan_turret26" parent="lasers" unique_id=1924955953 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -148.06796)
-
-[node name="hitscan_turret27" parent="lasers" unique_id=1179236983 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -148.06796)
-
-[node name="hitscan_turret29" parent="lasers" unique_id=1047924980 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -148.06796)
-
-[node name="hitscan_turret31" parent="lasers" unique_id=2017867759 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -158.06796)
-
-[node name="hitscan_turret32" parent="lasers" unique_id=1601692464 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -158.06796)
-
-[node name="hitscan_turret33" parent="lasers" unique_id=866800992 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -158.06796)
-
-[node name="hitscan_turret34" parent="lasers" unique_id=1613251285 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -158.06796)
-
-[node name="hitscan_turret35" parent="lasers" unique_id=1253875450 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -158.06796)
-
-[node name="hitscan_turret37" parent="lasers" unique_id=914953627 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -158.06796)
-
-[node name="hitscan_turret38" parent="lasers" unique_id=1587437462 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 120.796196, -1.4567499, -168.06796)
-
-[node name="hitscan_turret39" parent="lasers" unique_id=1225309365 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -168.06796)
-
-[node name="hitscan_turret40" parent="lasers" unique_id=1994363639 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -168.06796)
-
-[node name="hitscan_turret41" parent="lasers" unique_id=182775436 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -168.06796)
-
-[node name="hitscan_turret42" parent="lasers" unique_id=1227822703 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -168.06796)
-
-[node name="hitscan_turret43" parent="lasers" unique_id=683951619 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -168.06796)
-
-[node name="hitscan_turret44" parent="lasers" unique_id=683471888 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 110.796196, -1.4567499, -168.06796)
-
-[node name="hitscan_turret45" parent="lasers" unique_id=1814983277 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -168.06796)
-
-[node name="hitscan_turret46" parent="lasers" unique_id=1927928402 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 120.796196, -1.4567499, -178.06796)
-
-[node name="hitscan_turret47" parent="lasers" unique_id=1795527919 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -178.06796)
-
-[node name="hitscan_turret48" parent="lasers" unique_id=158878684 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -178.06796)
-
-[node name="hitscan_turret49" parent="lasers" unique_id=1963742306 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -178.06796)
-
-[node name="hitscan_turret50" parent="lasers" unique_id=733762619 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -178.06796)
-
-[node name="hitscan_turret51" parent="lasers" unique_id=2076064932 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -178.06796)
-
-[node name="hitscan_turret52" parent="lasers" unique_id=187335338 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 110.796196, -1.4567499, -178.06796)
-
-[node name="hitscan_turret53" parent="lasers" unique_id=404047899 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -178.06796)
-
-[node name="hitscan_turret54" parent="lasers" unique_id=868780559 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 120.796196, -1.4567499, -188.06796)
-
-[node name="hitscan_turret55" parent="lasers" unique_id=2001219519 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 130.7962, -1.4567499, -188.06796)
-
-[node name="hitscan_turret56" parent="lasers" unique_id=379425799 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 150.7962, -1.4567499, -188.06796)
-
-[node name="hitscan_turret57" parent="lasers" unique_id=142533051 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 140.7962, -1.4567499, -188.06796)
-
-[node name="hitscan_turret58" parent="lasers" unique_id=595146055 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 80.796196, -1.4567499, -188.06796)
-
-[node name="hitscan_turret59" parent="lasers" unique_id=18259645 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 90.796196, -1.4567499, -188.06796)
-
-[node name="hitscan_turret60" parent="lasers" unique_id=1901206317 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 110.796196, -1.4567499, -188.06796)
-
-[node name="hitscan_turret61" parent="lasers" unique_id=1150259495 instance=ExtResource("22_pm3ni")]
-transform = Transform3D(-8, 0, -1.2079664e-06, 0, 1, 0, 1.2079664e-06, 0, -8, 100.796196, -1.4567499, -188.06796)
-
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
@@ -838,54 +693,52 @@ script = ExtResource("20_gqmmt")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D6" unique_id=1384776938]
 shape = SubResource("BoxShape3D_yq6so")
 
-[node name="Bosses" type="Node" parent="." unique_id=343803410]
-
 [node name="boss_arena" type="Node" parent="." unique_id=916825965]
 
-[node name="boss_nav_node" parent="boss_arena" unique_id=1230759990 instance=ExtResource("23_y6deb")]
+[node name="boss_nav_node" parent="boss_arena" unique_id=1230759990 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -57.381523, -0.056754112, -253.42882)
 
-[node name="boss_nav_node2" parent="boss_arena" unique_id=1592593442 instance=ExtResource("23_y6deb")]
+[node name="boss_nav_node2" parent="boss_arena" unique_id=1592593442 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -27.263948, -0.056755066, -283.53497)
 
-[node name="boss_nav_node3" parent="boss_arena" unique_id=1512548162 instance=ExtResource("23_y6deb")]
+[node name="boss_nav_node3" parent="boss_arena" unique_id=1512548162 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -37.426132, -0.056754112, -273.7698)
 
-[node name="boss_nav_node4" parent="boss_arena" unique_id=221315562 instance=ExtResource("23_y6deb")]
+[node name="boss_nav_node4" parent="boss_arena" unique_id=221315562 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -8.426132, -0.056754112, -257.7698)
 
-[node name="boss_nav_node5" parent="boss_arena" unique_id=1378043510 instance=ExtResource("23_y6deb")]
+[node name="boss_nav_node5" parent="boss_arena" unique_id=1378043510 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -60.426132, -0.056754112, -295.7698)
 
-[node name="boss_turret_deploy_point2" parent="boss_arena" unique_id=972630542 instance=ExtResource("26_2wyq8")]
+[node name="boss_turret_deploy_point2" parent="boss_arena" unique_id=972630542 instance=ExtResource("22_2wyq8")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -11.711418, 2.3899336, -266.9097)
 
-[node name="boss_turret_deploy_point4" parent="boss_arena" unique_id=2062552353 instance=ExtResource("26_2wyq8")]
+[node name="boss_turret_deploy_point4" parent="boss_arena" unique_id=2062552353 instance=ExtResource("22_2wyq8")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -34.60963, 2.3899336, -294.8376)
 
-[node name="boss_turret_deploy_point5" parent="boss_arena" unique_id=2069107179 instance=ExtResource("26_2wyq8")]
+[node name="boss_turret_deploy_point5" parent="boss_arena" unique_id=2069107179 instance=ExtResource("22_2wyq8")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -60.436577, 2.3899336, -274.9199)
 
-[node name="boss_turret_deploy_point3" parent="boss_arena" unique_id=1489268342 instance=ExtResource("26_2wyq8")]
+[node name="boss_turret_deploy_point3" parent="boss_arena" unique_id=1489268342 instance=ExtResource("22_2wyq8")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -28.711418, 2.3899336, -252.9097)
 
-[node name="hitscan_turret28" parent="boss_arena" unique_id=1776565332 instance=ExtResource("22_pm3ni")]
+[node name="hitscan_turret28" parent="boss_arena" unique_id=1776565332 instance=ExtResource("23_vxglm")]
 transform = Transform3D(-95.19993, 0, -1.2852785e-05, 0, 1, 0, 1.4374789e-05, 0, -85.12015, -31.559944, -1.4567499, -273.53668)
 
-[node name="healing_crystal" parent="boss_arena" unique_id=47576092 instance=ExtResource("9_vxglm")]
+[node name="healing_crystal" parent="boss_arena" unique_id=47576092 instance=ExtResource("24_2f3dj")]
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000001, -15.883465, -0.056749344, -279.36298)
 
-[node name="healing_crystal3" parent="boss_arena" unique_id=2013058586 instance=ExtResource("9_vxglm")]
+[node name="healing_crystal3" parent="boss_arena" unique_id=2013058586 instance=ExtResource("24_2f3dj")]
 transform = Transform3D(-1, 0, -1.5099579e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000002, -23.802307, -0.056749344, -257.9104)
 
-[node name="healing_crystal2" parent="boss_arena" unique_id=447018954 instance=ExtResource("9_vxglm")]
+[node name="healing_crystal2" parent="boss_arena" unique_id=447018954 instance=ExtResource("24_2f3dj")]
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000001, -46.090744, -0.056749344, -252.18939)
 
 [node name="CollisionShape3D12" type="CollisionShape3D" parent="boss_arena" unique_id=219097392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.590038, -1.0240211, -253.26006)
-shape = SubResource("BoxShape3D_fv21b")
+shape = SubResource("BoxShape3D_tel4y")
 
-[node name="door48" parent="boss_arena" unique_id=909278030 instance=ExtResource("11_ya4ey")]
+[node name="door48" parent="boss_arena" unique_id=20755939 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-6.119594e-08, 0, -1.453, 0, 0.7, 0, 1.4, 0, -6.3512644e-08, -20.67004, 0.016834497, -278.385)
 
 [node name="door49" parent="boss_arena" unique_id=1203656389 instance=ExtResource("11_ya4ey")]
@@ -947,12 +800,12 @@ doorId = 13
 [node name="RedirectionBox4" parent="boss_arena" unique_id=76530190 instance=ExtResource("16_jbj1t")]
 transform = Transform3D(0.8569696, 0, -0.51536715, 0, 1, 0, 0.51536715, 0, 0.8569696, -26.835896, -9.536743e-07, -253.1659)
 
-[node name="hitscan_turret30" parent="boss_arena" unique_id=1829332305 instance=ExtResource("22_pm3ni")]
+[node name="hitscan_turret30" parent="boss_arena" unique_id=1829332305 instance=ExtResource("23_vxglm")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -31.399189, -1.4567499, -268.58453)
 
-[node name="boss_turret" parent="boss_arena" unique_id=634753806 groups=["bosses"] instance=ExtResource("21_jscy8")]
+[node name="boss_turret" parent="boss_arena" unique_id=634753806 groups=["bosses"] instance=ExtResource("25_yq6so")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -31.86284, 2.9623127, -268.03925)
-is_active = true
+doorId = 55
 sweep_speed = 0.5
 damage_per_second = 60.0
 max_health = 10000.0
