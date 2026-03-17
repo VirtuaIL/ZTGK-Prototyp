@@ -62,6 +62,13 @@ func _ready() -> void:
 
 	# Start with a small random pause so not all enemies move at once
 	_wander_pause_timer = randf_range(0.0, wander_pause_max)
+	
+	# Connect to player death to respawn
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		var p = players[0]
+		if p.has_signal("player_died"):
+			p.player_died.connect(_respawn)
 
 
 func _physics_process(delta: float) -> void:
@@ -70,6 +77,12 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5.0
 	else:
 		velocity.y = 0.0
+
+	# ── Map bounds check ──
+	# If the enemy falls off the map, it dies
+	if global_position.y < -15.0 and not _is_dead:
+		_die()
+		return
 
 	# ── Tick damage cooldowns ──
 	var to_remove: Array = []

@@ -82,6 +82,9 @@ func _ready() -> void:
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
 	collision_mask = 9  # Collide with Floor (1) and Walls (8) by default
+	
+	floor_snap_length = 0.5
+	floor_max_angle = deg_to_rad(45.0)
 
 
 func _physics_process(delta: float) -> void:

@@ -2,6 +2,7 @@ extends CharacterBody3D
 class_name player
 
 signal stratagem_activated(stratagem_id: String)
+signal player_died
 
 @export var speed: float = 7.0
 @export var rotation_speed: float = 10.0
@@ -94,12 +95,17 @@ func take_damage(amount: float) -> void:
 		die()
 
 
+func set_spawn_position(pos: Vector3) -> void:
+	_spawn_position = pos
+
+
 func die() -> void:
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
 	current_hp = max_hp
 	time_since_last_damage = 0.0
 	_update_health_bar()
+	player_died.emit()
 
 
 func set_stratagem_mode(active: bool) -> void:
