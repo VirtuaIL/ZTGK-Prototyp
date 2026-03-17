@@ -40,6 +40,10 @@ var _player_ref: CharacterBody3D = null
 
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
+var _slowdown_mult: float = 1.0
+var _slowdown_timer: float = 0.0
+
+var _blood_particles: CPUParticles3D = null
 
 # ── HP bar visuals ──
 var hp_bar_bg: MeshInstance3D
@@ -59,6 +63,7 @@ func _ready() -> void:
 
 	_create_hp_bar()
 	_create_hp_label()
+	_create_blood_particles()
 	_update_hp_bar()
 
 	# Start with a small random pause so not all enemies move at once
@@ -80,6 +85,13 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5.0
 	else:
 		velocity.y = 0.0
+
+	# ── Slowdown tick ──
+	if _slowdown_timer > 0.0:
+		_slowdown_timer -= delta
+		if _slowdown_timer <= 0.0:
+			_slowdown_mult = 1.0
+	
 
 	# ── Map bounds check ──
 	# If the enemy falls off the map, it dies
@@ -154,8 +166,8 @@ func _process_wander(delta: float) -> void:
 		return
 
 	var dir := to_target.normalized()
-	velocity.x = dir.x * move_speed
-	velocity.z = dir.z * move_speed
+	velocity.x = dir.x * move_speed * _slowdown_mult
+	velocity.z = dir.z * move_speed * _slowdown_mult
 
 	# Face movement direction
 	var target_angle := atan2(dir.x, dir.z)
@@ -196,8 +208,8 @@ func _process_chase(delta: float) -> void:
 	var to_player := _player_ref.global_position - global_position
 	to_player.y = 0.0
 	var dir := to_player.normalized()
-	velocity.x = dir.x * chase_speed
-	velocity.z = dir.z * chase_speed
+	velocity.x = dir.x * chase_speed * _slowdown_mult
+	velocity.z = dir.z * chase_speed * _slowdown_mult
 
 	var target_angle := atan2(dir.x, dir.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
@@ -276,6 +288,11 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 	health = maxf(health, 0.0)
 	_update_hp_bar()
 	_flash_hit()
+	_emit_blood()
+
+	# Apply slowdown from rats
+	_slowdown_mult = 0.4 # Slow to 40% speed
+	_slowdown_timer = 0.5
 
 	if hit_pos != Vector3.ZERO:
 		var dir := (global_position - hit_pos)
@@ -434,3 +451,32 @@ func _update_hp_bar() -> void:
 
 	if hp_label:
 		hp_label.text = str(int(ceil(health)))
+
+
+func _create_blood_particles() -> void:
+	_blood_particles = CPUParticles3D.new()
+	add_child(_blood_particles)
+	_blood_particles.position.y = 1.0
+	_blood_particles.emitting = false
+	_blood_particles.amount = 12
+	_blood_particles.one_shot = true
+	_blood_particles.explosiveness = 0.8
+	_blood_particles.direction = Vector3.UP
+	_blood_particles.spread = 45.0
+	_blood_particles.initial_velocity_min = 2.0
+	_blood_particles.initial_velocity_max = 4.0
+	
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 0, 0) # Red
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_blood_particles.material_override = mat
+	
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.1, 0.1, 0.1)
+	_blood_particles.mesh = mesh
+
+
+func _emit_blood() -> void:
+	if _blood_particles:
+		_blood_particles.restart()
+		_blood_particles.emitting = true

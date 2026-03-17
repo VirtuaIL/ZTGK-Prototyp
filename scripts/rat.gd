@@ -1,7 +1,7 @@
 extends CharacterBody3D
 class_name Rat
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, ATTACK}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -21,6 +21,9 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var release_boost_speed: float = 14.0
 @export var release_boost_up: float = 20.0
 @export var release_boost_time: float = 0.25
+
+@export var attack_speed: float = 14.0
+@export var leap_force: float = 5.0
 
 var state: State = State.FOLLOW
 var player: Node3D = null
@@ -71,6 +74,10 @@ var is_anchored: bool = false
 
 var is_fallen: bool = false
 var _recall_boost_timer: float = 0.0
+
+# Attack state
+var attack_target_node: Node3D = null
+var attack_offset: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -148,6 +155,9 @@ func _physics_process(delta: float) -> void:
 		State.WAVE:
 			_process_wave(delta)
 			_check_damage()
+		State.ATTACK:
+			_process_attack_state(delta)
+			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:
@@ -214,6 +224,48 @@ func _process_follow_spring(delta: float) -> void:
 func set_target(pos: Vector3) -> void:
 	_target_position = pos
 	_target_ready    = true
+
+
+func set_attack_target(target: Node3D) -> void:
+	state = State.ATTACK
+	attack_target_node = target
+	# Random offset so they don't all crowd the same point
+	var angle := randf() * TAU
+	var dist := randf_range(0.3, 0.7)
+	attack_offset = Vector3(cos(angle) * dist, randf_range(0.0, 0.5), sin(angle) * dist)
+	
+	# Initial leap
+	if is_on_floor():
+		velocity = (target.global_position - global_position).normalized() * attack_speed
+		velocity.y = leap_force
+	is_anchored = false
+
+
+func _process_attack_state(delta: float) -> void:
+	if attack_target_node == null or not is_instance_valid(attack_target_node):
+		state = State.FOLLOW
+		return
+	
+	var target_pos := attack_target_node.global_position + attack_offset
+	var dist_sq := global_position.distance_squared_to(target_pos)
+	
+	if dist_sq > 0.1:
+		var dir := (target_pos - global_position).normalized()
+		# Smoothly move toward target with high speed
+		velocity.x = lerp(velocity.x, dir.x * attack_speed, 10.0 * delta)
+		velocity.z = lerp(velocity.z, dir.z * attack_speed, 10.0 * delta)
+	else:
+		# Snap close or orbit slightly
+		global_position = global_position.lerp(target_pos, 25.0 * delta)
+		velocity.x = 0
+		velocity.z = 0
+	
+	# Face the target
+	var to_target := attack_target_node.global_position - global_position
+	if Vector2(to_target.x, to_target.z).length() > 0.1:
+		rotation.y = lerp_angle(rotation.y, atan2(to_target.x, to_target.z), 15.0 * delta)
+	
+	move_and_slide()
 
 
 func set_neighbors(n: Array) -> void:
@@ -339,10 +391,11 @@ func build_at(pos: Vector3) -> void:
 
 
 func release_rat(with_boost: bool = false) -> void:
-	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
+	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION or state == State.ATTACK:
 		state = State.FOLLOW
 		is_anchored = false
 		is_carrier = false
+		attack_target_node = null
 		_spring_velocity = Vector3.ZERO
 		if with_boost and player != null:
 			var to_player := player.global_position - global_position
@@ -501,6 +554,7 @@ func _should_block_edge(hvel: Vector2) -> bool:
 		return false
 
 	var forward := Vector3(hvel.x, 0.0, hvel.y).normalized()
+	if forward.length() < 0.001: return false # Don't block if not moving
 	var probe_pos := global_position + forward * edge_probe_distance
 	return not _has_floor_near(probe_pos, edge_max_drop)
 

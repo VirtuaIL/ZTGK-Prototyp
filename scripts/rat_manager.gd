@@ -560,79 +560,38 @@ func _update_combat_mouse_follow(delta: float) -> void:
 			rat.set_target(mouse_world)
 		return
 
-	# Arc-length parameterization of the trail
+	# RMB: follow cursor in stream/arc. If NOT held, rats follow player in blob.
+	if combat_rmb_down:
+		_process_combat_cursor_follow(active, mouse_world, delta)
+	else:
+		_process_combat_passive_blob(active, mouse_world)
+
+
+func _process_combat_cursor_follow(active: Array[CharacterBody3D], mouse_world: Vector3, _delta: float) -> void:
+	if _mouse_trail.size() < 2:
+		for rat in active: rat.set_target(mouse_world)
+		return
+
 	var arc: Array[float] = [0.0]
 	for i in range(1, _mouse_trail.size()):
 		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
 	var total: float = arc[-1]
 
-	# Calculate how much to resemble a blob based on brush size
-	var blob_blend := 0.0
-	var blob_scale := 1.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
-		blob_scale = circle_radius / 0.5
-	elif build_draw_mode == DRAW_MODE_PATH:
-		blob_blend = clampf(float(brush_lane_pairs - brush_lane_pairs_min) / maxf(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min)), 0.0, 1.0)
-		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-		blob_scale = float(1 + pairs * 2) / 2.5
-
-	if _blob_offsets.size() != count:
-		build_blob_offsets()
-
-	for i in range(count):
-		# 1) Calculate Arc/Stream Target
+	for i in range(active.size()):
 		var dist_back := float(i) * STREAM_SPACING
 		var arc_pos := total - dist_back
+		active[i].set_target(_arc_sample(_mouse_trail, arc, maxf(0.0, arc_pos)))
 
-		var t_stream: Vector3
-		var lateral_dir := Vector3.ZERO
-		
-		if arc_pos <= 0.0:
-			t_stream = _mouse_trail[0]
-			if _mouse_trail.size() >= 2:
-				var dir := _mouse_trail[1] - _mouse_trail[0]
-				dir.y = 0.0
-				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
-		else:
-			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-			
-			var lo := 0
-			var hi := arc.size() - 1
-			while lo < hi - 1:
-				var mid := (lo + hi) / 2
-				if arc[mid] <= arc_pos:
-					lo = mid
-				else:
-					hi = mid
-			
-			var dir := _mouse_trail[hi] - _mouse_trail[lo]
-			dir.y = 0.0
-			lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
 
-		# Apply brush width to arc target
-		if lateral_dir != Vector3.ZERO:
-			if build_draw_mode == DRAW_MODE_PATH:
-				var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-				if pairs > 0:
-					var lane_count := 1 + pairs * 2
-					var center_index := float(lane_count - 1) / 2.0
-					var lane_index := i % lane_count
-					var factor := float(lane_index) - center_index
-					t_stream += lateral_dir * (brush_lane_spacing / 1.5) * factor
-			elif build_draw_mode == DRAW_MODE_CIRCLE:
-				var pseudo_rand := fmod(float(active[i].get_instance_id()) * 0.6180339887, 2.0) - 1.0
-				t_stream += lateral_dir * (pseudo_rand * circle_radius / 1.5)
-
-		# 2) Calculate Blob Target
-		var t_blob := mouse_world
+func _process_combat_passive_blob(active: Array[CharacterBody3D], _mouse_world: Vector3) -> void:
+	if _blob_offsets.size() != rats.size():
+		build_blob_offsets()
+	
+	for i in range(active.size()):
+		var target := _player.global_position
 		if i < _blob_offsets.size():
-			t_blob += _blob_offsets[i] * blob_scale
-		t_blob.y = mouse_world.y
-
-		# 3) Blend based on brush size
-		var final_target = t_stream.lerp(t_blob, blob_blend)
-		active[i].set_target(final_target)
+			target += _blob_offsets[i]
+		active[i].set_target(target)
 
 func _update_free_rats_follow_player() -> void:
 	if mode != 1:
@@ -1018,6 +977,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			elif mode == 0:
 				combat_lmb_down = mb.pressed
+				if mb.pressed:
+					_handle_combat_attack(mb.position)
 				get_viewport().set_input_as_handled()
 			return
 			
@@ -1226,6 +1187,8 @@ func recall_all_rats() -> void:
 	mouse_is_down_left = false
 	is_dragging_left = false
 	mouse_is_down_right = false
+	combat_lmb_down = false
+	combat_rmb_down = false
 	_rmb_dragging_object = false
 	is_drawing_line = false
 	current_build_y = -1000.0
@@ -1638,19 +1601,19 @@ func _distribute_rats_on_path() -> void:
 				dir_single = Vector3.FORWARD
 			else:
 				dir_single = dir_single.normalized()
-			var lateral_single := dir_single.cross(Vector3.UP).normalized() * brush_half_width
+			var _lateral_single := dir_single.cross(Vector3.UP).normalized() * brush_half_width
 			single_pos = current_drawn_path[0]
 		available_rats[0].build_at(single_pos)
 		return
 		
 	var dist_between_rats = path_length / float(rat_count - 1)
-	var current_dist_on_path: float = 0.0
+	var _current_dist_on_path: float = 0.0
 	
 	for i in range(rat_count):
 		if i == 0:
 			var start_pos := current_drawn_path[0]
 			if use_wide_brush and rat_count > 2:
-				var lane_idx := 0
+				var _lane_idx := 0
 				start_pos = current_drawn_path[0]
 			available_rats[0].build_at(start_pos)
 			continue
@@ -1983,3 +1946,43 @@ func _try_build_at(raw_pos: Vector3) -> void:
 	if free_rat:
 		free_rat.build_at(build_pos)
 		built_positions[build_pos] = true
+
+
+func _handle_combat_attack(screen_pos: Vector2) -> void:
+	var camera := get_viewport().get_camera_3d()
+	if not camera: return
+	
+	var ray_origin := camera.project_ray_origin(screen_pos)
+	var ray_dir := camera.project_ray_normal(screen_pos)
+	
+	var space_state := camera.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
+	query.collision_mask = 1 | 16 # Floor and Enemies
+	
+	var hit := space_state.intersect_ray(query)
+	var target_node: Node3D = null
+	var hit_pos := Vector3.ZERO
+	
+	if hit:
+		hit_pos = hit.position
+		if hit.collider.is_in_group("enemies"):
+			target_node = hit.collider
+	
+	_send_attack_squad(target_node, hit_pos)
+
+
+func _send_attack_squad(target_node: Node3D, _fallback_pos: Vector3) -> void:
+	var followers: Array[Rat] = []
+	for rat in rats:
+		if rat is Rat and rat.state == Rat.State.FOLLOW and not rat.is_carrier:
+			followers.append(rat as Rat)
+	
+	if followers.is_empty(): return
+	
+	# Send a portion of the horde (e.g., 30% or at least 5 rats)
+	var squad_size := clampi(int(followers.size() * 0.3), 5, followers.size())
+	followers.shuffle()
+	
+	for i in range(squad_size):
+		if target_node:
+			followers[i].set_attack_target(target_node)
