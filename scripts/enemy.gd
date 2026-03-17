@@ -3,13 +3,13 @@ extends CharacterBody3D
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 
 # ── Health ──
-@export var max_health: float = 250.0
+@export var max_health: float = 150.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
 # ── Movement ──
-@export var move_speed: float = 2.5
-@export var chase_speed: float = 5.0
+@export var move_speed: float = 1.8
+@export var chase_speed: float = 3.2
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
@@ -52,6 +52,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	# Decouple from parent's non-uniform transform so move_and_slide works
 	top_level = true
+	collision_mask = collision_mask | (1 << 8) # Include RatStructures (9)
 	_spawn_transform = global_transform
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
@@ -281,7 +282,7 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		var dir := (global_position - hit_pos)
 		dir.y = 0.0
 		if dir.length() > 0.01:
-			_knockback += dir.normalized() * 18.0
+			_knockback += dir.normalized() * 10.0
 
 	# Being hit by rats? Chase that player!
 	if ai_state == AIState.WANDER:

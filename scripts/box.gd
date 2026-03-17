@@ -17,7 +17,7 @@ var _spawn_position: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	collision_layer = 4 # Layer 3: Movable
-	collision_mask = 31  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16)
+	collision_mask = 31 | (1 << 8)  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16) + RatStructures (9)
 	_spawn_position = global_position
 
 

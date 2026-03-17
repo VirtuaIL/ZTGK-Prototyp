@@ -82,7 +82,7 @@ func _ready() -> void:
 	
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
-	collision_mask = 9  # Collide with Floor (1) and Walls (8) by default
+	collision_mask = 9 | (1 << 8)  # Floor (1) + Walls (8) + RatStructures (9)
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
@@ -513,7 +513,7 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	var origin := pos + Vector3.UP * 0.3
 	var end := pos + Vector3.DOWN * (max_drop + 0.8)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
-	query.collision_mask = 1 # Floor
+	query.collision_mask = 1 | (1 << 8) # Floor + RatStructures
 	query.exclude = [self]
 	var hit := ss.intersect_ray(query)
 	if not hit:
