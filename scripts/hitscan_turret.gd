@@ -106,6 +106,10 @@ func _process_laser(delta: float) -> void:
 		# Chain redirection or damage
 		if hit.collider.has_method("receive_laser"):
 			hit.collider.receive_laser(delta)
+		elif hit.collider.is_in_group("rat_structures"):
+			var manager = hit.collider.get_parent()
+			if manager and manager.has_method("receive_laser"):
+				manager.receive_laser(delta)
 		elif hit.collider.has_method("take_damage"):
 			hit.collider.take_damage(damage_per_second * delta)
 	else:

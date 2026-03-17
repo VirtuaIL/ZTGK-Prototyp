@@ -28,4 +28,8 @@ func _on_body_entered(body: Node3D) -> void:
 		# Hit wall, box, floor, or wall button
 		if body.has_method("on_projectile_hit"):
 			body.on_projectile_hit()
+		elif body.is_in_group("rat_structures"):
+			var manager = body.get_parent()
+			if manager and manager.has_method("on_projectile_hit"):
+				manager.on_projectile_hit()
 		queue_free()

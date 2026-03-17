@@ -165,6 +165,12 @@ var _neighbor_tick: int = 0
 # ── Dragging object state (RMB in BUILD) ─────────────────────────────────────
 var _rmb_dragging_object: bool = false
 
+# ── Structure Integrity ──
+@export var structure_max_integrity: float = 100.0
+var structure_integrity: float = structure_max_integrity
+@export var structure_decay_on_laser: float = 25.0 # integrity loss per second
+@export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
+
 
 func _ready() -> void:
 	add_to_group("rat_manager")
@@ -175,7 +181,8 @@ func _ready() -> void:
 	
 	unified_shape_combiner = CSGCombiner3D.new()
 	unified_shape_combiner.use_collision = true
-	unified_shape_combiner.collision_layer = 1
+	unified_shape_combiner.collision_layer = 9
+	unified_shape_combiner.add_to_group("rat_structures")
 	add_child(unified_shape_combiner)
 	line_mesh_instance.mesh = immediate_mesh
 	
@@ -800,6 +807,7 @@ func _check_formation_sync() -> void:
 			if rat.state == rat.State.WAITING_FOR_FORMATION:
 				rat.activate_physics()
 		_form_unified_mesh()
+		structure_integrity = structure_max_integrity
 		_build_in_progress = false
 
 
@@ -824,50 +832,121 @@ func _form_unified_mesh() -> void:
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color(0.45, 0.30, 0.18)
 	
-	var height = 0.4
 	var radius = 0.35
-	var y_offset = -0.3
 
 	var rat_positions = []
+	var rat_on_floor = []
+	var space_state = get_world_3d().direct_space_state
+
 	for rat in static_rats:
-		rat_positions.append(rat.global_position)
+		var pos = rat.global_position
+		rat_positions.append(pos)
 		
-		var cyl = CSGCylinder3D.new()
-		cyl.radius = radius
-		cyl.height = height
-		cyl.sides = 12
-		cyl.material = mat
-		unified_shape_combiner.add_child(cyl)
-		cyl.global_position = rat.global_position + Vector3(0, y_offset, 0)
+		# Raycast downwards to check if the rat is resting on the floor
+		var query = PhysicsRayQueryParameters3D.create(pos + Vector3(0, 0.5, 0), pos + Vector3(0, -1.5, 0))
+		query.collision_mask = 1 # Floor
+		var hit = space_state.intersect_ray(query)
+		var on_floor = not hit.is_empty()
+		rat_on_floor.append(on_floor)
 
 	var connection_threshold = 1.3
 	var max_connections_per_rat = 4
-
-	for i in range(rat_positions.size()):
-		var pos_a = rat_positions[i]
+	var num_rats = rat_positions.size()
+	
+	# Build adjacency list for graph
+	var adj = []
+	for i in range(num_rats):
+		adj.append([])
 		
+	var all_neighbors = []
+	for i in range(num_rats):
+		var pos_a = rat_positions[i]
 		var neighbors = []
-		for j in range(i + 1, rat_positions.size()):
+		for j in range(num_rats):
+			if i == j: continue
 			var pos_b = rat_positions[j]
 			var dist = pos_a.distance_to(pos_b)
 			if dist < connection_threshold:
 				neighbors.append({"index": j, "dist": dist})
-		
 		neighbors.sort_custom(func(a, b): return a["dist"] < b["dist"])
 		
+		var connected_to_i = []
 		var connections_made = 0
 		for nb in neighbors:
 			if connections_made >= max_connections_per_rat:
 				break
+			var j = nb["index"]
+			connected_to_i.append({"index": j, "dist": nb["dist"]})
+			adj[i].append(j)
+			connections_made += 1
+		all_neighbors.append(connected_to_i)
+	
+	# Find connected components (islands of rats)
+	var component_id = []
+	for i in range(num_rats):
+		component_id.append(-1)
+		
+	var current_comp = 0
+	for i in range(num_rats):
+		if component_id[i] == -1:
+			var queue = [i]
+			component_id[i] = current_comp
+			while not queue.is_empty():
+				var curr = queue.pop_front()
+				for neighbor in adj[curr]:
+					if component_id[neighbor] == -1:
+						component_id[neighbor] = current_comp
+						queue.append(neighbor)
+			current_comp += 1
 			
+	# Determine if a component spans a chasm (any rat in component not on floor)
+	var component_is_bridge = []
+	for i in range(current_comp):
+		component_is_bridge.append(false)
+		
+	for i in range(num_rats):
+		if not rat_on_floor[i]:
+			var cid = component_id[i]
+			component_is_bridge[cid] = true
+	
+	# Generate cylinders
+	for i in range(num_rats):
+		var is_bridge = component_is_bridge[component_id[i]]
+		# Bridge: height 0.4, offset -0.3. Barricade: height 1.2, offset 0.6
+		var current_height = 0.4 if is_bridge else 1.2
+		var current_y_offset = -0.3 if is_bridge else 0.6
+		
+		var cyl = CSGCylinder3D.new()
+		cyl.radius = radius
+		cyl.height = current_height
+		cyl.sides = 12
+		cyl.material = mat
+		unified_shape_combiner.add_child(cyl)
+		cyl.global_position = rat_positions[i] + Vector3(0, current_y_offset, 0)
+
+	# Generate boxes for connections
+	for i in range(num_rats):
+		var pos_a = rat_positions[i]
+		var is_bridge_a = component_is_bridge[component_id[i]]
+		
+		for nb in all_neighbors[i]:
+			var j = nb["index"]
+			if i > j: 
+				continue # avoid double drawing edges (undirected graph equivalent)
+				
+			var pos_b = rat_positions[j]
 			var dist = nb["dist"]
-			var pos_b = rat_positions[nb["index"]]
+			
+			var is_bridge_b = component_is_bridge[component_id[j]]
+			var connection_is_bridge = is_bridge_a or is_bridge_b
+			var current_height = 0.4 if connection_is_bridge else 1.2
+			var current_y_offset = -0.3 if connection_is_bridge else 0.6
 			
 			var box = CSGBox3D.new()
-			box.size = Vector3(radius * 2.0, height, dist)
+			box.size = Vector3(radius * 2.0, current_height, dist)
 			var center = (pos_a + pos_b) / 2.0
 			unified_shape_combiner.add_child(box)
-			box.global_position = center + Vector3(0, y_offset, 0)
+			box.global_position = center + Vector3(0, current_y_offset, 0)
 			
 			if dist > 0.001:
 				var forward = (pos_b - pos_a).normalized()
@@ -877,7 +956,6 @@ func _form_unified_mesh() -> void:
 				box.look_at_from_position(box.global_position, box.global_position + forward, up)
 			
 			box.material = mat
-			connections_made += 1
 
 
 # ── Input handling ────────────────────────────────────────────────────────────
@@ -1105,6 +1183,24 @@ func on_stratagem_activated(stratagem_id: String) -> void:
 			activate_orbit()
 		"rat_wave":
 			activate_wave()
+
+
+func receive_laser(delta: float) -> void:
+	if not _has_static_rats():
+		return
+	structure_integrity -= structure_decay_on_laser * delta
+	if structure_integrity <= 0:
+		recall_all_rats()
+		structure_integrity = structure_max_integrity
+
+
+func on_projectile_hit() -> void:
+	if not _has_static_rats():
+		return
+	structure_integrity -= structure_decay_on_projectile
+	if structure_integrity <= 0:
+		recall_all_rats()
+		structure_integrity = structure_max_integrity
 
 
 func recall_all_rats() -> void:
@@ -1714,6 +1810,11 @@ func _on_object_reset(obj: CharacterBody3D) -> void:
 func _check_carrier_arrival() -> void:
 	if grabbed_object == null or grabbed_object.get("is_surrounded"):
 		return
+	
+	var carriers = grabbed_object.get("carrier_rats")
+	if carriers == null or carriers.is_empty():
+		return
+
 	var snap_dist_sq := 5.5 * 5.5
 	for r in grabbed_object.get("carrier_rats"):
 		if r == null:
