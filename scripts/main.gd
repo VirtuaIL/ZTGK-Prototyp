@@ -219,9 +219,25 @@ func _process(delta: float) -> void:
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
 	if cam and player:
-		var offset := Vector3(10, 18, 10)
-		cam.position = cam.position.lerp(player.position + offset, 0.05)
-		cam.look_at(player.position)
+		# Focus point: between player and cursor world pos (closer to player)
+		var focus := player.position
+		var mouse_pos := get_viewport().get_mouse_position()
+		var ray_origin := cam.project_ray_origin(mouse_pos)
+		var ray_dir := cam.project_ray_normal(mouse_pos)
+		# Intersect with Y=0 ground plane
+		if abs(ray_dir.y) > 0.001:
+			var t := -ray_origin.y / ray_dir.y
+			if t > 0.0:
+				var cursor_world := ray_origin + ray_dir * t
+				focus = player.position.lerp(cursor_world, 1.0 / 6.0)
+
+		# Keep constant offset angle
+		var offset := Vector3(10, 12, 10)
+		cam.position = cam.position.lerp(focus + offset, 0.03)
+		
+		# Force strict isometric angle by looking parallel to the offset vector
+		var current_focus := cam.position - offset
+		cam.look_at(current_focus, Vector3.UP)
 
 
 func _unhandled_input(event: InputEvent) -> void:
