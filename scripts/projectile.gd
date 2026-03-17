@@ -23,15 +23,19 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is player:
-		if deal_damage_instead_of_kill:
-			body.take_damage(damage)
-		else:
-			# Reset player
-			body.global_position = body._spawn_position
-			body.velocity = Vector3.ZERO
+		if body.has_method("take_damage"):
+			
+			if deal_damage_instead_of_kill:
+				body.take_damage(damage)
+			else:
+				body.take_damage(body.max_hp * 0.5)
 		queue_free()
 	elif not (body is turret or body is hitscan_turret or body is bossTurret):
 		# Hit wall, box, floor, or wall button
 		if body.has_method("on_projectile_hit"):
 			body.on_projectile_hit()
+		elif body.is_in_group("rat_structures"):
+			var manager = body.get_parent()
+			if manager and manager.has_method("on_projectile_hit"):
+				manager.on_projectile_hit()
 		queue_free()

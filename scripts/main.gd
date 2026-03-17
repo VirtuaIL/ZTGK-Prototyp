@@ -15,7 +15,7 @@ var mode_label_combat: Label
 var mode_label_build: Label
 var cheatsheet_panel: Panel
 var goal_label: Label
-var rat_count_label: Label
+var rat_count_label: RichTextLabel
 var recall_indicator: Control
 var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
@@ -238,12 +238,21 @@ func _setup_goal_ui() -> void:
 
 func _setup_rat_count_ui() -> void:
 	var layer = CanvasLayer.new()
-	var label = Label.new()
+	var label = RichTextLabel.new()
 	rat_count_label = label
-	var max_cap := 0
-	if rat_manager and rat_manager.has_method("get_max_cap"):
-		max_cap = rat_manager.get_max_cap()
-	label.text = "Szczury: 0 / " + str(max_cap)
+	var min_cap := 0
+	if rat_manager and rat_manager.has_method("get_min_cap"):
+		min_cap = rat_manager.get_min_cap()
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	label.scroll_following = false
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	label.custom_minimum_size = Vector2(10, 20)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.text = "Szczury: 0 | cap " + str(min_cap) + " | do wykorzystania [color=#9aa0a6]0[/color] | bonus [color=#9aa0a6]+0[/color]"
 	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	label.offset_left = 20
 	label.offset_top = 60
@@ -265,16 +274,19 @@ func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
 	var current_count := 0
-	var max_cap := 0
+	var min_cap := 0
 	if rat_manager.has_method("get_active_rat_count"):
 		current_count = rat_manager.get_active_rat_count()
 	else:
 		current_count = rat_manager.rats.size()
-	if rat_manager.has_method("get_max_cap"):
-		max_cap = rat_manager.get_max_cap()
-	else:
-		max_cap = rat_manager.rats.size()
-	rat_count_label.text = "Szczury: " + str(current_count) + " / " + str(max_cap)
+	if rat_manager.has_method("get_min_cap"):
+		min_cap = rat_manager.get_min_cap()
+	var available_count := current_count
+	if rat_manager.has_method("get_available_rat_count"):
+		available_count = rat_manager.get_available_rat_count()
+	var extra: int = maxi(current_count - min_cap, 0)
+	var extra_color: String = "#4ccf6a" if extra > 0 else "#9aa0a6"
+	rat_count_label.text = "Szczury: " + str(current_count) + " | cap " + str(min_cap) + " | do wykorzystania [color=#9aa0a6]" + str(available_count) + "[/color] | bonus [color=" + extra_color + "]+" + str(extra) + "[/color]"
 
 
 func _update_mode_ui() -> void:
@@ -374,7 +386,7 @@ func _update_recall_hold(delta: float) -> void:
 	var holding := Input.is_action_pressed("recall_rats")
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 1.5)
-		if _recall_hold_time >= 1.5:
+		if _recall_hold_time >= 1:
 			rat_manager.recall_all_rats()
 			_recall_triggered = true
 	else:

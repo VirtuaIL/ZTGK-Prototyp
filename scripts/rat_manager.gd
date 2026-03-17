@@ -17,7 +17,6 @@ var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
 @export var min_cap: int = 40
-@export var max_cap: int = 60
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -165,6 +164,12 @@ var _neighbor_tick: int = 0
 # ── Dragging object state (RMB in BUILD) ─────────────────────────────────────
 var _rmb_dragging_object: bool = false
 
+# ── Structure Integrity ──
+@export var structure_max_integrity: float = 100.0
+var structure_integrity: float = structure_max_integrity
+@export var structure_decay_on_laser: float = 25.0 # integrity loss per second
+@export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
+
 
 func _ready() -> void:
 	add_to_group("rat_manager")
@@ -175,7 +180,9 @@ func _ready() -> void:
 	
 	unified_shape_combiner = CSGCombiner3D.new()
 	unified_shape_combiner.use_collision = true
-	unified_shape_combiner.collision_layer = 1
+	# Put structures on layer 9 (bit 9), not layer mask "9" (which includes floor).
+	unified_shape_combiner.collision_layer = 1 << 8
+	unified_shape_combiner.add_to_group("rat_structures")
 	add_child(unified_shape_combiner)
 	line_mesh_instance.mesh = immediate_mesh
 	
@@ -195,12 +202,8 @@ func setup_player(player: CharacterBody3D) -> void:
 
 
 func _clamp_caps() -> void:
-	if max_cap < 0:
-		max_cap = 0
 	if min_cap < 0:
 		min_cap = 0
-	if min_cap > max_cap:
-		min_cap = max_cap
 
 
 func get_total_rat_count() -> int:
@@ -211,10 +214,6 @@ func get_total_rat_count() -> int:
 	return count
 
 
-func get_max_cap() -> int:
-	return max_cap
-
-
 func get_min_cap() -> int:
 	return min_cap
 
@@ -222,14 +221,14 @@ func get_min_cap() -> int:
 func increase_min_cap(amount: int) -> void:
 	if amount <= 0:
 		return
-	min_cap = clampi(min_cap + amount, 0, max_cap)
-	ensure_min_cap()
+	min_cap = max(0, min_cap + amount)
 
 
 func restore_to_min(require_empty: bool = false) -> void:
 	if require_empty and get_active_rat_count() > 0:
 		return
-	ensure_min_cap()
+	var spawn_center := _get_nearest_spawn_pos()
+	_restore_to_min_at_spawn(spawn_center)
 
 
 func ensure_min_cap() -> void:
@@ -248,10 +247,6 @@ func _spawn_rats(count: int) -> void:
 	if rat_scene == null:
 		push_error("rat_scene is not set in RatManager.")
 		return
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	count = min(count, capacity)
 
 	var parent_node := get_parent()
 	if parent_node == null:
@@ -290,16 +285,32 @@ func _spawn_rats(count: int) -> void:
 	build_blob_offsets()
 
 
+func _get_nearest_spawn_pos() -> Vector3:
+	var base_pos := global_position
+	if _player:
+		base_pos = _player.global_position
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var nearest: Node3D = null
+	var best_dist := INF
+	for s in spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		var d := n.global_position.distance_squared_to(base_pos)
+		if d < best_dist:
+			best_dist = d
+			nearest = n
+	if nearest:
+		return nearest.global_position
+	return base_pos
+
+
 func _spawn_rats_at_center(count: int, center: Vector3) -> void:
 	if count <= 0:
 		return
 	if rat_scene == null:
 		push_error("rat_scene is not set in RatManager.")
 		return
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	count = min(count, capacity)
 
 	var parent_node := get_parent()
 	if parent_node == null:
@@ -336,24 +347,12 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var active := get_active_rat_count()
-	if auto_respawn_if_empty and active == 0:
-		if _empty_respawn_triggered:
-			return
-		_empty_respawn_triggered = true
-		_respawn_min_cap_near_player()
-	else:
-		_empty_respawn_triggered = false
-
-	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_respawn_min_cap_near_player()
-		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+	# Respawn is handled only at rat_spawn points now.
+	return
 
 
-func _respawn_min_cap_near_player() -> void:
+func _restore_to_min_at_spawn(spawn_center: Vector3) -> void:
 	_clamp_caps()
-	if _player == null:
-		return
 	var target := min_cap
 	if target <= 0:
 		return
@@ -366,51 +365,31 @@ func _respawn_min_cap_near_player() -> void:
 	for r in fallen:
 		if needed <= 0:
 			break
-		r.force_respawn_near_player()
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		r.force_respawn_at_position(pos)
 		needed -= 1
 
 	if needed > 0:
-		_spawn_rats_near_player(needed)
+		_spawn_rats_at_center(needed, spawn_center)
 
 
 func _check_rat_spawn_bonus() -> void:
 	if _player == null:
 		return
-	if rat_spawn_bonus_amount <= 0:
+	if _min_respawn_cooldown > 0.0:
 		return
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	for s in spawns:
 		var n := s as Node3D
 		if n == null:
 			continue
-		if rat_spawn_one_shot and _rat_spawn_used.has(n):
-			continue
 		if n.global_position.distance_to(_player.global_position) > rat_spawn_bonus_radius:
 			continue
-		_give_rat_spawn_bonus(n.global_position)
-		if rat_spawn_one_shot:
-			_rat_spawn_used[n] = true
-
-
-func _give_rat_spawn_bonus(spawn_center: Vector3) -> void:
-	var add := rat_spawn_bonus_amount
-	var capacity := max_cap - get_total_rat_count()
-	if capacity <= 0:
-		return
-	add = min(add, capacity)
-
-	var fallen := _get_fallen_rats()
-	for r in fallen:
-		if add <= 0:
-			break
-		var angle := randf() * TAU
-		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-		r.force_respawn_at_position(pos)
-		add -= 1
-
-	if add > 0:
-		_spawn_rats_at_center(add, spawn_center)
+		_restore_to_min_at_spawn(n.global_position)
+		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+		break
 
 
 func _process(delta: float) -> void:
@@ -779,6 +758,8 @@ func _check_formation_sync() -> void:
 	if _build_force_timer <= 0.0:
 		for rat in rats:
 			if rat.state == rat.State.TRAVEL_TO_BUILD:
+				if not is_instance_valid(rat) or not rat.is_inside_tree():
+					continue
 				rat.state = rat.State.WAITING_FOR_FORMATION
 				rat.global_position = rat.build_target
 				rat.velocity = Vector3.ZERO
@@ -798,6 +779,7 @@ func _check_formation_sync() -> void:
 			if rat.state == rat.State.WAITING_FOR_FORMATION:
 				rat.activate_physics()
 		_form_unified_mesh()
+		structure_integrity = structure_max_integrity
 		_build_in_progress = false
 
 
@@ -807,6 +789,8 @@ func _form_unified_mesh() -> void:
 		
 	var static_rats: Array = []
 	for rat in rats:
+		if not is_instance_valid(rat) or not rat.is_inside_tree():
+			continue
 		if carrier_rats.has(rat):
 			continue
 		if rat.state == rat.State.STATIC:
@@ -820,49 +804,127 @@ func _form_unified_mesh() -> void:
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color(0.45, 0.30, 0.18)
 	
-	var height = 0.4
 	var radius = 0.35
-	var y_offset = -0.3
 
 	var rat_positions = []
+	var rat_on_floor = []
+	var space_state = get_world_3d().direct_space_state
+
 	for rat in static_rats:
-		rat_positions.append(rat.global_position)
+		var pos = rat.global_position
+		rat_positions.append(pos)
 		
-		var cyl = CSGCylinder3D.new()
-		cyl.radius = radius
-		cyl.height = height
-		cyl.sides = 12
-		cyl.global_position = rat.global_position + Vector3(0, y_offset, 0)
-		cyl.material = mat
-		unified_shape_combiner.add_child(cyl)
+		# Raycast downwards to check if the rat is resting on the floor
+		var query = PhysicsRayQueryParameters3D.create(pos + Vector3(0, 0.5, 0), pos + Vector3(0, -1.5, 0))
+		query.collision_mask = 1 # Floor
+		var hit = space_state.intersect_ray(query)
+		var on_floor = false
+		if not hit.is_empty():
+			var floor_dist: float = pos.y - (hit.position as Vector3).y
+			on_floor = floor_dist <= 0.4
+		rat_on_floor.append(on_floor)
 
 	var connection_threshold = 1.3
 	var max_connections_per_rat = 4
-
-	for i in range(rat_positions.size()):
-		var pos_a = rat_positions[i]
+	var num_rats = rat_positions.size()
+	
+	# Build adjacency list for graph
+	var adj = []
+	for i in range(num_rats):
+		adj.append([])
 		
+	var all_neighbors = []
+	for i in range(num_rats):
+		var pos_a = rat_positions[i]
 		var neighbors = []
-		for j in range(i + 1, rat_positions.size()):
+		for j in range(num_rats):
+			if i == j: continue
 			var pos_b = rat_positions[j]
+			var y_diff = abs(pos_a.y - pos_b.y)
+			if y_diff > 0.6:
+				continue
 			var dist = pos_a.distance_to(pos_b)
 			if dist < connection_threshold:
 				neighbors.append({"index": j, "dist": dist})
-		
 		neighbors.sort_custom(func(a, b): return a["dist"] < b["dist"])
 		
+		var connected_to_i = []
 		var connections_made = 0
 		for nb in neighbors:
 			if connections_made >= max_connections_per_rat:
 				break
+			var j = nb["index"]
+			connected_to_i.append({"index": j, "dist": nb["dist"]})
+			adj[i].append(j)
+			connections_made += 1
+		all_neighbors.append(connected_to_i)
+	
+	# Find connected components (islands of rats)
+	var component_id = []
+	for i in range(num_rats):
+		component_id.append(-1)
+		
+	var current_comp = 0
+	for i in range(num_rats):
+		if component_id[i] == -1:
+			var queue = [i]
+			component_id[i] = current_comp
+			while not queue.is_empty():
+				var curr = queue.pop_front()
+				for neighbor in adj[curr]:
+					if component_id[neighbor] == -1:
+						component_id[neighbor] = current_comp
+						queue.append(neighbor)
+			current_comp += 1
 			
+	# Determine if a component spans a chasm (any rat in component not on floor)
+	var component_is_bridge = []
+	for i in range(current_comp):
+		component_is_bridge.append(false)
+		
+	for i in range(num_rats):
+		if not rat_on_floor[i]:
+			var cid = component_id[i]
+			component_is_bridge[cid] = true
+	
+	# Generate cylinders
+	for i in range(num_rats):
+		var is_bridge = component_is_bridge[component_id[i]]
+		# Bridge: height 0.4, offset -0.3. Barricade: height 1.2, offset 0.6
+		var current_height = 0.4 if is_bridge else 1.2
+		var current_y_offset = -0.3 if is_bridge else 0.6
+		
+		var cyl = CSGCylinder3D.new()
+		cyl.radius = radius
+		cyl.height = current_height
+		cyl.sides = 12
+		cyl.material = mat
+		unified_shape_combiner.add_child(cyl)
+		cyl.global_position = rat_positions[i] + Vector3(0, current_y_offset, 0)
+
+	# Generate boxes for connections
+	for i in range(num_rats):
+		var pos_a = rat_positions[i]
+		var is_bridge_a = component_is_bridge[component_id[i]]
+		
+		for nb in all_neighbors[i]:
+			var j = nb["index"]
+			if i > j: 
+				continue # avoid double drawing edges (undirected graph equivalent)
+				
+			var pos_b = rat_positions[j]
 			var dist = nb["dist"]
-			var pos_b = rat_positions[nb["index"]]
+			
+			var is_bridge_b = component_is_bridge[component_id[j]]
+			var connection_is_bridge = is_bridge_a or is_bridge_b
+			var current_height = 0.4 if connection_is_bridge else 1.2
+			var current_y_offset = -0.3 if connection_is_bridge else 0.6
 			
 			var box = CSGBox3D.new()
-			box.size = Vector3(radius * 2.0, height, dist)
+			box.size = Vector3(radius * 2.0, current_height, dist)
 			var center = (pos_a + pos_b) / 2.0
-			box.global_position = center + Vector3(0, y_offset, 0)
+			unified_shape_combiner.add_child(box)
+			box.global_position = center + Vector3(0, current_y_offset, 0)
 			
 			if dist > 0.001:
 				var forward = (pos_b - pos_a).normalized()
@@ -872,8 +934,6 @@ func _form_unified_mesh() -> void:
 				box.look_at_from_position(box.global_position, box.global_position + forward, up)
 			
 			box.material = mat
-			unified_shape_combiner.add_child(box)
-			connections_made += 1
 
 
 # ── Input handling ────────────────────────────────────────────────────────────
@@ -1027,6 +1087,11 @@ func get_active_rat_count() -> int:
 	return count
 
 
+func get_available_rat_count() -> int:
+	var available := _get_available_follow_rats()
+	return available.size()
+
+
 func activate_orbit() -> void:
 	if orbit_active:
 		deactivate_orbit()
@@ -1103,6 +1168,24 @@ func on_stratagem_activated(stratagem_id: String) -> void:
 			activate_wave()
 
 
+func receive_laser(delta: float) -> void:
+	if not _has_static_rats():
+		return
+	structure_integrity -= structure_decay_on_laser * delta
+	if structure_integrity <= 0:
+		recall_all_rats()
+		structure_integrity = structure_max_integrity
+
+
+func on_projectile_hit() -> void:
+	if not _has_static_rats():
+		return
+	structure_integrity -= structure_decay_on_projectile
+	if structure_integrity <= 0:
+		recall_all_rats()
+		structure_integrity = structure_max_integrity
+
+
 func recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
@@ -1135,7 +1218,7 @@ func recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 
-	_respawn_min_cap_near_player()
+	# Respawn only at rat_spawn now.
 
 
 func _process_hover() -> void:
@@ -1710,6 +1793,11 @@ func _on_object_reset(obj: CharacterBody3D) -> void:
 func _check_carrier_arrival() -> void:
 	if grabbed_object == null or grabbed_object.get("is_surrounded"):
 		return
+	
+	var carriers = grabbed_object.get("carrier_rats")
+	if carriers == null or carriers.is_empty():
+		return
+
 	var snap_dist_sq := 5.5 * 5.5
 	for r in grabbed_object.get("carrier_rats"):
 		if r == null:

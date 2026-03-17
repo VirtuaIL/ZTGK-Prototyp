@@ -3,13 +3,13 @@ extends CharacterBody3D
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 
 # ── Health ──
-@export var max_health: float = 250.0
+@export var max_health: float = 120.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
 # ── Movement ──
-@export var move_speed: float = 2.5
-@export var chase_speed: float = 5.0
+@export var move_speed: float = 1.4
+@export var chase_speed: float = 2.6
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
@@ -52,6 +52,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	# Decouple from parent's non-uniform transform so move_and_slide works
 	top_level = true
+	collision_mask = collision_mask | (1 << 8) # Include RatStructures (9)
 	_spawn_transform = global_transform
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
@@ -73,6 +74,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _is_dead:
+		return
 	# ── Gravity ──
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5.0
@@ -99,12 +102,10 @@ func _physics_process(delta: float) -> void:
 		AIState.PASSIVE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			move_and_slide()
 			return
 		AIState.DEAD:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			move_and_slide()
 			return
 		AIState.WANDER:
 			_process_wander(delta)
@@ -282,7 +283,7 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		var dir := (global_position - hit_pos)
 		dir.y = 0.0
 		if dir.length() > 0.01:
-			_knockback += dir.normalized() * 18.0
+			_knockback += dir.normalized() * 10.0
 
 	# Being hit by rats? Chase that player!
 	if ai_state == AIState.WANDER:
@@ -298,13 +299,16 @@ func _die() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
+	set_physics_process(false)
 	ai_state = AIState.DEAD
 	damage_cooldowns.clear()
 	collision_layer = 0
 	collision_mask = 0
 
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
+	if body:
+		tween.tween_property(body, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		visible = false
 	)
@@ -314,8 +318,12 @@ func _die() -> void:
 
 func _respawn() -> void:
 	_is_dead = false
+	set_physics_process(true)
 	visible = true
 	scale = Vector3.ONE
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body:
+		body.scale = Vector3.ONE
 	global_transform = _spawn_transform
 	health = max_health
 	_update_hp_bar()

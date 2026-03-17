@@ -23,7 +23,7 @@ var player_node: player = null
 
 func _ready() -> void:
 	collision_layer = 4 # Layer 3: Movable
-	collision_mask = 31  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16)
+	collision_mask = 31 | (1 << 8)  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16) + RatStructures (9)
 	_spawn_position = global_position
 	# Find the player in the scene
 	var players = get_tree().get_nodes_in_group("player")
@@ -106,6 +106,10 @@ func _process_laser(delta: float) -> void:
 		# Chain redirection or damage
 		if hit.collider.has_method("receive_laser"):
 			hit.collider.receive_laser(delta)
+		elif hit.collider.is_in_group("rat_structures"):
+			var manager = hit.collider.get_parent()
+			if manager and manager.has_method("receive_laser"):
+				manager.receive_laser(delta)
 		elif hit.collider.has_method("take_damage"):
 			hit.collider.take_damage(damage_per_second * delta)
 	else:
