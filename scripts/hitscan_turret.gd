@@ -93,7 +93,7 @@ func _process_laser(delta: float) -> void:
 	var ray_end = start_pos + dir * attack_range
 	
 	var query := PhysicsRayQueryParameters3D.create(start_pos, ray_end)
-	query.collision_mask = 15 # Floor (1) + Player (2) + Movable (4) + Walls (8)
+	query.collision_mask = 15 | (1 << 8) # Floor (1) + Player (2) + Movable (4) + Walls (8) + RatStructures (9)
 	# Exclude self if needed, but the laser originates from outside the collision shape usually 
 	query.exclude = [self.get_rid()]
 	

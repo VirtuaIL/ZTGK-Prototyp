@@ -11,7 +11,7 @@ var max_lifetime: float = 5.0
 var _lifetime: float = 0.0
 
 func _ready() -> void:
-	collision_mask = 15 # Floor (1) + Player (2) + Movable (4) + Walls (8)
+	collision_mask = 15 | (1 << 8) # Floor (1) + Player (2) + Movable (4) + Walls (8) + RatStructures (9)
 	body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:

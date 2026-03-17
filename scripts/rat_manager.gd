@@ -169,6 +169,8 @@ var _rmb_dragging_object: bool = false
 var structure_integrity: float = structure_max_integrity
 @export var structure_decay_on_laser: float = 25.0 # integrity loss per second
 @export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
+@export var structure_lifetime: float = 12.0 # seconds before wall crumbles (0 = never)
+var _structure_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -227,8 +229,7 @@ func increase_min_cap(amount: int) -> void:
 func restore_to_min(require_empty: bool = false) -> void:
 	if require_empty and get_active_rat_count() > 0:
 		return
-	var spawn_center := _get_nearest_spawn_pos()
-	_restore_to_min_at_spawn(spawn_center)
+	_restore_to_min_near_player()
 
 
 func ensure_min_cap() -> void:
@@ -347,12 +348,16 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	# Respawn is handled only at rat_spawn points now.
-	return
+	var active := get_active_rat_count()
+	if active < min_cap and _min_respawn_cooldown <= 0.0:
+		_restore_to_min_near_player()
+		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
 
-func _restore_to_min_at_spawn(spawn_center: Vector3) -> void:
+func _restore_to_min_near_player() -> void:
 	_clamp_caps()
+	if _player == null:
+		return
 	var target := min_cap
 	if target <= 0:
 		return
@@ -367,29 +372,17 @@ func _restore_to_min_at_spawn(spawn_center: Vector3) -> void:
 			break
 		var angle := randf() * TAU
 		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var pos := spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		var pos := _player.global_position + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		r.force_respawn_at_position(pos)
 		needed -= 1
 
 	if needed > 0:
-		_spawn_rats_at_center(needed, spawn_center)
+		_spawn_rats_at_center(needed, _player.global_position)
 
 
 func _check_rat_spawn_bonus() -> void:
-	if _player == null:
-		return
-	if _min_respawn_cooldown > 0.0:
-		return
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
-	for s in spawns:
-		var n := s as Node3D
-		if n == null:
-			continue
-		if n.global_position.distance_to(_player.global_position) > rat_spawn_bonus_radius:
-			continue
-		_restore_to_min_at_spawn(n.global_position)
-		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
-		break
+	# Rat spawns are currently disabled; respawn happens near the player.
+	return
 
 
 func _process(delta: float) -> void:
@@ -449,6 +442,12 @@ func _process(delta: float) -> void:
 	_update_carrier_rat_targets()
 	_update_free_rats_follow_player()
 	_process_hover()
+	if structure_lifetime > 0.0 and _has_static_rats():
+		_structure_timer += delta
+		if _structure_timer >= structure_lifetime:
+			recall_all_rats()
+			structure_integrity = structure_max_integrity
+			_structure_timer = 0.0
 
 	# ── Neighbor throttle ──
 	_neighbor_tick += 1
@@ -780,6 +779,7 @@ func _check_formation_sync() -> void:
 				rat.activate_physics()
 		_form_unified_mesh()
 		structure_integrity = structure_max_integrity
+		_structure_timer = 0.0
 		_build_in_progress = false
 
 
@@ -1217,6 +1217,7 @@ func recall_all_rats() -> void:
 	for rat in rats:
 		rat.is_following_player = true
 		rat.is_carrier = false
+	_structure_timer = 0.0
 
 	# Respawn only at rat_spawn now.
 

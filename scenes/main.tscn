@@ -20,11 +20,11 @@
 [ext_resource type="PackedScene" uid="uid://cqhnnnuu3tl5h" path="res://scenes/laser_button.tscn" id="17_muem4"]
 [ext_resource type="PackedScene" uid="uid://cbp1g7n8h5m2p" path="res://scenes/movable_barrier.tscn" id="18_dp3eg"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
-[ext_resource type="PackedScene" uid="uid://craq2km8g200o" path="res://scenes/boss_nav_node.tscn" id="21_og1vs"]
-[ext_resource type="PackedScene" uid="uid://rnbix2vvjl4m" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
-[ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
-[ext_resource type="PackedScene" uid="uid://xdkpt36dqji0" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
-[ext_resource type="PackedScene" uid="uid://csp7jwbmufl4w" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
+[ext_resource type="PackedScene" path="res://scenes/boss_nav_node.tscn" id="21_og1vs"]
+[ext_resource type="PackedScene" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
+[ext_resource type="PackedScene" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
+[ext_resource type="PackedScene" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
+[ext_resource type="PackedScene" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -117,7 +117,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.24587, -1.1444092e-05, -41.207825)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39.244267, -1.1444092e-05, -69.62023)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -211,7 +211,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5858307, 0.75, 0.3252144)
 mesh = SubResource("CylinderMesh_RatSpawn")
 
 [node name="RatSpawn2" type="Marker3D" parent="RatSpawns" unique_id=2122705045 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.053612, 0, -158.27126)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.458443, 0, -108.585144)
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="RatSpawns/RatSpawn2" unique_id=1251400165]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
