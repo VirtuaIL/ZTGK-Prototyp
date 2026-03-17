@@ -89,8 +89,6 @@ size = Vector3(16.5401, 0.001, 35.97107)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
-
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
 
@@ -245,6 +243,10 @@ mesh = SubResource("PlaneMesh_1")
 transform = Transform3D(0.3, 0, 0, 0, 1, 0, 0, 0, 0.35, -12.596811, 0, -94.97928)
 mesh = SubResource("PlaneMesh_1")
 
+[node name="MeshInstance3D14" type="MeshInstance3D" parent="Floor" unique_id=1216663101]
+transform = Transform3D(0.3, 0, 0, 0, 1, 0, 0, 0, 0.35, -1.9951916, 0, -113.95686)
+mesh = SubResource("PlaneMesh_1")
+
 [node name="MeshInstance3D6" type="MeshInstance3D" parent="Floor" unique_id=1852761653]
 transform = Transform3D(0.39, 0, 0, 0, 1, 0, 0, 0, 1.2, -32, 0, -142.87643)
 mesh = SubResource("PlaneMesh_1")
@@ -316,7 +318,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -59.
 transform = Transform3D(2, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 0.6495285, 0, -62.719177)
 
 [node name="door4" parent="walls" unique_id=1297455916 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 27.672722, 0, 47.269707)
+transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 27.672722, 0, 46.6847)
 
 [node name="door5" parent="walls" unique_id=1981168902 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-2.1855695e-07, 0, -1.453, 0, 1.494, 0, 5, 0, -6.3512644e-08, -35.869446, 0, 48.645676)
@@ -412,7 +414,7 @@ transform = Transform3D(4, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -18.215405, 0, -62.78
 transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.007889, 0, -78.22751)
 
 [node name="door23" parent="walls" unique_id=1494699162 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(2, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -24.489746, 0, -82.1588)
+transform = Transform3D(5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -24.151905, 0, -82.1588)
 
 [node name="door20" parent="walls" unique_id=513902147 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(1, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 3.1882248, 0, -105.941315)
