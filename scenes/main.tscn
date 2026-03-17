@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/wall.tscn" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://pg0re2o56m0l" path="res://scenes/turret.tscn" id="12_eb6dy"]
 [ext_resource type="PackedScene" uid="uid://df234dghx" path="res://scenes/hitscan_turret.tscn" id="13_trceg"]
-[ext_resource type="PackedScene" path="res://scenes/wall_button.tscn" id="14_a8y0u"]
+[ext_resource type="PackedScene" uid="uid://1mm6ma8iuqri" path="res://scenes/wall_button.tscn" id="14_a8y0u"]
 [ext_resource type="PackedScene" uid="uid://dmj6b1wixm4x" path="res://scenes/laser_emitter.tscn" id="15_jkv2x"]
 [ext_resource type="PackedScene" uid="uid://djm6b1wixm4x" path="res://scenes/redirection_box.tscn" id="16_jbj1t"]
 [ext_resource type="PackedScene" uid="uid://cqhnnnuu3tl5h" path="res://scenes/laser_button.tscn" id="17_muem4"]
@@ -555,10 +555,10 @@ slide_distance = 4.5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.385296, 0.02200041, -16.349964)
 
 [node name="button" parent="buttons" unique_id=435181818 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6856575, 0, 4.606353)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.338669, 0, -3.9814587)
 
 [node name="button2" parent="buttons" unique_id=557643948 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.164162, 0, -31.39278)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.580235, 0, -32.91748)
 doorId = 1
 
 [node name="WallButton" parent="buttons" unique_id=1060861240 instance=ExtResource("14_a8y0u")]
