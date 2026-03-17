@@ -47,6 +47,7 @@ func _setup_input_map() -> void:
 	_add_action("move_right", KEY_D)
 	_add_action_key("recall_rats", KEY_SPACE)
 	_add_action_key("toggle_cheatsheet", KEY_H)
+	_add_action_key("toggle_enemy_passive", KEY_F2)
 
 
 func _setup_mode_ui() -> void:
@@ -121,7 +122,9 @@ func _setup_cheatsheet_ui() -> void:
 		"LPM – rysuj/wyznaczaj miejsce\n" + \
 		"PPM – chwytaj/upuść obiekty\n" + \
 		"Scroll – szerokość pędzla / promień koła\n" + \
-		"Boczne przyciski myszy – obrót niesionego obiektu"
+		"Boczne przyciski myszy – obrót niesionego obiektu\n\n" + \
+		"DEBUG\n" + \
+		"F2 – przełącz tryb pasywny wrogów"
 	body.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	vbox.add_child(body)
 
@@ -220,6 +223,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	if event.is_action_pressed("toggle_enemy_passive"):
+		_toggle_all_enemies_passive()
+		get_viewport().set_input_as_handled()
+		return
+
 
 func _add_action(action_name: String, key: Key) -> void:
 	if not InputMap.has_action(action_name):
@@ -256,3 +264,10 @@ func _on_stratagem_completed(stratagem_id: String) -> void:
 
 func _on_stratagem_failed() -> void:
 	stratagem_hud.flash_fail()
+
+
+func _toggle_all_enemies_passive() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy.has_method("toggle_passive"):
+			enemy.toggle_passive()
