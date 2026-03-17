@@ -16,18 +16,20 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
-@export var min_cap: int = 30
+@export var min_cap: int = 40
 @export var max_cap: int = 60
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
 @export var auto_respawn_if_empty: bool = true
-@export var rat_spawn_bonus_amount: int = 5
+@export var rat_spawn_bonus_amount: int = 10
 @export var rat_spawn_bonus_radius: float = 2.5
 @export var rat_spawn_one_shot: bool = true
+@export var min_cap_respawn_cooldown: float = 0.75
 
 var _player: CharacterBody3D = null
 var _empty_respawn_triggered: bool = false
+var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
 
 var mode: int = 0: # 0 = COMBAT, 1 = BUILD
@@ -332,16 +334,18 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	if not auto_respawn_if_empty:
-		return
 	var active := get_active_rat_count()
-	if active == 0:
+	if auto_respawn_if_empty and active == 0:
 		if _empty_respawn_triggered:
 			return
 		_empty_respawn_triggered = true
 		_respawn_min_cap_near_player()
 	else:
 		_empty_respawn_triggered = false
+
+	if active < min_cap and _min_respawn_cooldown <= 0.0:
+		_respawn_min_cap_near_player()
+		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
 
 func _respawn_min_cap_near_player() -> void:
@@ -408,6 +412,9 @@ func _give_rat_spawn_bonus(spawn_center: Vector3) -> void:
 
 
 func _process(delta: float) -> void:
+	if _min_respawn_cooldown > 0.0:
+		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+	_update_edge_avoidance()
 	if orbit_active:
 		orbit_timer -= delta
 		if orbit_timer <= 0.0:
@@ -470,6 +477,16 @@ func _process(delta: float) -> void:
 	_update_cursor_preview()
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
+
+
+func _update_edge_avoidance() -> void:
+	var enabled := true
+	if mode == 1 and (mouse_is_down_left or is_dragging_left):
+		enabled = false
+	for rat in rats:
+		var r := rat as Rat
+		if r:
+			r.edge_avoidance_enabled = enabled
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
@@ -695,7 +712,7 @@ func _has_static_rats() -> bool:
 func _cancel_active_build_orders() -> void:
 	for rat in rats:
 		if rat.state == rat.State.TRAVEL_TO_BUILD or rat.state == rat.State.WAITING_FOR_FORMATION:
-			rat.release_rat()
+			rat.release_rat(true)
 
 
 # ── Mouse → world raycast ─────────────────────────────────────────────────────
@@ -1045,7 +1062,7 @@ func recall_all_rats() -> void:
 		child.queue_free()
 		
 	for rat in rats:
-		rat.release_rat()
+		rat.release_rat(true)
 	# Reset drawing state
 	mouse_is_down_left = false
 	is_dragging_left = false
@@ -1596,14 +1613,11 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 	obj.set("carrier_available_max", count)
 	obj.set("carrier_brush_desired", desired_carriers)
 
-	# Pick random rats from the available pool
-	available_rats.shuffle()
-
 	for i in range(needed):
 		var angle := (TAU / needed) * i
 		var local_offset := Vector3(cos(angle) * ring_radius, 0.0, sin(angle) * ring_radius)
 		var world_pos := _carrier_offset_world_pos(obj.global_transform, local_offset)
-		var r: CharacterBody3D = available_rats[i] # already shuffled
+		var r: CharacterBody3D = available_rats[i] # already sorted by proximity
 		
 		r.state = r.State.FOLLOW
 		r.is_following_player = false

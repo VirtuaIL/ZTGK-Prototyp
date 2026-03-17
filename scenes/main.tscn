@@ -52,7 +52,7 @@ size = Vector3(20.05487, 0.001, 19.678223)
 size = Vector3(40.726654, 0.001, 21.083008)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_gqmmt"]
-size = Vector3(34.497925, 0.001, 30.159119)
+size = Vector3(26.937439, 0.001, 30.159119)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yc10j"]
 size = Vector3(36.53528, 0.001, 32.270782)
@@ -203,7 +203,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.5, -44, 0, -12.323715)
 mesh = SubResource("PlaneMesh_1")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="Floor" unique_id=1106394961]
-transform = Transform3D(0.9, 0, 0, 0, 1, 0, 0, 0, 0.7, -46.156914, 0, -36.741173)
+transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 0.8, -42.592194, 0, -36.744102)
 mesh = SubResource("PlaneMesh_1")
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="Floor" unique_id=1861182484]
@@ -251,7 +251,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.3793, 0, -12.465)
 shape = SubResource("BoxShape3D_0ld40")
 
 [node name="CollisionShape3D3" type="CollisionShape3D" parent="Floor" unique_id=1284429485]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.669563, 0, -35.677406)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.88932, 0, -35.677406)
 shape = SubResource("BoxShape3D_gqmmt")
 
 [node name="CollisionShape3D4" type="CollisionShape3D" parent="Floor" unique_id=26804051]
@@ -299,7 +299,7 @@ transform = Transform3D(-4.136409e-07, 0, -1.453, 0, 0.7, 0, 9.463, 0, -6.351264
 transform = Transform3D(-4.1361946e-07, 0, -1.4528499, 0, 1.4941561, 0, 9.462509, 0, -6.350608e-08, -35.869446, 0, 59.83957)
 
 [node name="door17" parent="walls" unique_id=918466331 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-2.84124e-07, 0, -1.453, 0, 1.494, 0, 6.5, 0, -6.3512644e-08, -35.869446, 0, 23.412117)
+transform = Transform3D(-2.84124e-07, 0, -1.453, 0, 1.494, 0, 6.5, 0, -6.3512644e-08, -27.353321, 0, 20.866768)
 
 [node name="door31" parent="walls" unique_id=1696693209 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-2.6226832e-07, 0, -1, 0, 0.7, 0, 6, 0, -4.371139e-08, -0.21899986, 0, 22.105312)
@@ -347,7 +347,7 @@ transform = Transform3D(9.355, 0, 0, 0, 0.7, 0, 0, 0, 1.453, -19.007832, 0, 57.1
 transform = Transform3D(9.355, 0, 0, 0, 0.7, 0, 0, 0, 1.453, 25.451494, 0, 57.19747)
 
 [node name="door8" parent="walls" unique_id=253644950 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(2.8065398, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -28.944363, 0, 27.268223)
+transform = Transform3D(2.8065398, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -26.332115, 0, 27.268223)
 
 [node name="door7" parent="walls" unique_id=2034586810 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(6, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 9.608953, 0, 8.613056)
@@ -361,14 +361,20 @@ transform = Transform3D(-6.119594e-08, 0, 1.453, 0, 0.7, 0, -1.4, 0, -6.3512644e
 [node name="door41" parent="walls" unique_id=1743807453 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-6.119594e-08, 0, 1.453, 0, 0.7, 0, -1.4, 0, -6.3512644e-08, -14.934959, 0, -33.944527)
 
+[node name="door43" parent="walls" unique_id=452628137 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(2.6, 0, 0, 0, 0.7, 0, 0, 0, 1.453, -20.949802, 0, -26.444588)
+
+[node name="door42" parent="walls" unique_id=1011749687 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 1.453, -12.9520035, 0, -31.217255)
+
 [node name="door39" parent="walls" unique_id=756304063 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-6.119594e-08, 0, 1.453, 0, 0.7, 0, -1.4, 0, -6.3512644e-08, -13.991795, 0, -51.76483)
 
 [node name="door12" parent="walls" unique_id=1244541262 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(12.639169, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, 7.946554, 0, -37.941315)
+transform = Transform3D(8, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -3.2669182, 0, -37.941315)
 
 [node name="door11" parent="walls" unique_id=1970893665 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(9.355132, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -49.786736, 0, -37.941315)
+transform = Transform3D(2, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -30.848225, 0, -37.941315)
 
 [node name="door16" parent="walls" unique_id=315846379 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(1, 0, 0, 0, 0.7, 0, 0, 0, 1.453, -16.998837, 0, -54.673607)
@@ -428,7 +434,7 @@ transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -35.464592, -3.8146973e-0
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -6.516176, -3.8146973e-06, -20.608696)
 
 [node name="box5" parent="boxes" unique_id=647181557 instance=ExtResource("8_tipki")]
-transform = Transform3D(2.5600002, 0, 0, 0, 1, 0, 0, 0, 2.89, -26.60019, 0.5737071, -46.37191)
+transform = Transform3D(2.5600002, 0, 0, 0, 1, 0, 0, 0, 2.89, -31.672718, 0.5737071, -40.191273)
 
 [node name="box6" parent="boxes" unique_id=497394248 instance=ExtResource("8_tipki")]
 transform = Transform3D(2.5600002, 0, 0, 0, 1, 0, 0, 0, 2.89, 0.042524338, 0.040887594, -20.816713)
@@ -490,7 +496,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.385296, 0.02200041, -16.3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6856575, 0, 4.606353)
 
 [node name="button2" parent="buttons" unique_id=557643948 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.138073, 0, -29.704334)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.164162, 0, -31.39278)
 doorId = 1
 
 [node name="WallButton" parent="buttons" unique_id=1060861240 instance=ExtResource("14_a8y0u")]
@@ -531,10 +537,10 @@ transform = Transform3D(0.5888014, 0, 0.8082777, 0, 1, 0, -0.8082777, 0, 0.58880
 [node name="RedirectionBox" parent="lasers" unique_id=637600661 instance=ExtResource("16_jbj1t")]
 
 [node name="turret" parent="lasers" unique_id=2011209879 instance=ExtResource("12_eb6dy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.22567, 4.7683716e-06, 27.859222)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.56041, 4.7683716e-06, 24.20433)
 
 [node name="hitscan_turret" parent="lasers" unique_id=345769400 instance=ExtResource("13_trceg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.816986, 1, 74.91194)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.902222, 1, 73.075165)
 attack_range = 40.0
 
 [node name="hitscan_turret2" parent="lasers" unique_id=1962595491 instance=ExtResource("13_trceg")]

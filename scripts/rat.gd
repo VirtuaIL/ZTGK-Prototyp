@@ -15,6 +15,11 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var separation_dist:  float = 0.5
 @export var separation_force: float = 12.0
 @export var max_speed:        float = 20.0
+@export var edge_avoidance_enabled: bool = true
+@export var edge_probe_distance: float = 0.45
+@export var edge_max_drop: float = 0.6
+@export var release_boost_speed: float = 7.5
+@export var release_boost_up: float = 8.0
 
 var state: State = State.FOLLOW
 var player: Node3D = null
@@ -96,8 +101,10 @@ func _physics_process(delta: float) -> void:
 
 	# Gravity and fall-recovery are skipped for anchored rats (near build target)
 	# so they can float as bridge pieces
-	if is_anchored:
+	if is_anchored or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
 		velocity.y = 0.0
+		if state == State.TRAVEL_TO_BUILD:
+			global_position.y = build_target.y
 	else:
 		# Gravity — applied every frame, preserved across all states
 		if not is_on_floor():
@@ -163,6 +170,11 @@ func _process_follow_spring(delta: float) -> void:
 	# Preserve gravity-driven vertical velocity, add spring horizontal
 	velocity.x = _spring_velocity.x
 	velocity.z = _spring_velocity.z
+	if _should_block_edge(Vector2(velocity.x, velocity.z)):
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_spring_velocity.x = 0.0
+		_spring_velocity.z = 0.0
 	move_and_slide()
 	# Sync spring velocity with collision response (horizontal only)
 	_spring_velocity.x = velocity.x
@@ -198,6 +210,9 @@ func _process_orbit(delta: float) -> void:
 	var lerp_vel: Vector3 = (new_pos - current) / max(delta, 0.001)
 	velocity.x = lerp_vel.x
 	velocity.z = lerp_vel.z
+	if _should_block_edge(Vector2(velocity.x, velocity.z)):
+		velocity.x = 0.0
+		velocity.z = 0.0
 
 	var forward_dir := Vector3(-sin(orbit_angle), 0.0, cos(orbit_angle))
 	var target_angle := atan2(forward_dir.x, forward_dir.z)
@@ -233,6 +248,9 @@ func _process_wave(delta: float) -> void:
 
 	velocity.x = wave_direction.x * wave_speed
 	velocity.z = wave_direction.z * wave_speed
+	if _should_block_edge(Vector2(velocity.x, velocity.z)):
+		velocity.x = 0.0
+		velocity.z = 0.0
 	move_and_slide()
 
 	var target_angle := atan2(wave_direction.x, wave_direction.z)
@@ -291,13 +309,22 @@ func build_at(pos: Vector3) -> void:
 		_travel_timer = 0.0
 
 
-func release_rat() -> void:
+func release_rat(with_boost: bool = false) -> void:
 	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
 		state = State.FOLLOW
 		is_anchored = false
 		is_carrier = false
 		_spring_velocity = Vector3.ZERO
-		velocity.y = 5.0
+		if with_boost and player != null:
+			var to_player := player.global_position - global_position
+			to_player.y = 0.0
+			if to_player.length() > 0.001:
+				var dir := to_player.normalized()
+				velocity.x = dir.x * release_boost_speed
+				velocity.z = dir.z * release_boost_speed
+			velocity.y = release_boost_up
+		else:
+			velocity.y = 5.0
 		_travel_timer = 0.0
 		# Lose solidity
 		set_collision_layer_value(1, false)
@@ -427,3 +454,34 @@ func show_visuals() -> void:
 
 func set_wall_collision(enabled: bool) -> void:
 	set_collision_mask_value(4, enabled)
+
+
+func _should_block_edge(hvel: Vector2) -> bool:
+	if not edge_avoidance_enabled:
+		return false
+	if is_anchored:
+		return false
+	if state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION or state == State.STATIC:
+		return false
+	if hvel.length() < 0.01:
+		return false
+
+	var forward := Vector3(hvel.x, 0.0, hvel.y).normalized()
+	var probe_pos := global_position + forward * edge_probe_distance
+	return not _has_floor_near(probe_pos, edge_max_drop)
+
+
+func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
+	var world := get_world_3d()
+	if world == null:
+		return true
+	var ss := world.direct_space_state
+	var origin := pos + Vector3.UP * 0.3
+	var end := pos + Vector3.DOWN * (max_drop + 0.8)
+	var query := PhysicsRayQueryParameters3D.create(origin, end)
+	query.collision_mask = 1 # Floor
+	query.exclude = [self]
+	var hit := ss.intersect_ray(query)
+	if not hit:
+		return false
+	return hit.position.y >= global_position.y - max_drop
