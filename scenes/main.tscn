@@ -369,7 +369,7 @@ transform = Transform3D(-4.136409e-07, 0, -1.453, 0, 0.7, 0, 9.463, 0, -6.351264
 transform = Transform3D(-4.136409e-07, 0, -1.453, 0, 0.7, 0, 9.463, 0, -6.3512644e-08, 5.136835, 0, -158.04054)
 
 [node name="door36" parent="walls" unique_id=795352949 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-4.136409e-07, 0, -1.453, 0, 0.7, 0, 9.463, 0, -6.3512644e-08, -11.021957, 0, -158.04054)
+transform = Transform3D(-4.136409e-07, 0, -1.453, 0, 0.7, 0, 9.463, 0, -6.3512644e-08, -11.021957, 0, -159.28864)
 
 [node name="door18" parent="walls" unique_id=1018950488 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-2.6226832e-07, 0, -1.453, 0, 1.494, 0, 6, 0, -6.3512644e-08, -14.922985, 0, -6.509926)
@@ -453,16 +453,13 @@ transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.0078
 transform = Transform3D(1.5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 4.1438465, 0, -134.76125)
 
 [node name="door45" parent="walls" unique_id=1290871580 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.7, 0, -2, 0, -6.3512644e-08, 7.3332405, 0, -129.24985)
-
-[node name="door47" parent="walls" unique_id=1564930884 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 0.7, 0, 0, 0, 1.453, 5.4134693, 0, -124.05176)
+transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.7, 0, -2, 0, -6.3512644e-08, 7.3332405, 0, -128.76999)
 
 [node name="door46" parent="walls" unique_id=122464070 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.7, 0, -2, 0, -6.3512644e-08, -14.981064, 0, -129.24985)
 
 [node name="door29" parent="walls" unique_id=1777577619 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, 4.827669, 0, -134.47389)
+transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, 4.827669, 0, -134.1825)
 
 [node name="door37" parent="walls" unique_id=137346768 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, 4.827669, 0, -115.287384)
