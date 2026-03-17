@@ -73,6 +73,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _is_dead:
+		return
 	# ── Gravity ──
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5.0
@@ -99,12 +101,10 @@ func _physics_process(delta: float) -> void:
 		AIState.PASSIVE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			move_and_slide()
 			return
 		AIState.DEAD:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			move_and_slide()
 			return
 		AIState.WANDER:
 			_process_wander(delta)
@@ -297,13 +297,16 @@ func _die() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
+	set_physics_process(false)
 	ai_state = AIState.DEAD
 	damage_cooldowns.clear()
 	collision_layer = 0
 	collision_mask = 0
 
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	var tween := create_tween()
-	tween.tween_property(self, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
+	if body:
+		tween.tween_property(body, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		visible = false
 	)
@@ -313,8 +316,12 @@ func _die() -> void:
 
 func _respawn() -> void:
 	_is_dead = false
+	set_physics_process(true)
 	visible = true
 	scale = Vector3.ONE
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body:
+		body.scale = Vector3.ONE
 	global_transform = _spawn_transform
 	health = max_health
 	_update_hp_bar()
