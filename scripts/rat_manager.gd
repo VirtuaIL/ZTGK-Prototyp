@@ -949,6 +949,8 @@ func _unhandled_input(event: InputEvent) -> void:
 						if not obj.is_surrounded:
 							_surround_object_with_rats(obj)
 						grabbed_object = obj
+						if grabbed_object:
+							grabbed_object.set_meta("is_being_dragged", true)
 						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
@@ -961,6 +963,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				if _lmb_is_object_drag:
 					# Release grabbed object
 					if grabbed_object != null:
+						grabbed_object.set_meta("is_being_dragged", false)
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
@@ -1113,6 +1116,7 @@ func on_projectile_hit() -> void:
 func recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1697,6 +1701,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 func _on_object_reset(obj: CharacterBody3D) -> void:
 	_release_object_carriers(obj)
 	if grabbed_object == obj:
+		grabbed_object.set_meta("is_being_dragged", false)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
 		_lmb_is_object_drag = false
