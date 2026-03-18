@@ -1435,7 +1435,7 @@ func _update_cursor_preview() -> void:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(!hit.is_empty())
+		_update_circle_preview(hit.is_empty())
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:
