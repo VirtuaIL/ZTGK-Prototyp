@@ -1,10 +1,5 @@
 extends Node3D
 
-enum RatMode { COMBAT, BUILD }
-var current_mode: RatMode = RatMode.COMBAT
-
-var combat_mode_rect: ColorRect
-var build_mode_rect: ColorRect
 var lpm_label_val: Label
 var spm_label_val: Label
 var ppm_label_val: Label
@@ -12,8 +7,6 @@ var lpm_rect_val: ColorRect
 var spm_rect_val: ColorRect
 var ppm_rect_val: ColorRect
 var space_rect_val: ColorRect
-var mode_label_combat: Label
-var mode_label_build: Label
 var cheatsheet_panel: Panel
 var goal_label: Label
 var rat_count_label: RichTextLabel
@@ -92,17 +85,17 @@ func _create_action_box(title: String) -> VBoxContainer:
 
 func _setup_mode_ui() -> void:
 	var mode_hud = CanvasLayer.new()
-	
+
 	var main_vbox = VBoxContainer.new()
 	main_vbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	main_vbox.position = Vector2(-350, -180) 
+	main_vbox.position = Vector2(-350, -140)
 	main_vbox.add_theme_constant_override("separation", 15)
-	
-	# Top: Action buttons (LPM, ŚPM, PPM)
+
+	# Action buttons (LPM, SCROLL, PPM)
 	var actions_hbox = HBoxContainer.new()
 	actions_hbox.add_theme_constant_override("separation", 10)
 	actions_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	
+
 	var lpm_box = _create_action_box("LPM")
 	lpm_rect_val = lpm_box.get_child(1) as ColorRect
 	lpm_label_val = lpm_rect_val.get_child(0) as Label
@@ -112,64 +105,27 @@ func _setup_mode_ui() -> void:
 	var ppm_box = _create_action_box("PPM")
 	ppm_rect_val = ppm_box.get_child(1) as ColorRect
 	ppm_label_val = ppm_rect_val.get_child(0) as Label
-	
+
 	var space_box = _create_action_box("SPACJA")
 	space_rect_val = space_box.get_child(1) as ColorRect
 	var space_label_val = space_rect_val.get_child(0) as Label
 	space_label_val.text = "przywołaj szczury"
 	space_rect_val.custom_minimum_size = Vector2(130, 30)
-	
+
 	var space_hbox = HBoxContainer.new()
 	space_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	space_hbox.add_child(space_box)
-	
+
 	actions_hbox.add_child(lpm_box)
 	actions_hbox.add_child(spm_box)
 	actions_hbox.add_child(ppm_box)
-	
-	# Middle: Mode indicators (Walka, Zarządzanie)
-	var mode_hbox = HBoxContainer.new()
-	mode_hbox.add_theme_constant_override("separation", 20)
-	mode_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	
-	combat_mode_rect = ColorRect.new()
-	combat_mode_rect.custom_minimum_size = Vector2(100, 40)
-	mode_label_combat = Label.new()
-	mode_label_combat.text = "Walka"
-	mode_label_combat.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mode_label_combat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mode_label_combat.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	mode_label_combat.add_theme_color_override("font_color", Color.BLACK)
-	combat_mode_rect.add_child(mode_label_combat)
-	
-	build_mode_rect = ColorRect.new()
-	build_mode_rect.custom_minimum_size = Vector2(100, 40)
-	mode_label_build = Label.new()
-	mode_label_build.text = "Zarządzanie"
-	mode_label_build.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mode_label_build.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mode_label_build.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	mode_label_build.add_theme_color_override("font_color", Color.WHITE)
-	build_mode_rect.add_child(mode_label_build)
-	
-	mode_hbox.add_child(combat_mode_rect)
-	mode_hbox.add_child(build_mode_rect)
-	
-	# Bottom: Ctrl hint
-	var ctrl_label = Label.new()
-	ctrl_label.text = "CTRL"
-	ctrl_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ctrl_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-	ctrl_label.add_theme_font_size_override("font_size", 14)
 
 	main_vbox.add_child(space_hbox)
 	main_vbox.add_child(actions_hbox)
-	main_vbox.add_child(mode_hbox)
-	main_vbox.add_child(ctrl_label)
-	
+
 	mode_hud.add_child(main_vbox)
 	add_child(mode_hud)
-	
+
 	_update_mode_ui()
 
 func _setup_cheatsheet_ui() -> void:
@@ -214,16 +170,11 @@ func _setup_cheatsheet_ui() -> void:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD
 	body.text = \
 		"WASD – ruch\n" + \
-		"CTRL (trzymaj) – tryb budowy, puść – tryb walki\n" + \
 		"SPACJA (przytrzymaj 1.5s) – przywołaj wszystkie szczury\n\n" + \
-		"MYSZ (Tryb walki)\n" + \
-		"LPM (przytrzymaj) – formacja wokół kursora\n" + \
-		"PPM (przytrzymaj) – obrót formacji\n\n" + \
-		"MYSZ (Tryb budowy)\n" + \
-		"LPM – rysuj/wyznaczaj miejsce\n" + \
-		"PPM – chwytaj/upuść obiekty\n" + \
-		"Scroll – szerokość pędzla / promień koła\n" + \
-		"Boczne przyciski myszy – obrót niesionego obiektu\n\n" + \
+		"MYSZ\n" + \
+		"LPM (ciągnij) – rysuj strukturę / przenieś obiekt\n" + \
+		"PPM (przytrzymaj) – atak (okrąg wokół kursora)\n" + \
+		"Scroll – rozmiar pędzla (obrót przy przenoszeniu)\n\n" + \
 		"DEBUG\n" + \
 		"F2 – przełącz tryb pasywny wrogów"
 	body.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
@@ -302,39 +253,12 @@ func _update_rat_count_ui() -> void:
 
 
 func _update_mode_ui() -> void:
-	if current_mode == RatMode.COMBAT:
-		combat_mode_rect.color = Color.WHITE
-		mode_label_combat.add_theme_color_override("font_color", Color.BLACK)
-		build_mode_rect.color = Color.hex(0x666666ff)
-		mode_label_build.add_theme_color_override("font_color", Color.WHITE)
-		
-		# Set mapping text for combat
-		if lpm_label_val: lpm_label_val.text = "okrąg"
-		if spm_label_val: spm_label_val.text = "wielkość hordy"
-		if ppm_label_val: ppm_label_val.text = "rotacja"
-	else:
-		combat_mode_rect.color = Color.hex(0x666666ff)
-		mode_label_combat.add_theme_color_override("font_color", Color.WHITE)
-		build_mode_rect.color = Color.WHITE
-		mode_label_build.add_theme_color_override("font_color", Color.BLACK)
-		
-		# Set mapping text for build
-		if lpm_label_val: lpm_label_val.text = "narysuj strukturę"
-		if spm_label_val: spm_label_val.text = "wielkość hordy"
-		if ppm_label_val: ppm_label_val.text = "przenieś obiekt"
+	if lpm_label_val: lpm_label_val.text = "buduj / przenieś"
+	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
+	if ppm_label_val: ppm_label_val.text = "atak"
 
 
 func _process(delta: float) -> void:
-	# ── Ctrl-based mode switching ──
-	var ctrl_held := Input.is_key_pressed(KEY_CTRL)
-	var new_mode: RatMode = RatMode.BUILD if ctrl_held else RatMode.COMBAT
-	
-	if new_mode != current_mode:
-		current_mode = new_mode
-		stratagem_system.mode = current_mode
-		rat_manager.mode = current_mode
-		_update_mode_ui()
-
 	_update_rat_count_ui()
 	_update_recall_hold(delta)
 	
