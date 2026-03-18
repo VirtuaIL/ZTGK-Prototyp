@@ -56,6 +56,8 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
+var _last_build_pos: Vector3 = Vector3.ZERO
+var _has_last_build_pos: bool = false
 
 # All positions in the most recently issued build command.
 var active_build_positions: Array[Vector3] = []
@@ -139,6 +141,11 @@ var _combat_offsets: Dictionary = {}
 var _combat_offsets_ready: bool = false
 
 const BRUSH_DIM_FACTOR: float = 0.6
+
+@export var formation_batch_size: int = 8
+var _formation_queue: Array[Rat] = []
+var _formation_index: int = 0
+var _formation_active: bool = false
 
 
 
@@ -374,6 +381,7 @@ func _process(delta: float) -> void:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+	_process_formation_queue()
 	_update_edge_avoidance()
 	if orbit_active:
 		orbit_timer -= delta
@@ -787,9 +795,36 @@ func _check_formation_sync() -> void:
 			any_waiting = true
 			
 	if not any_traveling and any_waiting:
-		for rat in rats:
-			if rat.state == rat.State.WAITING_FOR_FORMATION:
-				rat.activate_physics()
+		_start_formation_activation()
+
+
+func _start_formation_activation() -> void:
+	if _formation_active:
+		return
+	_formation_queue.clear()
+	for rat in rats:
+		if rat.state == rat.State.WAITING_FOR_FORMATION:
+			_formation_queue.append(rat)
+	_formation_index = 0
+	_formation_active = true
+
+
+func _process_formation_queue() -> void:
+	if not _formation_active:
+		return
+	var total := _formation_queue.size()
+	if total == 0:
+		_formation_active = false
+		return
+	var end_idx: int = min(_formation_index + formation_batch_size, total)
+	for i in range(_formation_index, end_idx):
+		var rat: Rat = _formation_queue[i]
+		if is_instance_valid(rat):
+			rat.activate_physics()
+	_formation_index = end_idx
+	if _formation_index >= total:
+		_formation_active = false
+		_formation_queue.clear()
 		_form_unified_mesh()
 		structure_integrity = structure_max_integrity
 		_structure_timer = 0.0
@@ -800,7 +835,7 @@ func _form_unified_mesh() -> void:
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
-	var static_rats: Array = []
+	var static_rats: Array[Rat] = []
 	for rat in rats:
 		if not is_instance_valid(rat) or not rat.is_inside_tree():
 			continue
@@ -1035,6 +1070,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				# No object hit — prepare for build drawing
 				current_drawn_path.clear()
 				current_build_y = -1000.0
+				_has_last_build_pos = false
 			else:
 				# RMB released
 				if _lmb_is_object_drag:
@@ -1057,6 +1093,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				current_build_y = -1000.0
 				is_drawing_line = false
 				current_drawn_path.clear()
+				_has_last_build_pos = false
 				immediate_mesh.clear_surfaces()
 			get_viewport().set_input_as_handled()
 			return
@@ -1218,7 +1255,11 @@ func recall_all_rats() -> void:
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
+	_has_last_build_pos = false
 	immediate_mesh.clear_surfaces()
+	_formation_queue.clear()
+	_formation_active = false
+	_formation_index = 0
 	for rat in rats:
 		rat.is_following_player = true
 		rat.is_carrier = false
@@ -1258,7 +1299,11 @@ func hard_recall_all_rats() -> void:
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
+	_has_last_build_pos = false
 	immediate_mesh.clear_surfaces()
+	_formation_queue.clear()
+	_formation_active = false
+	_formation_index = 0
 	for rat in rats:
 		rat.is_following_player = true
 		rat.is_carrier = false
@@ -1331,10 +1376,17 @@ func _process_build_drag() -> void:
 	elif current_build_y > -500.0:
 		var fallback := _get_mouse_pos_at_y(current_build_y)
 		if fallback == Vector3.ZERO:
-			return
-		raw_pos = fallback
+			if _has_last_build_pos:
+				raw_pos = _last_build_pos
+			else:
+				return
+		else:
+			raw_pos = fallback
 	else:
 		return
+
+	_last_build_pos = raw_pos
+	_has_last_build_pos = true
 
 	if build_draw_mode == DRAW_MODE_PATH:
 		if current_drawn_path.is_empty():
@@ -1555,10 +1607,8 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 
 	var fill_positions := _compute_circle_path_fill_positions(path_for_preview)
 	var required := fill_positions.size()
-	var total_rats := 0
-	for rat in rats:
-		if not rat.is_carrier:
-			total_rats += 1
+	var available_rats := _get_available_follow_rats()
+	var total_rats := available_rats.size()
 	var enough_rats := total_rats >= required
 
 	if line_material:
