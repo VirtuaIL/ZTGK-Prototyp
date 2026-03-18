@@ -20,6 +20,10 @@ var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
 var _recall_triggered: bool = false
 var _scroll_highlight_timer: float = 0.0
+var indicator_layer: CanvasLayer
+var indicator_root: Control
+var indicator_pool: Array[Label] = []
+var _indicator_blink_time: float = 0.0
 
 # ── UI Theme ──────────────────────────────────────────────────────────────────
 const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.85)
@@ -27,6 +31,14 @@ const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.9)
 const UI_BORDER: Color = Color(0.6, 0.6, 0.6, 0.6)
 const UI_TEXT: Color = Color(0.95, 0.95, 0.95)
 const UI_MUTED: Color = Color(0.78, 0.78, 0.78)
+
+# ── Offscreen Indicators ──────────────────────────────────────────────────────
+@export var indicator_max_distance: float = 26.0
+@export var indicator_min_distance: float = 6.0
+@export var indicator_screen_padding: float = 26.0
+@export var indicator_color: Color = Color(1.0, 0.65, 0.25, 1.0)
+@export var indicator_blink_speed: float = 4.0
+@export var indicator_blink_depth: float = 0.35
 
 # ── Camera look-ahead ─────────────────────────────────────────────────────────
 @export var cam_look_ahead_max: float = 2.0
@@ -53,6 +65,7 @@ func _init_game() -> void:
 	_setup_goal_ui()
 	_setup_rat_count_ui()
 	_setup_recall_indicator_ui()
+	_setup_offscreen_indicators_ui()
 	
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
@@ -307,6 +320,91 @@ func _setup_recall_indicator_ui() -> void:
 	recall_indicator_layer.add_child(recall_indicator)
 	add_child(recall_indicator_layer)
 
+func _setup_offscreen_indicators_ui() -> void:
+	indicator_layer = CanvasLayer.new()
+	indicator_root = Control.new()
+	indicator_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	indicator_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	indicator_layer.add_child(indicator_root)
+	add_child(indicator_layer)
+
+func _get_indicator(idx: int) -> Label:
+	while indicator_pool.size() <= idx:
+		var lbl = Label.new()
+		lbl.text = "▲"
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl.custom_minimum_size = Vector2(48, 48)
+		lbl.size = Vector2(48, 48)
+		lbl.pivot_offset = lbl.size * 0.5
+		lbl.add_theme_font_size_override("font_size", 34)
+		lbl.add_theme_color_override("font_color", indicator_color)
+		lbl.visible = false
+		indicator_root.add_child(lbl)
+		indicator_pool.append(lbl)
+	return indicator_pool[idx]
+
+func _update_offscreen_indicators() -> void:
+	if not indicator_layer or not indicator_root or player == null:
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+
+	var vp_rect: Rect2 = get_viewport().get_visible_rect()
+	var pad: float = indicator_screen_padding
+	var inner_rect := Rect2(Vector2(pad, pad), vp_rect.size - Vector2(pad * 2.0, pad * 2.0))
+	var center: Vector2 = inner_rect.get_center()
+
+	var targets: Array[Node] = []
+	targets.append_array(get_tree().get_nodes_in_group("enemies"))
+	targets.append_array(get_tree().get_nodes_in_group("bosses"))
+	targets.append_array(get_tree().get_nodes_in_group("turrets"))
+
+	var idx: int = 0
+	var ppos: Vector3 = player.global_position
+	for t in targets:
+		var node := t as Node3D
+		if node == null:
+			continue
+		var dist: float = ppos.distance_to(node.global_position)
+		if dist < indicator_min_distance or dist > indicator_max_distance:
+			continue
+
+		var screen_pos: Vector2 = cam.unproject_position(node.global_position)
+		var behind: bool = cam.is_position_behind(node.global_position)
+
+		if not behind and inner_rect.has_point(screen_pos):
+			continue
+
+		var dir: Vector2 = screen_pos - center
+		if dir.length() < 0.001:
+			continue
+		if behind:
+			dir = -dir
+
+		var half: Vector2 = inner_rect.size * 0.5
+		var scale_x: float = half.x / max(0.001, absf(dir.x))
+		var scale_y: float = half.y / max(0.001, absf(dir.y))
+		var scale: float = min(scale_x, scale_y)
+		var pos: Vector2 = center + dir * scale
+
+		var ind := _get_indicator(idx)
+		idx += 1
+		ind.visible = true
+		ind.position = pos - ind.pivot_offset
+		ind.rotation = atan2(dir.y, dir.x) + PI * 0.5
+
+		var t_dist: float = clampf((dist - indicator_min_distance) / max(0.001, indicator_max_distance - indicator_min_distance), 0.0, 1.0)
+		var alpha: float = lerpf(1.0, 0.35, t_dist)
+		var blink: float = 1.0 - indicator_blink_depth + indicator_blink_depth * (0.5 + 0.5 * sin(_indicator_blink_time * indicator_blink_speed))
+		alpha *= blink
+		ind.modulate = Color(indicator_color.r, indicator_color.g, indicator_color.b, alpha)
+
+	for i in range(idx, indicator_pool.size()):
+		indicator_pool[i].visible = false
+
 func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
@@ -335,6 +433,7 @@ func _update_mode_ui() -> void:
 func _process(delta: float) -> void:
 	_update_rat_count_ui()
 	_update_recall_hold(delta)
+	_indicator_blink_time += delta
 	
 	# ── Update Action Colors (LPM, SCROLL, PPM) ──
 	var highlight_color = Color(0.9, 0.9, 0.9, 1.0)
@@ -388,6 +487,8 @@ func _process(delta: float) -> void:
 		# Force strict isometric angle by looking parallel to the offset vector
 		var current_focus := cam.position - offset
 		cam.look_at(current_focus, Vector3.UP)
+	
+	_update_offscreen_indicators()
 
 
 func _unhandled_input(event: InputEvent) -> void:

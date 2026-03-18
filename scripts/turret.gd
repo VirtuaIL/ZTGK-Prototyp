@@ -24,6 +24,7 @@ var fire_timer: float = 0.0
 @onready var fire_point: Vector3 = Vector3(0, 0.7, 0) # Adjust based on the turret mesh
 
 func _ready() -> void:
+	add_to_group("turrets")
 	collision_layer = 4 # Layer 3: Movable
 	collision_mask = 31 | (1 << 8)  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16) + RatStructures (9)
 	_spawn_position = global_position
