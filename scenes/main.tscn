@@ -102,6 +102,7 @@ size = Vector3(5.9259033, 0.001, 5.899353)
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
+cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
 environment = SubResource("Environment_1")
@@ -117,7 +118,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.915739, -1.1444092e-05, -10.763271)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.751343, -1.1444092e-05, -177.39676)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -452,7 +453,7 @@ transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.0078
 transform = Transform3D(1.5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 4.1438465, 0, -134.76125)
 
 [node name="door45" parent="walls" unique_id=1290871580 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.7, 0, -2, 0, -6.3512644e-08, 7.3332405, 0, -128.76999)
+transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.149, 0, -2, 0, -6.3512644e-08, 7.3332405, 0, -128.76999)
 
 [node name="door46" parent="walls" unique_id=122464070 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(-8.742278e-08, 0, 1.453, 0, 0.7, 0, -2, 0, -6.3512644e-08, -14.981064, 0, -129.24985)
@@ -462,6 +463,9 @@ transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, 4.8
 
 [node name="door37" parent="walls" unique_id=137346768 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, 4.827669, 0, -115.287384)
+
+[node name="door47" parent="walls" unique_id=1717660781 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-6.119594e-09, 0, 2, 0, 0.149, 0, -0.14, 0, -8.742278e-08, 5.9851456, 0, -123.98636)
 
 [node name="door25" parent="walls" unique_id=1804874253 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, -11.160522, 0, -124.37242)
