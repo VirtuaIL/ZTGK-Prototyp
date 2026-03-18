@@ -7,7 +7,7 @@ material = SubResource("StandardMaterial3D_1")
 size = Vector3(0.8, 1.4, 0.8)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(5, 1.4, 0.8)
+size = Vector3(5, 2.9039795, 0.8)
 
 [node name="wall" type="CharacterBody3D" unique_id=1981168902]
 collision_layer = 129
@@ -17,5 +17,5 @@ transform = Transform3D(6.1, 0, 0, 0, 2.0511682, 0, 0, 0, 1, 0.08307457, 1.41898
 mesh = SubResource("BoxMesh_5f452")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=499049586]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.099999905, 0.7, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.099999905, 1.4519897, 0)
 shape = SubResource("BoxShape3D_1")

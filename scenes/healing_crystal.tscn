@@ -16,7 +16,7 @@ size = Vector3(0.8, 0.586792, 0.8)
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.509958e-07, 0, -1, 0, 0, 0)
 script = ExtResource("1_hy5t4")
 heal_range = 5.0
-heal_rate = 500.0
+heal_rate = 1000.0
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=743392259]
 transform = Transform3D(1, 0, 0, 0, 0.39999998, 0, 0, 0, 1, 0, 0.7, 0)
