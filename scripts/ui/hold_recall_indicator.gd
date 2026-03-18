@@ -1,7 +1,7 @@
 extends Control
 
-@export var radius: float = 10.0
-@export var thickness: float = 2.0
+@export var radius: float = 16.0
+@export var thickness: float = 3.0
 @export var bg_color: Color = Color(0.0, 0.0, 0.0, 0.6)
 @export var fg_color: Color = Color(1.0, 1.0, 1.0, 0.9)
 

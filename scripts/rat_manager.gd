@@ -96,6 +96,8 @@ var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.012
+@export var box_drag_speed: float = 4.0
+@export var box_drag_max_radius: float = 4.0
 @export var carrier_min_count: int = 1
 @export var carrier_drag_speed_min_mult: float = 0.08
 @export var carrier_drag_speed_max_mult: float = 0.5
@@ -147,7 +149,7 @@ var _neighbor_tick: int = 0
 var structure_integrity: float = structure_max_integrity
 @export var structure_decay_on_laser: float = 25.0 # integrity loss per second
 @export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
-@export var structure_lifetime: float = 12.0 # seconds before wall crumbles (0 = never)
+@export var structure_lifetime: float = 0.0 # seconds before wall crumbles (0 = never)
 var _structure_timer: float = 0.0
 
 
@@ -389,7 +391,7 @@ func _process(delta: float) -> void:
 		if _lmb_is_object_drag:
 			# Object dragging via LMB
 			if grabbed_object:
-				_process_object_drag()
+				_process_object_drag(delta)
 		else:
 			# Build drawing
 			if not is_dragging_left:
@@ -947,6 +949,8 @@ func _unhandled_input(event: InputEvent) -> void:
 						if not obj.is_surrounded:
 							_surround_object_with_rats(obj)
 						grabbed_object = obj
+						if grabbed_object:
+							grabbed_object.set_meta("is_being_dragged", true)
 						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
@@ -959,6 +963,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				if _lmb_is_object_drag:
 					# Release grabbed object
 					if grabbed_object != null:
+						grabbed_object.set_meta("is_being_dragged", false)
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
@@ -1111,6 +1116,7 @@ func on_projectile_hit() -> void:
 func recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1695,6 +1701,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 func _on_object_reset(obj: CharacterBody3D) -> void:
 	_release_object_carriers(obj)
 	if grabbed_object == obj:
+		grabbed_object.set_meta("is_being_dragged", false)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
 		_lmb_is_object_drag = false
@@ -1736,7 +1743,7 @@ func _check_carrier_arrival() -> void:
 		grabbed_object.set("is_surrounded", true)
 
 
-func _process_object_drag() -> void:
+func _process_object_drag(delta: float) -> void:
 	if grabbed_object == null:
 		return
 
@@ -1756,8 +1763,12 @@ func _process_object_drag() -> void:
 			return
 		target_pos = fallback
 
-	var new_pos: Vector3 = current_pos.lerp(target_pos, box_drag_lerp_factor)
-	grabbed_object.global_position = new_pos
+	var to_cursor := target_pos - current_pos
+	if to_cursor.length() > box_drag_max_radius:
+		target_pos = current_pos + to_cursor.normalized() * box_drag_max_radius
+
+	var step: float = max(0.0, box_drag_speed) * delta
+	grabbed_object.global_position = current_pos.move_toward(target_pos, step)
 
 
 func _get_brush_ratio(value: float, min_v: float, max_v: float) -> float:
