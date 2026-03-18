@@ -31,24 +31,7 @@ var _empty_respawn_triggered: bool = false
 var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
 
-var mode: int = 0: # 0 = COMBAT, 1 = BUILD
-	set(new_mode):
-		var old_mode := mode
-		mode = new_mode
-		if mode == 0 and old_mode == 1:
-			# Returning from BUILD to COMBAT:
-			# carrier rats stay with their object, free rats resume mouse follow
-			for rat in rats:
-				if not rat.is_carrier:
-					rat.is_following_player = true
-			mouse_is_down_left = false
-			mouse_is_down_right = false
-			combat_lmb_down = false
-			combat_rmb_down = false
-		if mode == 1 and old_mode == 0:
-			combat_lmb_down = false
-			combat_rmb_down = false
-			pass
+var mode: int = 1 # Always BUILD-like unified mode
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -58,8 +41,10 @@ var is_dragging_left: bool = false
 var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 
 var mouse_is_down_right: bool = false
-var combat_lmb_down: bool = false
 var combat_rmb_down: bool = false
+
+# LMB unified: true when LMB started on a movable object (drag mode), false = build mode
+var _lmb_is_object_drag: bool = false
 
 # Rats that are currently acting as box carriers
 var carrier_rats: Dictionary = {}
@@ -110,18 +95,15 @@ var grabbed_object: CharacterBody3D = null
 var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
-@export var box_drag_lerp_factor: float = 0.008
+@export var box_drag_lerp_factor: float = 0.012
 @export var carrier_min_count: int = 1
 @export var carrier_drag_speed_min_mult: float = 0.08
 @export var carrier_drag_speed_max_mult: float = 0.5
 @export var carrier_drag_speed_curve: float = 2.2
 @export var carrier_pick_radius: float = 6.0
 @export var object_rotation_step: float = 22.5
-@export var smooth_rotation_mode: bool = false
-@export var smooth_rotation_speed: float = 90.0
 @export var combat_circle_radius: float = 2.5
 @export var combat_circle_rotation_speed: float = 7.0
-@export var combat_spin_speed: float = 18.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -130,8 +112,6 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 			if rat.has_method("set_wall_collision"):
 				rat.set_wall_collision(value)
 
-var _is_rotating_left: bool = false
-var _is_rotating_right: bool = false
 var _hovered_object: Node3D = null
 
 var line_mesh_instance: MeshInstance3D
@@ -161,8 +141,6 @@ const NEIGHBOR_RADIUS: float = 1.1
 const NEIGHBOR_TICK: int = 3
 var _neighbor_tick: int = 0
 
-# ── Dragging object state (RMB in BUILD) ─────────────────────────────────────
-var _rmb_dragging_object: bool = false
 
 # ── Structure Integrity ──
 @export var structure_max_integrity: float = 100.0
@@ -402,45 +380,30 @@ func _process(delta: float) -> void:
 			wave_active = false
 			wave_ended.emit()
 
-	# ── COMBAT mode: rats follow cursor in arc/stream ──
-	if mode == 0:
-		_update_combat_mouse_follow(delta)
-	
-	# ── BUILD mode (Ctrl held) ──
-	if mode == 1:
-		if mouse_is_down_left:
+	# ── RMB held: combat attack circle ──
+	if combat_rmb_down:
+		_update_combat_attack_circle(delta)
+
+	# ── LMB: build drag or object drag ──
+	if mouse_is_down_left:
+		if _lmb_is_object_drag:
+			# Object dragging via LMB
+			if grabbed_object:
+				_process_object_drag()
+		else:
+			# Build drawing
 			if not is_dragging_left:
 				var current_mouse_pos := get_viewport().get_mouse_position()
 				if left_click_start_pos.distance_squared_to(current_mouse_pos) > drag_threshold_squared:
 					is_dragging_left = true
-			
 			if is_dragging_left:
 				_process_build_drag()
-		
-		if _rmb_dragging_object and grabbed_object:
-			_process_object_drag()
-			if smooth_rotation_mode:
-				if _is_rotating_left:
-					grabbed_object.rotate_y(deg_to_rad(smooth_rotation_speed * delta))
-				if _is_rotating_right:
-					grabbed_object.rotate_y(deg_to_rad(-smooth_rotation_speed * delta))
-
-
-
-	if mode != 1:
-		mouse_is_down_left = false
-		mouse_is_down_right = false
-		is_drawing_line = false
-		current_build_y = -1000.0
-		_build_in_progress = _has_build_in_progress()
-		if not _build_in_progress:
-			active_build_positions.clear()
 
 	_check_formation_sync()
 	_check_carrier_arrival()
 	_check_travel_anchoring()
 	_update_carrier_rat_targets()
-	_update_free_rats_follow_player()
+	_update_free_rats_follow_cursor(delta)
 	_process_hover()
 	if structure_lifetime > 0.0 and _has_static_rats():
 		_structure_timer += delta
@@ -463,7 +426,7 @@ func _process(delta: float) -> void:
 
 func _update_edge_avoidance() -> void:
 	var enabled := true
-	if mode == 1 and (mouse_is_down_left or is_dragging_left):
+	if mouse_is_down_left and not _lmb_is_object_drag:
 		enabled = false
 	for rat in rats:
 		var r := rat as Rat
@@ -473,12 +436,15 @@ func _update_edge_avoidance() -> void:
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
 
-func _update_combat_mouse_follow(delta: float) -> void:
-	var mouse_world := _mouse_to_world()
-	if mouse_world == Vector3.ZERO:
-		return
+func _get_active_follow_rats() -> Array[CharacterBody3D]:
+	var active: Array[CharacterBody3D] = []
+	for rat in rats:
+		if not rat.is_carrier and rat.state == rat.State.FOLLOW:
+			active.append(rat)
+	return active
 
-	# Track mouse position as a trail
+
+func _update_mouse_trail(mouse_world: Vector3) -> void:
 	if _mouse_trail.is_empty():
 		_mouse_trail.append(mouse_world)
 		_mouse_trail_last = mouse_world
@@ -488,45 +454,48 @@ func _update_combat_mouse_follow(delta: float) -> void:
 		if _mouse_trail.size() > MOUSE_TRAIL_MAX:
 			_mouse_trail.pop_front()
 
-	# Collect active rats
-	var active: Array[CharacterBody3D] = []
-	for rat in rats:
-		if not rat.is_carrier and rat.state == rat.State.FOLLOW:
-			active.append(rat)
 
+func _update_combat_attack_circle(delta: float) -> void:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
+		return
+
+	_update_mouse_trail(mouse_world)
+
+	var active := _get_active_follow_rats()
 	var count := active.size()
 	if count == 0:
 		return
 
-	# Apply per-rat spin when RMB is held without LMB
-	var spin_speed := 0.0
-	if combat_rmb_down and not combat_lmb_down:
-		spin_speed = combat_spin_speed
-	for rat in rats:
-		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
-			rat.extra_spin_speed = spin_speed
-		else:
-			rat.extra_spin_speed = 0.0
+	var effect_radius := combat_circle_radius
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		effect_radius = maxf(combat_circle_radius, circle_radius)
+	elif build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		effect_radius = maxf(combat_circle_radius, float(1 + pairs * 2) * brush_lane_spacing)
+	_combat_circle_angle += combat_circle_rotation_speed * delta
+	var angle_step := TAU / float(count)
+	for i in range(count):
+		var angle := _combat_circle_angle + angle_step * float(i)
+		var target := mouse_world + Vector3(cos(angle) * effect_radius, 0.0, sin(angle) * effect_radius)
+		target.y = mouse_world.y
+		active[i].set_target(target)
 
-	# LMB: circle around cursor
-	if combat_lmb_down:
-		var effect_radius := combat_circle_radius
-		if combat_rmb_down:
-			_combat_circle_angle += combat_circle_rotation_speed * delta
-			# Increase the target radius significantly so that the spring's inward
-			# lag naturally resolves to the true visual radius of the combat circle.
-			effect_radius += 1.3
-		var angle_step := TAU / float(count)
-		for i in range(count):
-			var angle := _combat_circle_angle + angle_step * float(i)
-			var target := mouse_world + Vector3(cos(angle) * effect_radius, 0.0, sin(angle) * effect_radius)
-			target.y = mouse_world.y
-			active[i].set_target(target)
+
+func _update_cursor_follow(delta: float) -> void:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
+		return
+
+	_update_mouse_trail(mouse_world)
+
+	var active := _get_active_follow_rats()
+	var count := active.size()
+	if count == 0:
 		return
 
 	# Need at least 2 points for arc distribution
 	if _mouse_trail.size() < 2:
-		# Fallback: set all rats to mouse position
 		for rat in active:
 			rat.set_target(mouse_world)
 		return
@@ -558,7 +527,7 @@ func _update_combat_mouse_follow(delta: float) -> void:
 
 		var t_stream: Vector3
 		var lateral_dir := Vector3.ZERO
-		
+
 		if arc_pos <= 0.0:
 			t_stream = _mouse_trail[0]
 			if _mouse_trail.size() >= 2:
@@ -567,7 +536,7 @@ func _update_combat_mouse_follow(delta: float) -> void:
 				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
 		else:
 			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-			
+
 			var lo := 0
 			var hi := arc.size() - 1
 			while lo < hi - 1:
@@ -576,7 +545,7 @@ func _update_combat_mouse_follow(delta: float) -> void:
 					lo = mid
 				else:
 					hi = mid
-			
+
 			var dir := _mouse_trail[hi] - _mouse_trail[lo]
 			dir.y = 0.0
 			lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
@@ -605,41 +574,13 @@ func _update_combat_mouse_follow(delta: float) -> void:
 		var final_target = t_stream.lerp(t_blob, blob_blend)
 		active[i].set_target(final_target)
 
-func _update_free_rats_follow_player() -> void:
-	if mode != 1:
+func _update_free_rats_follow_cursor(delta: float) -> void:
+	# Skip when RMB attack or LMB building is handling rats
+	if combat_rmb_down:
 		return
-	if grabbed_object == null:
+	if mouse_is_down_left and not _lmb_is_object_drag:
 		return
-	if mouse_is_down_left or is_dragging_left:
-		return
-
-	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
-	if player_node == null:
-		return
-
-	var active: Array[CharacterBody3D] = []
-	for rat in rats:
-		if rat.is_carrier:
-			continue
-		if rat.is_anchored:
-			continue
-		if rat.state != rat.State.FOLLOW:
-			continue
-		active.append(rat)
-
-	var count := active.size()
-	if count == 0:
-		return
-
-	if _blob_offsets.size() != rats.size():
-		build_blob_offsets()
-
-	for i in range(count):
-		var target := player_node.global_position
-		if i < _blob_offsets.size():
-			target += _blob_offsets[i]
-		target.y = player_node.global_position.y
-		active[i].set_target(target)
+	_update_cursor_follow(delta)
 
 
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
@@ -941,7 +882,7 @@ func _form_unified_mesh() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if wave_pending and event is InputEventMouseButton:
 		var mb_wave := event as InputEventMouseButton
-		if mb_wave.button_index == MOUSE_BUTTON_LEFT and mb_wave.pressed:
+		if mb_wave.button_index == MOUSE_BUTTON_RIGHT and mb_wave.pressed:
 			_fire_wave_at_mouse(mb_wave.position)
 			wave_pending = false
 			get_viewport().set_input_as_handled()
@@ -950,110 +891,91 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		
-		# Scroll wheel controls brush/arc width in both modes
+		# ── Scroll: rotate object if grabbed, otherwise change brush size ──
 		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-			if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
-				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-					brush_lane_pairs += 1
-				else:
-					brush_lane_pairs -= 1
-				brush_lane_pairs = clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-			elif build_draw_mode == DRAW_MODE_CIRCLE:
-				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-					circle_radius += circle_radius_step
-				else:
-					circle_radius -= circle_radius_step
-				circle_radius = clampf(circle_radius, circle_radius_min, circle_radius_max)
-				if mouse_is_down_left:
-					_update_circle_preview()
+			if grabbed_object != null:
+				# Rotate grabbed object
+				var rot_dir := 1.0 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -1.0
+				grabbed_object.rotate_y(deg_to_rad(object_rotation_step * rot_dir))
+			else:
+				# Change brush size
+				if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+						brush_lane_pairs += 1
+					else:
+						brush_lane_pairs -= 1
+					brush_lane_pairs = clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+				elif build_draw_mode == DRAW_MODE_CIRCLE:
+					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+						circle_radius += circle_radius_step
+					else:
+						circle_radius -= circle_radius_step
+					circle_radius = clampf(circle_radius, circle_radius_min, circle_radius_max)
+					if mouse_is_down_left and not _lmb_is_object_drag:
+						_update_circle_preview()
 
 			get_viewport().set_input_as_handled()
 			return
-		
-		# ── BUILD mode: LMB = drawing structures ──
+
+		# ── LMB: combat attack (circle around cursor) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mode == 1:
-				if mb.pressed:
-					mouse_is_down_left = true
-					left_click_start_pos = mb.position
-					is_dragging_left = false
-					current_drawn_path.clear()
-					current_build_y = -1000.0
-				else:
-					if not is_dragging_left:
-						_send_horde_to_point()
-					else:
-						if build_draw_mode == DRAW_MODE_PATH:
-							_distribute_rats_on_path()
-						elif build_draw_mode == DRAW_MODE_CIRCLE:
-							_build_circle_if_possible()
-					
-					mouse_is_down_left = false
-					current_build_y = -1000.0
-					is_drawing_line = false
-					current_drawn_path.clear()
-					immediate_mesh.clear_surfaces()
-				get_viewport().set_input_as_handled()
-			elif mode == 0:
-				combat_lmb_down = mb.pressed
-				get_viewport().set_input_as_handled()
+			combat_rmb_down = mb.pressed
+			get_viewport().set_input_as_handled()
 			return
-			
-		# ── BUILD mode: RMB = object interaction (surround / grab / release) ──
+
+		# ── RMB: raycast for object → drag, otherwise → build ──
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			if mode == 1:
-				if mb.pressed:
-					rmb_press_screen_pos = mb.position
-					if grabbed_object != null:
-						# Object already grabbed — start/resume dragging
-						_rmb_dragging_object = true
+			if mb.pressed:
+				mouse_is_down_left = true
+				left_click_start_pos = mb.position
+				is_dragging_left = false
+				_lmb_is_object_drag = false
+
+				# Raycast to check if we clicked on a movable object
+				var camera_m: Camera3D = get_viewport().get_camera_3d()
+				var ray_origin_m: Vector3 = camera_m.project_ray_origin(mb.position)
+				var ray_dir_m: Vector3 = camera_m.project_ray_normal(mb.position)
+				var space_state_m := camera_m.get_world_3d().direct_space_state
+				var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
+				var hit_m := space_state_m.intersect_ray(query_m)
+
+				if hit_m:
+					var obj = hit_m.collider
+					if obj is box or obj is turret or obj is hitscan_turret:
+						# Start object drag mode
+						_lmb_is_object_drag = true
+						if not obj.is_surrounded:
+							_surround_object_with_rats(obj)
+						grabbed_object = obj
+						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
 
-					# No object currently grabbed — raycast to find one
-					var camera_m: Camera3D = get_viewport().get_camera_3d()
-					var ray_origin_m: Vector3 = camera_m.project_ray_origin(mb.position)
-					var ray_dir_m: Vector3 = camera_m.project_ray_normal(mb.position)
-					var space_state_m := camera_m.get_world_3d().direct_space_state
-					var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
-					var hit_m := space_state_m.intersect_ray(query_m)
-
-					if hit_m:
-						var obj = hit_m.collider
-						if obj is box or obj is turret or obj is hitscan_turret:
-							_rmb_dragging_object = true
-							if not obj.is_surrounded:
-								_surround_object_with_rats(obj)
-							grabbed_object = obj
-							grabbed_object_last_pos = obj.global_position
-							get_viewport().set_input_as_handled()
-							return
-
-					_rmb_dragging_object = false
-				else:
-					# RMB released - drop object and return carriers immediately
-					_rmb_dragging_object = false
+				# No object hit — prepare for build drawing
+				current_drawn_path.clear()
+				current_build_y = -1000.0
+			else:
+				# RMB released
+				if _lmb_is_object_drag:
+					# Release grabbed object
 					if grabbed_object != null:
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
-				get_viewport().set_input_as_handled()
-			elif mode == 0:
-				combat_rmb_down = mb.pressed
-				get_viewport().set_input_as_handled()
-			return
+				else:
+					# Finalize build (only if we dragged)
+					if is_dragging_left:
+						if build_draw_mode == DRAW_MODE_PATH:
+							_distribute_rats_on_path()
+						elif build_draw_mode == DRAW_MODE_CIRCLE:
+							_build_circle_if_possible()
 
-		# Side Mouse Buttons: Rotate carried object
-		if mb.button_index == MOUSE_BUTTON_XBUTTON1:
-			_is_rotating_left = mb.pressed
-			if _is_rotating_left and grabbed_object and not smooth_rotation_mode:
-				grabbed_object.rotate_y(deg_to_rad(object_rotation_step))
-			get_viewport().set_input_as_handled()
-			return
-		if mb.button_index == MOUSE_BUTTON_XBUTTON2:
-			_is_rotating_right = mb.pressed
-			if _is_rotating_right and grabbed_object and not smooth_rotation_mode:
-				grabbed_object.rotate_y(deg_to_rad(-object_rotation_step))
+				mouse_is_down_left = false
+				_lmb_is_object_drag = false
+				current_build_y = -1000.0
+				is_drawing_line = false
+				current_drawn_path.clear()
+				immediate_mesh.clear_surfaces()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -1063,7 +985,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_fire_wave_at_mouse(mb.position)
 			wave_pending = false
 			get_viewport().set_input_as_handled()
@@ -1192,7 +1114,7 @@ func recall_all_rats() -> void:
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
-		_rmb_dragging_object = false
+		_lmb_is_object_drag = false
 
 	active_build_positions.clear()
 	built_positions.clear()
@@ -1209,7 +1131,7 @@ func recall_all_rats() -> void:
 	mouse_is_down_left = false
 	is_dragging_left = false
 	mouse_is_down_right = false
-	_rmb_dragging_object = false
+	_lmb_is_object_drag = false
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
@@ -1223,12 +1145,6 @@ func recall_all_rats() -> void:
 
 
 func _process_hover() -> void:
-	if mode != 1:
-		if _hovered_object:
-			if _hovered_object.has_method("set_highlight"):
-				_hovered_object.set_highlight(false)
-			_hovered_object = null
-		return
 
 	var camera := get_viewport().get_camera_3d()
 	if not camera: return
@@ -1442,8 +1358,8 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 # ── Brush UI Preview ─────────────────────────────────────────────────────────
 
 func _update_cursor_preview() -> void:
-	# Ignore if we are actively drawing a path in BUILD mode
-	if mode == 1 and mouse_is_down_left:
+	# Ignore if we are actively drawing a path
+	if mouse_is_down_left and not _lmb_is_object_drag:
 		return
 
 	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
@@ -1452,22 +1368,16 @@ func _update_cursor_preview() -> void:
 	
 	if hit:
 		raw_pos = hit.position + hit.normal * build_surface_offset
-		if mode == 1:
-			if current_build_y <= -500.0:
-				current_build_y = raw_pos.y
-			raw_pos.y = current_build_y
-		else:
-			# In combat mode, follow ground Y or fallback to player Y
-			if player_node:
-				raw_pos.y = player_node.global_position.y
-	elif mode == 1 and current_build_y > -500.0:
+		if current_build_y <= -500.0:
+			current_build_y = raw_pos.y
+		raw_pos.y = current_build_y
+	elif current_build_y > -500.0:
 		var fallback := _get_mouse_pos_at_y(current_build_y)
 		if fallback == Vector3.ZERO:
 			immediate_mesh.clear_surfaces()
 			return
 		raw_pos = fallback
-	elif mode == 0 and player_node:
-		# Combat fallback
+	elif player_node:
 		var fallback := _get_mouse_pos_at_y(player_node.global_position.y)
 		if fallback == Vector3.ZERO:
 			immediate_mesh.clear_surfaces()
@@ -1481,7 +1391,7 @@ func _update_cursor_preview() -> void:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(!hit.is_empty() if mode == 1 else false)
+		_update_circle_preview(!hit.is_empty())
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:
@@ -1495,7 +1405,7 @@ func _update_cursor_preview() -> void:
 		
 		# Determine lateral direction
 		var lateral := Vector3.RIGHT
-		if mode == 1 and current_drawn_path.size() >= 2:
+		if current_drawn_path.size() >= 2:
 			var dir: Vector3 = current_drawn_path[-1] - current_drawn_path[-2]
 			dir.y = 0.0
 			if dir.length() > 0.001:
@@ -1748,10 +1658,8 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 			var scl := obj.global_transform.basis.get_scale()
 			obj_max_extent = maxf(aabb.size.x * scl.x, aabb.size.z * scl.z) * 0.5
 
-	# Rat count is driven by current brush thickness
-	var total_count: int = rats.size()
-	var desired_carriers: int = _get_brush_desired_carriers(total_count)
-	var needed: int = clampi(desired_carriers, 1, count)
+	# All available rats participate in carrying
+	var needed: int = count
 	
 	if needed <= 0:
 		return
@@ -1761,7 +1669,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 
 	obj.get("carrier_rats").clear()
 	obj.set("carrier_available_max", count)
-	obj.set("carrier_brush_desired", desired_carriers)
+	obj.set("carrier_brush_desired", count)
 
 	for i in range(needed):
 		var angle := (TAU / needed) * i
@@ -1789,7 +1697,7 @@ func _on_object_reset(obj: CharacterBody3D) -> void:
 	if grabbed_object == obj:
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
-		_rmb_dragging_object = false
+		_lmb_is_object_drag = false
 
 
 func _check_carrier_arrival() -> void:
@@ -1848,27 +1756,7 @@ func _process_object_drag() -> void:
 			return
 		target_pos = fallback
 
-	var carrier_count: int = grabbed_object.get("carrier_rats").size()
-	var carrier_max_val: Variant = grabbed_object.get("carrier_available_max")
-	var carrier_max: int = 1
-	if carrier_max_val != null:
-		carrier_max = int(carrier_max_val)
-	if carrier_max <= 0:
-		carrier_max = max(1, carrier_count)
-	var carrier_desired_val: Variant = grabbed_object.get("carrier_brush_desired")
-	var carrier_desired: int = carrier_max
-	if carrier_desired_val != null:
-		carrier_desired = int(carrier_desired_val)
-	if carrier_desired <= 0:
-		carrier_desired = max(1, carrier_max)
-
-	var speed_t: float = 0.0
-	if carrier_desired > 1:
-		speed_t = clampf(float(carrier_count - 1) / float(carrier_desired - 1), 0.0, 1.0)
-	var curved_t: float = pow(speed_t, carrier_drag_speed_curve)
-	var speed_mult: float = lerpf(carrier_drag_speed_min_mult, carrier_drag_speed_max_mult, curved_t)
-	var lerp_factor: float = clampf(box_drag_lerp_factor * speed_mult, 0.0, 1.0)
-	var new_pos: Vector3 = current_pos.lerp(target_pos, lerp_factor)
+	var new_pos: Vector3 = current_pos.lerp(target_pos, box_drag_lerp_factor)
 	grabbed_object.global_position = new_pos
 
 

@@ -16,7 +16,6 @@ var is_active: bool = false
 var input_timeout: float = 2.0
 var time_since_last_input: float = 0.0
 
-var mode: int = 0 # 0 = COMBAT, 1 = BUILD
 
 
 func _ready() -> void:
@@ -37,13 +36,6 @@ func register_stratagem(data: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
-	# Ctrl is now used for BUILD mode — stratagem activation is handled externally
-	# When mode != 0, deactivate stratagems
-	if mode != 0:
-		if is_active:
-			_deactivate()
-		return
-
 	if is_active and current_input.size() > 0:
 		time_since_last_input += delta
 		if time_since_last_input > input_timeout:
@@ -52,7 +44,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not is_active or mode != 0:
+	if not is_active:
 		return
 
 	var key_event := event as InputEventKey
