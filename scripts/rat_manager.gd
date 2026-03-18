@@ -882,7 +882,7 @@ func _form_unified_mesh() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if wave_pending and event is InputEventMouseButton:
 		var mb_wave := event as InputEventMouseButton
-		if mb_wave.button_index == MOUSE_BUTTON_LEFT and mb_wave.pressed:
+		if mb_wave.button_index == MOUSE_BUTTON_RIGHT and mb_wave.pressed:
 			_fire_wave_at_mouse(mb_wave.position)
 			wave_pending = false
 			get_viewport().set_input_as_handled()
@@ -917,8 +917,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: raycast for object → drag, otherwise → build ──
+		# ── LMB: combat attack (circle around cursor) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
+			combat_rmb_down = mb.pressed
+			get_viewport().set_input_as_handled()
+			return
+
+		# ── RMB: raycast for object → drag, otherwise → build ──
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
 				mouse_is_down_left = true
 				left_click_start_pos = mb.position
@@ -949,7 +955,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				current_drawn_path.clear()
 				current_build_y = -1000.0
 			else:
-				# LMB released
+				# RMB released
 				if _lmb_is_object_drag:
 					# Release grabbed object
 					if grabbed_object != null:
@@ -973,19 +979,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── RMB: combat attack (circle around cursor) ──
-		if mb.button_index == MOUSE_BUTTON_RIGHT:
-			combat_rmb_down = mb.pressed
-			get_viewport().set_input_as_handled()
-			return
-
 	# Wave targeting input (Combat Mode)
 	if not wave_pending:
 		return
 
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_fire_wave_at_mouse(mb.position)
 			wave_pending = false
 			get_viewport().set_input_as_handled()

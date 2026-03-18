@@ -172,8 +172,8 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD – ruch\n" + \
 		"SPACJA (przytrzymaj 1.5s) – przywołaj wszystkie szczury\n\n" + \
 		"MYSZ\n" + \
-		"LPM (ciągnij) – rysuj strukturę / przenieś obiekt\n" + \
-		"PPM (przytrzymaj) – atak (okrąg wokół kursora)\n" + \
+		"LPM (przytrzymaj) – atak (okrąg wokół kursora)\n" + \
+		"PPM (ciągnij) – rysuj strukturę / przenieś obiekt\n" + \
 		"Scroll – rozmiar pędzla (obrót przy przenoszeniu)\n\n" + \
 		"DEBUG\n" + \
 		"F2 – przełącz tryb pasywny wrogów"
@@ -253,9 +253,9 @@ func _update_rat_count_ui() -> void:
 
 
 func _update_mode_ui() -> void:
-	if lpm_label_val: lpm_label_val.text = "buduj / przenieś"
+	if lpm_label_val: lpm_label_val.text = "atak"
 	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
-	if ppm_label_val: ppm_label_val.text = "atak"
+	if ppm_label_val: ppm_label_val.text = "buduj / przenieś"
 
 
 func _process(delta: float) -> void:
