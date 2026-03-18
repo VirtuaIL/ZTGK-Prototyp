@@ -140,8 +140,14 @@ var _combat_circle_angle: float = 0.0
 
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
 const NEIGHBOR_RADIUS: float = 1.1
-const NEIGHBOR_TICK: int = 3
+const NEIGHBOR_TICK: int = 6
 var _neighbor_tick: int = 0
+
+var _cached_enemies: Array = []
+
+var _preview_tick: int = 0
+const PREVIEW_TICK: int = 3
+var _last_mouse_screen_pos: Vector2 = Vector2(-1, -1)
 
 
 # ── Structure Integrity ──
@@ -366,10 +372,19 @@ func _check_rat_spawn_bonus() -> void:
 
 
 func _process(delta: float) -> void:
+	# ── Cache enemies once per frame for all rats ──
+	_cached_enemies = get_tree().get_nodes_in_group("enemies")
+	_cached_enemies += get_tree().get_nodes_in_group("bosses")
+	for rat in rats:
+		if is_instance_valid(rat) and rat.has_method("set_enemies"):
+			rat.set_enemies(_cached_enemies)
+
 	if _build_force_timer > 0.0:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+	_process_formation_queue()
+	_process_mesh_build_queue()
 	_update_edge_avoidance()
 	if orbit_active:
 		orbit_timer -= delta
@@ -420,8 +435,14 @@ func _process(delta: float) -> void:
 		_neighbor_tick = 0
 		_assign_neighbors()
 
-	# ── Cursor Preview ──
-	_update_cursor_preview()
+	# ── Cursor Preview (throttled) ──
+	var current_mp := get_viewport().get_mouse_position()
+	var mouse_moved := current_mp.distance_squared_to(_last_mouse_screen_pos) > 1.0
+	_last_mouse_screen_pos = current_mp
+	_preview_tick += 1
+	if mouse_moved or _preview_tick >= PREVIEW_TICK:
+		_preview_tick = 0
+		_update_cursor_preview()
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
 
@@ -613,14 +634,40 @@ func build_blob_offsets() -> void:
 
 func _assign_neighbors() -> void:
 	var count := rats.size()
+	if count == 0:
+		return
+
+	# Build spatial grid — cell size = NEIGHBOR_RADIUS
+	var cell_size := NEIGHBOR_RADIUS
+	var inv_cell := 1.0 / cell_size
+	var grid: Dictionary = {}
+
 	for i in range(count):
-		var nb: Array = []
+		var pos := rats[i].global_position
+		var cx := int(floor(pos.x * inv_cell))
+		var cz := int(floor(pos.z * inv_cell))
+		var key := Vector2i(cx, cz)
+		if not grid.has(key):
+			grid[key] = []
+		grid[key].append(i)
+
+	# For each rat, check only 9 neighboring cells
+	var radius_sq := NEIGHBOR_RADIUS * NEIGHBOR_RADIUS
+	for i in range(count):
 		var pos_i := rats[i].global_position
-		for j in range(count):
-			if i == j:
-				continue
-			if pos_i.distance_to(rats[j].global_position) < NEIGHBOR_RADIUS:
-				nb.append(rats[j])
+		var cx := int(floor(pos_i.x * inv_cell))
+		var cz := int(floor(pos_i.z * inv_cell))
+		var nb: Array = []
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var key := Vector2i(cx + dx, cz + dz)
+				if not grid.has(key):
+					continue
+				for j in grid[key]:
+					if j == i:
+						continue
+					if pos_i.distance_squared_to(rats[j].global_position) < radius_sq:
+						nb.append(rats[j])
 		rats[i].set_neighbors(nb)
 
 
@@ -726,6 +773,50 @@ func _check_formation_sync() -> void:
 		_build_in_progress = false
 
 
+# ── Batched mesh build ────────────────────────────────────────────────────────
+var _mesh_build_queue: Array = []  # Array of Dictionaries with CSG params
+var _mesh_build_active: bool = false
+var _mesh_build_index: int = 0
+var _mesh_build_mat: StandardMaterial3D = null
+const MESH_BUILD_BATCH_SIZE: int = 12
+
+
+func _process_mesh_build_queue() -> void:
+	if not _mesh_build_active:
+		return
+	var total := _mesh_build_queue.size()
+	if total == 0:
+		_mesh_build_active = false
+		return
+	var end_idx: int = min(_mesh_build_index + MESH_BUILD_BATCH_SIZE, total)
+	for i in range(_mesh_build_index, end_idx):
+		var data: Dictionary = _mesh_build_queue[i]
+		if data["type"] == "cyl":
+			var cyl = CSGCylinder3D.new()
+			cyl.radius = data["radius"]
+			cyl.height = data["height"]
+			cyl.sides = 8
+			cyl.material = _mesh_build_mat
+			unified_shape_combiner.add_child(cyl)
+			cyl.global_position = data["position"]
+		elif data["type"] == "box":
+			var box = CSGBox3D.new()
+			box.size = data["size"]
+			unified_shape_combiner.add_child(box)
+			box.global_position = data["position"]
+			if data.has("forward"):
+				var forward: Vector3 = data["forward"]
+				var up := Vector3.UP
+				if abs(forward.y) > 0.99:
+					up = Vector3.RIGHT
+				box.look_at_from_position(box.global_position, box.global_position + forward, up)
+			box.material = _mesh_build_mat
+	_mesh_build_index = end_idx
+	if _mesh_build_index >= total:
+		_mesh_build_active = false
+		_mesh_build_queue.clear()
+
+
 func _form_unified_mesh() -> void:
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
@@ -744,8 +835,8 @@ func _form_unified_mesh() -> void:
 	if static_rats.is_empty():
 		return
 
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(0.45, 0.30, 0.18)
+	_mesh_build_mat = StandardMaterial3D.new()
+	_mesh_build_mat.albedo_color = Color(0.45, 0.30, 0.18)
 	
 	var radius = 0.35
 
@@ -771,24 +862,42 @@ func _form_unified_mesh() -> void:
 	var max_connections_per_rat = 4
 	var num_rats = rat_positions.size()
 	
-	# Build adjacency list for graph
+	# Build adjacency via spatial grid (instead of O(n²))
 	var adj = []
 	for i in range(num_rats):
 		adj.append([])
-		
+
+	var inv_cell := 1.0 / float(connection_threshold)
+	var grid: Dictionary = {}
+	for i in range(num_rats):
+		var pos = rat_positions[i]
+		var cx := int(floor(pos.x * inv_cell))
+		var cz := int(floor(pos.z * inv_cell))
+		var key := Vector2i(cx, cz)
+		if not grid.has(key):
+			grid[key] = []
+		grid[key].append(i)
+
 	var all_neighbors = []
 	for i in range(num_rats):
 		var pos_a = rat_positions[i]
+		var cx := int(floor(pos_a.x * inv_cell))
+		var cz := int(floor(pos_a.z * inv_cell))
 		var neighbors = []
-		for j in range(num_rats):
-			if i == j: continue
-			var pos_b = rat_positions[j]
-			var y_diff = abs(pos_a.y - pos_b.y)
-			if y_diff > 0.6:
-				continue
-			var dist = pos_a.distance_to(pos_b)
-			if dist < connection_threshold:
-				neighbors.append({"index": j, "dist": dist})
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var key := Vector2i(cx + dx, cz + dz)
+				if not grid.has(key):
+					continue
+				for j in grid[key]:
+					if i == j: continue
+					var pos_b = rat_positions[j]
+					var y_diff = abs(pos_a.y - pos_b.y)
+					if y_diff > 0.6:
+						continue
+					var dist = pos_a.distance_to(pos_b)
+					if dist < connection_threshold:
+						neighbors.append({"index": j, "dist": dist})
 		neighbors.sort_custom(func(a, b): return a["dist"] < b["dist"])
 		
 		var connected_to_i = []
@@ -830,22 +939,22 @@ func _form_unified_mesh() -> void:
 			var cid = component_id[i]
 			component_is_bridge[cid] = true
 	
-	# Generate cylinders
+	# Queue CSG data for batched creation
+	_mesh_build_queue.clear()
+	
+	# Queue cylinders
 	for i in range(num_rats):
 		var is_bridge = component_is_bridge[component_id[i]]
-		# Bridge: height 0.4, offset -0.3. Barricade: height 1.2, offset 0.6
 		var current_height = 0.4 if is_bridge else 1.2
 		var current_y_offset = -0.3 if is_bridge else 0.6
-		
-		var cyl = CSGCylinder3D.new()
-		cyl.radius = radius
-		cyl.height = current_height
-		cyl.sides = 12
-		cyl.material = mat
-		unified_shape_combiner.add_child(cyl)
-		cyl.global_position = rat_positions[i] + Vector3(0, current_y_offset, 0)
+		_mesh_build_queue.append({
+			"type": "cyl",
+			"radius": radius,
+			"height": current_height,
+			"position": rat_positions[i] + Vector3(0, current_y_offset, 0)
+		})
 
-	# Generate boxes for connections
+	# Queue boxes for connections
 	for i in range(num_rats):
 		var pos_a = rat_positions[i]
 		var is_bridge_a = component_is_bridge[component_id[i]]
@@ -853,8 +962,8 @@ func _form_unified_mesh() -> void:
 		for nb in all_neighbors[i]:
 			var j = nb["index"]
 			if i > j: 
-				continue # avoid double drawing edges (undirected graph equivalent)
-				
+				continue
+
 			var pos_b = rat_positions[j]
 			var dist = nb["dist"]
 			
@@ -863,20 +972,18 @@ func _form_unified_mesh() -> void:
 			var current_height = 0.4 if connection_is_bridge else 1.2
 			var current_y_offset = -0.3 if connection_is_bridge else 0.6
 			
-			var box = CSGBox3D.new()
-			box.size = Vector3(radius * 2.0, current_height, dist)
-			var center = (pos_a + pos_b) / 2.0
-			unified_shape_combiner.add_child(box)
-			box.global_position = center + Vector3(0, current_y_offset, 0)
-			
+			var box_data: Dictionary = {
+				"type": "box",
+				"size": Vector3(radius * 2.0, current_height, dist),
+				"position": (pos_a + pos_b) / 2.0 + Vector3(0, current_y_offset, 0)
+			}
 			if dist > 0.001:
-				var forward = (pos_b - pos_a).normalized()
-				var up = Vector3.UP
-				if abs(forward.y) > 0.99:
-					up = Vector3.RIGHT
-				box.look_at_from_position(box.global_position, box.global_position + forward, up)
-			
-			box.material = mat
+				box_data["forward"] = (pos_b - pos_a).normalized()
+			_mesh_build_queue.append(box_data)
+
+	# Start batched creation
+	_mesh_build_index = 0
+	_mesh_build_active = true
 
 
 # ── Input handling ────────────────────────────────────────────────────────────
@@ -1142,16 +1249,64 @@ func recall_all_rats() -> void:
 	current_build_y = -1000.0
 	current_drawn_path.clear()
 	immediate_mesh.clear_surfaces()
+	_formation_queue.clear()
+	_formation_active = false
+	_formation_index = 0
+	_mesh_build_queue.clear()
+	_mesh_build_active = false
+	_mesh_build_index = 0
 	for rat in rats:
 		rat.is_following_player = true
 		rat.is_carrier = false
 	_structure_timer = 0.0
 
-	# Respawn only at rat_spawn now.
+
+func hard_recall_all_rats() -> void:
+	# Release any grabbed object and its carrier rats first
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+		_lmb_is_object_drag = false
+
+	active_build_positions.clear()
+	built_positions.clear()
+	carrier_rats.clear()
+	carrier_rat_offsets.clear()
+	
+	# Destroy the unified mesh
+	for child in unified_shape_combiner.get_children():
+		child.queue_free()
+		
+	for rat in rats:
+		if rat.has_method("hard_recall_to_player"):
+			rat.hard_recall_to_player()
+		else:
+			rat.release_rat(true)
+	# Reset drawing state
+	mouse_is_down_left = false
+	is_dragging_left = false
+	mouse_is_down_right = false
+	_lmb_is_object_drag = false
+	is_drawing_line = false
+	current_build_y = -1000.0
+	current_drawn_path.clear()
+	_has_last_build_pos = false
+	immediate_mesh.clear_surfaces()
+	_formation_queue.clear()
+	_formation_active = false
+	_formation_index = 0
+	_mesh_build_queue.clear()
+	_mesh_build_active = false
+	_mesh_build_index = 0
+	for rat in rats:
+		rat.is_following_player = true
+		rat.is_carrier = false
+	_structure_timer = 0.0
 
 
 func _process_hover() -> void:
-
 	var camera := get_viewport().get_camera_3d()
 	if not camera: return
 	
