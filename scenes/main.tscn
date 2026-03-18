@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
 [ext_resource type="PackedScene" uid="uid://xdkpt36dqji0" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
 [ext_resource type="PackedScene" uid="uid://csp7jwbmufl4w" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
+[ext_resource type="PackedScene" uid="uid://b23uv66hbun6u" path="res://scenes/floor_tile_noCollision.tscn" id="26_2wyq8"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -39,18 +40,6 @@ sky = SubResource("Sky_0ld40")
 ambient_light_source = 2
 ambient_light_color = Color(0.3, 0.28, 0.35, 1)
 ambient_light_energy = 0.5
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_RatSpawn"]
-albedo_color = Color(0.2, 0.9, 0.4, 1)
-emission_enabled = true
-emission = Color(0.2, 0.9, 0.4, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_RatSpawn"]
-material = SubResource("StandardMaterial3D_RatSpawn")
-top_radius = 0.25
-bottom_radius = 0.25
-height = 1.5
-radial_segments = 16
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -118,7 +107,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.751343, -1.1444092e-05, -103.957726)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.452862, -1.1444092e-05, -225.23209)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -202,27 +191,6 @@ transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.688231
 transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.6882313, 0, -3.008354e-08, 16.54462, -0.024049282, 24.282845)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1251990227]
-
-[node name="RatSpawn1" type="Marker3D" parent="RatSpawns" unique_id=999559681 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -59.874504, 0, -12.989948)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RatSpawns/RatSpawn1" unique_id=56771121]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5858307, 0.75, 0.3252144)
-mesh = SubResource("CylinderMesh_RatSpawn")
-
-[node name="RatSpawn2" type="Marker3D" parent="RatSpawns" unique_id=2122705045 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.458443, 0, -108.585144)
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="RatSpawns/RatSpawn2" unique_id=1251400165]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CylinderMesh_RatSpawn")
-
-[node name="RatSpawn3" type="Marker3D" parent="RatSpawns" unique_id=1459646445 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.401188, 0, -227.51373)
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="RatSpawns/RatSpawn3" unique_id=588890921]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CylinderMesh_RatSpawn")
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=519523457]
 
@@ -714,25 +682,25 @@ transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -60.426132, -0.056754112, -295.7698)
 
 [node name="boss_turret_deploy_point2" parent="boss_arena" unique_id=972630542 instance=ExtResource("22_2wyq8")]
-transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -11.711418, 2.3899336, -266.9097)
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -11.711, -0.057, -266.91)
 
 [node name="boss_turret_deploy_point4" parent="boss_arena" unique_id=2062552353 instance=ExtResource("22_2wyq8")]
-transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -34.60963, 2.3899336, -294.8376)
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -34.61, -0.057, -294.838)
 
 [node name="boss_turret_deploy_point5" parent="boss_arena" unique_id=2069107179 instance=ExtResource("22_2wyq8")]
-transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -60.436577, 2.3899336, -274.9199)
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -60.437, 0.5, -274.92)
 
 [node name="boss_turret_deploy_point3" parent="boss_arena" unique_id=1489268342 instance=ExtResource("22_2wyq8")]
-transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -28.711418, 2.3899336, -252.9097)
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -28.711, 0.5, -252.91)
 
 [node name="hitscan_turret28" parent="boss_arena" unique_id=1776565332 instance=ExtResource("23_vxglm")]
 transform = Transform3D(-95.19993, 0, -1.2852785e-05, 0, 1, 0, 1.4374789e-05, 0, -85.12015, -31.559944, -1.4567499, -273.53668)
 
 [node name="healing_crystal" parent="boss_arena" unique_id=47576092 instance=ExtResource("24_2f3dj")]
-transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000001, -15.883465, -0.056749344, -279.36298)
+transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000001, -15.0409775, -0.056749344, -285.0626)
 
 [node name="healing_crystal3" parent="boss_arena" unique_id=2013058586 instance=ExtResource("24_2f3dj")]
-transform = Transform3D(-1, 0, -1.5099579e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000002, -23.802307, -0.056749344, -257.9104)
+transform = Transform3D(-1, 0, -1.5099579e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000002, -28.697884, -0.056749344, -248.9175)
 
 [node name="healing_crystal2" parent="boss_arena" unique_id=447018954 instance=ExtResource("24_2f3dj")]
 transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000001, -46.090744, -0.056749344, -252.18939)
@@ -741,20 +709,14 @@ transform = Transform3D(-1, 0, -1.509958e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.590038, -1.0240211, -253.26006)
 shape = SubResource("BoxShape3D_tel4y")
 
-[node name="door48" parent="boss_arena" unique_id=20755939 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-6.119594e-08, 0, -1.453, 0, 0.7, 0, 1.4, 0, -6.3512644e-08, -20.67004, 0.016834497, -278.385)
+[node name="door51" parent="boss_arena" unique_id=461018474 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-9.987173e-09, 0, -1.3395641, 0, 0.7, 0, -0.22847988, 0, 5.85542e-08, -37.373978, -0.13696218, -261.58548)
 
-[node name="door49" parent="boss_arena" unique_id=1203656389 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-1, 0, 1.2702529e-07, 0, 0.6999999, 0, -8.742277e-08, 0, -1.4529998, -17.662998, 0.016834497, -275.47623)
-
-[node name="door50" parent="boss_arena" unique_id=1662949317 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-6.119594e-08, 0, 1.453, 0, 0.7, 0, -1.4, 0, -6.3512644e-08, -41.62864, 0.016834497, -256.09686)
-
-[node name="door51" parent="boss_arena" unique_id=1063040861 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(1, 0, -1.4210855e-14, 0, 0.6999999, 0, -7.1054274e-15, 0, 1.4529998, -44.63568, 0.016834497, -259.00565)
+[node name="door52" parent="boss_arena" unique_id=1491267439 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-9.987173e-09, 0, -1.3395641, 0, 0.7, 0, -0.22847988, 0, 5.85542e-08, -26.373978, -0.13696218, -273.58548)
 
 [node name="box8" parent="boss_arena" unique_id=2077481210 instance=ExtResource("8_tipki")]
-transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -17.470812, -0.024021626, -253.90018)
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -20.911518, -0.024023533, -256.4994)
 
 [node name="box9" parent="boss_arena" unique_id=1436045761 instance=ExtResource("8_tipki")]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -45.73484, 0.9759784, -262.8346)
@@ -768,47 +730,220 @@ transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -37.197266, 0.97597456, -
 [node name="box12" parent="boss_arena" unique_id=1849642187 instance=ExtResource("8_tipki")]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -8.298134, 0.97597075, -283.74744)
 
-[node name="door25" parent="boss_arena" unique_id=2025588472 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1.910686e-15, 2.707117e-07, 0.99999976, -1.0000002, 8.1213506e-07, -3.82137e-15, -1.311342e-07, -6.1931615, 4.3711385e-08, -23.231342, -2.1422975, -260.69116)
-doorId = 11
-slide_distance = 4.5
-
-[node name="door27" parent="boss_arena" unique_id=723902743 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1.910686e-15, 2.707117e-07, 0.99999976, -1.0000002, -2.7071172e-07, 3.8213705e-15, 4.37114e-08, -6.1931615, 4.3711385e-08, -39.23134, -2.1422975, -260.69116)
-doorId = 12
-slide_distance = 4.5
-
-[node name="door28" parent="boss_arena" unique_id=1857824680 instance=ExtResource("9_85g3d")]
-transform = Transform3D(-4.37114e-08, 6.1931615, -3.5527137e-15, -1.0000002, -2.7071172e-07, 3.1058812e-22, 1.2621777e-29, -2.842171e-14, 0.99999976, -40.23134, -2.1422975, -277.69116)
-doorId = 13
-slide_distance = 4.5
-
-[node name="door29" parent="boss_arena" unique_id=640264842 instance=ExtResource("9_85g3d")]
-transform = Transform3D(-4.37114e-08, 6.1931615, -3.5527137e-15, -1.0000002, -2.7071172e-07, 3.1058812e-22, 1.2621777e-29, -2.842171e-14, 0.99999976, -40.23134, -2.1422975, -260.69116)
+[node name="door31" parent="boss_arena" unique_id=341626980 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -47.80676, -1.4805789, -253.53703)
 doorId = 14
 slide_distance = 4.5
 
-[node name="button3" parent="boss_arena" unique_id=1405929707 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.458603, 0.022004224, -283.30463)
-doorId = 12
+[node name="door33" parent="boss_arena" unique_id=1142958665 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -47.424294, -1.4805789, -253.89764)
+doorId = 14
+slide_distance = 4.5
+
+[node name="door34" parent="boss_arena" unique_id=2081144320 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -44.675625, -1.4805789, -253.89764)
+doorId = 14
+slide_distance = 4.5
+
+[node name="door32" parent="boss_arena" unique_id=332551365 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -47.80676, -1.4805789, -250.7993)
+doorId = 14
+slide_distance = 4.5
+
+[node name="door35" parent="boss_arena" unique_id=108893777 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -16.806759, -1.4805789, -286.53705)
+doorId = 15
+slide_distance = 4.5
+
+[node name="door36" parent="boss_arena" unique_id=358884749 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -16.424294, -1.4805789, -286.89764)
+doorId = 15
+slide_distance = 4.5
+
+[node name="door37" parent="boss_arena" unique_id=1315425031 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -13.675625, -1.4805789, -286.89764)
+doorId = 15
+slide_distance = 4.5
+
+[node name="door38" parent="boss_arena" unique_id=1177255590 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -16.806759, -1.4805789, -283.79932)
+doorId = 15
+slide_distance = 4.5
 
 [node name="button4" parent="boss_arena" unique_id=213852704 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.80371, 0.022004224, -252.79498)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.397251, 0.022004224, -252.17398)
 doorId = 14
 
-[node name="button6" parent="boss_arena" unique_id=1033158495 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.974976, 0.022006132, -293.50183)
-doorId = 13
+[node name="button5" parent="boss_arena" unique_id=1045585367 instance=ExtResource("10_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45.39725, 0.022004224, -285.17398)
+doorId = 15
 
 [node name="RedirectionBox4" parent="boss_arena" unique_id=76530190 instance=ExtResource("16_jbj1t")]
-transform = Transform3D(0.8569696, 0, -0.51536715, 0, 1, 0, 0.51536715, 0, 0.8569696, -26.835896, -9.536743e-07, -253.1659)
+transform = Transform3D(0.8569696, 0, -0.51536715, 0, 1, 0, 0.51536715, 0, 0.8569696, -31.589489, -9.536743e-07, -244.96019)
 
 [node name="hitscan_turret30" parent="boss_arena" unique_id=1829332305 instance=ExtResource("23_vxglm")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -31.399189, -1.4567499, -268.58453)
 
 [node name="boss_turret" parent="boss_arena" unique_id=634753806 groups=["bosses"] instance=ExtResource("25_yq6so")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -31.86284, 2.9623127, -268.03925)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -31.86284, -0.014903545, -268.03925)
 doorId = 55
-sweep_speed = 0.5
+sweep_speed = 0.3
 damage_per_second = 60.0
+fly_speed = 4.0
 max_health = 10000.0
+
+[node name="floor_tile" parent="boss_arena" unique_id=671380923 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -43.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile2" parent="boss_arena" unique_id=91568770 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -42.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile3" parent="boss_arena" unique_id=2084331959 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -41.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile4" parent="boss_arena" unique_id=762875289 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -40.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile5" parent="boss_arena" unique_id=1764626893 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -39.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile6" parent="boss_arena" unique_id=1989140735 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -38.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile7" parent="boss_arena" unique_id=152077819 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -37.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile8" parent="boss_arena" unique_id=1464762254 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -36.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile9" parent="boss_arena" unique_id=354543744 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -34.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile10" parent="boss_arena" unique_id=595589657 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -35.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile11" parent="boss_arena" unique_id=1389190163 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -33.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile12" parent="boss_arena" unique_id=577381972 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -32.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile13" parent="boss_arena" unique_id=702524116 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -31.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile14" parent="boss_arena" unique_id=610289050 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -30.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile15" parent="boss_arena" unique_id=1393849511 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -29.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile16" parent="boss_arena" unique_id=1854914854 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -28.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile17" parent="boss_arena" unique_id=223222162 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -27.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile18" parent="boss_arena" unique_id=489076475 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -25.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile19" parent="boss_arena" unique_id=1842386151 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -26.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile20" parent="boss_arena" unique_id=234589925 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -24.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile21" parent="boss_arena" unique_id=1835197332 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -23.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile22" parent="boss_arena" unique_id=1877435596 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -22.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile23" parent="boss_arena" unique_id=235467390 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -21.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile24" parent="boss_arena" unique_id=1787333417 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -20.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile25" parent="boss_arena" unique_id=115185209 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -19.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile26" parent="boss_arena" unique_id=1374630748 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -18.96944, -0.1877085, -252.17305)
+
+[node name="floor_tile27" parent="boss_arena" unique_id=401985930 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -43.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile28" parent="boss_arena" unique_id=1122830455 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -42.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile29" parent="boss_arena" unique_id=1250923604 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -41.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile30" parent="boss_arena" unique_id=266318241 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -40.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile31" parent="boss_arena" unique_id=401609875 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -39.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile32" parent="boss_arena" unique_id=1490772470 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -38.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile33" parent="boss_arena" unique_id=1266308909 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -37.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile34" parent="boss_arena" unique_id=1006092017 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -36.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile35" parent="boss_arena" unique_id=1304980324 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -34.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile36" parent="boss_arena" unique_id=215765561 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -35.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile37" parent="boss_arena" unique_id=605520172 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -33.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile38" parent="boss_arena" unique_id=1927861206 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -32.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile39" parent="boss_arena" unique_id=1447123155 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -31.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile40" parent="boss_arena" unique_id=1221085119 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -30.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile41" parent="boss_arena" unique_id=147593804 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -29.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile42" parent="boss_arena" unique_id=894423089 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -28.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile43" parent="boss_arena" unique_id=28809969 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -27.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile44" parent="boss_arena" unique_id=149893326 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -25.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile45" parent="boss_arena" unique_id=373370911 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -26.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile46" parent="boss_arena" unique_id=1225026487 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -24.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile47" parent="boss_arena" unique_id=843083221 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -23.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile48" parent="boss_arena" unique_id=846975272 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -22.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile49" parent="boss_arena" unique_id=1957691744 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -21.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile50" parent="boss_arena" unique_id=838592087 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -20.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile51" parent="boss_arena" unique_id=2029895898 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -19.96944, -0.1877085, -285.17303)
+
+[node name="floor_tile52" parent="boss_arena" unique_id=7743992 instance=ExtResource("26_2wyq8")]
+transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -18.96944, -0.1877085, -285.17303)
