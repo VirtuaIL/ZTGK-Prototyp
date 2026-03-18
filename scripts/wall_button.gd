@@ -13,6 +13,11 @@ var _is_activated: bool = false
 @onready var _button_mesh: MeshInstance3D = $ButtonMesh
 @onready var _original_pos: Vector3 = $ButtonMesh.position
 
+func _ready() -> void:
+	for child in get_children():
+		if child is CollisionShape3D:
+			child.scale *= 2.0
+
 
 func on_projectile_hit() -> void:
 	if _is_activated:

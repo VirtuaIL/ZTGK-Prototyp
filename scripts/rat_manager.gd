@@ -1811,14 +1811,21 @@ func _check_carrier_arrival() -> void:
 			r.velocity = Vector3.ZERO
 
 	var arrival_dist_sq := 0.05 * 0.05
-	for r in grabbed_object.get("carrier_rats"):
+	var arrived_count := 0
+	var total_count := 0
+	for r in carriers:
 		if r == null:
 			continue
+		total_count += 1
 		var flat_pos := Vector2(r.global_position.x, r.global_position.z)
 		var flat_target := Vector2(r.blob_target.x, r.blob_target.z)
-		if flat_pos.distance_squared_to(flat_target) > arrival_dist_sq:
-			return
-	grabbed_object.set("is_surrounded", true)
+		if flat_pos.distance_squared_to(flat_target) <= arrival_dist_sq:
+			arrived_count += 1
+			
+	var required_to_start: int = max(1, total_count / 2)
+	
+	if arrived_count >= required_to_start:
+		grabbed_object.set("is_surrounded", true)
 
 
 func _process_object_drag() -> void:

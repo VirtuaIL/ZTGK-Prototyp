@@ -100,6 +100,10 @@ func set_spawn_position(pos: Vector3) -> void:
 
 
 func die() -> void:
+	for box in get_tree().get_nodes_in_group("boxes"):
+		if box.has_method("_activate_reset_to_spawn"):
+			box._activate_reset_to_spawn()
+			
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
 	current_hp = max_hp

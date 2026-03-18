@@ -19,6 +19,12 @@ func _ready() -> void:
 	collision_layer = 4 # Layer 3: Movable
 	collision_mask = 31 | (1 << 8)  # Floor (1) + Player (2) + Movable (4) + Walls (8) + Barrier (16) + RatStructures (9)
 	_spawn_position = global_position
+	add_to_group("boxes")
+
+func _activate_reset_to_spawn() -> void:
+	global_position = _spawn_position
+	velocity = Vector3.ZERO
+	object_reset.emit()
 
 
 func _physics_process(delta: float) -> void:

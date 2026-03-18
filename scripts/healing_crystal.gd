@@ -40,21 +40,36 @@ func _physics_process(delta: float) -> void:
 	var closest_boss: bossTurret = null
 	var closest_dist = heal_range + 0.1
 	
+	var space_state := get_world_3d().direct_space_state
+	
 	for boss in bosses:
 		if boss is bossTurret:
 			if boss.current_state != bossTurret.State.DEAD and boss.health < boss.max_health:
 				var dist = global_position.distance_to(boss.global_position)
 				if dist <= heal_range and dist < closest_dist:
-					closest_dist = dist
-					closest_boss = boss
+					var start_pos = global_position
+					var end_pos = boss.global_position + Vector3(0, 0.7, 0)
+					var query = PhysicsRayQueryParameters3D.create(start_pos, end_pos)
+					query.collision_mask = 8 | 4 | (1 << 8) # Walls (8) + Movable (4) + RatStructures (256)
+					query.exclude = [boss.get_rid()]
+					var hit = space_state.intersect_ray(query)
 					
+					if hit:
+						# Blocked connection: still display the laser towards the blockage
+						_update_laser_visuals(start_pos, hit.position)
+						closest_boss = null # Ensures no healing logic runs
+						healed_anyone = true # Ensures laser_mesh.visible doesn't get set to false unnecessarily
+					else:
+						closest_dist = dist
+						closest_boss = boss
+						
 	if closest_boss:
-		# We found a boss to heal
+		# We found a boss to heal and line of sight is clear
 		healed_anyone = true
 		closest_boss.take_damage(-heal_rate * delta)
 		
-		# Draw laser
-		_update_laser_visuals(global_position, closest_boss.global_position + Vector3(0, 0.7, 0)) # Point at center
+		# Draw laser fully to boss
+		_update_laser_visuals(global_position, closest_boss.global_position + Vector3(0, 0.7, 0))
 	
 	if not healed_anyone:
 		laser_mesh.visible = false

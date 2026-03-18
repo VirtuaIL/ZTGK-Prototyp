@@ -11,6 +11,7 @@ var ppm_label_val: Label
 var lpm_rect_val: ColorRect
 var spm_rect_val: ColorRect
 var ppm_rect_val: ColorRect
+var space_rect_val: ColorRect
 var mode_label_combat: Label
 var mode_label_build: Label
 var cheatsheet_panel: Panel
@@ -112,6 +113,16 @@ func _setup_mode_ui() -> void:
 	ppm_rect_val = ppm_box.get_child(1) as ColorRect
 	ppm_label_val = ppm_rect_val.get_child(0) as Label
 	
+	var space_box = _create_action_box("SPACJA")
+	space_rect_val = space_box.get_child(1) as ColorRect
+	var space_label_val = space_rect_val.get_child(0) as Label
+	space_label_val.text = "przywołaj szczury"
+	space_rect_val.custom_minimum_size = Vector2(130, 30)
+	
+	var space_hbox = HBoxContainer.new()
+	space_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	space_hbox.add_child(space_box)
+	
 	actions_hbox.add_child(lpm_box)
 	actions_hbox.add_child(spm_box)
 	actions_hbox.add_child(ppm_box)
@@ -151,6 +162,7 @@ func _setup_mode_ui() -> void:
 	ctrl_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	ctrl_label.add_theme_font_size_override("font_size", 14)
 
+	main_vbox.add_child(space_hbox)
 	main_vbox.add_child(actions_hbox)
 	main_vbox.add_child(mode_hbox)
 	main_vbox.add_child(ctrl_label)
@@ -332,6 +344,7 @@ func _process(delta: float) -> void:
 	
 	if lpm_rect_val: lpm_rect_val.color = highlight_color if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) else normal_color
 	if ppm_rect_val: ppm_rect_val.color = highlight_color if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) else normal_color
+	if space_rect_val: space_rect_val.color = highlight_color if Input.is_action_pressed("recall_rats") else normal_color
 	
 	if _scroll_highlight_timer > 0.0:
 		_scroll_highlight_timer -= delta

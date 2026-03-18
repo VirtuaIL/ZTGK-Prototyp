@@ -60,6 +60,9 @@ var current_deploy_node: Node3D = null
 # Retreat State
 var retreat_phase: int = 0
 var current_retreat_target: Node3D = null
+var retreat_timeout_timer: float = 0.0
+var heal_cooldown: float = 0.0
+var _last_health: float = 0.0
 
 # Health UI
 var canvas_layer: CanvasLayer
@@ -142,6 +145,9 @@ func _physics_process(delta: float) -> void:
 		if canvas_layer:
 			canvas_layer.visible = true
 
+	if heal_cooldown > 0.0:
+		heal_cooldown -= delta
+
 	match current_state:
 		State.IDLE:
 			_process_idle(delta)
@@ -158,7 +164,7 @@ func _process_idle(delta: float) -> void:
 	_aim_at_player(delta)
 	mode_timer -= delta
 	if mode_timer <= 0:
-		if health < max_health * 0.7:
+		if health < max_health * 0.7 and heal_cooldown <= 0.0:
 			var crystals = get_tree().get_nodes_in_group("healing_crystals")
 			if crystals.size() > 0:
 				var closest_crystal: Node3D = null
@@ -173,6 +179,7 @@ func _process_idle(delta: float) -> void:
 					current_retreat_target = closest_crystal
 					current_state = State.RETREAT_HEAL
 					retreat_phase = 0
+					retreat_timeout_timer = 4.0 # Max 4 seconds waiting for heal
 					return
 					
 		_transition_to_next_mode()
@@ -391,7 +398,8 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		boss_hp_bar.value = health
 		boss_hp_bar.max_value = max_health
 		
-	_flash_hit()
+	if amount > 0:
+		_flash_hit()
 	
 	if health <= 0.0:
 		_die()
@@ -533,31 +541,37 @@ func _spawn_enemies() -> void:
 
 # --- RETREAT HEAL ---
 func _process_retreat_heal(delta: float) -> void:
-	if not current_retreat_target or not is_instance_valid(current_retreat_target):
-		current_state = State.IDLE
-		mode_timer = mode_switch_time
-		return
+	if retreat_phase < 2 and (not current_retreat_target or not is_instance_valid(current_retreat_target)):
+		retreat_phase = 2 # Crystal destroyed, return to fight or abort
 		
 	if retreat_phase == 0: # Moving to crystal
-		var target_pos = current_retreat_target.global_position
-		# Stay a decent distance away, or go directly adjacent to it
-		target_pos.y = original_position.y # Try to maintain normal flight height if possible
-		var dist = global_position.distance_to(target_pos)
-		
-		# Move towards it
-		if dist > 3.0: 
-			var step = fly_speed * delta
-			global_position = global_position.move_toward(target_pos, step)
-			_aim_at_player(delta)
-		else:
-			retreat_phase = 1 # Reached, now we wait
+		if current_retreat_target:
+			var target_pos = current_retreat_target.global_position
+			target_pos.y = original_position.y # Try to maintain normal flight height if possible
+			var dist = global_position.distance_to(target_pos)
+			
+			if dist > 3.0: 
+				var step = fly_speed * delta
+				global_position = global_position.move_toward(target_pos, step)
+				_aim_at_player(delta)
+			else:
+				retreat_phase = 1 # Reached, now we wait
+				_last_health = health
+				retreat_timeout_timer = 4.0
 			
 	elif retreat_phase == 1: # Waiting for heal
 		_aim_at_player(delta)
 		
-		if health >= max_health - 1.0:
-			retreat_phase = 2 # fully healed, returning
-			current_retreat_target = null
+		# Reset timeout if being healed
+		if health > _last_health:
+			retreat_timeout_timer = 4.0
+		else:
+			retreat_timeout_timer -= delta
+			
+		_last_health = health
+		
+		if health >= max_health - 1.0 or retreat_timeout_timer <= 0.0:
+			retreat_phase = 2 # fully healed or timed out, returning
 			
 	elif retreat_phase == 2: # Returning home
 		var target_pos = original_position
@@ -570,4 +584,6 @@ func _process_retreat_heal(delta: float) -> void:
 		else:
 			global_position = target_pos
 			current_state = State.IDLE
+			heal_cooldown = 15.0 # Don't try to heal again immediately
+			current_retreat_target = null
 			mode_timer = mode_switch_time
