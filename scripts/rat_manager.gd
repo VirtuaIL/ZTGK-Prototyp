@@ -149,7 +149,7 @@ var _neighbor_tick: int = 0
 var structure_integrity: float = structure_max_integrity
 @export var structure_decay_on_laser: float = 25.0 # integrity loss per second
 @export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
-@export var structure_lifetime: float = 12.0 # seconds before wall crumbles (0 = never)
+@export var structure_lifetime: float = 0.0 # seconds before wall crumbles (0 = never)
 var _structure_timer: float = 0.0
 
 

@@ -513,8 +513,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _update_recall_hold(delta: float) -> void:
 	var holding := Input.is_action_pressed("recall_rats")
 	if holding and not _recall_triggered:
-		_recall_hold_time = min(_recall_hold_time + delta, 1.5)
-		if _recall_hold_time >= 1:
+		_recall_hold_time = min(_recall_hold_time + delta, 0.5)
+		if _recall_hold_time >= 0.5:
 			rat_manager.recall_all_rats()
 			_recall_triggered = true
 	else:
@@ -524,7 +524,7 @@ func _update_recall_hold(delta: float) -> void:
 	if recall_indicator:
 		if holding and not _recall_triggered:
 			recall_indicator.visible = true
-			recall_indicator.set("progress", _recall_hold_time / 1.5)
+			recall_indicator.set("progress", _recall_hold_time / 0.5)
 			var mp := get_viewport().get_mouse_position()
 			var sz := recall_indicator.size
 			recall_indicator.position = mp + Vector2(-sz.x * 0.5, -sz.y - 14.0)
