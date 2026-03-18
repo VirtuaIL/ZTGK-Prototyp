@@ -96,6 +96,8 @@ var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
 @export var box_drag_lerp_factor: float = 0.012
+@export var box_drag_speed: float = 4.0
+@export var box_drag_max_radius: float = 4.0
 @export var carrier_min_count: int = 1
 @export var carrier_drag_speed_min_mult: float = 0.08
 @export var carrier_drag_speed_max_mult: float = 0.5
@@ -389,7 +391,7 @@ func _process(delta: float) -> void:
 		if _lmb_is_object_drag:
 			# Object dragging via LMB
 			if grabbed_object:
-				_process_object_drag()
+				_process_object_drag(delta)
 		else:
 			# Build drawing
 			if not is_dragging_left:
@@ -1736,7 +1738,7 @@ func _check_carrier_arrival() -> void:
 		grabbed_object.set("is_surrounded", true)
 
 
-func _process_object_drag() -> void:
+func _process_object_drag(delta: float) -> void:
 	if grabbed_object == null:
 		return
 
@@ -1756,8 +1758,12 @@ func _process_object_drag() -> void:
 			return
 		target_pos = fallback
 
-	var new_pos: Vector3 = current_pos.lerp(target_pos, box_drag_lerp_factor)
-	grabbed_object.global_position = new_pos
+	var to_cursor := target_pos - current_pos
+	if to_cursor.length() > box_drag_max_radius:
+		target_pos = current_pos + to_cursor.normalized() * box_drag_max_radius
+
+	var step: float = max(0.0, box_drag_speed) * delta
+	grabbed_object.global_position = current_pos.move_toward(target_pos, step)
 
 
 func _get_brush_ratio(value: float, min_v: float, max_v: float) -> float:
