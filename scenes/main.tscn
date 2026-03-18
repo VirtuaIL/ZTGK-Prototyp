@@ -41,18 +41,6 @@ ambient_light_source = 2
 ambient_light_color = Color(0.3, 0.28, 0.35, 1)
 ambient_light_energy = 0.5
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_RatSpawn"]
-albedo_color = Color(0.2, 0.9, 0.4, 1)
-emission_enabled = true
-emission = Color(0.2, 0.9, 0.4, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_RatSpawn"]
-material = SubResource("StandardMaterial3D_RatSpawn")
-top_radius = 0.25
-bottom_radius = 0.25
-height = 1.5
-radial_segments = 16
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
 
@@ -203,27 +191,6 @@ transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.688231
 transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.6882313, 0, -3.008354e-08, 16.54462, -0.024049282, 24.282845)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1251990227]
-
-[node name="RatSpawn1" type="Marker3D" parent="RatSpawns" unique_id=999559681 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -59.874504, 0, -12.989948)
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="RatSpawns/RatSpawn1" unique_id=56771121]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5858307, 0.75, 0.3252144)
-mesh = SubResource("CylinderMesh_RatSpawn")
-
-[node name="RatSpawn2" type="Marker3D" parent="RatSpawns" unique_id=2122705045 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.458443, 0, -108.585144)
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="RatSpawns/RatSpawn2" unique_id=1251400165]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CylinderMesh_RatSpawn")
-
-[node name="RatSpawn3" type="Marker3D" parent="RatSpawns" unique_id=1459646445 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.401188, 0, -227.51373)
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="RatSpawns/RatSpawn3" unique_id=588890921]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CylinderMesh_RatSpawn")
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=519523457]
 
