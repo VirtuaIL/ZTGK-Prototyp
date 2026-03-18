@@ -16,7 +16,7 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
-@export var min_cap: int = 40
+@export var min_cap: int = 60
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -80,13 +80,13 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 @export var brush_lane_pairs: int = 1
 @export var brush_lane_pairs_min: int = 0
 @export var brush_lane_pairs_max: int = 4
-@export var brush_lane_spacing: float = 0.3
+@export var brush_lane_spacing: float = 0.5
 
 @export var circle_radius: float = 0.5
 @export var circle_radius_min: float = 0.25
 @export var circle_radius_max: float = 4.0
 @export var circle_radius_step: float = 0.25
-@export var circle_fill_spacing: float = 0.5
+@export var circle_fill_spacing: float = 0.8
 
 var current_circle_center: Vector3 = Vector3.ZERO
 var _build_force_timer: float = 0.0
@@ -123,18 +123,22 @@ var line_material: StandardMaterial3D
 var unified_shape_combiner: CSGCombiner3D
 
 # ── Blob offsets (sunflower pattern) ──────────────────────────────────────────
-const BLOB_RADIUS_BASE: float = 1.8
-const BLOB_SPREAD: float = 0.22
+const BLOB_RADIUS_BASE: float = 2.6
+const BLOB_SPREAD: float = 0.3
 var _blob_offsets: Array[Vector3] = []
 
 # ── Combat draw (stream/arc) ──────────────────────────────────────────────────
-const STREAM_SPACING: float = 0.42
+const STREAM_SPACING: float = 0.7
 const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
 var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
 var _combat_circle_angle: float = 0.0
+var _combat_offsets: Dictionary = {}
+var _combat_offsets_ready: bool = false
+
+const BRUSH_DIM_FACTOR: float = 0.6
 
 
 
@@ -457,6 +461,51 @@ func _update_mouse_trail(mouse_world: Vector3) -> void:
 			_mouse_trail.pop_front()
 
 
+func _brush_color(base: Color) -> Color:
+	if combat_rmb_down:
+		return Color(base.r * BRUSH_DIM_FACTOR, base.g * BRUSH_DIM_FACTOR, base.b * BRUSH_DIM_FACTOR, base.a)
+	return base
+
+
+func _capture_combat_offsets(mouse_world: Vector3) -> void:
+	_combat_offsets.clear()
+	_combat_offsets_ready = false
+
+	var active := _get_active_follow_rats()
+	var count := active.size()
+	if count == 0:
+		return
+
+	var effect_radius := combat_circle_radius
+	var brush_ring_spacing := brush_lane_spacing * 1.6
+	var lane_count := 1
+	var center_index := 0.0
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		effect_radius = maxf(combat_circle_radius, circle_radius * 1.2)
+	elif build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		lane_count = 1 + pairs * 2
+		center_index = float(lane_count - 1) / 2.0
+		effect_radius = maxf(combat_circle_radius, float(lane_count - 1) * brush_ring_spacing * 0.6)
+
+	var angle_step := TAU / float(count)
+	for i in range(count):
+		var rat := active[i]
+		var offset := rat.global_position - mouse_world
+		offset.y = 0.0
+		if offset.length() < 0.25:
+			var angle := angle_step * float(i)
+			var radius := effect_radius
+			if build_draw_mode == DRAW_MODE_PATH and use_wide_brush and lane_count > 1:
+				var lane_index := i % lane_count
+				var factor := float(lane_index) - center_index
+				radius = maxf(0.8, effect_radius + factor * brush_ring_spacing)
+			offset = Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		_combat_offsets[rat.get_instance_id()] = offset
+
+	_combat_offsets_ready = true
+
+
 func _update_combat_attack_circle(delta: float) -> void:
 	var mouse_world := _mouse_to_world()
 	if mouse_world == Vector3.ZERO:
@@ -469,17 +518,38 @@ func _update_combat_attack_circle(delta: float) -> void:
 	if count == 0:
 		return
 
+	_combat_circle_angle += combat_circle_rotation_speed * delta
+	if _combat_offsets_ready:
+		for rat in active:
+			var id := rat.get_instance_id()
+			if _combat_offsets.has(id):
+				var base_offset: Vector3 = _combat_offsets[id]
+				var rotated := base_offset.rotated(Vector3.UP, _combat_circle_angle)
+				var target := mouse_world + rotated
+				target.y = mouse_world.y
+				rat.set_target(target)
+		return
+
 	var effect_radius := combat_circle_radius
+	var brush_ring_spacing := brush_lane_spacing * 1.6
+	var lane_count := 1
+	var center_index := 0.0
 	if build_draw_mode == DRAW_MODE_CIRCLE:
-		effect_radius = maxf(combat_circle_radius, circle_radius)
+		effect_radius = maxf(combat_circle_radius, circle_radius * 1.2)
 	elif build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
 		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-		effect_radius = maxf(combat_circle_radius, float(1 + pairs * 2) * brush_lane_spacing)
-	_combat_circle_angle += combat_circle_rotation_speed * delta
+		lane_count = 1 + pairs * 2
+		center_index = float(lane_count - 1) / 2.0
+		effect_radius = maxf(combat_circle_radius, float(lane_count - 1) * brush_ring_spacing * 0.6)
 	var angle_step := TAU / float(count)
 	for i in range(count):
 		var angle := _combat_circle_angle + angle_step * float(i)
-		var target := mouse_world + Vector3(cos(angle) * effect_radius, 0.0, sin(angle) * effect_radius)
+		var radius := effect_radius
+		if build_draw_mode == DRAW_MODE_PATH and use_wide_brush and lane_count > 1:
+			var lane_index := i % lane_count
+			var factor := float(lane_index) - center_index
+			radius = maxf(0.8, effect_radius + factor * brush_ring_spacing)
+		var target := mouse_world + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		target.y = mouse_world.y
 		active[i].set_target(target)
 
@@ -922,6 +992,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		# ── LMB: combat attack (circle around cursor) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			combat_rmb_down = mb.pressed
+			if combat_rmb_down:
+				var mouse_world := _mouse_to_world()
+				if mouse_world != Vector3.ZERO:
+					_capture_combat_offsets(mouse_world)
+			else:
+				_combat_offsets_ready = false
+				_combat_offsets.clear()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -1150,6 +1227,44 @@ func recall_all_rats() -> void:
 	# Respawn only at rat_spawn now.
 
 
+func hard_recall_all_rats() -> void:
+	# Release any grabbed object and its carrier rats first
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+		_lmb_is_object_drag = false
+
+	active_build_positions.clear()
+	built_positions.clear()
+	carrier_rats.clear()
+	carrier_rat_offsets.clear()
+	
+	# Destroy the unified mesh
+	for child in unified_shape_combiner.get_children():
+		child.queue_free()
+		
+	for rat in rats:
+		if rat.has_method("hard_recall_to_player"):
+			rat.hard_recall_to_player()
+		else:
+			rat.release_rat(true)
+	# Reset drawing state
+	mouse_is_down_left = false
+	is_dragging_left = false
+	mouse_is_down_right = false
+	_lmb_is_object_drag = false
+	is_drawing_line = false
+	current_build_y = -1000.0
+	current_drawn_path.clear()
+	immediate_mesh.clear_surfaces()
+	for rat in rats:
+		rat.is_following_player = true
+		rat.is_carrier = false
+	_structure_timer = 0.0
+
+
 func _process_hover() -> void:
 
 	var camera := get_viewport().get_camera_3d()
@@ -1249,7 +1364,8 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 		return
 
 	if line_material:
-		line_material.albedo_color = Color(1, 0, 0) if invalid_surface else Color.WHITE
+		var base := Color(1, 0, 0) if invalid_surface else Color.WHITE
+		line_material.albedo_color = _brush_color(base)
 	
 	var offset := Vector3(0, 0.1, 0)
 
@@ -1397,7 +1513,7 @@ func _update_cursor_preview() -> void:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(!hit.is_empty())
+		_update_circle_preview(hit.is_empty())
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:
@@ -1419,7 +1535,7 @@ func _update_cursor_preview() -> void:
 				
 		immediate_mesh.clear_surfaces()
 		if line_material:
-			line_material.albedo_color = Color.WHITE
+			line_material.albedo_color = _brush_color(Color.WHITE)
 		
 		var offset := Vector3(0, 0.1, 0)
 		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
@@ -1447,9 +1563,9 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 
 	if line_material:
 		if invalid_surface:
-			line_material.albedo_color = Color(1, 0, 0)
+			line_material.albedo_color = _brush_color(Color(1, 0, 0))
 		else:
-			line_material.albedo_color = Color.WHITE if enough_rats else Color(1, 0, 0)
+			line_material.albedo_color = _brush_color(Color.WHITE if enough_rats else Color(1, 0, 0))
 
 	var segments := 32
 	var offset := Vector3(0, 0.1, 0)

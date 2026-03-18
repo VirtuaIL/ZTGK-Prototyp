@@ -433,6 +433,20 @@ func force_respawn_at_position(pos: Vector3) -> void:
 	_finish_respawn()
 
 
+func hard_recall_to_player() -> void:
+	if player == null:
+		return
+	_reset_to_follow()
+	_travel_timer = 0.0
+	_recall_boost_timer = 0.0
+	is_fallen = false
+	set_physics_process(true)
+	global_position = player.global_position + Vector3(
+		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+	)
+	show_visuals()
+
+
 func _get_nearest_spawn(pos: Vector3) -> Node3D:
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var best: Node3D = null
