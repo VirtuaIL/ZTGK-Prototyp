@@ -1150,6 +1150,44 @@ func recall_all_rats() -> void:
 	# Respawn only at rat_spawn now.
 
 
+func hard_recall_all_rats() -> void:
+	# Release any grabbed object and its carrier rats first
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+		_lmb_is_object_drag = false
+
+	active_build_positions.clear()
+	built_positions.clear()
+	carrier_rats.clear()
+	carrier_rat_offsets.clear()
+	
+	# Destroy the unified mesh
+	for child in unified_shape_combiner.get_children():
+		child.queue_free()
+		
+	for rat in rats:
+		if rat.has_method("hard_recall_to_player"):
+			rat.hard_recall_to_player()
+		else:
+			rat.release_rat(true)
+	# Reset drawing state
+	mouse_is_down_left = false
+	is_dragging_left = false
+	mouse_is_down_right = false
+	_lmb_is_object_drag = false
+	is_drawing_line = false
+	current_build_y = -1000.0
+	current_drawn_path.clear()
+	immediate_mesh.clear_surfaces()
+	for rat in rats:
+		rat.is_following_player = true
+		rat.is_carrier = false
+	_structure_timer = 0.0
+
+
 func _process_hover() -> void:
 
 	var camera := get_viewport().get_camera_3d()

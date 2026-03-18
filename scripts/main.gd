@@ -141,7 +141,7 @@ func _setup_mode_ui() -> void:
 	var space_box = _create_action_box("SPACJA")
 	space_rect_val = space_box.get_child(1) as ColorRect
 	var space_label_val = space_rect_val.get_child(0) as Label
-	space_label_val.text = "przywołaj szczury"
+	space_label_val.text = "hard-recall szczury"
 	space_rect_val.custom_minimum_size = Vector2(130, 30)
 
 	var space_hbox = HBoxContainer.new()
@@ -215,7 +215,7 @@ func _setup_cheatsheet_ui() -> void:
 	body.text = \
 		"[b]Ruch[/b]\n" + \
 		"WASD — ruch\n" + \
-		"SPACJA (przytrzymaj 1.5s) — przywołaj wszystkie szczury\n" + \
+		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
 		"LPM (przytrzymaj) — atak (okrąg wokół kursora)\n" + \
 		"PPM (ciągnij) — rysuj strukturę lub przenieś obiekt\n" + \
@@ -515,7 +515,7 @@ func _update_recall_hold(delta: float) -> void:
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 0.5)
 		if _recall_hold_time >= 0.5:
-			rat_manager.recall_all_rats()
+			rat_manager.hard_recall_all_rats()
 			_recall_triggered = true
 	else:
 		_recall_hold_time = 0.0
