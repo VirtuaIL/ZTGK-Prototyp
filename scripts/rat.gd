@@ -127,8 +127,6 @@ func _physics_process(delta: float) -> void:
 	# so they can float as bridge pieces
 	if is_anchored or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
 		velocity.y = 0.0
-		if state == State.TRAVEL_TO_BUILD:
-			global_position.y = build_target.y
 	else:
 		# Gravity — applied every frame, preserved across all states
 		if not is_on_floor():
@@ -307,15 +305,23 @@ func _process_travel_to_build(delta: float) -> void:
 		state = State.WAITING_FOR_FORMATION
 		global_position = build_target
 		velocity = Vector3.ZERO
+		# Restore floor collision
+		set_collision_mask_value(1, true)
 		return
 
 	if dist <= anchor_radius:
 		is_anchored = true
 
+	# Disable floor collision while traveling so rats glide over platform edges
+	# instead of clipping into them
+	set_collision_mask_value(1, false)
+
 	if dist > 0.1:
 		var dir := Vector2(flat_target - flat_self).normalized()
 		velocity.x = dir.x * follow_speed * 2.0
 		velocity.z = dir.y * follow_speed * 2.0
+		# Smoothly lerp Y toward build target instead of instant snap
+		global_position.y = lerpf(global_position.y, build_target.y, 5.0 * delta)
 		var target_angle := atan2(dir.x, dir.y)
 		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 		move_and_slide()
@@ -323,6 +329,8 @@ func _process_travel_to_build(delta: float) -> void:
 		state = State.WAITING_FOR_FORMATION
 		global_position = build_target
 		velocity = Vector3.ZERO
+		# Restore floor collision once placed
+		set_collision_mask_value(1, true)
 
 
 func activate_physics() -> void:
@@ -486,6 +494,8 @@ func _reset_to_follow() -> void:
 	_spring_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
 	set_collision_layer_value(1, false)
+	# Restore floor collision in case it was disabled during TRAVEL_TO_BUILD
+	set_collision_mask_value(1, true)
 	show_visuals()
 
 

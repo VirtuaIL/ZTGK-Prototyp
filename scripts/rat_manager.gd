@@ -439,13 +439,17 @@ func _process(delta: float) -> void:
 
 
 func _update_edge_avoidance() -> void:
-	var enabled := true
-	if mouse_is_down_left and not _lmb_is_object_drag:
-		enabled = false
 	for rat in rats:
 		var r := rat as Rat
 		if r:
-			r.edge_avoidance_enabled = enabled
+			# Rats traveling to build or already placed don't need edge avoidance
+			# (it's already skipped in _should_block_edge), but FOLLOW rats
+			# must keep it ON even while the player is drawing, so they don't
+			# push each other off the edge.
+			if r.state == Rat.State.TRAVEL_TO_BUILD or r.state == Rat.State.WAITING_FOR_FORMATION or r.state == Rat.State.STATIC:
+				r.edge_avoidance_enabled = false
+			else:
+				r.edge_avoidance_enabled = true
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
