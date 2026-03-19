@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://bfl1f4ov0jrtn" path="res://scenes/floor_tile_noCollision_blue.tscn" id="22_2f3dj"]
 [ext_resource type="PackedScene" uid="uid://rnbix2vvjl4m" path="res://scenes/boss_enemy_deploy_point.tscn" id="22_2wyq8"]
 [ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/floor_tile.tscn" id="23_vxglm"]
+[ext_resource type="PackedScene" uid="uid://cb5vdotpcpt5p" path="res://scenes/floor_tile_noCollision_purple.tscn" id="23_yq6so"]
 [ext_resource type="PackedScene" uid="uid://xdkpt36dqji0" path="res://scenes/healing_crystal.tscn" id="24_2f3dj"]
 [ext_resource type="PackedScene" uid="uid://csp7jwbmufl4w" path="res://scenes/boss_turret.tscn" id="25_yq6so"]
 [ext_resource type="PackedScene" uid="uid://b23uv66hbun6u" path="res://scenes/floor_tile_noCollision.tscn" id="26_2wyq8"]
@@ -109,7 +110,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.341717, -1.1444092e-05, -103.575806)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.22881, -1.1444092e-05, -129.91147)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -375,7 +376,25 @@ transform = Transform3D(8.6, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 29.99672, 0, -69.76
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 1.494, 0, 4, 0, -6.3512644e-08, -26.778828, 0, -72.74892)
 
 [node name="door40" parent="walls" unique_id=1418347755 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(-4.152582e-07, 0, -1.453, 0, 1.494, 0, 9.5, 0, -6.3512644e-08, -11.656509, 0, -101.59503)
+transform = Transform3D(-1.8088649e-07, 0, -1.453, 0, 1.494, 0, 4.1382003, 0, -6.3512644e-08, -11.656509, 0, -114.59503)
+
+[node name="door69" parent="walls" unique_id=1666445421 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-7.235459e-08, 0, -1.1624, 0, 0.23903997, 0, 1.65528, 0, -5.0810115e-08, -15.989597, -0.29734468, -78.59503)
+
+[node name="door73" parent="walls" unique_id=1623202272 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-2.8941834e-08, 0, -1.1624, 0, 0.40636796, 0, 0.66211194, 0, -5.0810115e-08, -10.989597, -0.091106534, -77.06381)
+
+[node name="door72" parent="walls" unique_id=481435922 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-7.235458e-09, 0, -8.462273, 0, 0.23903997, 0, 0.16552798, 0, -3.6989766e-07, -14.155624, -0.99840593, -76.27893)
+
+[node name="door70" parent="walls" unique_id=1621778400 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-1.65528, 0, 1.0162023e-07, 0, 0.23903997, 0, -1.4470916e-07, 0, -1.1624, -19.583126, -0.29734468, -82.018234)
+
+[node name="door67" parent="walls" unique_id=1532855829 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-3.798616e-07, 0, -1.4529998, 0, 6.2747993, 0, 8.69022, 0, -6.351264e-08, -19.65651, -13.364735, -103.54619)
+
+[node name="door68" parent="walls" unique_id=1803943191 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(-1.8088649e-07, 0, -1.453, 0, 3.1373997, 0, 4.1382003, 0, -6.3512644e-08, -19.65651, -10.861127, -72.59503)
 
 [node name="door3" parent="walls" unique_id=1493423040 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(11, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 3.6022758, 0, 37.058685)
@@ -447,13 +466,16 @@ transform = Transform3D(4, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -18.215405, 0, -62.78
 transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.007889, 0, -78.22751)
 
 [node name="door23" parent="walls" unique_id=1494699162 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -24.151905, 0, -82.1588)
+transform = Transform3D(5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -32.151905, 0, -82.1588)
 
 [node name="door20" parent="walls" unique_id=513902147 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(1, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 3.1882248, 0, -105.941315)
 
 [node name="door28" parent="walls" unique_id=1711682023 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, -9.007889, 0, -120.64255)
+
+[node name="door71" parent="walls" unique_id=1387660127 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(0.8840597, 0, 0, 0, 1.4941561, 0, 0, 0, 1.45285, 2.9921112, -2.1414728, -120.64255)
 
 [node name="door30" parent="walls" unique_id=420779028 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(1.5, 0, 0, 0, 1.494, 0, 0, 0, 1.453, 4.1438465, 0, -134.76125)
@@ -482,8 +504,14 @@ transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, -11
 [node name="door19" parent="walls" unique_id=1230502508 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(2, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -7.816883, 0, -105.941315)
 
+[node name="door74" parent="walls" unique_id=2140412685 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(2, 0, 0, 0, 10.03968, 0, 0, 0, 1.453, -17.225586, -24.306828, -105.941315)
+
 [node name="door22" parent="walls" unique_id=910513602 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 22.629593, -20.911358, 0, -73.280365)
+transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 9.051837, -20.911358, 0, -66.280365)
+
+[node name="door66" parent="walls" unique_id=1261795909 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(0.14032695, 0, 0, 0, 0.14941555, 0, 0, 0, 15.3881235, -20.911358, 0, -76.84099)
 
 [node name="door27" parent="walls" unique_id=467581967 instance=ExtResource("11_ya4ey")]
 transform = Transform3D(3, 0, 0, 0, 1.494, 0, 0, 0, 1.453, -10.745499, 0, -134.76125)
@@ -564,11 +592,6 @@ doorId = 3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.961315, 0, -99.70198)
 doorId = 4
 
-[node name="door14" parent="doors" unique_id=844437046 instance=ExtResource("9_85g3d")]
-transform = Transform3D(4.371139e-08, -3.821371e-15, 1, -8.742278e-08, -1, 0, 1, -8.742278e-08, -4.371139e-08, -19.332123, 2.940846, -94.796326)
-doorId = 77
-is_inverse = true
-
 [node name="door18" parent="doors" unique_id=2003140082 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, -142.96257)
 doorId = 5
@@ -593,7 +616,7 @@ doorId = 7
 slide_distance = 4.5
 
 [node name="door17" parent="doors" unique_id=901313726 instance=ExtResource("9_85g3d")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -20, 0, -116.45775)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -20, -1.657588, -116.45775)
 doorId = 5
 slide_distance = 4.5
 
@@ -788,8 +811,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.902222, 1, 73.075165)
 attack_range = 40.0
 
 [node name="hitscan_turret2" parent="lasers" unique_id=1962595491 instance=ExtResource("13_trceg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.96872, 1, -23.92591)
-damage_per_second = 68.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.96872, 1, -22.83654)
+damage_per_second = 60.0
 attack_range = 40.0
 
 [node name="hitscan_turret3" parent="lasers" unique_id=2133749642 instance=ExtResource("13_trceg")]
@@ -844,6 +867,33 @@ transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0
 [node name="floor_tile8" parent="lasers" unique_id=795506426 instance=ExtResource("22_2f3dj")]
 transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.448101, -0.33982635, 3.208168)
 
+[node name="floor_tile24" parent="lasers" unique_id=969877222 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -16.182072, -0.33982635, -4.112915)
+
+[node name="floor_tile31" parent="lasers" unique_id=1684832520 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -15.491222, -0.33982635, -4.112915)
+
+[node name="floor_tile32" parent="lasers" unique_id=797099817 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -14.754547, -0.33982635, -4.112915)
+
+[node name="floor_tile33" parent="lasers" unique_id=487155772 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -14.1517105, -0.33982635, -4.112915)
+
+[node name="floor_tile34" parent="lasers" unique_id=1987845826 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.54686, -0.33982635, -4.112915)
+
+[node name="floor_tile35" parent="lasers" unique_id=184016895 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.54686, -0.33982635, -4.6190186)
+
+[node name="floor_tile36" parent="lasers" unique_id=1377848394 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.54686, -0.33982635, -5.125122)
+
+[node name="floor_tile37" parent="lasers" unique_id=1897536419 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.54686, -0.33982635, -5.606537)
+
+[node name="floor_tile38" parent="lasers" unique_id=180000894 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.54686, -0.33982635, -6.0879517)
+
 [node name="floor_tile9" parent="lasers" unique_id=2117385097 instance=ExtResource("22_2f3dj")]
 transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.448101, -0.33982635, 0.42713928)
 
@@ -883,11 +933,464 @@ transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0
 [node name="floor_tile17" parent="lasers" unique_id=652044445 instance=ExtResource("22_2f3dj")]
 transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.448101, -0.33982635, -5.113495)
 
+[node name="floor_tile39" parent="lasers" unique_id=2000104991 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -43.3724)
+
+[node name="floor_tile40" parent="lasers" unique_id=1125841042 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -43.969765)
+
+[node name="floor_tile41" parent="lasers" unique_id=655279459 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -44.578453)
+
+[node name="floor_tile42" parent="lasers" unique_id=1947182615 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -45.25904)
+
+[node name="floor_tile43" parent="lasers" unique_id=65928666 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -45.766975)
+
+[node name="floor_tile44" parent="lasers" unique_id=485333936 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -46.463997)
+
+[node name="floor_tile45" parent="lasers" unique_id=837443909 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -47.245674)
+
+[node name="floor_tile46" parent="lasers" unique_id=982960987 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -48.04151)
+
+[node name="floor_tile47" parent="lasers" unique_id=1325614520 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -48.913033)
+
+[node name="floor_tile48" parent="lasers" unique_id=140227669 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -36.96528)
+
+[node name="floor_tile49" parent="lasers" unique_id=414005023 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -37.562645)
+
+[node name="floor_tile50" parent="lasers" unique_id=1439482431 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -38.171333)
+
+[node name="floor_tile51" parent="lasers" unique_id=335517735 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -38.85192)
+
+[node name="floor_tile52" parent="lasers" unique_id=622445733 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -39.359856)
+
+[node name="floor_tile53" parent="lasers" unique_id=1676290555 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -40.056877)
+
+[node name="floor_tile54" parent="lasers" unique_id=626354924 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -40.838554)
+
+[node name="floor_tile55" parent="lasers" unique_id=718510197 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -41.63439)
+
+[node name="floor_tile56" parent="lasers" unique_id=850011761 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -42.505913)
+
+[node name="floor_tile57" parent="lasers" unique_id=1707681490 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -30.57595)
+
+[node name="floor_tile58" parent="lasers" unique_id=1270097396 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -31.173317)
+
+[node name="floor_tile59" parent="lasers" unique_id=1572809325 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -31.782005)
+
+[node name="floor_tile60" parent="lasers" unique_id=1989057468 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -32.462593)
+
+[node name="floor_tile61" parent="lasers" unique_id=1315487478 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -32.970528)
+
+[node name="floor_tile62" parent="lasers" unique_id=1732413294 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -33.66755)
+
+[node name="floor_tile63" parent="lasers" unique_id=1186734125 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -34.449226)
+
+[node name="floor_tile64" parent="lasers" unique_id=1409387176 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -35.245064)
+
+[node name="floor_tile65" parent="lasers" unique_id=561068412 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -36.116585)
+
+[node name="floor_tile107" parent="lasers" unique_id=1692667464 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -67.3724)
+
+[node name="floor_tile111" parent="lasers" unique_id=1526235446 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -67.969765)
+
+[node name="floor_tile113" parent="lasers" unique_id=750188428 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -68.57845)
+
+[node name="floor_tile114" parent="lasers" unique_id=1294047706 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -69.25904)
+
+[node name="floor_tile115" parent="lasers" unique_id=959229201 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -69.766975)
+
+[node name="floor_tile116" parent="lasers" unique_id=725476806 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -70.464)
+
+[node name="floor_tile117" parent="lasers" unique_id=116450880 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -71.245674)
+
+[node name="floor_tile118" parent="lasers" unique_id=1995672755 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -72.04151)
+
+[node name="floor_tile128" parent="lasers" unique_id=1004883996 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 0.8368149, -0.33982635, -72.0415)
+
+[node name="floor_tile133" parent="lasers" unique_id=1340559960 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 1.4341812, -0.33982635, -72.0415)
+
+[node name="floor_tile134" parent="lasers" unique_id=647567123 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 2.0428696, -0.33982635, -72.0415)
+
+[node name="floor_tile135" parent="lasers" unique_id=1490693784 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 2.7234554, -0.33982635, -72.0415)
+
+[node name="floor_tile136" parent="lasers" unique_id=1544907657 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 3.23139, -0.33982635, -72.0415)
+
+[node name="floor_tile137" parent="lasers" unique_id=303059872 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 3.9284115, -0.33982635, -72.0415)
+
+[node name="floor_tile138" parent="lasers" unique_id=37473510 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 4.7100887, -0.33982635, -72.0415)
+
+[node name="floor_tile139" parent="lasers" unique_id=825978302 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, 5.505926, -0.33982635, -72.0415)
+
+[node name="floor_tile140" parent="lasers" unique_id=342373239 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -5.163185, -0.33982635, -72.0415)
+
+[node name="floor_tile141" parent="lasers" unique_id=18207454 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -4.565819, -0.33982635, -72.0415)
+
+[node name="floor_tile142" parent="lasers" unique_id=334690296 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.9571304, -0.33982635, -72.0415)
+
+[node name="floor_tile148" parent="lasers" unique_id=1460685311 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -6.9743958, -0.33982635, -72.0415)
+
+[node name="floor_tile149" parent="lasers" unique_id=1765759504 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -6.3770294, -0.33982635, -72.0415)
+
+[node name="floor_tile150" parent="lasers" unique_id=1224085588 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -5.768341, -0.33982635, -72.0415)
+
+[node name="floor_tile143" parent="lasers" unique_id=1631489759 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.2765427, -0.33982635, -72.0415)
+
+[node name="floor_tile144" parent="lasers" unique_id=1581445663 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -2.768608, -0.33982635, -72.0415)
+
+[node name="floor_tile145" parent="lasers" unique_id=1505036444 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -2.0715866, -0.33982635, -72.0415)
+
+[node name="floor_tile146" parent="lasers" unique_id=763754875 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -1.2899094, -0.33982635, -72.0415)
+
+[node name="floor_tile147" parent="lasers" unique_id=325144993 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -0.49407387, -0.33982635, -72.0415)
+
+[node name="floor_tile119" parent="lasers" unique_id=2110389830 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -2.1957397, -0.33982635, -63.3787)
+
+[node name="floor_tile120" parent="lasers" unique_id=535229449 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -1.5983734, -0.33982635, -63.3787)
+
+[node name="floor_tile121" parent="lasers" unique_id=1136433832 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -0.98968506, -0.33982635, -63.3787)
+
+[node name="floor_tile122" parent="lasers" unique_id=503651954 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -0.3090992, -0.33982635, -63.3787)
+
+[node name="floor_tile123" parent="lasers" unique_id=25564479 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -63.379692)
+
+[node name="floor_tile124" parent="lasers" unique_id=2108486278 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -64.05688)
+
+[node name="floor_tile125" parent="lasers" unique_id=1531346822 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -64.838554)
+
+[node name="floor_tile126" parent="lasers" unique_id=1909363823 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -65.63439)
+
+[node name="floor_tile127" parent="lasers" unique_id=371449612 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -66.50591)
+
+[node name="floor_tile151" parent="lasers" unique_id=998139371 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -74.3724)
+
+[node name="floor_tile152" parent="lasers" unique_id=894474141 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -74.969765)
+
+[node name="floor_tile153" parent="lasers" unique_id=1768160674 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -75.57845)
+
+[node name="floor_tile154" parent="lasers" unique_id=198352864 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -76.25904)
+
+[node name="floor_tile155" parent="lasers" unique_id=802750955 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -76.766975)
+
+[node name="floor_tile156" parent="lasers" unique_id=1993705901 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -77.464)
+
+[node name="floor_tile157" parent="lasers" unique_id=820487427 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -78.245674)
+
+[node name="floor_tile158" parent="lasers" unique_id=840031370 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -72.63439)
+
+[node name="floor_tile159" parent="lasers" unique_id=772024653 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -73.50591)
+
+[node name="floor_tile132" parent="lasers" unique_id=1186169925 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -4.7401657, -0.33982635, -63.913948)
+
+[node name="floor_tile129" parent="lasers" unique_id=1275094972 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -4.751438, -0.33982635, -63.3787)
+
+[node name="floor_tile130" parent="lasers" unique_id=1752486588 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.9159546, -0.33982635, -63.3787)
+
+[node name="floor_tile131" parent="lasers" unique_id=2140378036 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.0444336, -0.33982635, -63.3787)
+
+[node name="floor_tile66" parent="lasers" unique_id=216450991 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -24.288414)
+
+[node name="floor_tile67" parent="lasers" unique_id=115108077 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -24.88578)
+
+[node name="floor_tile68" parent="lasers" unique_id=2015825425 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -25.494469)
+
+[node name="floor_tile69" parent="lasers" unique_id=1610219116 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -26.175056)
+
+[node name="floor_tile70" parent="lasers" unique_id=1623407304 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -26.682991)
+
+[node name="floor_tile71" parent="lasers" unique_id=1982991384 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -27.380013)
+
+[node name="floor_tile72" parent="lasers" unique_id=21480587 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -28.16169)
+
+[node name="floor_tile73" parent="lasers" unique_id=1026026591 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -28.957527)
+
+[node name="floor_tile74" parent="lasers" unique_id=1380664324 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -29.829048)
+
+[node name="floor_tile75" parent="lasers" unique_id=1427970781 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -2.3333244, -0.33982635, -20.264336)
+
+[node name="floor_tile76" parent="lasers" unique_id=649773353 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -1.7359581, -0.33982635, -20.264336)
+
+[node name="floor_tile77" parent="lasers" unique_id=799213027 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -1.1272697, -0.33982635, -20.264336)
+
+[node name="floor_tile78" parent="lasers" unique_id=94976907 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -0.44668198, -0.33982635, -20.264336)
+
+[node name="floor_tile84" parent="lasers" unique_id=496860225 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -4.892277, -0.33982635, -20.264336)
+
+[node name="floor_tile85" parent="lasers" unique_id=194862318 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -4.2949104, -0.33982635, -20.264336)
+
+[node name="floor_tile86" parent="lasers" unique_id=847000244 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.686222, -0.33982635, -20.264336)
+
+[node name="floor_tile87" parent="lasers" unique_id=1273600430 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -3.0056343, -0.33982635, -20.264336)
+
+[node name="floor_tile88" parent="lasers" unique_id=2058929904 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(0.29999998, 0, 1.9071908e-08, 0, 0.29999998, 0, -1.9071908e-08, 0, 0.29999998, -6.270447, -0.33982635, -21.479027)
+
+[node name="floor_tile89" parent="lasers" unique_id=1701600062 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(0.29999998, 0, 1.9071908e-08, 0, 0.29999998, 0, -1.9071908e-08, 0, 0.29999998, -6.270447, -0.33982635, -20.881676)
+
+[node name="floor_tile90" parent="lasers" unique_id=2079041668 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -6.2790985, -0.33982635, -20.264336)
+
+[node name="floor_tile91" parent="lasers" unique_id=457809209 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -5.5985107, -0.33982635, -20.264336)
+
+[node name="floor_tile79" parent="lasers" unique_id=260690147 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -20.27755)
+
+[node name="floor_tile103" parent="lasers" unique_id=2113502855 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -16.333324, -0.33982635, -20.264336)
+
+[node name="floor_tile104" parent="lasers" unique_id=1848725436 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -15.735958, -0.33982635, -20.264336)
+
+[node name="floor_tile105" parent="lasers" unique_id=1158572773 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -15.12727, -0.33982635, -20.264336)
+
+[node name="floor_tile106" parent="lasers" unique_id=384772696 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -14.446682, -0.33982635, -20.264336)
+
+[node name="floor_tile108" parent="lasers" unique_id=718801041 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -18.29491, -0.33982635, -20.264336)
+
+[node name="floor_tile109" parent="lasers" unique_id=76214992 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -17.686222, -0.33982635, -20.264336)
+
+[node name="floor_tile110" parent="lasers" unique_id=1561929756 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -17.005634, -0.33982635, -20.264336)
+
+[node name="floor_tile112" parent="lasers" unique_id=913217469 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.782322, -0.33982635, -20.27755)
+
+[node name="floor_tile92" parent="lasers" unique_id=220178514 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -9.333324, -0.6841508, -20.264336)
+
+[node name="floor_tile93" parent="lasers" unique_id=401214645 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -8.735958, -0.6841508, -20.264336)
+
+[node name="floor_tile94" parent="lasers" unique_id=614081297 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -8.12727, -0.33982635, -20.264336)
+
+[node name="floor_tile95" parent="lasers" unique_id=309228795 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -7.446682, -0.33982635, -20.264336)
+
+[node name="floor_tile96" parent="lasers" unique_id=1697460785 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -11.892277, -0.6841508, -20.264336)
+
+[node name="floor_tile97" parent="lasers" unique_id=1027779020 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -11.29491, -0.6841508, -20.264336)
+
+[node name="floor_tile98" parent="lasers" unique_id=1040366162 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -10.686222, -0.6841508, -20.264336)
+
+[node name="floor_tile99" parent="lasers" unique_id=5778507 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -10.005634, -0.6841508, -20.264336)
+
+[node name="floor_tile100" parent="lasers" unique_id=1168667318 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -13.2790985, -0.33982635, -20.264336)
+
+[node name="floor_tile101" parent="lasers" unique_id=1820030217 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-3.2185326e-08, 0, 0.29999998, 0, 0.29999998, 0, -0.29999998, 0, -3.2185326e-08, -12.598511, -0.6841508, -20.264336)
+
+[node name="floor_tile102" parent="lasers" unique_id=657297599 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -6.782322, -0.33982635, -20.27755)
+
+[node name="floor_tile80" parent="lasers" unique_id=688943753 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -20.974571)
+
+[node name="floor_tile81" parent="lasers" unique_id=1054657612 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -21.756248)
+
+[node name="floor_tile82" parent="lasers" unique_id=515290520 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -22.552086)
+
+[node name="floor_tile83" parent="lasers" unique_id=1857153603 instance=ExtResource("22_2f3dj")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, 0.21767807, -0.33982635, -23.423607)
+
 [node name="floor_tile18" parent="lasers" unique_id=505086554 instance=ExtResource("22_2f3dj")]
 transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.448101, -0.33982635, -5.8468475)
 
 [node name="floor_tile19" parent="lasers" unique_id=206359828 instance=ExtResource("22_2f3dj")]
 transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.448101, -0.33982635, -5.8468475)
+
+[node name="floor_tile160" parent="lasers" unique_id=1974320859 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.176212, -0.40559936, 25.634796)
+
+[node name="floor_tile161" parent="lasers" unique_id=465998326 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile162" parent="lasers" unique_id=923961552 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile180" parent="lasers" unique_id=1830866109 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.016365, -0.40559936, 52.223644)
+
+[node name="floor_tile181" parent="lasers" unique_id=1382170486 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.016365, -0.40559936, 52.74887)
+
+[node name="floor_tile182" parent="lasers" unique_id=2063790608 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -10.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile183" parent="lasers" unique_id=656888552 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -9.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile184" parent="lasers" unique_id=1924068177 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -8.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile185" parent="lasers" unique_id=1323224847 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -7.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile186" parent="lasers" unique_id=2045310427 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -6.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile187" parent="lasers" unique_id=1476590524 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.016365, -0.40559936, 53.296932)
+
+[node name="floor_tile188" parent="lasers" unique_id=955918920 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.016365, -0.40559936, 52.456783)
+
+[node name="floor_tile189" parent="lasers" unique_id=1283539974 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -5.016365, -0.40559936, 51.639465)
+
+[node name="floor_tile163" parent="lasers" unique_id=1641563285 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -11.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile164" parent="lasers" unique_id=1935534163 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -12.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile165" parent="lasers" unique_id=1632206669 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -13.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile166" parent="lasers" unique_id=538054491 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -14.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile167" parent="lasers" unique_id=1027972551 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -15.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile168" parent="lasers" unique_id=1240720749 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -16.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile169" parent="lasers" unique_id=226448832 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -17.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile170" parent="lasers" unique_id=658344916 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -18.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile171" parent="lasers" unique_id=840466919 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 26.23211)
+
+[node name="floor_tile172" parent="lasers" unique_id=2111175224 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 25.23211)
+
+[node name="floor_tile173" parent="lasers" unique_id=1885991877 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 24.23211)
+
+[node name="floor_tile174" parent="lasers" unique_id=1491142443 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 23.23211)
+
+[node name="floor_tile175" parent="lasers" unique_id=1358834090 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 22.23211)
+
+[node name="floor_tile176" parent="lasers" unique_id=1065881174 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 21.23211)
+
+[node name="floor_tile177" parent="lasers" unique_id=171791146 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 20.23211)
+
+[node name="floor_tile178" parent="lasers" unique_id=2096209728 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 19.23211)
+
+[node name="floor_tile179" parent="lasers" unique_id=1329826307 instance=ExtResource("23_yq6so")]
+transform = Transform3D(-0.3, 0, -4.5298744e-08, 0, 0.3, 0, 4.5298744e-08, 0, -0.3, -19.176212, -0.40559936, 18.404358)
 
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
@@ -1019,6 +1522,12 @@ slide_distance = 4.5
 transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -44.675625, -1.4805789, -237.60295)
 doorId = 14
 slide_distance = 4.5
+
+[node name="door39" parent="boss_arena" unique_id=249174031 instance=ExtResource("9_85g3d")]
+transform = Transform3D(-1.6420286e-15, -8.0263455e-08, -0.99999976, -1.0000002, -8.0263476e-08, 3.1058812e-22, -4.37114e-08, 1.8362141, -4.371138e-08, -48.258015, -0.4914093, -120.02937)
+doorId = 77
+slide_distance = 4.5
+is_inverse = true
 
 [node name="door32" parent="boss_arena" unique_id=332551365 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -47.80676, -1.4805789, -234.50461)
