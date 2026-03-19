@@ -110,7 +110,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.22881, -1.1444092e-05, -129.91147)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.22881, -1.1444092e-05, -202.1602)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -567,7 +567,7 @@ transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -26.905994, -3.8146973e-0
 carriers_required = 5
 
 [node name="box10" parent="boxes" unique_id=106995478 instance=ExtResource("8_tipki")]
-transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -26.905994, -3.8146973e-06, -221.51974)
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -28.626598, -3.8146973e-06, -220.23949)
 carriers_required = 5
 
 [node name="doors" type="Node3D" parent="." unique_id=268508132]
@@ -792,6 +792,9 @@ transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -7.1
 
 [node name="LaserEmitter2" parent="lasers" unique_id=1469288679 instance=ExtResource("15_jkv2x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2, 0.99, -7.844)
+
+[node name="LaserEmitter4" parent="lasers" unique_id=1311808448 instance=ExtResource("15_jkv2x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.200001, 0.6881561, -79.46467)
 
 [node name="LaserEmitter3" parent="lasers" unique_id=1284436546 instance=ExtResource("15_jkv2x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1572533, 0.98987484, -50.764656)
@@ -1564,6 +1567,9 @@ doorId = 15
 
 [node name="RedirectionBox4" parent="boss_arena" unique_id=76530190 instance=ExtResource("16_jbj1t")]
 transform = Transform3D(0.8569696, 0, -0.51536715, 0, 1, 0, 0.51536715, 0, 0.8569696, -31.589489, -9.536743e-07, -228.6655)
+
+[node name="healing_crystal4" parent="boss_arena" unique_id=1938003558 instance=ExtResource("24_2f3dj")]
+transform = Transform3D(-1, 0, -1.5099579e-07, 0, 1, 0, 1.5099582e-07, 0, -1.0000002, -37.57462, -0.056750298, -221.10411)
 
 [node name="hitscan_turret30" parent="boss_arena" unique_id=1829332305 instance=ExtResource("23_vxglm")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -31.399189, -1.4567499, -252.28984)
