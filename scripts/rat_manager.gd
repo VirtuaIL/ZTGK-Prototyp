@@ -1368,12 +1368,13 @@ func _process_build_drag() -> void:
 	var hit := _get_mouse_ground_hit()
 
 	var raw_pos: Vector3
-	if hit:
-		raw_pos = hit.position + hit.normal * build_surface_offset
-		if current_build_y <= -500.0:
+	if current_build_y <= -500.0:
+		if hit:
+			raw_pos = hit.position + hit.normal * build_surface_offset
 			current_build_y = raw_pos.y
-		raw_pos.y = current_build_y
-	elif current_build_y > -500.0:
+		else:
+			return
+	else:
 		var fallback := _get_mouse_pos_at_y(current_build_y)
 		if fallback == Vector3.ZERO:
 			if _has_last_build_pos:
@@ -1382,8 +1383,6 @@ func _process_build_drag() -> void:
 				return
 		else:
 			raw_pos = fallback
-	else:
-		return
 
 	_last_build_pos = raw_pos
 	_has_last_build_pos = true
@@ -1494,6 +1493,15 @@ func _get_available_follow_rats() -> Array:
 	return available_rats
 
 
+func _is_pos_too_close_to_player(pos: Vector3) -> bool:
+	if _player == null:
+		return false
+	if abs(pos.y - _player.global_position.y) > 2.0:
+		return false
+	var dist_sq = Vector2(pos.x, pos.z).distance_squared_to(Vector2(_player.global_position.x, _player.global_position.z))
+	return dist_sq < (0.9 * 0.9)
+
+
 func _compute_circle_fill_positions(center: Vector3) -> Array[Vector3]:
 	var positions: Array[Vector3] = []
 	var radius := circle_radius
@@ -1506,7 +1514,9 @@ func _compute_circle_fill_positions(center: Vector3) -> Array[Vector3]:
 		for iz in range(-max_steps, max_steps + 1):
 			var off := Vector3(float(ix) * spacing, 0.0, float(iz) * spacing)
 			if off.x * off.x + off.z * off.z <= radius * radius + 0.001:
-				positions.append(center + off)
+				var p := center + off
+				if not _is_pos_too_close_to_player(p):
+					positions.append(p)
 	return positions
 
 
@@ -1696,75 +1706,74 @@ func _distribute_rats_on_path() -> void:
 	if rat_count == 0:
 		return
 		
+	var target_positions: Array[Vector3] = []
+	
 	if rat_count == 1:
 		var single_pos := current_drawn_path[0]
-		if use_wide_brush:
-			var dir_single := (current_drawn_path[1] - current_drawn_path[0])
-			dir_single.y = 0.0
-			if dir_single.length() < 0.001:
-				dir_single = Vector3.FORWARD
-			else:
-				dir_single = dir_single.normalized()
-			var lateral_single := dir_single.cross(Vector3.UP).normalized() * brush_half_width
-			single_pos = current_drawn_path[0]
-		available_rats[0].build_at(single_pos)
-		return
-		
-	var dist_between_rats = path_length / float(rat_count - 1)
-	var current_dist_on_path: float = 0.0
+		target_positions.append(single_pos)
+	else:
+		var dist_between_rats = path_length / float(rat_count - 1)
+		for i in range(rat_count):
+			if i == 0:
+				var start_pos := current_drawn_path[0]
+				if use_wide_brush and rat_count > 2:
+					start_pos = current_drawn_path[0]
+				target_positions.append(start_pos)
+				continue
+			elif i == rat_count - 1:
+				var end_pos := current_drawn_path[-1]
+				if use_wide_brush and rat_count > 2:
+					end_pos = current_drawn_path[-1]
+				target_positions.append(end_pos)
+				continue
+				
+			var target_dist = i * dist_between_rats
+			
+			var accum: float = 0.0
+			var segment_idx: int = 0
+			var segment_start: float = 0.0
+			
+			for j in range(segs.size()):
+				if accum + segs[j] >= target_dist:
+					segment_idx = j
+					segment_start = accum
+					break
+				accum += segs[j]
+				
+			var segment_t = (target_dist - segment_start) / max(0.0001, segs[segment_idx])
+			var point_a: Vector3 = current_drawn_path[segment_idx]
+			var point_b: Vector3 = current_drawn_path[segment_idx + 1]
+			var interp_pos = point_a.lerp(point_b, segment_t)
+			
+			if use_wide_brush:
+				var dir := point_b - point_a
+				dir.y = 0.0
+				if dir.length() < 0.001:
+					dir = Vector3.FORWARD
+				else:
+					dir = dir.normalized()
+				var lateral_dir := dir.cross(Vector3.UP).normalized()
 	
-	for i in range(rat_count):
-		if i == 0:
-			var start_pos := current_drawn_path[0]
-			if use_wide_brush and rat_count > 2:
-				var lane_idx := 0
-				start_pos = current_drawn_path[0]
-			available_rats[0].build_at(start_pos)
-			continue
-		elif i == rat_count - 1:
-			var end_pos := current_drawn_path[-1]
-			if use_wide_brush and rat_count > 2:
-				end_pos = current_drawn_path[-1]
-			available_rats[i].build_at(end_pos)
-			continue
-			
-		var target_dist = i * dist_between_rats
-		
-		var accum: float = 0.0
-		var segment_idx: int = 0
-		var segment_start: float = 0.0
-		
-		for j in range(segs.size()):
-			if accum + segs[j] >= target_dist:
-				segment_idx = j
-				segment_start = accum
-				break
-			accum += segs[j]
-			
-		var segment_t = (target_dist - segment_start) / max(0.0001, segs[segment_idx])
-		var point_a: Vector3 = current_drawn_path[segment_idx]
-		var point_b: Vector3 = current_drawn_path[segment_idx + 1]
-		var interp_pos = point_a.lerp(point_b, segment_t)
-		
-		if use_wide_brush:
-			var dir := point_b - point_a
-			dir.y = 0.0
-			if dir.length() < 0.001:
-				dir = Vector3.FORWARD
-			else:
-				dir = dir.normalized()
-			var lateral_dir := dir.cross(Vector3.UP).normalized()
+				var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+				if pairs > 0:
+					var lane_count := 1 + pairs * 2
+					var center_index := float(lane_count - 1) / 2.0
+					var lane_index := i % lane_count
+					var factor := float(lane_index) - center_index
+					interp_pos += lateral_dir * brush_lane_spacing * factor
+	
+			target_positions.append(interp_pos)
 
-			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-			if pairs > 0:
-				var lane_count := 1 + pairs * 2
-				var center_index := float(lane_count - 1) / 2.0
-				var lane_index := i % lane_count
-				var factor := float(lane_index) - center_index
-				interp_pos += lateral_dir * brush_lane_spacing * factor
-
-		available_rats[i].build_at(interp_pos)
-	if rat_count > 0:
+	var valid_positions: Array[Vector3] = []
+	for p in target_positions:
+		if not _is_pos_too_close_to_player(p):
+			valid_positions.append(p)
+			
+	var assign_count = min(available_rats.size(), valid_positions.size())
+	for i in range(assign_count):
+		available_rats[i].build_at(valid_positions[i])
+		
+	if assign_count > 0:
 		_build_force_timer = max(0.1, build_force_timeout)
 
 
