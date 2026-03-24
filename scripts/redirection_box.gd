@@ -76,8 +76,8 @@ func _cast_redirected_laser(delta: float) -> void:
 		# Chain redirection or damage
 		if hit.collider.has_method("receive_laser"):
 			hit.collider.receive_laser(delta)
-		elif hit.collider.has_method("take_damage"):
-			hit.collider.take_damage(damage_per_second * delta)
+		elif hit.collider.has_method("die"):
+			hit.collider.die()
 	else:
 		_update_laser_visuals(start_pos, ray_end)
 

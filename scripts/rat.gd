@@ -11,10 +11,10 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 30.0
-@export var damping:          float = 0.8
-@export var separation_dist:  float = 0.5
+@export var damping: float = 0.8
+@export var separation_dist: float = 0.5
 @export var separation_force: float = 12.0
-@export var max_speed:        float = 26.0
+@export var max_speed: float = 26.0
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
@@ -32,8 +32,8 @@ var extra_spin_speed: float = 0.0
 # Spring-damp internal state
 var _spring_velocity: Vector3 = Vector3.ZERO
 var _target_position: Vector3 = Vector3.ZERO
-var _target_ready:    bool    = false
-var _neighbors:       Array   = []
+var _target_ready: bool = false
+var _neighbors: Array = []
 
 # Blob State (Build Mode) — kept for blob_target compat
 var is_following_player: bool = true
@@ -45,10 +45,7 @@ var wave_speed: float = 18.0
 var wave_timer: float = 0.0
 var wave_duration: float = 0.8
 
-# Damage
-var damage_per_hit: float = 10.0
-var hit_range: float = 0.8
-var attack_cooldown: float = 0.0
+
 
 # Build state
 var build_target: Vector3 = Vector3.ZERO
@@ -82,7 +79,7 @@ func _ready() -> void:
 	
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
-	collision_mask = 9 | (1 << 8)  # Floor (1) + Walls (8) + RatStructures (9)
+	collision_mask = 9 | (1 << 8) # Floor (1) + Walls (8) + RatStructures (9)
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
@@ -92,8 +89,7 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 		
-	if attack_cooldown > 0.0:
-		attack_cooldown = maxf(0.0, attack_cooldown - delta)
+
 
 	if _recall_boost_timer > 0.0:
 		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
@@ -139,13 +135,10 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.FOLLOW:
 			_process_follow_spring(delta)
-			_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
-			_check_damage()
 		State.WAVE:
 			_process_wave(delta)
-			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:
@@ -211,7 +204,7 @@ func _process_follow_spring(delta: float) -> void:
 
 func set_target(pos: Vector3) -> void:
 	_target_position = pos
-	_target_ready    = true
+	_target_ready = true
 
 
 func set_neighbors(n: Array) -> void:
@@ -279,20 +272,7 @@ func _process_wave(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 
 
-func _check_damage() -> void:
-	if attack_cooldown > 0.0:
-		return
-		
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	enemies += (get_tree().get_nodes_in_group("bosses"))
-	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
-	
-	for enemy in enemies:
-		var dist: float = global_position.distance_to(enemy.global_position)
-		if dist < hit_range:
-			enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
-			attack_cooldown = 1.0
-			break
+
 
 
 func _process_travel_to_build(delta: float) -> void:
@@ -486,7 +466,6 @@ func _finish_respawn() -> void:
 	set_physics_process(true)
 
 
-
 func _reset_to_follow() -> void:
 	is_anchored = false
 	state = State.FOLLOW
@@ -543,7 +522,7 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	var end := pos + Vector3.DOWN * (max_drop + 0.8)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.collision_mask = 1 | (1 << 8) # Floor + RatStructures
-	query.exclude = [self]
+	query.exclude = [ self ]
 	var hit := ss.intersect_ray(query)
 	if not hit:
 		return false

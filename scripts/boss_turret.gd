@@ -141,7 +141,6 @@ func _physics_process(delta: float) -> void:
 
 	if not _was_active:
 		_was_active = true
-		player_node.hp_regen_rate = 0.0
 		if canvas_layer:
 			canvas_layer.visible = true
 
@@ -254,8 +253,8 @@ func _process_laser(delta: float, mesh: MeshInstance3D, dir: Vector3) -> void:
 		_update_laser_visuals(mesh, start_pos, hit_pos)
 		if hit.collider.has_method("receive_laser"):
 			hit.collider.receive_laser(delta)
-		elif hit.collider.has_method("take_damage"):
-			hit.collider.take_damage(damage_per_second * delta)
+		elif hit.collider.has_method("die"):
+			hit.collider.die()
 	else:
 		_update_laser_visuals(mesh, start_pos, ray_end)
 
@@ -364,7 +363,7 @@ func _shoot() -> void:
 	var proj = projectile_scene.instantiate()
 	get_parent().add_child(proj)
 	
-	proj.deal_damage_instead_of_kill = true
+
 	
 	proj.global_position = fire_origin + dir * 0.8
 	proj.velocity = dir * projectile_speed

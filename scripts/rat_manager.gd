@@ -133,7 +133,7 @@ var _blob_offsets: Array[Vector3] = []
 const STREAM_SPACING: float = 0.7
 const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
-var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
+var _mouse_trail: Array[Vector3] = [] # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
 var _combat_circle_angle: float = 0.0
@@ -146,7 +146,6 @@ const BRUSH_DIM_FACTOR: float = 0.6
 var _formation_queue: Array[Rat] = []
 var _formation_index: int = 0
 var _formation_active: bool = false
-
 
 
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
@@ -961,7 +960,7 @@ func _form_unified_mesh() -> void:
 		
 		for nb in all_neighbors[i]:
 			var j = nb["index"]
-			if i > j: 
+			if i > j:
 				continue # avoid double drawing edges (undirected graph equivalent)
 				
 			var pos_b = rat_positions[j]
@@ -1315,7 +1314,6 @@ func hard_recall_all_rats() -> void:
 
 
 func _process_hover() -> void:
-
 	var camera := get_viewport().get_camera_3d()
 	if not camera: return
 	
@@ -1325,7 +1323,7 @@ func _process_hover() -> void:
 	
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	query.collision_mask = 4 
+	query.collision_mask = 4
 	
 	var hit := space_state.intersect_ray(query)
 	var new_hover: Node3D = null
@@ -1690,7 +1688,7 @@ func _distribute_rats_on_path() -> void:
 	var path_length: float = 0.0
 	var segs: Array[float] = []
 	for i in range(1, current_drawn_path.size()):
-		var segment_len = current_drawn_path[i-1].distance_to(current_drawn_path[i])
+		var segment_len = current_drawn_path[i - 1].distance_to(current_drawn_path[i])
 		path_length += segment_len
 		segs.append(segment_len)
 		

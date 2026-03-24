@@ -23,12 +23,8 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body is player:
-		if body.has_method("take_damage"):
-			
-			if deal_damage_instead_of_kill:
-				body.take_damage(damage)
-			else:
-				body.take_damage(body.max_hp * 0.5)
+		if body.has_method("die"):
+			body.die()
 		queue_free()
 	elif not (body is turret or body is hitscan_turret or body is bossTurret):
 		# Hit wall, box, floor, or wall button

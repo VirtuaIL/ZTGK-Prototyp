@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://cc6a8vpeg25d1"]
 
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player.gd" id="1_script"]
-[ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
+[ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
+[ext_resource type="PackedScene" path="res://scenes/rat.tscn" id="3_qhqgy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -15,6 +16,11 @@ height = 1.6
 radius = 0.4
 height = 1.6
 
+[sub_resource type="BoxMesh" id="BoxMesh_g2els"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qhqgy"]
+albedo_color = Color(0.15, 0.15, 0.15, 1)
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
 shader_parameter/vignette_color = Color(1, 0, 0, 1)
@@ -22,31 +28,60 @@ shader_parameter/intensity = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_HealthPanel"]
 bg_color = Color(0, 0, 0, 0.65)
-border_color = Color(0.9, 0.9, 0.9, 0.6)
 border_width_left = 2
-border_width_right = 2
 border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.9, 0.9, 0.9, 0.6)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
-corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
-
+corner_radius_bottom_left = 6
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2005916585]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1511974, 0)
 mesh = SubResource("CapsuleMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1970706798]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1511974, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="PlayerHUD" type="CanvasLayer" parent="."]
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=1636786274]
+transform = Transform3D(1.5, 0, 0, 0, 0.17, 0, 0, 0, 1.5, 0, 0.43546987, 0)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
 
-[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD"]
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="." unique_id=1038548625]
+transform = Transform3D(1.5, 0, 0, 0, 0.17, 0, 0, 0, 1.5, 0, 2.0402641, 0)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="." unique_id=366620352]
+transform = Transform3D(0.15, 0, 0, 0, 1.65, 0, 0, 0, 0.15, 0.674264, 1.2355651, -0.67357606)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="." unique_id=1256318886]
+transform = Transform3D(0.15, 0, 0, 0, 1.65, 0, 0, 0, 0.15, 0.674264, 1.2355651, 0.6744619)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="." unique_id=1082906777]
+transform = Transform3D(0.15, 0, 0, 0, 1.65, 0, 0, 0, 0.15, -0.67112356, 1.2355651, 0.6744619)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="." unique_id=1539105634]
+transform = Transform3D(0.15, 0, 0, 0, 1.65, 0, 0, 0, 0.15, -0.67497116, 1.2355651, -0.6733987)
+mesh = SubResource("BoxMesh_g2els")
+surface_material_override/0 = SubResource("StandardMaterial3D_qhqgy")
+
+[node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=352743051]
+
+[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD" unique_id=1792706171]
 material = SubResource("ShaderMaterial_Vignette")
 anchors_preset = 15
 anchor_right = 1.0
@@ -55,7 +90,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HealthBar" type="Panel" parent="PlayerHUD"]
+[node name="HealthBar" type="Panel" parent="PlayerHUD" unique_id=904289291]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
@@ -65,34 +101,42 @@ offset_bottom = -30.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
 
-[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar"]
-anchors_preset = 15
+[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar" unique_id=1483747984]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
 theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin" unique_id=1324038794]
+layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=2111078081]
+layout_mode = 2
 text = "ZDROWIE"
-mouse_filter = 2
 
-[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=1929804736]
 custom_minimum_size = Vector2(0, 18)
-max_value = 100.0
+layout_mode = 2
+mouse_filter = 2
 value = 100.0
 show_percentage = false
-mouse_filter = 2
+
+[node name="Rat" parent="." unique_id=1502925343 instance=ExtResource("3_qhqgy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6769942, 0.21565734, -0.66206145)
+
+[node name="Rat2" parent="." unique_id=907689999 instance=ExtResource("3_qhqgy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6769942, 0.21565734, 0.78791344)
+
+[node name="Rat3" parent="." unique_id=1207549229 instance=ExtResource("3_qhqgy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.69153714, 0.21565734, -0.66206145)
+
+[node name="Rat4" parent="." unique_id=1277136516 instance=ExtResource("3_qhqgy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.69153714, 0.21565734, 0.78791344)

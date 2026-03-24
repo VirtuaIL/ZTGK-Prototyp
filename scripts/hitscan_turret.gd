@@ -104,15 +104,15 @@ func _process_laser(delta: float) -> void:
 		var hit_pos: Vector3 = hit.position
 		_update_laser_visuals(start_pos, hit_pos)
 		
-		# Chain redirection or damage
+		# Chain redirection or instant-kill player
 		if hit.collider.has_method("receive_laser"):
 			hit.collider.receive_laser(delta)
 		elif hit.collider.is_in_group("rat_structures"):
 			var manager = hit.collider.get_parent()
 			if manager and manager.has_method("receive_laser"):
 				manager.receive_laser(delta)
-		elif hit.collider.has_method("take_damage"):
-			hit.collider.take_damage(damage_per_second * delta)
+		elif hit.collider.has_method("die"):
+			hit.collider.die()
 	else:
 		# If we hit nothing, draw laser to max range (shouldn't realistically happen if enclosed)
 		_update_laser_visuals(start_pos, ray_end)

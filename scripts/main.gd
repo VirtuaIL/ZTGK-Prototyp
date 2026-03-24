@@ -60,6 +60,7 @@ func _ready() -> void:
 
 
 func _init_game() -> void:
+	_setup_stealth_atmosphere()
 	_setup_mode_ui()
 	_setup_cheatsheet_ui()
 	_setup_goal_ui()
@@ -78,6 +79,55 @@ func _init_game() -> void:
 	
 	# Setup Ability HUD
 	ability_hud.rat_manager = rat_manager
+
+
+func _setup_stealth_atmosphere() -> void:
+	# ── Darken the WorldEnvironment ──
+	var world_env := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_env and world_env.environment:
+		var env := world_env.environment
+		# Much darker ambient — cold, gloomy
+		env.ambient_light_color = Color(0.12, 0.14, 0.2, 1.0)
+		env.ambient_light_energy = 0.15
+		# Volumetric fog for atmosphere
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.015
+		env.volumetric_fog_albedo = Color(0.05, 0.07, 0.1)
+		env.volumetric_fog_emission = Color(0.02, 0.03, 0.05)
+		env.volumetric_fog_emission_energy = 0.3
+		env.volumetric_fog_length = 80.0
+		# Tonemap for moodiness
+		env.tonemap_exposure = 0.8
+
+	# ── Dim the directional light ──
+	var dir_light := get_node_or_null("DirectionalLight3D") as DirectionalLight3D
+	if dir_light:
+		dir_light.light_energy = 0.4
+		dir_light.light_color = Color(0.65, 0.7, 0.85)
+
+	# ── Dark vignette overlay ──
+	var vignette_layer := CanvasLayer.new()
+	vignette_layer.layer = 90
+	var vignette_rect := ColorRect.new()
+	vignette_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vignette_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+void fragment() {
+	vec2 uv = UV - 0.5;
+	float dist = length(uv) * 1.6;
+	float vignette = smoothstep(0.3, 1.2, dist);
+	COLOR = vec4(0.0, 0.0, 0.02, vignette * 0.55);
+}
+"""
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = shader
+	vignette_rect.material = shader_mat
+
+	vignette_layer.add_child(vignette_rect)
+	add_child(vignette_layer)
 
 
 func _setup_input_map() -> void:

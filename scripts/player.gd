@@ -9,16 +9,6 @@ signal player_died
 
 @export var fall_death_y: float = -1.0
 
-@export var max_hp: float = 100.0
-@export var hp_regen_rate: float = 20.0
-@export var regen_delay: float = 2.0
-
-var current_hp: float = 100.0
-var time_since_last_damage: float = 0.0
-
-@onready var damage_overlay: ColorRect = $PlayerHUD/DamageOverlay
-@onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
-
 var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 
@@ -27,29 +17,9 @@ func _ready() -> void:
 	collision_layer = 2 # Layer 2: Player
 	collision_mask = 13 | (1 << 8) # Floor (1) + Movable (4) + Walls (8) + RatStructures (9)
 	_spawn_position = global_position
-	current_hp = max_hp
-	_update_health_bar()
 
 
 func _physics_process(delta: float) -> void:
-	# HP Regeneration
-	time_since_last_damage += delta
-	if time_since_last_damage >= regen_delay and current_hp < max_hp:
-		current_hp = min(current_hp + hp_regen_rate * delta, max_hp)
-		_update_health_bar()
-		
-	# Update Damage Vignette Overlay
-	if damage_overlay and damage_overlay.material:
-		var health_ratio: float = clamp(current_hp / max_hp, 0.0, 1.0)
-		var intensity: float = 1.0 - health_ratio
-		
-		# Optionally, make the intensity non-linear so it only intensely shows up when very low
-		intensity = pow(intensity, 1.5)
-		
-		var shader_mat: ShaderMaterial = damage_overlay.material as ShaderMaterial
-		if shader_mat:
-			shader_mat.set_shader_parameter("intensity", intensity)
-
 	# Fall reset
 	if global_position.y < fall_death_y:
 		die()
@@ -86,13 +56,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-func take_damage(amount: float) -> void:
-	current_hp -= amount
-	time_since_last_damage = 0.0
-	_update_health_bar()
-	
-	if current_hp <= 0:
-		die()
+# Stealth: any contact = instant reset
+func take_damage(_amount: float = 0.0) -> void:
+	die()
 
 
 func set_spawn_position(pos: Vector3) -> void:
@@ -106,18 +72,8 @@ func die() -> void:
 			
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
-	current_hp = max_hp
-	time_since_last_damage = 0.0
-	_update_health_bar()
 	player_died.emit()
 
 
 func set_stratagem_mode(active: bool) -> void:
 	is_stratagem_mode = active
-
-
-func _update_health_bar() -> void:
-	if not health_bar:
-		return
-	health_bar.max_value = max_hp
-	health_bar.value = clampf(current_hp, 0.0, max_hp)
