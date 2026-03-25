@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/turret_solid.tscn" id="9_vxglm"]
@@ -45,6 +46,14 @@ sky = SubResource("Sky_0ld40")
 ambient_light_source = 2
 ambient_light_color = Color(0.3, 0.28, 0.35, 1)
 ambient_light_energy = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
+cull_mode = 2
+shading_mode = 0
+albedo_texture = ExtResource("2_0ld40")
+
+[sub_resource type="SphereMesh" id="SphereMesh_skydome"]
+material = SubResource("StandardMaterial3D_skydome")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -100,6 +109,12 @@ cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
 environment = SubResource("Environment_1")
+
+[node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("SphereMesh_skydome")
+script = ExtResource("7_skydome")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 5, 10, 5)
