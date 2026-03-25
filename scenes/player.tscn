@@ -96,3 +96,17 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 mouse_filter = 2
+
+[node name="HelpHint" type="Label" parent="PlayerHUD"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -26.0
+offset_right = 220.0
+offset_bottom = -8.0
+text = "H — pomoc"
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 11

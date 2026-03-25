@@ -26,11 +26,13 @@ var indicator_pool: Array[Label] = []
 var _indicator_blink_time: float = 0.0
 
 # ── UI Theme ──────────────────────────────────────────────────────────────────
-const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.85)
-const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.9)
+const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.65)
+const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.75)
 const UI_BORDER: Color = Color(0.6, 0.6, 0.6, 0.6)
 const UI_TEXT: Color = Color(0.95, 0.95, 0.95)
 const UI_MUTED: Color = Color(0.78, 0.78, 0.78)
+const UI_HINT: Color = Color(1.0, 0.92, 0.72)
+const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 
 # ── Offscreen Indicators ──────────────────────────────────────────────────────
 @export var indicator_max_distance: float = 26.0
@@ -95,11 +97,13 @@ func _create_action_box(title: String) -> VBoxContainer:
 	var title_lbl = Label.new()
 	title_lbl.text = title
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.add_theme_color_override("font_color", UI_MUTED)
-	title_lbl.add_theme_font_size_override("font_size", 12)
+	title_lbl.add_theme_color_override("font_color", UI_TEXT)
+	title_lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	title_lbl.add_theme_constant_override("outline_size", 3)
+	title_lbl.add_theme_font_size_override("font_size", 14)
 	
 	var rect = ColorRect.new()
-	rect.custom_minimum_size = Vector2(100, 30)
+	rect.custom_minimum_size = Vector2(120, 36)
 	rect.color = UI_BG_STRONG
 	
 	var val_lbl = Label.new()
@@ -107,7 +111,9 @@ func _create_action_box(title: String) -> VBoxContainer:
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	val_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	val_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	val_lbl.add_theme_font_size_override("font_size", 12)
+	val_lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	val_lbl.add_theme_constant_override("outline_size", 3)
+	val_lbl.add_theme_font_size_override("font_size", 13)
 	rect.add_child(val_lbl)
 	
 	vbox.add_child(title_lbl)
@@ -120,7 +126,7 @@ func _setup_mode_ui() -> void:
 
 	var main_vbox = VBoxContainer.new()
 	main_vbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	main_vbox.position = Vector2(-350, -140)
+	main_vbox.position = Vector2(-480, -140)
 	main_vbox.add_theme_constant_override("separation", 15)
 
 	# Action buttons (LPM, SCROLL, PPM)
@@ -142,7 +148,7 @@ func _setup_mode_ui() -> void:
 	space_rect_val = space_box.get_child(1) as ColorRect
 	var space_label_val = space_rect_val.get_child(0) as Label
 	space_label_val.text = "hard-recall szczury"
-	space_rect_val.custom_minimum_size = Vector2(130, 30)
+	space_rect_val.custom_minimum_size = Vector2(160, 36)
 
 	var space_hbox = HBoxContainer.new()
 	space_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -164,7 +170,7 @@ func _setup_cheatsheet_ui() -> void:
 	var layer = CanvasLayer.new()
 	var panel = Panel.new()
 	cheatsheet_panel = panel
-	panel.visible = false
+	panel.visible = true
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.position = Vector2(20, 95)
 	panel.custom_minimum_size = Vector2(380, 300)
@@ -201,7 +207,7 @@ func _setup_cheatsheet_ui() -> void:
 	cheatsheet_title = title
 	title.text = "STEROWANIE"
 	title.add_theme_color_override("font_color", UI_TEXT)
-	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(title)
 
 	var body = RichTextLabel.new()
@@ -212,6 +218,8 @@ func _setup_cheatsheet_ui() -> void:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	body.add_theme_font_size_override("normal_font_size", 12)
+	body.add_theme_font_size_override("bold_font_size", 12)
 	body.text = \
 		"[b]Ruch[/b]\n" + \
 		"WASD — ruch\n" + \
@@ -231,8 +239,10 @@ func _setup_cheatsheet_ui() -> void:
 	var hint = Label.new()
 	cheatsheet_hint = hint
 	hint.text = "H — pokaż/ukryj pomoc"
-	hint.add_theme_color_override("font_color", UI_MUTED)
-	hint.add_theme_font_size_override("font_size", 11)
+	hint.add_theme_color_override("font_color", UI_HINT)
+	hint.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	hint.add_theme_constant_override("outline_size", 3)
+	hint.add_theme_font_size_override("font_size", 15)
 	vbox.add_child(hint)
 
 	layer.add_child(panel)
@@ -244,8 +254,14 @@ func _refresh_cheatsheet_size() -> void:
 		return
 	# Fit panel to its content, but keep it on-screen and reasonably wide.
 	var vp_size: Vector2 = get_viewport().get_visible_rect().size
-	var max_w: float = max(320.0, vp_size.x - 40.0)
-	var target_w: float = clampf(460.0, 320.0, max_w)
+	var max_w: float = vp_size.x - 20.0
+	var target_w: float = 440.0
+	if max_w <= 0.0:
+		return
+	if max_w < 200.0:
+		target_w = max_w
+	else:
+		target_w = clampf(440.0, 260.0, max_w)
 
 	var m_left: int = cheatsheet_margin.get_theme_constant("margin_left")
 	var m_right: int = cheatsheet_margin.get_theme_constant("margin_right")
@@ -269,12 +285,15 @@ func _refresh_cheatsheet_size() -> void:
 
 	cheatsheet_panel.custom_minimum_size = Vector2(target_w, final_h)
 	cheatsheet_panel.size = cheatsheet_panel.custom_minimum_size
+	var desired_x: float = 20.0
+	var max_x: float = vp_size.x - cheatsheet_panel.size.x - 10.0
+	cheatsheet_panel.position.x = max(10.0, min(desired_x, max_x))
 
 func _setup_goal_ui() -> void:
 	var layer = CanvasLayer.new()
 	var label = Label.new()
 	goal_label = label
-	label.text = "Cel prototypu: wydostań się z labiryntu"
+	label.text = "Cel prototypu: wydostań się z labiryntu, pokonując kolejne poziomy i bossa na końcu."
 	label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	label.offset_left = 0
 	label.offset_right = 0
@@ -282,7 +301,7 @@ func _setup_goal_ui() -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	label.add_theme_constant_override("outline_size", 6)
+	label.add_theme_constant_override("outline_size", 10)
 	layer.add_child(label)
 	add_child(layer)
 
