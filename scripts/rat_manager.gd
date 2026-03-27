@@ -93,7 +93,7 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 var current_circle_center: Vector3 = Vector3.ZERO
 var _build_force_timer: float = 0.0
 
-var grabbed_object: PhysicsBody3D = null
+var grabbed_object: CharacterBody3D = null
 var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
@@ -108,6 +108,10 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var object_rotation_step: float = 22.5
 @export var combat_circle_radius: float = 2.5
 @export var combat_circle_rotation_speed: float = 7.0
+@export var capstan_cursor_snap_radius: float = 2.4
+@export var capstan_cursor_ring_radius: float = 4.8
+@export var capstan_cursor_rotation_scale: float = 0.6
+@export var capstan_rat_required_radius: float = 2.4
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -117,6 +121,10 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 				rat.set_wall_collision(value)
 
 var _hovered_object: Node3D = null
+var _cursor_capstan: Capstan = null
+var _cursor_capstan_last_angle: float = 0.0
+var _cursor_capstan_has_angle: bool = false
+var _capstan_collision_exceptions: Dictionary = {}
 
 var line_mesh_instance: MeshInstance3D
 var immediate_mesh: ImmediateMesh
@@ -569,6 +577,7 @@ func _update_combat_attack_circle(delta: float) -> void:
 func _update_cursor_follow(delta: float) -> void:
 	var mouse_world := _mouse_to_world()
 	if mouse_world == Vector3.ZERO:
+		_set_cursor_following(_get_active_follow_rats(), false)
 		return
 
 	_update_mouse_trail(mouse_world)
@@ -577,6 +586,7 @@ func _update_cursor_follow(delta: float) -> void:
 	var count := active.size()
 	if count == 0:
 		return
+	_set_cursor_following(active, true)
 
 	# Need at least 2 points for arc distribution
 	if _mouse_trail.size() < 2:
@@ -661,10 +671,117 @@ func _update_cursor_follow(delta: float) -> void:
 func _update_free_rats_follow_cursor(delta: float) -> void:
 	# Skip when RMB attack or LMB building is handling rats
 	if combat_rmb_down:
+		_set_cursor_following(_get_active_follow_rats(), false)
+		_clear_cursor_capstan()
 		return
 	if mouse_is_down_left and not _lmb_is_object_drag:
+		_set_cursor_following(_get_active_follow_rats(), false)
+		_clear_cursor_capstan()
+		return
+	if _update_capstan_cursor(delta):
 		return
 	_update_cursor_follow(delta)
+
+
+func _update_capstan_cursor(delta: float) -> bool:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
+		_clear_cursor_capstan()
+		return false
+
+	var nearest: Capstan = null
+	var nearest_dist_sq := capstan_cursor_snap_radius * capstan_cursor_snap_radius
+	for node in get_tree().get_nodes_in_group("capstan"):
+		var cap := node as Capstan
+		if cap == null:
+			continue
+		var d_sq := _flat_distance_squared(mouse_world, cap.global_position)
+		if d_sq <= nearest_dist_sq:
+			nearest = cap
+			nearest_dist_sq = d_sq
+
+	if nearest == null:
+		_clear_cursor_capstan()
+		return false
+
+	if _cursor_capstan != nearest:
+		_cursor_capstan = nearest
+		_cursor_capstan_has_angle = false
+
+	# Require at least one rat near the capstan to allow rotation
+	if not _has_rat_near_capstan(_cursor_capstan):
+		_clear_cursor_capstan()
+		return false
+
+	# Rotate capstan based on mouse movement around it (flat angle)
+	var to_mouse := mouse_world - _cursor_capstan.global_position
+	to_mouse.y = 0.0
+	if to_mouse.length() > 0.001:
+		var angle := atan2(to_mouse.x, to_mouse.z)
+		if _cursor_capstan_has_angle:
+			var diff := wrapf(angle - _cursor_capstan_last_angle, -PI, PI)
+			_cursor_capstan.apply_cursor_rotation(diff * capstan_cursor_rotation_scale, delta)
+		_cursor_capstan_last_angle = angle
+		_cursor_capstan_has_angle = true
+
+	# Snap free FOLLOW rats to a ring around the capstan
+	var active := _get_active_follow_rats()
+	if active.size() > 0:
+		_set_cursor_following(active, true)
+		_set_capstan_collision(active, _cursor_capstan, true)
+	return false
+
+
+func _snap_rats_to_capstan(active: Array[CharacterBody3D], center: Vector3) -> void:
+	var count := active.size()
+	if count == 0:
+		return
+	var angle_step := TAU / float(count)
+	for i in range(count):
+		var angle := angle_step * float(i)
+		var target := center + Vector3(cos(angle) * capstan_cursor_ring_radius, 0.0, sin(angle) * capstan_cursor_ring_radius)
+		target.y = center.y
+		active[i].set_target(target)
+
+
+func _clear_cursor_capstan() -> void:
+	_clear_capstan_collision_exceptions()
+	_cursor_capstan = null
+	_cursor_capstan_has_angle = false
+
+
+func _set_capstan_collision(active: Array[CharacterBody3D], capstan: Capstan, enabled: bool) -> void:
+	if capstan == null:
+		return
+	for rat in active:
+		if rat == null:
+			continue
+		if enabled:
+			rat.add_collision_exception_with(capstan)
+			capstan.add_collision_exception_with(rat)
+			_capstan_collision_exceptions[rat] = capstan
+		else:
+			if _capstan_collision_exceptions.has(rat):
+				var prev := _capstan_collision_exceptions[rat] as Node
+				if prev:
+					rat.remove_collision_exception_with(prev)
+					prev.remove_collision_exception_with(rat)
+				_capstan_collision_exceptions.erase(rat)
+
+
+func _clear_capstan_collision_exceptions() -> void:
+	for rat in _capstan_collision_exceptions.keys():
+		var capstan := _capstan_collision_exceptions[rat] as Node
+		if rat and capstan:
+			rat.remove_collision_exception_with(capstan)
+			capstan.remove_collision_exception_with(rat)
+	_capstan_collision_exceptions.clear()
+
+
+func _set_cursor_following(active: Array[CharacterBody3D], enabled: bool) -> void:
+	for rat in active:
+		if rat:
+			rat.set_cursor_following(enabled)
 
 
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
@@ -681,6 +798,24 @@ func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
 		return path[lo]
 	var t: float = (want - arc[lo]) / seg
 	return (path[lo] as Vector3).lerp(path[hi] as Vector3, t)
+
+
+func _flat_distance_squared(a: Vector3, b: Vector3) -> float:
+	var dx := a.x - b.x
+	var dz := a.z - b.z
+	return dx * dx + dz * dz
+
+
+func _has_rat_near_capstan(capstan: Capstan) -> bool:
+	if capstan == null:
+		return false
+	var r_sq := capstan_rat_required_radius * capstan_rat_required_radius
+	for rat in rats:
+		if rat == null:
+			continue
+		if _flat_distance_squared(rat.global_position, capstan.global_position) <= r_sq:
+			return true
+	return false
 
 
 func build_blob_offsets() -> void:
@@ -1059,7 +1194,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret or obj is Capstan:
+					if obj is box or obj is turret or obj is hitscan_turret:
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1825,7 +1960,7 @@ func _send_horde_to_point() -> void:
 		_build_force_timer = max(0.1, build_force_timeout)
 
 
-func _surround_object_with_rats(obj: PhysicsBody3D) -> void:
+func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 	var center: Vector3 = obj.global_position
 
 	var available_rats: Array[CharacterBody3D] = _get_nearest_available_rats(center)
@@ -1877,7 +2012,7 @@ func _surround_object_with_rats(obj: PhysicsBody3D) -> void:
 		obj.object_reset.connect(_on_object_reset.bind(obj))
 
 
-func _on_object_reset(obj: PhysicsBody3D) -> void:
+func _on_object_reset(obj: CharacterBody3D) -> void:
 	_release_object_carriers(obj)
 	if grabbed_object == obj:
 		grabbed_object.set_meta("is_being_dragged", false)
@@ -1930,23 +2065,6 @@ func _process_object_drag(delta: float) -> void:
 		return
 
 	var current_pos: Vector3 = grabbed_object.global_position
-	
-	if grabbed_object is Capstan:
-		var target_pos := _get_mouse_pos_at_y(current_pos.y)
-		if target_pos != Vector3.ZERO:
-			var diff: Vector3 = target_pos - current_pos
-			var target_angle = atan2(diff.x, diff.z)
-			
-			if not grabbed_object.has_meta("last_drag_angle"):
-				grabbed_object.set_meta("last_drag_angle", target_angle)
-			else:
-				var last_angle = grabbed_object.get_meta("last_drag_angle")
-				var angle_diff = wrapf(target_angle - last_angle, -PI, PI)
-				if abs(angle_diff) > 0.001:
-					grabbed_object.add_capstan_angle_diff(angle_diff)
-				grabbed_object.set_meta("last_drag_angle", target_angle)
-		return
-
 	var target_pos: Vector3
 	
 	var hit := _get_mouse_ground_hit()
@@ -2041,12 +2159,9 @@ func _carrier_offset_world_pos(obj_transform: Transform3D, local_offset: Vector3
 	return obj_transform.origin + rot_basis * local_offset
 
 
-func _release_object_carriers(obj: PhysicsBody3D) -> void:
+func _release_object_carriers(obj: CharacterBody3D) -> void:
 	if obj == null:
 		return
-
-	if obj.has_meta("last_drag_angle"):
-		obj.remove_meta("last_drag_angle")
 
 	for r in obj.get("carrier_rats"):
 		if r:

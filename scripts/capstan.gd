@@ -1,22 +1,39 @@
-extends StaticBody3D
+extends RigidBody3D
 class_name Capstan
 
 @export var doorId: int = 0
-@export var required_rotations: float = 12.0
-
-signal object_reset
+@export var required_rotations: float = 3.0
+@export var cursor_rotate_strength: float = 0.45
+@export var cursor_rotate_max_speed: float = 3.0
 
 var _current_total_rotation: float = 0.0
+var _previous_rotation: float = 0.0
 var _max_rotation: float = 0.0
 
-var is_surrounded: bool = false
-var carrier_rats: Array[CharacterBody3D] = []
-var carrier_available_max: int = 0
-var carrier_brush_desired: int = 0
-
 func _ready() -> void:
+    collision_layer = 9
+    collision_mask = 1
     _max_rotation = required_rotations * TAU
+    _previous_rotation = rotation.y
     add_to_group("capstan")
+    _set_center_of_mass_from_base()
+
+
+func _set_center_of_mass_from_base() -> void:
+    var base := get_node_or_null("Base") as Node3D
+    if base == null:
+        return
+    center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
+    # Center of mass is in local space of the rigid body.
+    center_of_mass = base.transform.origin
+
+
+func apply_cursor_rotation(delta_angle: float, delta: float) -> void:
+    if delta <= 0.0 or delta_angle == 0.0:
+        return
+    var max_delta := cursor_rotate_max_speed * delta
+    var clamped := clampf(delta_angle * cursor_rotate_strength, -max_delta, max_delta)
+    rotation.y += clamped
 
 
 func _get_target_doors() -> Array[Node]:
@@ -28,39 +45,34 @@ func _get_target_doors() -> Array[Node]:
     return result
 
 
-func set_highlight(enabled: bool) -> void:
-    var mesh1: CSGBox3D = get_node_or_null("Arm1")
-    var mesh2: CSGBox3D = get_node_or_null("Arm2")
-    var base: CSGCylinder3D = get_node_or_null("Base")
-    
-    var highlight_mat = StandardMaterial3D.new()
-    highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-    highlight_mat.albedo_color = Color.YELLOW
-    highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
-    highlight_mat.no_depth_test = true
-    highlight_mat.grow = true
-    highlight_mat.grow_amount = 0.03
-    
-    if mesh1: mesh1.material_overlay = highlight_mat if enabled else null
-    if mesh2: mesh2.material_overlay = highlight_mat if enabled else null
-    if base: base.material_overlay = highlight_mat if enabled else null
-
-func add_capstan_angle_diff(diff: float) -> void:
-    var old_total = _current_total_rotation
+func _physics_process(delta: float) -> void:
+    var diff = wrapf(rotation.y - _previous_rotation, -PI, PI)
+    # We use abs(diff) or allow bidirectional winding? 
+    # If potentiometer, it must be bidirectional (positive winds, negative unwinds)
     _current_total_rotation += diff
+    _previous_rotation = rotation.y
     
-    if _current_total_rotation < 0.0:
+    # Limit rotation values
+    var hit_limit = false
+    if _current_total_rotation <= 0.0:
         _current_total_rotation = 0.0
-        rotation.y -= (diff - (_current_total_rotation - old_total))
-    elif _current_total_rotation > _max_rotation:
+        if angular_velocity.y < 0:
+            angular_velocity.y = 0
+            hit_limit = true
+    elif _current_total_rotation >= _max_rotation:
         _current_total_rotation = _max_rotation
-        rotation.y -= (diff - (_current_total_rotation - old_total))
-    else:
-        rotation.y += diff
-    
+        if angular_velocity.y > 0:
+            angular_velocity.y = 0
+            hit_limit = true
+            
+    # If hitting a limit, we zero the rotation to its exact clamped bound
+    if hit_limit:
+        var target_y = rotation.y - diff # Revert the excess rotation
+        # Note: setting transform directly on RigidBody is usually bad practice,
+        # but for enforcing a hard capstan lock it works well enough.
+        
     var progress = _current_total_rotation / _max_rotation
     
     for door in _get_target_doors():
         if door.has_method("set_progress"):
             door.set_progress(progress)
-

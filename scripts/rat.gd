@@ -15,6 +15,7 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var separation_dist:  float = 0.5
 @export var separation_force: float = 12.0
 @export var max_speed:        float = 26.0
+@export var cursor_follow_speed_scale: float = 0.6
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
@@ -28,6 +29,7 @@ var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
 var lerp_speed: float = 8.0
 var extra_spin_speed: float = 0.0
+var is_cursor_following: bool = false
 
 # Spring-damp internal state
 var _spring_velocity: Vector3 = Vector3.ZERO
@@ -161,10 +163,14 @@ func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:
 		return
 
+	var speed_scale := cursor_follow_speed_scale if is_cursor_following else 1.0
+	var stiffness := spring_stiffness * speed_scale
+	var max_spd := max_speed * speed_scale
+
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position
 	to_target.y *= 0.2
-	_spring_velocity += to_target * spring_stiffness * delta
+	_spring_velocity += to_target * stiffness * delta
 
 	# Separation from neighbors
 	for neighbor in _neighbors:
@@ -184,8 +190,8 @@ func _process_follow_spring(delta: float) -> void:
 
 	# Clamp horizontal speed
 	var hvel := Vector2(_spring_velocity.x, _spring_velocity.z)
-	if hvel.length() > max_speed:
-		hvel = hvel.normalized() * max_speed
+	if hvel.length() > max_spd:
+		hvel = hvel.normalized() * max_spd
 		_spring_velocity.x = hvel.x
 		_spring_velocity.z = hvel.y
 
@@ -251,6 +257,11 @@ func set_orbit(angle: float, radius: float = 4.0) -> void:
 
 func set_follow() -> void:
 	state = State.FOLLOW
+	is_cursor_following = false
+
+
+func set_cursor_following(enabled: bool) -> void:
+	is_cursor_following = enabled
 
 
 func set_wave(direction: Vector3, delay: float) -> void:
@@ -491,6 +502,7 @@ func _reset_to_follow() -> void:
 	is_anchored = false
 	state = State.FOLLOW
 	is_following_player = true
+	is_cursor_following = false
 	_spring_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
 	set_collision_layer_value(1, false)
@@ -552,3 +564,10 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 
 func _do_move_and_slide() -> void:
 	move_and_slide()
+	# Optional logic: make rats push specific rigid bodies
+	var push_force = 120.0
+	for i in get_slide_collision_count():
+		var c = get_slide_collision(i)
+		var collider = c.get_collider()
+		if collider is RigidBody3D and collider.is_in_group("capstan"):
+			collider.apply_impulse(-c.get_normal() * push_force * get_physics_process_delta_time(), c.get_position() - collider.global_position)
