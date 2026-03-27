@@ -16,6 +16,7 @@ class_name door
 var _closed_position: Vector3
 var _open_position: Vector3
 var _is_open: bool = false
+var _current_tween: Tween
 
 
 func _ready() -> void:
@@ -53,8 +54,21 @@ func close() -> void:
 
 
 func _animate_to(target_pos: Vector3) -> void:
+	if _current_tween:
+		_current_tween.kill()
 	var tween := create_tween()
+	_current_tween = tween
 	tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
 	tween.set_ease(Tween.EASE_IN_OUT)
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(self, "position", target_pos, slide_duration)
+
+
+func set_progress(weight: float) -> void:
+	if _current_tween:
+		_current_tween.kill()
+		_current_tween = null
+	var target = _closed_position.lerp(_open_position, clamp(weight, 0.0, 1.0))
+	if is_inverse:
+		target = _open_position.lerp(_closed_position, clamp(weight, 0.0, 1.0))
+	position = target

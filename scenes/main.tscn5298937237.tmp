@@ -32,7 +32,7 @@
 [ext_resource type="PackedScene" uid="uid://b23uv66hbun6u" path="res://scenes/floor_tile_noCollision.tscn" id="26_2wyq8"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="30_fv21b"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="31_tel4y"]
-[ext_resource type="PackedScene" path="res://scenes/capstan.tscn" id="33_5q0nq"]
+[ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/capstan.tscn" id="33_5q0nq"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -561,46 +561,73 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.
 
 [node name="door" parent="doors" unique_id=1508054242 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.582687, 0, 0)
+doorId = null
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door5" parent="doors" unique_id=670439689 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.585457, 0, -28.243254)
 doorId = 1
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door6" parent="doors" unique_id=615008847 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -6.8812294, 0, -41.666466)
 doorId = 66
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door10" parent="doors" unique_id=2627827 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.400368, 0, -74.84566)
 doorId = 3
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door13" parent="doors" unique_id=63013407 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.961315, 0, -99.70198)
 doorId = 4
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door18" parent="doors" unique_id=2003140082 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -95.011536, 0, -142.96257)
 doorId = 5
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door27" parent="doors" unique_id=33028763 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7265015, 0, -128.17146)
 doorId = 55
+slide_distance = null
+slide_duration = null
+is_inverse = null
 
 [node name="door24" parent="doors" unique_id=1759815341 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -104.30148, 0, -165.05446)
 doorId = 7
 slide_distance = 4.5
+slide_duration = null
 is_inverse = true
 
 [node name="door31" parent="doors" unique_id=1059192383 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -90.01149, 0, -165.05026)
 doorId = 7
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door17" parent="doors" unique_id=901313726 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -114.011536, -1.657588, -116.45775)
 doorId = 5
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="floor_tiles" type="Node3D" parent="." unique_id=1371514873]
 transform = Transform3D(-0.28705433, 0, -3.4018658e-08, 0, 0.09931266, 0, 4.3344e-08, 0, -0.2252954, -20.96944, -0.1877085, -252.17305)
@@ -1474,47 +1501,64 @@ transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, -13.024635, 0.97597075, -
 transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -52.53326, -1.4805789, -164.98688)
 doorId = 14
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door33" parent="boss_arena" unique_id=1142958665 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -52.150795, -1.4805789, -165.34749)
 doorId = 14
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door34" parent="boss_arena" unique_id=2081144320 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -49.402126, -1.4805789, -165.34749)
 doorId = 14
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door39" parent="boss_arena" unique_id=249174031 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1.6420286e-15, -8.0263455e-08, -0.99999976, -1.0000002, -8.0263476e-08, 3.1058812e-22, -4.37114e-08, 1.8362141, -4.371138e-08, -48.258015, -0.4914093, -120.02937)
 doorId = 77
 slide_distance = 4.5
+slide_duration = null
 is_inverse = true
 
 [node name="door32" parent="boss_arena" unique_id=332551365 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -52.53326, -1.4805789, -162.24915)
 doorId = 14
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door35" parent="boss_arena" unique_id=108893777 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -21.53326, -1.4805789, -197.98691)
 doorId = 15
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door36" parent="boss_arena" unique_id=358884749 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -21.150795, -1.4805789, -198.3475)
 doorId = 15
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door37" parent="boss_arena" unique_id=1315425031 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-1.6420286e-15, -5.4142326e-08, -0.99999976, -1.0000002, -5.414234e-08, 3.1058812e-22, -4.37114e-08, 1.2386322, -4.371138e-08, -18.402126, -1.4805789, -198.3475)
 doorId = 15
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="door38" parent="boss_arena" unique_id=1177255590 instance=ExtResource("9_85g3d")]
 transform = Transform3D(-4.37114e-08, 1.2386322, -3.5527137e-15, -1.0000002, -5.414234e-08, 3.1058812e-22, 1.2621777e-29, -5.6843415e-15, 0.99999976, -21.53326, -1.4805789, -195.24918)
 doorId = 15
 slide_distance = 4.5
+slide_duration = null
+is_inverse = null
 
 [node name="button4" parent="boss_arena" unique_id=213852704 instance=ExtResource("10_choun")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.123753, 0.022004224, -163.62383)

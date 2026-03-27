@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://ch30pw45vrons"]
+
+[ext_resource type="Script" uid="uid://c0p1wd3ycmuft" path="res://scripts/capstan.gd" id="1_cps"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_capstan"]
+size = Vector3(5, 0.4, 0.4)
+
+[node name="Capstan" type="RigidBody3D"]
+axis_lock_linear_x = true
+axis_lock_linear_y = true
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_z = true
+linear_damp = 10.0
+angular_damp = 5.0
+script = ExtResource("1_cps")
+
+[node name="Arm1" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+size = Vector3(5, 0.4, 0.4)
+
+[node name="Arm2" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+size = Vector3(0.4, 0.4, 5)
+
+[node name="Base" type="CSGCylinder3D" parent="."]
+radius = 0.5
+height = 1.0
+
+[node name="CollisionShape3D_1" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("BoxShape3D_capstan")
+
+[node name="CollisionShape3D_2" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+rotation = Vector3(0, 1.5708, 0)
+shape = SubResource("BoxShape3D_capstan")

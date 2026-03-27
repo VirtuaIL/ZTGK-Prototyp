@@ -107,7 +107,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 		else:
 			velocity.y = 0.0
-		move_and_slide()
+		_do_move_and_slide()
 		return
 
 	# Fall recovery first so distance check doesn't pull rats to player mid-fall.
@@ -197,7 +197,7 @@ func _process_follow_spring(delta: float) -> void:
 		velocity.z = 0.0
 		_spring_velocity.x = 0.0
 		_spring_velocity.z = 0.0
-	move_and_slide()
+	_do_move_and_slide()
 	# Sync spring velocity with collision response (horizontal only)
 	_spring_velocity.x = velocity.x
 	_spring_velocity.z = velocity.z
@@ -240,7 +240,7 @@ func _process_orbit(delta: float) -> void:
 	var target_angle := atan2(forward_dir.x, forward_dir.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 
-	move_and_slide()
+	_do_move_and_slide()
 
 
 func set_orbit(angle: float, radius: float = 4.0) -> void:
@@ -273,7 +273,7 @@ func _process_wave(delta: float) -> void:
 	if _should_block_edge(Vector2(velocity.x, velocity.z)):
 		velocity.x = 0.0
 		velocity.z = 0.0
-	move_and_slide()
+	_do_move_and_slide()
 
 	var target_angle := atan2(wave_direction.x, wave_direction.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
@@ -324,7 +324,7 @@ func _process_travel_to_build(delta: float) -> void:
 		global_position.y = lerpf(global_position.y, build_target.y, 5.0 * delta)
 		var target_angle := atan2(dir.x, dir.y)
 		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
-		move_and_slide()
+		_do_move_and_slide()
 	else:
 		state = State.WAITING_FOR_FORMATION
 		global_position = build_target
@@ -548,3 +548,14 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	if not hit:
 		return false
 	return hit.position.y >= global_position.y - max_drop
+
+
+func _do_move_and_slide() -> void:
+	move_and_slide()
+	# Optional logic: make rats push specific rigid bodies
+	var push_force = 120.0
+	for i in get_slide_collision_count():
+		var c = get_slide_collision(i)
+		var collider = c.get_collider()
+		if collider is RigidBody3D and collider.is_in_group("capstan"):
+			collider.apply_impulse(-c.get_normal() * push_force * get_physics_process_delta_time(), c.get_position() - collider.global_position)
