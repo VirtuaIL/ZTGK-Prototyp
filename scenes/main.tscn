@@ -8,12 +8,12 @@
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/turret_solid.tscn" id="9_vxglm"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/button.tscn" id="10_choun"]
-[ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/grates.tscn" id="10_dgi5k"]
+[ext_resource type="PackedScene" path="res://scenes/grates.tscn" id="10_dgi5k"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/wall.tscn" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://pg0re2o56m0l" path="res://scenes/turret.tscn" id="12_eb6dy"]
 [ext_resource type="PackedScene" uid="uid://df234dghx" path="res://scenes/hitscan_turret.tscn" id="13_trceg"]
@@ -34,7 +34,7 @@
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="30_fv21b"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="31_tel4y"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/capstan.tscn" id="33_5q0nq"]
-[ext_resource type="PackedScene" uid="uid://cnxscuu3krfta" path="res://scenes/grates_doors.tscn" id="35_j8jky"]
+[ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/grates_doors.tscn" id="35_j8jky"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -58,11 +58,11 @@ albedo_texture = ExtResource("2_0ld40")
 [sub_resource type="SphereMesh" id="SphereMesh_skydome"]
 material = SubResource("StandardMaterial3D_skydome")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j8jky"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_1"]
-material = SubResource("StandardMaterial3D_1")
+material = SubResource("StandardMaterial3D_j8jky")
 size = Vector2(40, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0ld40"]
@@ -100,7 +100,6 @@ size = Vector3(41.459656, 0.001, 29.254395)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tel4y"]
 size = Vector3(5.9259033, 0.001, 5.899353)
-
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
