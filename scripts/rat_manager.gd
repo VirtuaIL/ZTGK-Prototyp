@@ -93,7 +93,7 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 var current_circle_center: Vector3 = Vector3.ZERO
 var _build_force_timer: float = 0.0
 
-var grabbed_object: CharacterBody3D = null
+var grabbed_object: PhysicsBody3D = null
 var grabbed_object_last_pos: Vector3 = Vector3.ZERO
 var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 
@@ -1059,7 +1059,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret:
+					if obj is box or obj is turret or obj is hitscan_turret or obj is Capstan:
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1825,7 +1825,7 @@ func _send_horde_to_point() -> void:
 		_build_force_timer = max(0.1, build_force_timeout)
 
 
-func _surround_object_with_rats(obj: CharacterBody3D) -> void:
+func _surround_object_with_rats(obj: PhysicsBody3D) -> void:
 	var center: Vector3 = obj.global_position
 
 	var available_rats: Array[CharacterBody3D] = _get_nearest_available_rats(center)
@@ -1877,7 +1877,7 @@ func _surround_object_with_rats(obj: CharacterBody3D) -> void:
 		obj.object_reset.connect(_on_object_reset.bind(obj))
 
 
-func _on_object_reset(obj: CharacterBody3D) -> void:
+func _on_object_reset(obj: PhysicsBody3D) -> void:
 	_release_object_carriers(obj)
 	if grabbed_object == obj:
 		grabbed_object.set_meta("is_being_dragged", false)
@@ -1930,6 +1930,23 @@ func _process_object_drag(delta: float) -> void:
 		return
 
 	var current_pos: Vector3 = grabbed_object.global_position
+	
+	if grabbed_object is Capstan:
+		var target_pos := _get_mouse_pos_at_y(current_pos.y)
+		if target_pos != Vector3.ZERO:
+			var diff: Vector3 = target_pos - current_pos
+			var target_angle = atan2(diff.x, diff.z)
+			
+			if not grabbed_object.has_meta("last_drag_angle"):
+				grabbed_object.set_meta("last_drag_angle", target_angle)
+			else:
+				var last_angle = grabbed_object.get_meta("last_drag_angle")
+				var angle_diff = wrapf(target_angle - last_angle, -PI, PI)
+				if abs(angle_diff) > 0.001:
+					grabbed_object.add_capstan_angle_diff(angle_diff)
+				grabbed_object.set_meta("last_drag_angle", target_angle)
+		return
+
 	var target_pos: Vector3
 	
 	var hit := _get_mouse_ground_hit()
@@ -2024,9 +2041,12 @@ func _carrier_offset_world_pos(obj_transform: Transform3D, local_offset: Vector3
 	return obj_transform.origin + rot_basis * local_offset
 
 
-func _release_object_carriers(obj: CharacterBody3D) -> void:
+func _release_object_carriers(obj: PhysicsBody3D) -> void:
 	if obj == null:
 		return
+
+	if obj.has_meta("last_drag_angle"):
+		obj.remove_meta("last_drag_angle")
 
 	for r in obj.get("carrier_rats"):
 		if r:

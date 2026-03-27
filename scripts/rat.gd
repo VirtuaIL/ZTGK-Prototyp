@@ -552,10 +552,3 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 
 func _do_move_and_slide() -> void:
 	move_and_slide()
-	# Optional logic: make rats push specific rigid bodies
-	var push_force = 120.0
-	for i in get_slide_collision_count():
-		var c = get_slide_collision(i)
-		var collider = c.get_collider()
-		if collider is RigidBody3D and collider.is_in_group("capstan"):
-			collider.apply_impulse(-c.get_normal() * push_force * get_physics_process_delta_time(), c.get_position() - collider.global_position)
