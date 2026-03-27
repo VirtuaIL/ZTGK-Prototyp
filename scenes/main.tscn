@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/turret_solid.tscn" id="9_vxglm"]
@@ -32,6 +32,7 @@
 [ext_resource type="PackedScene" uid="uid://b23uv66hbun6u" path="res://scenes/floor_tile_noCollision.tscn" id="26_2wyq8"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="30_fv21b"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="31_tel4y"]
+[ext_resource type="PackedScene" path="res://scenes/capstan.tscn" id="32_cpst"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -127,7 +128,7 @@ fov = 45.0
 size = 16.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.31198, -1.1444092e-05, -131.72278)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.967451, -1.1444092e-05, -15.117714)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -560,6 +561,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.
 
 [node name="door" parent="doors" unique_id=1508054242 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.582687, 0, 0)
+slide_distance = 5.0
 
 [node name="door5" parent="doors" unique_id=670439689 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.585457, 0, -28.243254)
@@ -749,6 +751,15 @@ doorId = 5
 [node name="LaserButton3" parent="buttons" unique_id=1166963993 instance=ExtResource("17_muem4")]
 transform = Transform3D(1.9106855e-15, -4.371139e-08, -1, -1, -4.371139e-08, 0, -4.371139e-08, 1, -4.371139e-08, -102.61981, 0.9679986, -163.36357)
 doorId = 7
+
+[node name="capstans" type="Node3D" parent="." unique_id=1905176594]
+
+[node name="Capstan1" parent="capstans" unique_id=1279539192 instance=ExtResource("32_cpst")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.337795, 0, -11.252401)
+detection_radius = 1.2
+rotation_sensitivity = 0.005
+min_rats_to_turn = 1
+visual_rotation_mult = 0.5
 
 [node name="lasers" type="Node3D" parent="." unique_id=471287475]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.35614, 0, -115.46873)

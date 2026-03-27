@@ -52,6 +52,17 @@ func close() -> void:
 		_animate_to(_closed_position)
 
 
+## Called by Capstan every frame to smoothly position the door between
+## closed (0.0) and open (1.0).  Bypasses the tween animation.
+func set_open_progress(progress: float) -> void:
+	progress = clampf(progress, 0.0, 1.0)
+	if is_inverse:
+		# inverse door: fully open at progress 0, closes as progress grows
+		position = _open_position.lerp(_closed_position, progress)
+	else:
+		position = _closed_position.lerp(_open_position, progress)
+
+
 func _animate_to(target_pos: Vector3) -> void:
 	var tween := create_tween()
 	tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
