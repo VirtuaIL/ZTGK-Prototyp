@@ -6,6 +6,7 @@ class_name door
 
 # How far (in local X units) the door slides when opened
 @export var slide_distance: float = 9.0
+@export var slide_axis: Vector3 = Vector3.RIGHT
 
 # Duration of the slide animation in seconds
 @export var slide_duration: float = 1.8
@@ -22,7 +23,11 @@ var _current_tween: Tween
 func _ready() -> void:
 	add_to_group("doors")
 	_closed_position = position
-	_open_position = position + global_transform.basis.x * slide_distance
+	var axis := slide_axis
+	if axis.length() < 0.001:
+		axis = Vector3.RIGHT
+	var world_axis := global_transform.basis * axis.normalized()
+	_open_position = position + world_axis * slide_distance
 	
 	if is_inverse:
 		position = _open_position

@@ -108,8 +108,8 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var object_rotation_step: float = 22.5
 @export var combat_circle_radius: float = 2.5
 @export var combat_circle_rotation_speed: float = 7.0
-@export var capstan_cursor_snap_radius: float = 2.4
-@export var capstan_cursor_ring_radius: float = 4.8
+@export var capstan_cursor_snap_radius: float = 6.0
+@export var capstan_cursor_ring_radius: float = 8.0
 @export var capstan_cursor_rotation_scale: float = 0.6
 @export var capstan_rat_required_radius: float = 2.4
 
