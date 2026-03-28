@@ -54,7 +54,7 @@ shape = SubResource("BoxShape3D_d5akn")
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
 
 [node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(1, 0, -1.7763568e-15, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 0, 0)
+transform = Transform3D(1, 0, -1.7763568e-15, 0, 0.9999998, 0, 0, 0, 0.9999999, 0, 0, 0)
 
 [node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("8_mqh5v")]
 transform = Transform3D(0.875, 0, -1.7763568e-15, 0, 2.1342854, 0, 0, 0, 0.99999994, 0.33958098, 0, 28.21774)
@@ -66,7 +66,7 @@ transform = Transform3D(-6.556708e-08, 0, 0.36325, 0, 2.1342854, 0, -4.1293874, 
 transform = Transform3D(-3.278354e-08, 0, 0.36325, 0, 2.1342854, 0, -2.0646937, 0, -4.3711385e-08, -1.7315288, 0, 27.428783)
 
 [node name="wall5" parent="walls" unique_id=152295184 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(-1.0223e-07, 0, 0.36325, 0, 0.99999994, 0, -6.4384027, 0, -4.3711385e-08, 2.3929312, 0, 16.61305)
+transform = Transform3D(-2.6226832e-07, 0, 0.363, 0, 0.9999998, 0, -5.9999995, 0, -1.586723e-08, 2.3929312, 0, 14.766268)
 
 [node name="wall6" parent="walls" unique_id=887796119 instance=ExtResource("8_mqh5v")]
 transform = Transform3D(-1.5334712e-09, 0, 3.8470309, 0, 0.21345077, 0, -0.09657738, 0, -4.6292925e-07, -0.17533174, 0, 23.200459)
@@ -87,14 +87,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.894108, 0, 8.302832)
 
 [node name="sprites" type="Node3D" parent="." unique_id=284390696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+visible = false
 
 [node name="Sprite3D" type="Sprite3D" parent="sprites" unique_id=229734907]
-transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -17.534431, 0.037058353, 1.4006658)
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -7.388344, 0.037058353, 4.4006658)
 pixel_size = 0.005
 texture = ExtResource("13_0qwwm")
 
 [node name="Sprite3D2" type="Sprite3D" parent="sprites" unique_id=743921769]
-transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -14.259842, 0.037058353, 0.93287325)
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -1.9810905, 0.037058353, 3.9328732)
 pixel_size = 0.002
 texture = ExtResource("14_t4umt")
 
