@@ -29,8 +29,8 @@ var current_state: State = State.IDLE
 @export var max_health: float = 1000.0
 var health: float = max_health
 
-var projectile_scene: PackedScene = preload("res://scenes/projectile.tscn")
-var enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
+var projectile_scene: PackedScene = preload("res://scenes/projectiles/projectile.tscn")
+var enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
 
 var mode_timer: float = 0.0
 
