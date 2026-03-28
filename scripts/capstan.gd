@@ -2,6 +2,7 @@ extends RigidBody3D
 class_name Capstan
 
 @export var doorId: int = 0
+@export var trapId: int = -1
 @export var required_rotations: float = 3.0
 @export var cursor_rotate_strength: float = 0.45
 @export var cursor_rotate_max_speed: float = 3.0
@@ -38,10 +39,21 @@ func apply_cursor_rotation(delta_angle: float, delta: float) -> void:
 
 func _get_target_doors() -> Array[Node]:
     var result: Array[Node] = []
-    var objects := get_tree().get_nodes_in_group("doors") + get_tree().get_nodes_in_group("bosses")
-    for d in objects:
-        if "doorId" in d and d.doorId == doorId:
-            result.append(d)
+    
+    # Target doors & bosses by doorId
+    if doorId != -1:
+        var door_objects := get_tree().get_nodes_in_group("doors") + get_tree().get_nodes_in_group("bosses")
+        for d in door_objects:
+            if "doorId" in d and d.doorId == doorId:
+                result.append(d)
+                
+    # Target traps by trapId
+    if trapId != -1:
+        var trap_objects := get_tree().get_nodes_in_group("progress_targets")
+        for t in trap_objects:
+            if "trapId" in t and t.trapId == trapId:
+                result.append(t)
+                
     return result
 
 

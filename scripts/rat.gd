@@ -82,8 +82,8 @@ func _ready() -> void:
 		randf_range(-1.5, 1.5)
 	)
 	
-	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
-	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
+	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls, Layer 6 = Rats (32)
+	collision_layer = 32 # Rats need to be detected by Area3Ds (like Heat Grates)
 	collision_mask = 9 | (1 << 8)  # Floor (1) + Walls (8) + RatStructures (9)
 	
 	floor_snap_length = 0.5
