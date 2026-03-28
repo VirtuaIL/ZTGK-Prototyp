@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://duon2o5gslpwo"]
+
+[ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/main.gd" id="1_n0tbt"]
+[ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_a8nm3"]
+[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="3_6tsk5"]
+[ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_gh2xu"]
+[ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="5_ugomt"]
+[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="6_bv5l5"]
+[ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="7_uhimm"]
+[ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_ddy05"]
+[ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_bsu0v"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
+panorama = ExtResource("2_a8nm3")
+
+[sub_resource type="Sky" id="Sky_0ld40"]
+sky_material = SubResource("PanoramaSkyMaterial_dp3eg")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+background_color = Color(0.7083283, 0.11449968, 0.5420097, 1)
+sky = SubResource("Sky_0ld40")
+ambient_light_source = 2
+ambient_light_color = Color(0.3, 0.28, 0.35, 1)
+ambient_light_energy = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
+cull_mode = 2
+shading_mode = 0
+albedo_texture = ExtResource("2_a8nm3")
+
+[sub_resource type="SphereMesh" id="SphereMesh_skydome"]
+material = SubResource("StandardMaterial3D_skydome")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
+
+[node name="Main" type="Node3D" unique_id=709470400]
+script = ExtResource("1_n0tbt")
+cam_look_ahead_max = 4.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
+transform = Transform3D(0.8660253, -0.25000033, 0.43301278, 0, 0.8660252, 0.50000036, -0.50000024, -0.43301296, 0.7499997, 5, 10, 5)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=759215990]
+transform = Transform3D(0.25881907, -0.9330127, 0.25000006, 0, 0.2588191, 0.9659258, -0.9659258, -0.25000006, 0.06698732, 10, 50, 10)
+projection = 1
+fov = 45.0
+size = 16.0
+
+[node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("SphereMesh_skydome")
+script = ExtResource("3_6tsk5")
+
+[node name="RatManager" type="Node3D" parent="." unique_id=169060230]
+script = ExtResource("4_gh2xu")
+use_wide_brush = true
+
+[node name="Player" parent="." unique_id=1407634471 instance=ExtResource("5_ugomt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.235979, -1.1444092e-05, -0.50224495)
+
+[node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
+script = ExtResource("6_bv5l5")
+
+[node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+
+[node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -12.575114)
+collision_mask = 3
+script = ExtResource("7_uhimm")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="levels" type="Node3D" parent="." unique_id=428045097]
+
+[node name="Level1" parent="levels" unique_id=1719073169 instance=ExtResource("8_ddy05")]
+
+[node name="Level2" parent="levels" unique_id=202538783 instance=ExtResource("9_bsu0v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
