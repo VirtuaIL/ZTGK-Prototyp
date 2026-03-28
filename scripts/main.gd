@@ -50,8 +50,8 @@ var _cam_look_ahead: Vector3 = Vector3.ZERO
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
-@onready var stratagem_system: Node = $StratagemSystem
-@onready var stratagem_hud: CanvasLayer = $StratagemHUD
+@onready var stratagem_system: Node = get_node_or_null("StratagemSystem")
+@onready var stratagem_hud: CanvasLayer = get_node_or_null("StratagemHUD")
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
 
 
@@ -72,11 +72,12 @@ func _init_game() -> void:
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
 	
-	# Connect stratagem signals
-	stratagem_system.stratagem_menu_toggled.connect(_on_stratagem_menu_toggled)
-	stratagem_system.stratagem_input_received.connect(_on_stratagem_input)
-	stratagem_system.stratagem_completed.connect(_on_stratagem_completed)
-	stratagem_system.stratagem_failed.connect(_on_stratagem_failed)
+	# Connect stratagem signals (optional)
+	if stratagem_system and stratagem_hud:
+		stratagem_system.stratagem_menu_toggled.connect(_on_stratagem_menu_toggled)
+		stratagem_system.stratagem_input_received.connect(_on_stratagem_input)
+		stratagem_system.stratagem_completed.connect(_on_stratagem_completed)
+		stratagem_system.stratagem_failed.connect(_on_stratagem_failed)
 	
 	# Setup Ability HUD
 	ability_hud.rat_manager = rat_manager
