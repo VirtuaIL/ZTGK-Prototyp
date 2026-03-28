@@ -171,6 +171,10 @@ var structure_integrity: float = structure_max_integrity
 @export var structure_lifetime: float = 0.0 # seconds before wall crumbles (0 = never)
 var _structure_timer: float = 0.0
 
+@export var bridge_collapse_time: float = 2.5
+var bridge_stress: float = 0.0
+var _stress_update_timer: float = 0.0
+
 
 func _ready() -> void:
 	add_to_group("rat_manager")
@@ -434,6 +438,26 @@ func _process(delta: float) -> void:
 			structure_integrity = structure_max_integrity
 			_structure_timer = 0.0
 
+	if _stress_update_timer > 0.0:
+		_stress_update_timer -= delta
+		var shake := 0.05 * (bridge_stress / bridge_collapse_time)
+		unified_shape_combiner.position = Vector3(
+			randf_range(-shake, shake),
+			0.0,
+			randf_range(-shake, shake)
+		)
+	elif bridge_stress > 0.0:
+		bridge_stress = maxf(0.0, bridge_stress - delta * 0.5)
+		if bridge_stress <= 0.0:
+			unified_shape_combiner.position = Vector3.ZERO
+		else:
+			var shake := 0.05 * (bridge_stress / bridge_collapse_time)
+			unified_shape_combiner.position = Vector3(
+				randf_range(-shake, shake),
+				0.0,
+				randf_range(-shake, shake)
+			)
+
 	# ── Neighbor throttle ──
 	_neighbor_tick += 1
 	if _neighbor_tick >= NEIGHBOR_TICK:
@@ -447,17 +471,9 @@ func _process(delta: float) -> void:
 
 
 func _update_edge_avoidance() -> void:
-	for rat in rats:
-		var r := rat as Rat
-		if r:
-			# Rats traveling to build or already placed don't need edge avoidance
-			# (it's already skipped in _should_block_edge), but FOLLOW rats
-			# must keep it ON even while the player is drawing, so they don't
-			# push each other off the edge.
-			if r.state == Rat.State.TRAVEL_TO_BUILD or r.state == Rat.State.WAITING_FOR_FORMATION or r.state == Rat.State.STATIC:
-				r.edge_avoidance_enabled = false
-			else:
-				r.edge_avoidance_enabled = true
+	# Edge avoidance completely disabled per user request.
+	# (Leaving function intact but doing nothing so it can be called safely)
+	pass
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
@@ -1357,6 +1373,15 @@ func receive_laser(delta: float) -> void:
 		structure_integrity = structure_max_integrity
 
 
+func add_bridge_stress(amount: float) -> void:
+	if not _has_static_rats():
+		return
+	bridge_stress += amount
+	_stress_update_timer = 0.1
+	if bridge_stress >= bridge_collapse_time:
+		recall_all_rats()
+
+
 func on_projectile_hit() -> void:
 	if not _has_static_rats():
 		return
@@ -1403,6 +1428,8 @@ func recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 	_structure_timer = 0.0
+	bridge_stress = 0.0
+	unified_shape_combiner.position = Vector3.ZERO
 
 	# Respawn only at rat_spawn now.
 
@@ -1447,6 +1474,8 @@ func hard_recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 	_structure_timer = 0.0
+	bridge_stress = 0.0
+	unified_shape_combiner.position = Vector3.ZERO
 
 
 func _process_hover() -> void:
