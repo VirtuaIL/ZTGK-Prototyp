@@ -69,8 +69,11 @@ func _init_game() -> void:
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
 	
-	rat_manager.setup_player(player)
-	rat_manager.ensure_min_cap()
+	if rat_manager and player:
+		rat_manager.setup_player(player)
+		rat_manager.ensure_min_cap()
+	else:
+		push_warning("RatManager or Player missing in scene; skipping setup_player.")
 	
 	# Connect stratagem signals (optional)
 	if stratagem_system and stratagem_hud:
@@ -80,7 +83,8 @@ func _init_game() -> void:
 		stratagem_system.stratagem_failed.connect(_on_stratagem_failed)
 	
 	# Setup Ability HUD
-	ability_hud.rat_manager = rat_manager
+	if ability_hud:
+		ability_hud.rat_manager = rat_manager
 
 
 func _setup_input_map() -> void:
@@ -531,6 +535,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _update_recall_hold(delta: float) -> void:
+	if not rat_manager:
+		return
 	var holding := Input.is_action_pressed("recall_rats")
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 0.5)
