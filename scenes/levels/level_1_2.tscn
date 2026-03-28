@@ -11,7 +11,6 @@
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="14_xworo"]
 [ext_resource type="Script" uid="uid://w7ya2jovaj51" path="res://scripts/heat_grate_controller.gd" id="15_wwjag"]
 [ext_resource type="PackedScene" uid="uid://cxheatgrate" path="res://scenes/objects/heat_grate.tscn" id="16_rvwo1"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="17_yxkvy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -185,6 +184,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 4.4)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -2.4330902, 0, -4.185296)
 doorId = 1
 trapId = 1
-
-[node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1787962070]
-script = ExtResource("17_yxkvy")
