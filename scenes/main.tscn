@@ -5,9 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_85g3d"]
+[ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_choun"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -62,7 +63,7 @@ script = ExtResource("4_rat_man")
 use_wide_brush = true
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.235979, -1.1444092e-05, -0.50224495)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4346104, -1.1444092e-05, 84.895836)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
@@ -70,11 +71,19 @@ script = ExtResource("7_ability_hud")
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -12.575114)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -11.356438)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=1704942286]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -4.74444, 1.855777, 85.402)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=492470218]
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=428045097]
@@ -83,3 +92,6 @@ shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Level2" parent="levels" unique_id=202538783 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
+
+[node name="Level4" parent="levels" unique_id=1632914966 instance=ExtResource("10_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0013961792, 0.034557343, 57.389484)
