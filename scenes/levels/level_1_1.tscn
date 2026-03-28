@@ -1,10 +1,5 @@
 [gd_scene format=3 uid="uid://cc5i52fwmdxxr"]
 
-[ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/main.gd" id="1_bahl2"]
-[ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_np2pn"]
-[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="3_v6ha0"]
-[ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="4_gmpev"]
-[ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="5_mkypq"]
 [ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="6_ndtll"]
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="7_7h2jl"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="8_mqh5v"]
@@ -18,28 +13,6 @@
 [ext_resource type="PackedScene" uid="uid://cxheatgrate" path="res://scenes/objects/heat_grate.tscn" id="16_vmrhw"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="17_cfnpk"]
 
-[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_d5akn"]
-panorama = ExtResource("2_np2pn")
-
-[sub_resource type="Sky" id="Sky_0ld40"]
-sky_material = SubResource("PanoramaSkyMaterial_d5akn")
-
-[sub_resource type="Environment" id="Environment_wbtxt"]
-background_mode = 2
-background_color = Color(0.7083283, 0.11449968, 0.5420097, 1)
-sky = SubResource("Sky_0ld40")
-ambient_light_source = 2
-ambient_light_color = Color(0.3, 0.28, 0.35, 1)
-ambient_light_energy = 0.5
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
-cull_mode = 2
-shading_mode = 0
-albedo_texture = ExtResource("2_np2pn")
-
-[sub_resource type="SphereMesh" id="SphereMesh_x2fux"]
-material = SubResource("StandardMaterial3D_skydome")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
 
@@ -51,34 +24,6 @@ size = Vector2(40, 40)
 size = Vector3(40.17141, 0.001, 16.172592)
 
 [node name="Level1" type="Node3D" unique_id=1719073169]
-script = ExtResource("1_bahl2")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=372778154]
-environment = SubResource("Environment_wbtxt")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1524449378]
-transform = Transform3D(0.8660253, -0.25000033, 0.43301278, 0, 0.8660252, 0.50000036, -0.50000024, -0.43301296, 0.7499997, 5, 10, 5)
-shadow_enabled = true
-
-[node name="Skydome" type="MeshInstance3D" parent="." unique_id=300046168]
-transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.0004582405, -0.01813507, 0.043559074)
-visible = false
-cast_shadow = 0
-mesh = SubResource("SphereMesh_x2fux")
-script = ExtResource("3_v6ha0")
-
-[node name="Camera3D" type="Camera3D" parent="." unique_id=618399990]
-transform = Transform3D(0.25881907, -0.93301266, 0.25000003, 0, 0.25881907, 0.9659258, -0.9659258, -0.25000003, 0.06698731, 10, 50, 10)
-projection = 1
-fov = 45.0
-size = 16.0
-
-[node name="Player" parent="." unique_id=70268198 instance=ExtResource("4_gmpev")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.744907, -1.1444092e-05, 1.0271235)
-
-[node name="RatManager" type="Node3D" parent="." unique_id=530548711]
-script = ExtResource("5_mkypq")
-use_wide_brush = true
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
@@ -132,11 +77,6 @@ transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06,
 [node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("9_7o3do")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0, 0)
 
-[node name="capstan" parent="objects" unique_id=426294487 instance=ExtResource("10_o7j4k")]
-transform = Transform3D(0.625, 0, 0, 0, 1, 0, 0, 0, 0.5882353, -11.793706, 3.8146973e-06, -0.2842307)
-doorId = 1
-trapId = 1
-
 [node name="doors" type="Node3D" parent="." unique_id=1525246903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
 
@@ -159,7 +99,7 @@ pixel_size = 0.002
 texture = ExtResource("14_t4umt")
 
 [node name="HeatGrateController" type="Node3D" parent="." unique_id=688171962]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.104088, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.491096, 0, 0)
 script = ExtResource("15_4yk0h")
 mode = 1
 trapId = 1
@@ -239,6 +179,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 4.4)
 
 [node name="@Area3D@89744" parent="HeatGrateController" unique_id=114929653 instance=ExtResource("16_vmrhw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 4.4)
+
+[node name="capstan" parent="." unique_id=426294487 instance=ExtResource("10_o7j4k")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -2.4330902, 0, -4.185296)
+doorId = 1
+trapId = 1
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1787962070]
 script = ExtResource("17_cfnpk")

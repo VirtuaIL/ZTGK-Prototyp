@@ -1,10 +1,7 @@
 [gd_scene format=3 uid="uid://tilyplb56vtw"]
 
-[ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/main.gd" id="1_v8d84"]
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_gw1l3"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="3_p4se4"]
-[ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="4_sibr7"]
-[ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="5_lkn2k"]
 [ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="6_sbygb"]
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="7_5niy6"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="8_wikm6"]
@@ -51,7 +48,6 @@ size = Vector2(40, 40)
 size = Vector3(40.17141, 0.001, 16.172592)
 
 [node name="Level1" type="Node3D" unique_id=1719073169]
-script = ExtResource("1_v8d84")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=372778154]
 environment = SubResource("Environment_wbtxt")
@@ -72,13 +68,6 @@ transform = Transform3D(0.25881907, -0.93301266, 0.25000003, 0, 0.25881907, 0.96
 projection = 1
 fov = 45.0
 size = 16.0
-
-[node name="Player" parent="." unique_id=70268198 instance=ExtResource("4_sibr7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.744907, -1.1444092e-05, 1.0271235)
-
-[node name="RatManager" type="Node3D" parent="." unique_id=530548711]
-script = ExtResource("5_lkn2k")
-use_wide_brush = true
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
