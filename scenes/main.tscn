@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_tipki"]
+[ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_85g3d"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -42,7 +43,6 @@ environment = SubResource("Environment_1")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
 transform = Transform3D(0.8660253, -0.25000033, 0.43301278, 0, 0.8660252, 0.50000036, -0.50000024, -0.43301296, 0.7499997, 5, 10, 5)
-shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=759215990]
 transform = Transform3D(0.25881907, -0.9330127, 0.25000006, 0, 0.2588191, 0.9659258, -0.9659258, -0.25000006, 0.06698732, 10, 50, 10)
@@ -62,7 +62,7 @@ script = ExtResource("4_rat_man")
 use_wide_brush = true
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.767708, -1.1444092e-05, -0.17077446)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.235979, -1.1444092e-05, -0.50224495)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
@@ -70,7 +70,7 @@ script = ExtResource("7_ability_hud")
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -53.196114, 1.855777, -25.726896)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -12.575114)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 
@@ -80,3 +80,6 @@ shape = SubResource("BoxShape3D_yq6so")
 [node name="levels" type="Node3D" parent="." unique_id=428045097]
 
 [node name="Level1" parent="levels" unique_id=1719073169 instance=ExtResource("8_tipki")]
+
+[node name="Level2" parent="levels" unique_id=202538783 instance=ExtResource("9_85g3d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)

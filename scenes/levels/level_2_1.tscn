@@ -1,0 +1,202 @@
+[gd_scene format=3 uid="uid://jtyjfnfke2a5"]
+
+[ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="1_ng5v0"]
+[ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="2_yhmlo"]
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="3_c0cgf"]
+[ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="4_clsa1"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="5_4g7v8"]
+[ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="6_ic842"]
+[ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="7_506bi"]
+[ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="8_cli2m"]
+[ext_resource type="Script" uid="uid://w7ya2jovaj51" path="res://scripts/heat_grate_controller.gd" id="9_x2i05"]
+[ext_resource type="PackedScene" uid="uid://cxheatgrate" path="res://scenes/objects/heat_grate.tscn" id="10_mhwp5"]
+[ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_4kqca"]
+[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="12_lwif6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_tr1x6"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector2(40, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
+size = Vector3(32.02992, 0.001, 28.322111)
+
+[node name="Level1" type="Node3D" unique_id=1719073169]
+
+[node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+
+[node name="grates" type="Node3D" parent="." unique_id=290464308]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)
+
+[node name="grate" parent="grates" unique_id=16392337 instance=ExtResource("1_ng5v0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.21361876, 0, -10.059679)
+doorId = 2
+
+[node name="grate5" parent="grates" unique_id=1981168902 instance=ExtResource("1_ng5v0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.611971, 0, -10.059678)
+doorId = 2
+
+[node name="grate3" parent="grates" unique_id=688918615 instance=ExtResource("2_yhmlo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.669754, 0, -10.046431)
+
+[node name="grate4" parent="grates" unique_id=1071654156 instance=ExtResource("2_yhmlo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.686916, 0, -10.046431)
+
+[node name="grate2" parent="grates" unique_id=505040133 instance=ExtResource("2_yhmlo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6408396, 0, -10.002183)
+
+[node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="floor" unique_id=439866030]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.7, -4.078333, -0.022816658, -5.557475)
+mesh = SubResource("PlaneMesh_tr1x6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0707455, 0, -5.448743)
+shape = SubResource("BoxShape3D_d5akn")
+
+[node name="walls" type="Node3D" parent="." unique_id=58504239]
+transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
+
+[node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(1.5, 0, -1.7763568e-15, 0, 0.99999994, 0, 0, 0, 0.99999994, -1.2624552, 0, 5.5158854)
+
+[node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(1.5, 0, -1.7763568e-15, 0, 2.1339998, 0, 0, 0, 0.99999994, -1.2529159, 0, 28.21774)
+
+[node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(-7.430936e-08, 0, 0.363, 0, 2.1339996, 0, -1.6999999, 0, -1.586723e-08, -4.6659646, 0, 9.380684)
+
+[node name="wall4" parent="walls" unique_id=1333403362 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(-1.09278474e-07, 0, 0.363, 0, 2.1339998, 0, -2.5, 0, -1.5867231e-08, -4.6131363, 0, 22.610184)
+
+[node name="wall7" parent="walls" unique_id=2081728804 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(-3.278352e-08, 0, 0.36325, 0, 2.1342854, 0, -2.0646935, 0, -4.371138e-08, 0.53883874, 0, 23.031597)
+
+[node name="wall5" parent="walls" unique_id=152295184 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(-1.5298986e-07, 0, 0.363, 0, 0.99999994, 0, -3.4999998, 0, -1.5867231e-08, 2.3929312, 0, 14.01875)
+
+[node name="wall8" parent="walls" unique_id=914597567 instance=ExtResource("3_c0cgf")]
+transform = Transform3D(-2.1855694e-08, 0, 0.363, 0, 0.9999998, 0, -0.49999994, 0, -1.586723e-08, 2.3929315, 0, 26.703423)
+
+[node name="objects" type="Node3D" parent="." unique_id=510466418]
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
+
+[node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("4_clsa1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, -20.04792, 0, -0.5157285)
+
+[node name="doors" type="Node3D" parent="." unique_id=1525246903]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
+
+[node name="door" parent="doors" unique_id=432057396 instance=ExtResource("5_4g7v8")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.615858, 0, -11.661636)
+
+[node name="button" parent="doors" unique_id=1670576418 instance=ExtResource("6_ic842")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.9108715, 0, -5.979533)
+
+[node name="sprites" type="Node3D" parent="." unique_id=284390696]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+visible = false
+
+[node name="Sprite3D" type="Sprite3D" parent="sprites" unique_id=229734907]
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -7.388344, 0.037058353, 4.4006658)
+pixel_size = 0.005
+texture = ExtResource("7_506bi")
+
+[node name="Sprite3D2" type="Sprite3D" parent="sprites" unique_id=743921769]
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -1.9810905, 0.037058353, 3.9328732)
+pixel_size = 0.002
+texture = ExtResource("8_cli2m")
+
+[node name="HeatGrateController" type="Node3D" parent="." unique_id=688171962]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2984357, 0, -3.9467278)
+script = ExtResource("9_x2i05")
+mode = 1
+trapId = 2
+patterns = Array[String](["1111110001100011000111111", "0000001110010100111000000", "1010101010101010101010101", "0101010101010101010101010"])
+grate_scene = ExtResource("10_mhwp5")
+
+[node name="HeatGrate" parent="HeatGrateController" unique_id=596657464 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, -4.4)
+
+[node name="@Area3D@89721" parent="HeatGrateController" unique_id=2015074575 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, -4.4)
+
+[node name="@Area3D@89722" parent="HeatGrateController" unique_id=1076060782 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.4)
+
+[node name="@Area3D@89723" parent="HeatGrateController" unique_id=2050076281 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, -4.4)
+
+[node name="@Area3D@89724" parent="HeatGrateController" unique_id=1666832796 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, -4.4)
+
+[node name="@Area3D@89725" parent="HeatGrateController" unique_id=1028913598 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, -2.2)
+
+[node name="@Area3D@89726" parent="HeatGrateController" unique_id=981668890 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, -2.2)
+
+[node name="@Area3D@89727" parent="HeatGrateController" unique_id=1871390939 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.2)
+
+[node name="@Area3D@89728" parent="HeatGrateController" unique_id=337865611 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, -2.2)
+
+[node name="@Area3D@89729" parent="HeatGrateController" unique_id=574235625 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, -2.2)
+
+[node name="@Area3D@89730" parent="HeatGrateController" unique_id=195080119 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 0)
+
+[node name="@Area3D@89731" parent="HeatGrateController" unique_id=665934140 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 0)
+
+[node name="@Area3D@89732" parent="HeatGrateController" unique_id=1303568308 instance=ExtResource("10_mhwp5")]
+
+[node name="@Area3D@89733" parent="HeatGrateController" unique_id=855680081 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 0)
+
+[node name="@Area3D@89734" parent="HeatGrateController" unique_id=781008019 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 0)
+
+[node name="@Area3D@89735" parent="HeatGrateController" unique_id=2133200096 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 2.2)
+
+[node name="@Area3D@89736" parent="HeatGrateController" unique_id=2076144280 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 2.2)
+
+[node name="@Area3D@89737" parent="HeatGrateController" unique_id=1818617332 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.2)
+
+[node name="@Area3D@89738" parent="HeatGrateController" unique_id=350901487 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 2.2)
+
+[node name="@Area3D@89739" parent="HeatGrateController" unique_id=1174941122 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 2.2)
+
+[node name="@Area3D@89740" parent="HeatGrateController" unique_id=975461111 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 4.4)
+
+[node name="@Area3D@89741" parent="HeatGrateController" unique_id=129484114 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 4.4)
+
+[node name="@Area3D@89742" parent="HeatGrateController" unique_id=1982811953 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.4)
+
+[node name="@Area3D@89743" parent="HeatGrateController" unique_id=1567216661 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 4.4)
+
+[node name="@Area3D@89744" parent="HeatGrateController" unique_id=114929653 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 4.4)
+
+[node name="capstan" parent="." unique_id=426294487 instance=ExtResource("11_4kqca")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -13.2136345, 0, -14.273764)
+doorId = 2
+trapId = 2
+
+[node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1787962070]
+script = ExtResource("12_lwif6")
