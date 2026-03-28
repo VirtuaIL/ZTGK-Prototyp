@@ -16,7 +16,7 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var separation_force: float = 12.0
 @export var max_speed:        float = 26.0
 @export var cursor_follow_speed_scale: float = 0.6
-@export var edge_avoidance_enabled: bool = true
+@export var edge_avoidance_enabled: bool = false
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
 @export var release_boost_speed: float = 14.0
@@ -62,7 +62,7 @@ var is_carrier: bool = false
 
 # Fall recovery
 @export var fall_death_y: float = -1.0
-@export var respawn_time: float = 1.0
+@export var respawn_time: float = 2.0
 @export var spawn_player_distance: float = 3.0
 @export var respawn_near_player_when_near_spawn: bool = true
 
@@ -119,11 +119,12 @@ func _physics_process(delta: float) -> void:
 
 	# Distance recovery — if a follower gets too far (e.g., stuck behind doors), snap near player.
 	# Avoid snapping while falling off the world.
-	if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
-		var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
-		if dist_sq > max_follow_distance * max_follow_distance:
-			_teleport_to_player()
-			return
+	# (Disabled per user request: rats should not teleport to player based on distance)
+	# if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
+	# 	var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
+	# 	if dist_sq > max_follow_distance * max_follow_distance:
+	# 		_teleport_to_player()
+	# 		return
 
 	# Gravity and fall-recovery are skipped for anchored rats (near build target)
 	# so they can float as bridge pieces

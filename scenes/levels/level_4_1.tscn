@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://xwk3gx5566ja"]
+
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="3_h2ymd"]
+[ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="4_14w03"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="5_iwe2b"]
+[ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="6_7di0m"]
+[ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="7_1h8qf"]
+[ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="8_kruoe"]
+[ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_83jg5"]
+[ext_resource type="PackedScene" uid="uid://ck54l2om20a8l" path="res://scenes/objects/fragile_bridge_puzzle.tscn" id="12_fbbridge"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_tr1x6"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector2(40, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
+size = Vector3(40.131443, 0.001, 6.9942436)
+
+[node name="Level4" type="Node3D" unique_id=1719073169]
+
+[node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+
+[node name="grates" type="Node3D" parent="." unique_id=290464308]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)
+
+[node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="floor" unique_id=439866030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.31, -4.078333, -0.022816658, 24.63662)
+mesh = SubResource("PlaneMesh_tr1x6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.82, -3.9334621, 0, 24.605976)
+shape = SubResource("BoxShape3D_d5akn")
+
+[node name="walls" type="Node3D" parent="." unique_id=58504239]
+transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
+
+[node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(3.615, 0, 0, 0, 1, 0, 0, 0, 1, -0.8948995, 0, 3.528882)
+
+[node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(3.7, 0, -1.7763568e-15, 0, 2.1339996, 0, 0, 0, 0.9999999, -1.0064998, 0, 30.689905)
+
+[node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(-9.0701135e-08, 0, 0.363, 0, 2.1339998, 0, -2.075, 0, -1.5867231e-08, -9.228432, 0, 8.43771)
+
+[node name="wall4" parent="walls" unique_id=1333403362 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(-1.3375684e-07, 0, 0.363, 0, 2.1339998, 0, -3.06, 0, -1.5867231e-08, -9.175604, 0, 23.91732)
+
+[node name="wall5" parent="walls" unique_id=1981168902 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(-1.3375684e-07, 0, 0.363, 0, 2.1339993, 0, -3.06, 0, -1.5867226e-08, 8.0782585, 0, 26.937996)
+
+[node name="wall6" parent="walls" unique_id=1873782651 instance=ExtResource("3_h2ymd")]
+transform = Transform3D(-1.3375684e-07, 0, 0.363, 0, 2.1339993, 0, -3.06, 0, -1.5867224e-08, 8.0782585, 0, 8.157604)
+
+[node name="objects" type="Node3D" parent="." unique_id=510466418]
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
+
+[node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("4_14w03")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, -18.715775, 0, 16.857506)
+
+[node name="doors" type="Node3D" parent="." unique_id=1525246903]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
+
+[node name="door" parent="doors" unique_id=432057396 instance=ExtResource("5_iwe2b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.615858, 0, -29.911503)
+doorId = 4
+
+[node name="button" parent="doors" unique_id=1670576418 instance=ExtResource("6_7di0m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.9108715, 0, -22.242367)
+doorId = 4
+
+[node name="door2" parent="doors" unique_id=1247533113 instance=ExtResource("5_iwe2b")]
+transform = Transform3D(1, 0, 0, 0, 0.01, 0, 0, 0, 57, -16.769758, -0.07315326, 4.362)
+doorId = 5
+
+[node name="sprites" type="Node3D" parent="." unique_id=284390696]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+visible = false
+
+[node name="Sprite3D" type="Sprite3D" parent="sprites" unique_id=229734907]
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -7.388344, 0.037058353, 4.4006658)
+pixel_size = 0.005
+texture = ExtResource("7_1h8qf")
+
+[node name="Sprite3D2" type="Sprite3D" parent="sprites" unique_id=743921769]
+transform = Transform3D(-4.371139e-08, -1, 4.371139e-08, -8.742278e-08, 4.3711392e-08, 1, -1, 4.3711385e-08, -8.742278e-08, -1.9810905, 0.037058353, 3.9328732)
+pixel_size = 0.002
+texture = ExtResource("8_kruoe")
+
+[node name="capstan" parent="." unique_id=426294487 instance=ExtResource("11_83jg5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -13.2136345, 0, -31.619951)
+doorId = 5
+
+[node name="FragileBridgePuzzle" parent="." unique_id=5555555 instance=ExtResource("12_fbbridge")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.157, -0.025775313, -4.0381994)
+
+[node name="floor2" type="StaticBody3D" parent="." unique_id=390767542]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -56.50395)
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="floor2" unique_id=864304891]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.31, -4.078333, -0.022816658, 24.63662)
+mesh = SubResource("PlaneMesh_tr1x6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="floor2" unique_id=1503296172]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.82, -3.9334621, 0, 24.605976)
+shape = SubResource("BoxShape3D_d5akn")
