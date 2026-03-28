@@ -34,7 +34,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
-[node name="Main" type="Node3D" unique_id=709470400]
+[node name="Main2" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
 cam_look_ahead_max = 4.0
 
