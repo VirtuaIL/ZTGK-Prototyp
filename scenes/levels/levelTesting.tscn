@@ -151,6 +151,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.76077, 0.18543625, -279.82
 script = ExtResource("5_ftjox")
 min_cap = 35
 use_wide_brush = true
+bridge_collapse_time = 1.0
 
 [node name="StratagemSystem" type="Node" parent="." unique_id=371444767]
 script = ExtResource("6_rdrci")
