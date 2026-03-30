@@ -128,6 +128,7 @@ func die() -> void:
 	velocity = Vector3.ZERO
 	current_hp = max_hp
 	time_since_last_damage = 0.0
+	is_stratagem_mode = false
 	_update_health_bar()
 	player_died.emit()
 

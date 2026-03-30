@@ -16,6 +16,10 @@ enum AIState {WANDER, SUSPICIOUS, CHASE, CATCH, PASSIVE}
 @export var alert_decay_rate: float = 1.0    # Suspicion lost per second when player not visible
 
 # ── Wander / patrol ──
+@export var patrol_path: NodePath
+var _patrol_points: Array[Vector3] = []
+var _current_patrol_index: int = 0
+
 @export var wander_radius: float = 5.0
 @export var wander_pause_min: float = 1.0
 @export var wander_pause_max: float = 3.0
@@ -55,6 +59,14 @@ func _ready() -> void:
 
 	_create_indicator()
 	_create_fov_cone()
+
+	if patrol_path != NodePath():
+		var path_node = get_node_or_null(patrol_path)
+		if path_node:
+			for child in path_node.get_children():
+				if child is Node3D:
+					_patrol_points.append(child.global_position)
+		_resume_patrol()
 
 	_wander_pause_timer = randf_range(0.0, wander_pause_max)
 
@@ -147,13 +159,31 @@ func _process_wander(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 
 
+func _resume_patrol() -> void:
+	if _patrol_points.size() > 0:
+		var closest_idx := 0
+		var min_dist := INF
+		for i in range(_patrol_points.size()):
+			var d := global_position.distance_squared_to(_patrol_points[i])
+			if d < min_dist:
+				min_dist = d
+				closest_idx = i
+		_current_patrol_index = closest_idx
+
 func _pick_wander_target() -> void:
-	var spawn_pos := _spawn_transform.origin
-	var angle := randf() * TAU
-	var radius := randf_range(1.0, wander_radius)
-	_wander_target = spawn_pos + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-	_wander_target.y = global_position.y
-	_has_wander_target = true
+	if _patrol_points.size() > 0:
+		var target: Vector3 = _patrol_points[_current_patrol_index]
+		_wander_target = target
+		_wander_target.y = global_position.y
+		_has_wander_target = true
+		_current_patrol_index = (_current_patrol_index + 1) % _patrol_points.size()
+	else:
+		var spawn_pos := _spawn_transform.origin
+		var angle := randf() * TAU
+		var radius := randf_range(1.0, wander_radius)
+		_wander_target = spawn_pos + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		_wander_target.y = global_position.y
+		_has_wander_target = true
 
 
 # ═══════════════════════════════════════════════
@@ -180,6 +210,7 @@ func _process_suspicious(delta: float) -> void:
 		if _suspicion_level <= 0.0:
 			_suspicion_level = 0.0
 			ai_state = AIState.WANDER
+			_resume_patrol()
 			return
 
 	# Slow approach while suspicious
@@ -194,6 +225,7 @@ func _process_chase(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		_suspicion_level = 0.0
+		_resume_patrol()
 		return
 
 	# Update last known position if we can still see them
@@ -211,6 +243,7 @@ func _process_chase(delta: float) -> void:
 	if dist > lose_range:
 		ai_state = AIState.WANDER
 		_suspicion_level = 0.0
+		_resume_patrol()
 		return
 
 	# Move toward player (or last known position)
@@ -230,6 +263,7 @@ func _process_chase(delta: float) -> void:
 		if flat_dist < 1.5:
 			ai_state = AIState.WANDER
 			_suspicion_level = 0.0
+			_resume_patrol()
 
 
 # ═══════════════════════════════════════════════
@@ -245,6 +279,7 @@ func _catch_player() -> void:
 	_suspicion_level = 0.0
 	global_transform = _spawn_transform
 	velocity = Vector3.ZERO
+	_resume_patrol()
 
 
 # ═══════════════════════════════════════════════
@@ -294,6 +329,7 @@ func toggle_passive() -> void:
 		_has_wander_target = false
 		_wander_pause_timer = randf_range(0.0, wander_pause_max)
 		_suspicion_level = 0.0
+		_resume_patrol()
 	else:
 		if _is_dead:
 			_respawn()
@@ -339,6 +375,7 @@ func _respawn() -> void:
 	_suspicion_level = 0.0
 	_wander_pause_timer = randf_range(wander_pause_min, wander_pause_max)
 	velocity = Vector3.ZERO
+	_resume_patrol()
 
 
 func _on_player_died() -> void:

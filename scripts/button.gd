@@ -9,7 +9,7 @@ class_name button
 
 # Duration of the press animation
 @export var press_duration: float = 0.1
-@export var latch_open: bool = true
+@export var latch_open: bool = false
 
 # Track how many valid bodies are currently pressing the button.
 # When it drops to 0 the door closes again.
