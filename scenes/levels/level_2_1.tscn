@@ -12,7 +12,8 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/heat_grate_small.tscn" id="10_mhwp5"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_4kqca"]
 [ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="12_rat_spawn"]
-[ext_resource type="Texture2D" uid="uid://ckqsij0md7jwg" path="res://resources/controls_build_LMB.png" id="13_7o223"]
+[ext_resource type="Shader" uid="uid://bcow6qxhd8ac2" path="res://resources/swampWater.gdshader" id="13_jhgwk"]
+[ext_resource type="Texture2D" uid="uid://2fkxex6n673l" path="res://resources/WATERBLUE.png" id="14_gs1mk"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -32,6 +33,21 @@ size = Vector3(8.365173, 0.001, 12.652344)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jhgwk"]
 size = Vector3(5.07959, 0.001, 6.8637695)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ns8tc"]
+render_priority = 0
+shader = ExtResource("13_jhgwk")
+shader_parameter/albedo_texture = ExtResource("14_gs1mk")
+shader_parameter/warp_speed = 1.0000000475
+shader_parameter/warp_intensity = 0.12
+shader_parameter/warp_closeness = 0.55600002571148
+shader_parameter/flow_dir = Vector2(1, 0)
+shader_parameter/flow_speed = 0.0
+shader_parameter/uv_scale = 17.39700082309762
+
+[sub_resource type="BoxMesh" id="BoxMesh_wl7eb"]
+material = SubResource("ShaderMaterial_ns8tc")
+size = Vector3(0.8, 1.4, 0.8)
 
 [node name="Level2" type="Node3D" unique_id=1719073169]
 
@@ -422,7 +438,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -13.2136345, 0, -14.2
 doorId = 2
 trapId = 2
 
-[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1774334901]
-transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -17.669502, 0, -11.0067005)
-pixel_size = 0.004
-texture = ExtResource("13_7o223")
+[node name="Body17" type="MeshInstance3D" parent="." unique_id=585002996]
+transform = Transform3D(-18.140303, 0, -2.5705565e-06, 0, 1, 0, 2.739108e-06, 0, -17.024025, -16.945065, -1.8949325, -3.1330156)
+mesh = SubResource("BoxMesh_wl7eb")
