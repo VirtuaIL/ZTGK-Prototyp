@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://xwk3gx5566ja"]
 
+[ext_resource type="PackedScene" uid="uid://drv1uqkyfgj2j" path="res://scenes/objects/invisible_wall.tscn" id="3_disq3"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="3_h2ymd"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="5_iwe2b"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="6_7di0m"]
@@ -45,17 +46,14 @@ shape = SubResource("BoxShape3D_d5akn")
 [node name="walls" type="Node3D" parent="." unique_id=58504239]
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
 
-[node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("3_h2ymd")]
-transform = Transform3D(2.5, 0, -1.7763568e-15, 0, 0.99999976, 0, 8.526513e-14, 0, 0.9999999, 2.0694017, 0, 8.3736925)
-
 [node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("3_h2ymd")]
 transform = Transform3D(2.555, 0, -1.7763568e-15, 0, 2.1339993, 0, 2.842171e-14, 0, 0.9999999, 2.0293734, 0, 25.182676)
 
 [node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("3_h2ymd")]
-transform = Transform3D(-9.0701135e-08, 0, 0.363, 0, 2.1339993, 0, -2.075, 0, -1.5867224e-08, -3.856818, 0, 10.717066)
+transform = Transform3D(-6.731554e-08, 0, 0.363, 0, 2.1339996, 0, -1.5399997, 0, -1.586723e-08, -3.856818, 0, 12.193108)
 
 [node name="wall4" parent="walls" unique_id=1333403362 instance=ExtResource("3_h2ymd")]
-transform = Transform3D(-1.3375684e-07, 0, 0.363, 0, 2.1339993, 0, -3.06, 0, -1.5867224e-08, -3.803991, 0, 26.196676)
+transform = Transform3D(-6.862688e-08, 0, 0.363, 0, 2.1339998, 0, -1.5699999, 0, -1.5867231e-08, -3.803991, 0, 22.497784)
 
 [node name="wall5" parent="walls" unique_id=1981168902 instance=ExtResource("3_h2ymd")]
 transform = Transform3D(0.26, 0, -4.2632564e-14, 0, 0.99999994, 0, 1.7763568e-14, 0, 0.625, 1.7595652, 0, 20.838665)
@@ -74,6 +72,12 @@ transform = Transform3D(-2.7538174e-08, 0, 0.19, 0, 0.9999998, 0, -0.62999994, 0
 
 [node name="wall10" parent="walls" unique_id=743904499 instance=ExtResource("3_h2ymd")]
 transform = Transform3D(-2.7538174e-08, 0, 0.19, 0, 0.99999976, 0, -0.62999994, 0, -8.3051575e-09, -2.7034028, 0, 14.027648)
+
+[node name="invisible_wall" parent="walls" unique_id=590886537 instance=ExtResource("3_disq3")]
+transform = Transform3D(-1.5211563e-07, 0, -0.015, 0, 0.99999994, 0, 3.4799998, 0, -6.5567074e-10, 8.378662, 0, 16.633818)
+
+[node name="invisible_wall2" parent="walls" unique_id=946211084 instance=ExtResource("3_disq3")]
+transform = Transform3D(2.515, 0, -8.6042284e-16, 0, 0.99999994, 0, 1.4210855e-13, 0, 0.014999999, 1.952258, 0, 8.4417515)
 
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
