@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_jmukd"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_42pt1"]
 [ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_avfv3"]
-[ext_resource type="PackedScene" uid="uid://db2r84gbsgdwy" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
+[ext_resource type="PackedScene" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://c28717wolln1n" path="res://scenes/levels/level_5_1.tscn" id="12_a8y0u"]
 [ext_resource type="PackedScene" uid="uid://dkt0qubrdcd83" path="res://scenes/levels/level_5_2.tscn" id="13_jkv2x"]
 [ext_resource type="PackedScene" uid="uid://bpggtrks5qdb3" path="res://scenes/levels/level_5_3.tscn" id="14_jbj1t"]
@@ -74,6 +74,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.324669, -1.1444092e-05, 4.
 script = ExtResource("6_r1k3v")
 
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+
+[node name="Area3D7" type="Area3D" parent="checkpoints" unique_id=181496802]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 16.169622, 1.855777, 4.058918)
+collision_mask = 3
+script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D7" unique_id=370830372]
+shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -11.356438)
