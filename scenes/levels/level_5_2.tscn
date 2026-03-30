@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://1mm6ma8iuqri" path="res://scenes/objects/wall_button.tscn" id="4_3als5"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/projectiles/turret_solid.tscn" id="5_0428a"]
 [ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/objects/floor_tile.tscn" id="6_303y2"]
+[ext_resource type="Texture2D" uid="uid://ioa3llpj1i6f" path="res://resources/hint_projectile_reflect.png" id="7_mjsmt"]
+[ext_resource type="Texture2D" uid="uid://ckqsij0md7jwg" path="res://resources/controls_build_LMB.png" id="8_a1sre"]
 
 [node name="Level3" type="Node3D" unique_id=1719073169]
 
@@ -39,3 +41,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7310972, 0.31733328, 3.2236
 
 [node name="floorTile11" parent="Node3" unique_id=1776565332 instance=ExtResource("6_303y2")]
 transform = Transform3D(-17.306837, 0.002350007, -0.08818945, 0.040706918, 1.000776, -0.046692792, 0.04672521, -0.0014387018, -32.62428, 0.44699764, -1.4567499, -0.81157875)
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1450819349]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -1.9273949, -9.536743e-07, -7.93946)
+pixel_size = 0.002
+texture = ExtResource("7_mjsmt")
+
+[node name="Sprite3D2" type="Sprite3D" parent="." unique_id=56009785]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -1.3217044, -9.536743e-07, -1.752198)
+pixel_size = 0.002
+texture = ExtResource("8_a1sre")
