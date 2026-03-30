@@ -512,9 +512,26 @@ func _pick_current_level(player_pos: Vector3) -> Node3D:
 func _set_level_occlusion(level: Node3D, enabled: bool) -> void:
 	if level == null:
 		return
-	var walls := level.get_node_or_null("walls")
-	if walls and walls is Node3D:
-		(walls as Node3D).visible = enabled
+	level.visible = enabled
+
+	# Disable collisions for hidden levels
+	var queue: Array[Node] = [level]
+	while not queue.is_empty():
+		var n: Node = queue.pop_back() as Node
+		if n is CollisionObject3D:
+			var co := n as CollisionObject3D
+			if enabled:
+				if co.has_meta("_saved_collision_layer"):
+					co.collision_layer = int(co.get_meta("_saved_collision_layer"))
+					co.collision_mask = int(co.get_meta("_saved_collision_mask"))
+			else:
+				if not co.has_meta("_saved_collision_layer"):
+					co.set_meta("_saved_collision_layer", co.collision_layer)
+					co.set_meta("_saved_collision_mask", co.collision_mask)
+				co.collision_layer = 0
+				co.collision_mask = 0
+		for child in n.get_children():
+			queue.append(child)
 
 func _close_level_doors(level: Node3D) -> void:
 	if level == null:
@@ -533,6 +550,10 @@ func _reset_level_objects(level: Node3D) -> void:
 		var b := box as Node3D
 		if b and level.is_ancestor_of(b) and b.has_method("_activate_reset_to_spawn"):
 			b._activate_reset_to_spawn()
+	for btn in get_tree().get_nodes_in_group("buttons"):
+		var n := btn as Node
+		if n and level.is_ancestor_of(n) and n.has_method("reset_button_state"):
+			n.reset_button_state()
 
 func restart_level_for_checkpoint(level: Node3D) -> void:
 	if level == null:
@@ -544,10 +565,12 @@ func restart_level_for_checkpoint(level: Node3D) -> void:
 		rat_manager.reset_respawn_and_restore()
 
 func _update_level_occlusion(current: Node3D) -> void:
-	for lvl in _levels:
-		var is_current := lvl == current
-		_set_level_occlusion(lvl, is_current)
-		if not is_current:
+	var current_idx := _levels.find(current)
+	for i in range(_levels.size()):
+		var lvl := _levels[i]
+		var is_visible := (i == current_idx) or (i == current_idx + 1)
+		_set_level_occlusion(lvl, is_visible)
+		if not is_visible:
 			_close_level_doors(lvl)
 
 func force_current_level(level: Node3D) -> void:
