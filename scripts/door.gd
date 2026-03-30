@@ -17,6 +17,13 @@ class_name door
 # If true, the door starts open and closes when triggered
 @export var is_inverse: bool = false
 
+@export_category("Vertical Grate Settings")
+# Zaznacz, jeśli to krata pionowa ruszająca się w górę/w dół (ignoruje slide_axis)
+@export var is_vertical_grate: bool = false
+# True = jedzie w górę podczas kręcenia kołowrotkiem (np. postawiona w podłodze)
+# False = jedzie w dół podczas kręcenia kołowrotkiem (np. postawiona w powietrzu)
+@export var moves_up: bool = true
+
 var _closed_position: Vector3
 var _open_position: Vector3
 var _is_open: bool = false
@@ -29,8 +36,12 @@ func _ready() -> void:
 	add_to_group("doors")
 	_closed_position = position
 	var axis := slide_axis
-	if axis.length() < 0.001:
+	
+	if is_vertical_grate:
+		axis = Vector3.UP if moves_up else Vector3.DOWN
+	elif axis.length() < 0.001:
 		axis = Vector3.RIGHT
+		
 	var world_axis := global_transform.basis * axis.normalized()
 	_open_position = position + world_axis * slide_distance
 	

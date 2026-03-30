@@ -786,11 +786,7 @@ func _update_cursor_follow(delta: float) -> void:
 		active[i].set_target(final_target)
 
 func _update_free_rats_follow_cursor(delta: float) -> void:
-	# Skip when RMB attack or LMB building is handling rats
-	if combat_rmb_down:
-		_set_cursor_following(_get_active_follow_rats(), false)
-		_clear_cursor_capstan()
-		return
+	# Skip when build drag is handling rats
 	if mouse_is_down_left and not _lmb_is_object_drag:
 		_set_cursor_following(_get_active_follow_rats(), false)
 		_clear_cursor_capstan()
@@ -1282,27 +1278,38 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: combat attack (circle around cursor) ──
+		# ── LMB: build draw ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
-			combat_rmb_down = mb.pressed
-			if combat_rmb_down:
-				var mouse_world := _mouse_to_world()
-				if mouse_world != Vector3.ZERO:
-					_capture_combat_offsets(mouse_world)
-			else:
-				_combat_offsets_ready = false
-				_combat_offsets.clear()
-			get_viewport().set_input_as_handled()
-			return
-
-		# ── RMB: raycast for object → drag, otherwise → build ──
-		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
 				mouse_is_down_left = true
 				left_click_start_pos = mb.position
 				is_dragging_left = false
 				_lmb_is_object_drag = false
+				# Prepare for build drawing
+				current_drawn_path.clear()
+				current_build_y = -1000.0
+				_has_last_build_pos = false
+			else:
+				# LMB released → finalize build
+				if is_dragging_left:
+					if build_draw_mode == DRAW_MODE_PATH:
+						_distribute_rats_on_path()
+					elif build_draw_mode == DRAW_MODE_CIRCLE:
+						_build_circle_if_possible()
 
+				mouse_is_down_left = false
+				_lmb_is_object_drag = false
+				current_build_y = -1000.0
+				is_drawing_line = false
+				current_drawn_path.clear()
+				_has_last_build_pos = false
+				immediate_mesh.clear_surfaces()
+			get_viewport().set_input_as_handled()
+			return
+
+		# ── RMB: raycast for object → drag ──
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			if mb.pressed:
 				# Raycast to check if we clicked on a movable object
 				var camera_m: Camera3D = get_viewport().get_camera_3d()
 				var ray_origin_m: Vector3 = camera_m.project_ray_origin(mb.position)
@@ -1314,7 +1321,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				if hit_m:
 					var obj = hit_m.collider
 					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
-						# Start object drag mode
+						mouse_is_down_left = true
+						left_click_start_pos = mb.position
+						is_dragging_left = false
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
 							_surround_object_with_rats(obj)
@@ -1330,11 +1339,6 @@ func _unhandled_input(event: InputEvent) -> void:
 						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
-
-				# No object hit — prepare for build drawing
-				current_drawn_path.clear()
-				current_build_y = -1000.0
-				_has_last_build_pos = false
 			else:
 				# RMB released
 				if _lmb_is_object_drag:
@@ -1349,21 +1353,9 @@ func _unhandled_input(event: InputEvent) -> void:
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
-				else:
-					# Finalize build (only if we dragged)
-					if is_dragging_left:
-						if build_draw_mode == DRAW_MODE_PATH:
-							_distribute_rats_on_path()
-						elif build_draw_mode == DRAW_MODE_CIRCLE:
-							_build_circle_if_possible()
 
 				mouse_is_down_left = false
 				_lmb_is_object_drag = false
-				current_build_y = -1000.0
-				is_drawing_line = false
-				current_drawn_path.clear()
-				_has_last_build_pos = false
-				immediate_mesh.clear_surfaces()
 			get_viewport().set_input_as_handled()
 			return
 
