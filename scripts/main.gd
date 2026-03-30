@@ -52,9 +52,12 @@ var _cam_look_ahead: Vector3 = Vector3.ZERO
 @export var cam_level_focus_weight: float = 0.4
 @export var cam_level_focus_weight_forced: float = 0.55
 @export var cam_level_switch_hysteresis: float = 3.0
+@export var level_hide_delay: float = 1.2
 var _levels: Array[Node3D] = []
 var _current_level: Node3D = null
 var _forced_level: Node3D = null
+var _pending_occlusion_level: Node3D = null
+var _occlusion_timer: SceneTreeTimer = null
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
@@ -564,8 +567,12 @@ func restart_level_for_checkpoint(level: Node3D) -> void:
 	if rat_manager and rat_manager.has_method("reset_respawn_and_restore"):
 		rat_manager.reset_respawn_and_restore()
 
-func _update_level_occlusion(current: Node3D) -> void:
+func _apply_level_occlusion(current: Node3D) -> void:
 	var current_idx := _levels.find(current)
+	if current_idx == -1:
+		for lvl in _levels:
+			_set_level_occlusion(lvl, true)
+		return
 	for i in range(_levels.size()):
 		var lvl := _levels[i]
 		var is_visible := (i == current_idx) or (i == current_idx + 1)
@@ -573,12 +580,27 @@ func _update_level_occlusion(current: Node3D) -> void:
 		if not is_visible:
 			_close_level_doors(lvl)
 
+func _schedule_level_occlusion(current: Node3D) -> void:
+	_pending_occlusion_level = current
+	if level_hide_delay <= 0.0:
+		_apply_level_occlusion(current)
+		return
+	# Keep all levels visible briefly to let rats pass
+	for lvl in _levels:
+		_set_level_occlusion(lvl, true)
+	if _occlusion_timer:
+		_occlusion_timer = null
+	_occlusion_timer = get_tree().create_timer(level_hide_delay)
+	_occlusion_timer.timeout.connect(func():
+		_apply_level_occlusion(_pending_occlusion_level)
+	)
+
 func force_current_level(level: Node3D) -> void:
 	if level == null:
 		return
 	_forced_level = level
 	_current_level = level
-	_update_level_occlusion(_current_level)
+	_schedule_level_occlusion(_current_level)
 
 func clear_forced_level(level: Node3D = null) -> void:
 	if level == null or _forced_level == level:
@@ -642,7 +664,7 @@ func _process(delta: float) -> void:
 		var current_level := _forced_level if _forced_level else _pick_current_level(player.global_position)
 		if current_level and current_level != _current_level:
 			_current_level = current_level
-			_update_level_occlusion(_current_level)
+			_schedule_level_occlusion(_current_level)
 		var center_node := _get_level_center_node(_current_level) if _current_level else null
 		if center_node:
 			var weight := cam_level_focus_weight_forced if _forced_level else cam_level_focus_weight
