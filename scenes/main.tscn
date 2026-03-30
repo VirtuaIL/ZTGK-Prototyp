@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_85g3d"]
-[ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_choun"]
+[ext_resource type="PackedScene" uid="uid://db2r84gbsgdwy" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -78,6 +78,15 @@ script = ExtResource("20_gqmmt")
 target_level_path = NodePath("../../levels/Level2")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=1253548339]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 3.7998638, 2.7076411, -39.287834)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+target_level_path = NodePath("../../levels/Level3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=140545266]
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=1704942286]
