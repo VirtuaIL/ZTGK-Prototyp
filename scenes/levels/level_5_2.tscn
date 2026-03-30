@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bxb248662xqfc"]
+[gd_scene format=3 uid="uid://dkt0qubrdcd83"]
 
 [ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="1_mjsmt"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="2_a1sre"]
@@ -16,9 +16,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.53932285, 1.9073486e-06, -0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("1_mjsmt")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42.059235, 0, -23.038982)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.596653, 0, -0.8712301)
 
-[node name="Node3" type="Node" parent="." unique_id=1391544418]
+[node name="Node3" type="Node3D" parent="." unique_id=1033632909]
 
 [node name="door86" parent="Node3" unique_id=1451896991 instance=ExtResource("2_a1sre")]
 transform = Transform3D(-2.2945964e-07, 0, -1.4529997, 0, 1.494, 0, 5.249425, 0, -6.351263e-08, -6.42048, 0.016834497, -0.7407656)

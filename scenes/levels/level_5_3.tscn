@@ -1,9 +1,10 @@
-[gd_scene format=3 uid="uid://cn7iqvr62t2pr"]
+[gd_scene format=3 uid="uid://bpggtrks5qdb3"]
 
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="2_f0pck"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="3_2kv3o"]
 [ext_resource type="PackedScene" uid="uid://1mm6ma8iuqri" path="res://scenes/objects/wall_button.tscn" id="4_m0m1k"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/projectiles/turret_solid.tscn" id="5_ff4qk"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="6_cx1bl"]
 [ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/objects/floor_tile.tscn" id="6_i7mqm"]
 
 [node name="Level3" type="Node3D" unique_id=1719073169]
@@ -14,7 +15,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0042505, 1.9073486e-06, 4.3
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
 
-[node name="Node3" type="Node" parent="." unique_id=1391544418]
+[node name="Node3" type="Node3D" parent="." unique_id=1667918600]
 
 [node name="door87" parent="Node3" unique_id=88197224 instance=ExtResource("2_f0pck")]
 transform = Transform3D(-2.6220314e-07, 0, -1.446625, 0, 1.4874454, 0, 5.9985094, 0, -6.3233976e-08, -9.838879, 0.016772475, 9.342076)
@@ -38,3 +39,6 @@ transform = Transform3D(0.9956127, 0, 0, 0, 0.9956127, 0, 0, 0, 0.9956127, -2.71
 
 [node name="floorTile12" parent="Node3" unique_id=1269427570 instance=ExtResource("6_i7mqm")]
 transform = Transform3D(-20.118725, 0.0023357642, -0.10083406, 0.047320683, 0.9947107, -0.05338761, 0.054316774, -0.001429982, -37.30195, -2.041017, -1.4503468, 9.482193)
+
+[node name="RatSpawn2" parent="Node3" unique_id=1383741209 instance=ExtResource("6_cx1bl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.240448, 0, 21.619507)
