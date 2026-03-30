@@ -16,9 +16,9 @@ func _on_body_entered(body: Node3D) -> void:
 			_is_active = true
 			# Ustawiamy punkt wskrzeszenia Gracza na naszą lokalizację. 
 			if body.has_method("set_spawn_position"):
-				body.set_spawn_position(global_position)
+				body.set_spawn_position(body.global_position)
 			# Prosty sposób poinformowania gracza (opcjonalny tekst na wyjściu by zweryfikować że działa)
-			print("Checkpoint reached at: ", global_position)
+			print("Checkpoint reached at: ", body.global_position)
 		
 		# Opcjonalnie: wymuś level dla kamery/occlusion
 		if target_level_path != NodePath():
