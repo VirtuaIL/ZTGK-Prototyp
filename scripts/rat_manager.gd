@@ -509,9 +509,8 @@ func _process(delta: float) -> void:
 
 
 func _update_edge_avoidance() -> void:
-	# Edge avoidance completely disabled per user request.
-	# (Leaving function intact but doing nothing so it can be called safely)
-	pass
+	for rat in rats:
+		rat.edge_avoidance_enabled = true
 
 func _update_carried_player() -> void:
 	if not carry_player_enabled:
