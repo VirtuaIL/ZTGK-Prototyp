@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="14_xworo"]
 [ext_resource type="Script" uid="uid://w7ya2jovaj51" path="res://scripts/heat_grate_controller.gd" id="15_wwjag"]
 [ext_resource type="PackedScene" uid="uid://cxheatgrate" path="res://scenes/objects/heat_grate.tscn" id="16_rvwo1"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="17_rat_spawn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -24,8 +25,12 @@ size = Vector3(40.17141, 0.001, 16.172592)
 
 [node name="Level1" type="Node3D" unique_id=1719073169]
 
+[node name="CameraCenter" type="Node3D" parent="."]
+
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+
+[node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("17_rat_spawn")]
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)

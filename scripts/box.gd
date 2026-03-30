@@ -26,6 +26,9 @@ func _activate_reset_to_spawn() -> void:
 	velocity = Vector3.ZERO
 	object_reset.emit()
 
+func die() -> void:
+	_activate_reset_to_spawn()
+
 
 func _physics_process(delta: float) -> void:
 	# Fall reset
@@ -41,6 +44,53 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	move_and_slide()
+
+	# Check for overweight / overhang on bridge
+	var overhanging_bridge := false
+	var space_state := get_world_3d().direct_space_state
+	var center := global_position + Vector3.UP * 0.1
+	
+	var query_center := PhysicsRayQueryParameters3D.create(center, center + Vector3.DOWN * 2.0)
+	query_center.collision_mask = 1 | (1 << 8) # Floor (1) + RatStructures (9)
+	query_center.exclude = [self]
+	
+	var hit_center := space_state.intersect_ray(query_center)
+	if hit_center and hit_center.collider and hit_center.collider.is_in_group("rat_structures"):
+		# We are on a bridge. Check corners/edges
+		var shape_owner_id := shape_find_owner(0)
+		if shape_owner_id != -1:
+			var shape_owner := shape_owner_get_owner(shape_owner_id) as CollisionShape3D
+			if shape_owner and shape_owner.shape:
+				var aabb := shape_owner.shape.get_debug_mesh().get_aabb()
+				var scl := global_transform.basis.get_scale()
+				var extents := aabb.size * scl * 0.45
+				
+				# Check 4 corners. If any corner is unsupported, it's wider
+				var corners = [
+					Vector3(extents.x, 0, extents.z),
+					Vector3(-extents.x, 0, extents.z),
+					Vector3(extents.x, 0, -extents.z),
+					Vector3(-extents.x, 0, -extents.z)
+				]
+				
+				var unsupported_count := 0
+				for c in corners:
+					var world_c = global_transform * c + Vector3.UP * 0.1
+					var q := PhysicsRayQueryParameters3D.create(world_c, world_c + Vector3.DOWN * 2.0)
+					q.collision_mask = 1 | (1 << 8)
+					q.exclude = [self]
+					var hit := space_state.intersect_ray(q)
+					if not hit:
+						unsupported_count += 1
+				
+				# If at least 2 corners are unsupported, consider it overhanging
+				if unsupported_count >= 2:
+					overhanging_bridge = true
+					
+	if overhanging_bridge:
+		var rm := get_tree().get_first_node_in_group("rat_manager")
+		if rm and rm.has_method("add_bridge_stress"):
+			rm.add_bridge_stress(delta)
 
 
 func set_highlight(enabled: bool) -> void:

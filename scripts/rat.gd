@@ -62,9 +62,9 @@ var is_carrier: bool = false
 
 # Fall recovery
 @export var fall_death_y: float = -1.0
-@export var respawn_time: float = 2.0
+@export var respawn_time: float = 5.0
 @export var spawn_player_distance: float = 3.0
-@export var respawn_near_player_when_near_spawn: bool = true
+@export var respawn_near_player_when_near_spawn: bool = false
 
 # Bridge anchoring — when true, gravity and fall-recovery are suppressed
 # so rats can float in mid-air to form bridges
@@ -402,6 +402,9 @@ func _start_respawn() -> void:
 	set_physics_process(false)
 	await get_tree().create_timer(respawn_time).timeout
 	_respawn_at_spawn_point()
+
+func die() -> void:
+	_start_respawn()
 
 
 func _respawn_at_spawn_point() -> void:

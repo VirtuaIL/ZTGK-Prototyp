@@ -3,12 +3,17 @@ extends Node3D
 class_name HeatGrateController
 
 enum ControlMode { TIMER, PROGRESS }
+enum PatternMode { STRING, INDICES }
 
 @export_category("Behavior Settings")
 @export var mode: ControlMode = ControlMode.TIMER
 @export var step_time: float = 1.0
 @export var trapId: int = -1
+@export var pattern_mode: PatternMode = PatternMode.STRING
 @export var patterns: Array[String] = []
+@export var patterns_indices: Array[PackedInt32Array] = []
+@export var paint_enabled: bool = false
+@export var paint_pattern_index: int = 0
 
 @export_category("Grid Generation")
 @export var grate_scene: PackedScene
@@ -38,7 +43,7 @@ func _ready() -> void:
 			grates.append(child)
 			
 	_is_ready = true
-	if patterns.size() > 0:
+	if _get_pattern_count() > 0:
 		_apply_pattern(_current_pattern_index)
 
 func _process(delta: float) -> void:
@@ -46,32 +51,55 @@ func _process(delta: float) -> void:
 		return
 		
 	if mode == ControlMode.TIMER and patterns.size() > 1:
+		if _get_pattern_count() <= 1:
+			return
 		_timer += delta
 		if _timer >= step_time:
 			_timer -= step_time
-			_current_pattern_index = (_current_pattern_index + 1) % patterns.size()
+			_current_pattern_index = (_current_pattern_index + 1) % _get_pattern_count()
 			_apply_pattern(_current_pattern_index)
 
 func set_progress(weight: float) -> void:
 	if Engine.is_editor_hint() or not _is_ready:
 		return
-	if mode != ControlMode.PROGRESS or patterns.size() == 0:
+	if mode != ControlMode.PROGRESS or _get_pattern_count() == 0:
 		return
 		
-	var idx = clampi(int(weight * patterns.size()), 0, patterns.size() - 1)
+	var idx = clampi(int(weight * _get_pattern_count()), 0, _get_pattern_count() - 1)
 	
 	if idx != _current_pattern_index:
 		_current_pattern_index = idx
 		_apply_pattern(idx)
 
 func _apply_pattern(idx: int) -> void:
-	if idx < 0 or idx >= patterns.size():
+	if idx < 0 or idx >= _get_pattern_count():
 		return
-	var p = patterns[idx]
-	for i in range(min(p.length(), grates.size())):
-		var grate = grates[i]
-		if grate != null:
-			grate.is_active = (p[i] == "1")
+	if pattern_mode == PatternMode.INDICES:
+		var target_grates := grates
+		if Engine.is_editor_hint():
+			target_grates = get_grates_editor()
+		for g in target_grates:
+			if g:
+				g.is_active = false
+		if idx >= patterns_indices.size():
+			return
+		var list := patterns_indices[idx]
+		for i in list:
+			if i >= 0 and i < target_grates.size():
+				var grate := target_grates[i]
+				if grate:
+					grate.is_active = true
+	else:
+		if idx >= patterns.size():
+			return
+		var p = patterns[idx]
+		for i in range(min(p.length(), grates.size())):
+			var grate = grates[i]
+			if grate != null:
+				grate.is_active = (p[i] == "1")
+
+func _get_pattern_count() -> int:
+	return patterns_indices.size() if pattern_mode == PatternMode.INDICES else patterns.size()
 
 func _generate_grid() -> void:
 	if grate_scene == null:
@@ -100,3 +128,40 @@ func _generate_grid() -> void:
 				grate.owner = get_tree().edited_scene_root
 
 	print("HeatGrateController: Wygenerowano grid ", grid_columns, "x", grid_rows)
+
+func get_grates_editor() -> Array[HeatGrate]:
+	var list: Array[HeatGrate] = []
+	for child in get_children():
+		if child is HeatGrate:
+			list.append(child)
+	return list
+
+func is_index_active(pattern_idx: int, grate_idx: int) -> bool:
+	if pattern_idx < 0 or pattern_idx >= patterns_indices.size():
+		return false
+	for i in patterns_indices[pattern_idx]:
+		if i == grate_idx:
+			return true
+	return false
+
+func set_pattern_index_active(pattern_idx: int, grate_idx: int, active: bool) -> void:
+	if pattern_idx < 0:
+		return
+	while patterns_indices.size() <= pattern_idx:
+		patterns_indices.append(PackedInt32Array())
+	var arr := patterns_indices[pattern_idx]
+	var exists := false
+	for i in arr:
+		if i == grate_idx:
+			exists = true
+			break
+	var new_arr := PackedInt32Array()
+	for i in arr:
+		if i != grate_idx:
+			new_arr.append(i)
+	if active and not exists:
+		new_arr.append(grate_idx)
+	patterns_indices[pattern_idx] = new_arr
+	
+	if pattern_mode == PatternMode.INDICES:
+		_apply_pattern(pattern_idx)

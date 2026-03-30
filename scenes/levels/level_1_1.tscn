@@ -3,12 +3,12 @@
 [ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="6_ndtll"]
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="7_7h2jl"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="8_mqh5v"]
-[ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="9_7o3do"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="10_o7j4k"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="11_31oqk"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="12_x7jkp"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="13_0qwwm"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="14_t4umt"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="15_rat_spawn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -22,8 +22,12 @@ size = Vector3(40.17141, 0.001, 16.172592)
 
 [node name="Level2" type="Node3D" unique_id=1719073169]
 
+[node name="CameraCenter" type="Node3D" parent="." unique_id=1736285385]
+
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+
+[node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("15_rat_spawn")]
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 10.599485, 0, 4.9834614)
@@ -68,9 +72,6 @@ transform = Transform3D(-2.6226832e-07, 0, 0.363, 0, 0.9999998, 0, -5.9999995, 0
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
 
-[node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("9_7o3do")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 0, 0, 0)
-
 [node name="doors" type="Node3D" parent="." unique_id=1525246903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
 
@@ -95,6 +96,6 @@ pixel_size = 0.002
 texture = ExtResource("14_t4umt")
 
 [node name="capstan" parent="." unique_id=426294487 instance=ExtResource("10_o7j4k")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -3.6711345, 0, 4.045402)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 1.5570588, 0, 0.39879322)
 doorId = 1
 trapId = 1

@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_choun"]
@@ -35,7 +35,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_yq6so"]
 
-[node name="Main" type="Node3D" unique_id=709470400]
+[node name="Main2" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
 cam_look_ahead_max = 4.0
 
@@ -61,9 +61,10 @@ script = ExtResource("7_skydome")
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
 use_wide_brush = true
+cursor_trail_max_length = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4346104, -1.1444092e-05, 84.895836)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.201527, -1.1444092e-05, 2.2183065)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
@@ -74,6 +75,7 @@ script = ExtResource("7_ability_hud")
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -11.356438)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
+target_level_path = NodePath("../../levels/Level2")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
 shape = SubResource("BoxShape3D_yq6so")
@@ -94,4 +96,4 @@ shape = SubResource("BoxShape3D_yq6so")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
 
 [node name="Level4" parent="levels" unique_id=1632914966 instance=ExtResource("10_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0013961792, 0.034557343, 57.389484)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0013961792, 0.034557343, -91.721405)

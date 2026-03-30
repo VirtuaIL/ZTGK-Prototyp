@@ -9,8 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="7_506bi"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="8_cli2m"]
 [ext_resource type="Script" uid="uid://w7ya2jovaj51" path="res://scripts/heat_grate_controller.gd" id="9_x2i05"]
-[ext_resource type="PackedScene" uid="uid://cxheatgrate" path="res://scenes/objects/heat_grate.tscn" id="10_mhwp5"]
+[ext_resource type="PackedScene" path="res://scenes/objects/heat_grate_small.tscn" id="10_mhwp5"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_4kqca"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="12_rat_spawn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -22,35 +23,44 @@ size = Vector2(40, 40)
 [sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
 size = Vector3(32.02992, 0.001, 28.322111)
 
-[node name="Level1" type="Node3D" unique_id=1719073169]
+[node name="Level2" type="Node3D" unique_id=1719073169]
+
+[node name="CameraCenter" type="Node3D" parent="." unique_id=988644282]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.432622, 0, -14.303774)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+
+[node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("12_rat_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.466045, 0, 4.9713955)
+
+[node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("12_rat_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7673, 0, -17.427391)
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)
 
 [node name="grate" parent="grates" unique_id=16392337 instance=ExtResource("1_ng5v0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.21361876, 0, -10.059679)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.21361876, 0, -9.23377)
 doorId = 2
 
 [node name="grate5" parent="grates" unique_id=1981168902 instance=ExtResource("1_ng5v0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.611971, 0, -10.059678)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.611971, 0, -9.371973)
 doorId = 2
 
 [node name="grate3" parent="grates" unique_id=688918615 instance=ExtResource("2_yhmlo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.669754, 0, -10.046431)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.669754, 0, -9.358726)
 
 [node name="grate4" parent="grates" unique_id=1071654156 instance=ExtResource("2_yhmlo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.686916, 0, -10.046431)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.686916, 0, -9.358726)
 
 [node name="grate2" parent="grates" unique_id=505040133 instance=ExtResource("2_yhmlo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6408396, 0, -10.002183)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6408396, 0, -9.314478)
 
 [node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="floor" unique_id=439866030]
-transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.7, -4.078333, -0.022816658, -5.557475)
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.7, -4.1086597, -0.022816658, -5.557475)
 mesh = SubResource("PlaneMesh_tr1x6")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
@@ -61,7 +71,7 @@ shape = SubResource("BoxShape3D_d5akn")
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
 
 [node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("3_c0cgf")]
-transform = Transform3D(1.5, 0, -1.7763568e-15, 0, 0.99999994, 0, 0, 0, 0.99999994, -1.2624552, 0, 5.5158854)
+transform = Transform3D(1.5, 0, -1.7763568e-15, 0, 0.9999998, 0, 0, 0, 0.9999999, -1.2624552, 0, 9.16843)
 
 [node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("3_c0cgf")]
 transform = Transform3D(1.5, 0, -1.7763568e-15, 0, 2.1339998, 0, 0, 0, 0.99999994, -1.2529159, 0, 28.21774)
@@ -73,7 +83,7 @@ transform = Transform3D(-7.430936e-08, 0, 0.363, 0, 2.1339996, 0, -1.6999999, 0,
 transform = Transform3D(-1.09278474e-07, 0, 0.363, 0, 2.1339998, 0, -2.5, 0, -1.5867231e-08, -4.6131363, 0, 22.610184)
 
 [node name="wall7" parent="walls" unique_id=2081728804 instance=ExtResource("3_c0cgf")]
-transform = Transform3D(-3.278352e-08, 0, 0.36325, 0, 2.1342854, 0, -2.0646935, 0, -4.371138e-08, 0.53883874, 0, 23.031597)
+transform = Transform3D(-9.026402e-08, 0, 0.363, 0, 1, 0, -2.065, 0, -1.5867235e-08, 0.53883874, 0, 23.031597)
 
 [node name="wall5" parent="walls" unique_id=152295184 instance=ExtResource("3_c0cgf")]
 transform = Transform3D(-1.5298986e-07, 0, 0.363, 0, 0.99999994, 0, -3.4999998, 0, -1.5867231e-08, 2.3929312, 0, 14.01875)
@@ -85,16 +95,25 @@ transform = Transform3D(-2.1855694e-08, 0, 0.363, 0, 0.9999998, 0, -0.49999994, 
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
 
 [node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("4_clsa1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, -20.04792, 0, -0.5157285)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, -17.92657, 0, -1.2238798)
 
 [node name="doors" type="Node3D" parent="." unique_id=1525246903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
 
 [node name="door" parent="doors" unique_id=432057396 instance=ExtResource("5_4g7v8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.615858, 0, -11.661636)
+doorId = 1
+required_press_count = 2
 
 [node name="button" parent="doors" unique_id=1670576418 instance=ExtResource("6_ic842")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.9108715, 0, -5.979533)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3096838, 0, -8.384399)
+doorId = 1
+latch_open = false
+
+[node name="button2" parent="doors" unique_id=591105451 instance=ExtResource("6_ic842")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.729464, 0, -8.384399)
+doorId = 1
+latch_open = false
 
 [node name="sprites" type="Node3D" parent="." unique_id=284390696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
@@ -111,86 +130,257 @@ pixel_size = 0.002
 texture = ExtResource("8_cli2m")
 
 [node name="HeatGrateController" type="Node3D" parent="." unique_id=688171962]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2984357, 0, -3.9467278)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4760716, 0, -4.4005694)
 script = ExtResource("9_x2i05")
 mode = 1
 trapId = 2
-patterns = Array[String](["1111110001100011000111111", "0000001110010100111000000", "1010101010101010101010101", "0101010101010101010101010"])
+patterns = Array[String](["111111111000011111000011111110011111110011111110011111110011111110011111110011111", "110011111110011111110011111110011111110011111110011111110011111110011111110011111"])
 grate_scene = ExtResource("10_mhwp5")
+grid_columns = 9
+grid_rows = 9
+grid_spacing = Vector2(1.3, 1.3)
 
-[node name="HeatGrate" parent="HeatGrateController" unique_id=596657464 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, -4.4)
+[node name="HeatGrate" parent="HeatGrateController" unique_id=499822722 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, -5.2)
 
-[node name="@Area3D@89721" parent="HeatGrateController" unique_id=2015074575 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, -4.4)
+[node name="@Area3D@36216" parent="HeatGrateController" unique_id=572590177 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, -5.2)
 
-[node name="@Area3D@89722" parent="HeatGrateController" unique_id=1076060782 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.4)
+[node name="@Area3D@36217" parent="HeatGrateController" unique_id=1484047042 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, -5.2)
 
-[node name="@Area3D@89723" parent="HeatGrateController" unique_id=2050076281 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, -4.4)
+[node name="@Area3D@36218" parent="HeatGrateController" unique_id=341855427 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -5.2)
 
-[node name="@Area3D@89724" parent="HeatGrateController" unique_id=1666832796 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, -4.4)
+[node name="@Area3D@36219" parent="HeatGrateController" unique_id=906388100 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5.2)
 
-[node name="@Area3D@89725" parent="HeatGrateController" unique_id=1028913598 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, -2.2)
+[node name="@Area3D@36220" parent="HeatGrateController" unique_id=136890681 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -5.2)
 
-[node name="@Area3D@89726" parent="HeatGrateController" unique_id=981668890 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, -2.2)
+[node name="@Area3D@36221" parent="HeatGrateController" unique_id=320521060 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -5.2)
 
-[node name="@Area3D@89727" parent="HeatGrateController" unique_id=1871390939 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.2)
+[node name="@Area3D@36222" parent="HeatGrateController" unique_id=1257825 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, -5.2)
 
-[node name="@Area3D@89728" parent="HeatGrateController" unique_id=337865611 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, -2.2)
+[node name="@Area3D@36223" parent="HeatGrateController" unique_id=1194606957 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, -5.2)
 
-[node name="@Area3D@89729" parent="HeatGrateController" unique_id=574235625 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, -2.2)
+[node name="@Area3D@36224" parent="HeatGrateController" unique_id=1169200905 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, -3.8999999)
 
-[node name="@Area3D@89730" parent="HeatGrateController" unique_id=195080119 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 0)
+[node name="@Area3D@36225" parent="HeatGrateController" unique_id=1425541793 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, -3.8999999)
 
-[node name="@Area3D@89731" parent="HeatGrateController" unique_id=665934140 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 0)
+[node name="@Area3D@36226" parent="HeatGrateController" unique_id=1863126891 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, -3.8999999)
 
-[node name="@Area3D@89732" parent="HeatGrateController" unique_id=1303568308 instance=ExtResource("10_mhwp5")]
+[node name="@Area3D@36227" parent="HeatGrateController" unique_id=1537708675 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -3.8999999)
 
-[node name="@Area3D@89733" parent="HeatGrateController" unique_id=855680081 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 0)
+[node name="@Area3D@36228" parent="HeatGrateController" unique_id=954098209 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3.8999999)
 
-[node name="@Area3D@89734" parent="HeatGrateController" unique_id=781008019 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 0)
+[node name="@Area3D@36229" parent="HeatGrateController" unique_id=1431505349 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -3.8999999)
 
-[node name="@Area3D@89735" parent="HeatGrateController" unique_id=2133200096 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 2.2)
+[node name="@Area3D@36230" parent="HeatGrateController" unique_id=2120980899 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -3.8999999)
 
-[node name="@Area3D@89736" parent="HeatGrateController" unique_id=2076144280 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 2.2)
+[node name="@Area3D@36231" parent="HeatGrateController" unique_id=680437739 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, -3.8999999)
 
-[node name="@Area3D@89737" parent="HeatGrateController" unique_id=1818617332 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.2)
+[node name="@Area3D@36232" parent="HeatGrateController" unique_id=992495751 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, -3.8999999)
 
-[node name="@Area3D@89738" parent="HeatGrateController" unique_id=350901487 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 2.2)
+[node name="@Area3D@36233" parent="HeatGrateController" unique_id=239329454 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, -2.6)
 
-[node name="@Area3D@89739" parent="HeatGrateController" unique_id=1174941122 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 2.2)
+[node name="@Area3D@36234" parent="HeatGrateController" unique_id=316556020 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, -2.6)
 
-[node name="@Area3D@89740" parent="HeatGrateController" unique_id=975461111 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4, 0, 4.4)
+[node name="@Area3D@36235" parent="HeatGrateController" unique_id=800801923 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, -2.6)
 
-[node name="@Area3D@89741" parent="HeatGrateController" unique_id=129484114 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0, 4.4)
+[node name="@Area3D@36236" parent="HeatGrateController" unique_id=1354684365 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -2.6)
 
-[node name="@Area3D@89742" parent="HeatGrateController" unique_id=1982811953 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.4)
+[node name="@Area3D@36237" parent="HeatGrateController" unique_id=1476003230 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.6)
 
-[node name="@Area3D@89743" parent="HeatGrateController" unique_id=1567216661 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 4.4)
+[node name="@Area3D@36238" parent="HeatGrateController" unique_id=1707411663 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -2.6)
 
-[node name="@Area3D@89744" parent="HeatGrateController" unique_id=114929653 instance=ExtResource("10_mhwp5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0, 4.4)
+[node name="@Area3D@36239" parent="HeatGrateController" unique_id=1055844340 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -2.6)
+
+[node name="@Area3D@36240" parent="HeatGrateController" unique_id=775050816 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, -2.6)
+
+[node name="@Area3D@36241" parent="HeatGrateController" unique_id=1795900854 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, -2.6)
+
+[node name="@Area3D@36242" parent="HeatGrateController" unique_id=219833431 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, -1.3)
+
+[node name="@Area3D@36243" parent="HeatGrateController" unique_id=1808847414 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, -1.3)
+
+[node name="@Area3D@36244" parent="HeatGrateController" unique_id=1754906137 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, -1.3)
+
+[node name="@Area3D@36245" parent="HeatGrateController" unique_id=977058115 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, -1.3)
+
+[node name="@Area3D@36246" parent="HeatGrateController" unique_id=1946125023 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.3)
+
+[node name="@Area3D@36247" parent="HeatGrateController" unique_id=1449332063 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -1.3)
+
+[node name="@Area3D@36248" parent="HeatGrateController" unique_id=1046424545 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -1.3)
+
+[node name="@Area3D@36249" parent="HeatGrateController" unique_id=839163631 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, -1.3)
+
+[node name="@Area3D@36250" parent="HeatGrateController" unique_id=884508229 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, -1.3)
+
+[node name="@Area3D@36251" parent="HeatGrateController" unique_id=1772772395 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, 0)
+
+[node name="@Area3D@36252" parent="HeatGrateController" unique_id=1230716420 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, 0)
+
+[node name="@Area3D@36253" parent="HeatGrateController" unique_id=894755620 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, 0)
+
+[node name="@Area3D@36254" parent="HeatGrateController" unique_id=567769184 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 0)
+
+[node name="@Area3D@36255" parent="HeatGrateController" unique_id=1232841133 instance=ExtResource("10_mhwp5")]
+
+[node name="@Area3D@36256" parent="HeatGrateController" unique_id=1547981958 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 0)
+
+[node name="@Area3D@36257" parent="HeatGrateController" unique_id=915026264 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 0)
+
+[node name="@Area3D@36258" parent="HeatGrateController" unique_id=387726183 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, 0)
+
+[node name="@Area3D@36259" parent="HeatGrateController" unique_id=1021807000 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 0)
+
+[node name="@Area3D@36260" parent="HeatGrateController" unique_id=1580961229 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, 1.3)
+
+[node name="@Area3D@36261" parent="HeatGrateController" unique_id=1648378076 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, 1.3)
+
+[node name="@Area3D@36262" parent="HeatGrateController" unique_id=1413421176 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, 1.3)
+
+[node name="@Area3D@36263" parent="HeatGrateController" unique_id=238332216 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 1.3)
+
+[node name="@Area3D@36264" parent="HeatGrateController" unique_id=1427688110 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.3)
+
+[node name="@Area3D@36265" parent="HeatGrateController" unique_id=13655449 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.3)
+
+[node name="@Area3D@36266" parent="HeatGrateController" unique_id=1051967090 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 1.3)
+
+[node name="@Area3D@36267" parent="HeatGrateController" unique_id=787851347 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, 1.3)
+
+[node name="@Area3D@36268" parent="HeatGrateController" unique_id=1295951616 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 1.3)
+
+[node name="@Area3D@36269" parent="HeatGrateController" unique_id=1038732283 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, 2.6)
+
+[node name="@Area3D@36270" parent="HeatGrateController" unique_id=184696304 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, 2.6)
+
+[node name="@Area3D@36271" parent="HeatGrateController" unique_id=616252524 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, 2.6)
+
+[node name="@Area3D@36272" parent="HeatGrateController" unique_id=1489720600 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 2.6)
+
+[node name="@Area3D@36273" parent="HeatGrateController" unique_id=1658650385 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6)
+
+[node name="@Area3D@36274" parent="HeatGrateController" unique_id=585789245 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 2.6)
+
+[node name="@Area3D@36275" parent="HeatGrateController" unique_id=288959607 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 2.6)
+
+[node name="@Area3D@36276" parent="HeatGrateController" unique_id=2133211915 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, 2.6)
+
+[node name="@Area3D@36277" parent="HeatGrateController" unique_id=512625178 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 2.6)
+
+[node name="@Area3D@36278" parent="HeatGrateController" unique_id=1659050455 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, 3.8999999)
+
+[node name="@Area3D@36279" parent="HeatGrateController" unique_id=1467755638 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, 3.8999999)
+
+[node name="@Area3D@36280" parent="HeatGrateController" unique_id=712711737 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, 3.8999999)
+
+[node name="@Area3D@36281" parent="HeatGrateController" unique_id=668457093 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 3.8999999)
+
+[node name="@Area3D@36282" parent="HeatGrateController" unique_id=1066265047 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.8999999)
+
+[node name="@Area3D@36283" parent="HeatGrateController" unique_id=145261090 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 3.8999999)
+
+[node name="@Area3D@36284" parent="HeatGrateController" unique_id=1922788704 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 3.8999999)
+
+[node name="@Area3D@36285" parent="HeatGrateController" unique_id=1439901053 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, 3.8999999)
+
+[node name="@Area3D@36286" parent="HeatGrateController" unique_id=60241250 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 3.8999999)
+
+[node name="@Area3D@36287" parent="HeatGrateController" unique_id=1978640844 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.2, 0, 5.2)
+
+[node name="@Area3D@36288" parent="HeatGrateController" unique_id=1583872527 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.8999999, 0, 5.2)
+
+[node name="@Area3D@36289" parent="HeatGrateController" unique_id=434814013 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0, 5.2)
+
+[node name="@Area3D@36290" parent="HeatGrateController" unique_id=24232040 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 5.2)
+
+[node name="@Area3D@36291" parent="HeatGrateController" unique_id=173203660 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.2)
+
+[node name="@Area3D@36292" parent="HeatGrateController" unique_id=2122651153 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 5.2)
+
+[node name="@Area3D@36293" parent="HeatGrateController" unique_id=1090003203 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 5.2)
+
+[node name="@Area3D@36294" parent="HeatGrateController" unique_id=1152878167 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8999999, 0, 5.2)
+
+[node name="@Area3D@36295" parent="HeatGrateController" unique_id=580520863 instance=ExtResource("10_mhwp5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0, 5.2)
 
 [node name="capstan" parent="." unique_id=426294487 instance=ExtResource("11_4kqca")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, -13.2136345, 0, -14.273764)

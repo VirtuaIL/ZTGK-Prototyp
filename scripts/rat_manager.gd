@@ -16,7 +16,7 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
-@export var min_cap: int = 60
+@export var min_cap: int = 40
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -112,6 +112,11 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var capstan_cursor_ring_radius: float = 8.0
 @export var capstan_cursor_rotation_scale: float = 0.6
 @export var capstan_rat_required_radius: float = 2.4
+@export var cursor_trail_max_length: float = 9.0
+@export var cursor_turn_reset_angle: float = 120.0
+@export var cursor_turn_reset_distance: float = 1.0
+@export var carry_player_enabled: bool = true
+@export var carry_player_height_offset: float = 0.6
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -143,10 +148,14 @@ const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
 var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
+var _mouse_trail_last_dir: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
 var _combat_circle_angle: float = 0.0
 var _combat_offsets: Dictionary = {}
 var _combat_offsets_ready: bool = false
+var _carried_player_base_y: float = 0.0
+var _carried_player_base_set: bool = false
+var _carry_player_active: bool = false
 
 const BRUSH_DIM_FACTOR: float = 0.6
 
@@ -170,6 +179,10 @@ var structure_integrity: float = structure_max_integrity
 @export var structure_decay_on_projectile: float = 20.0 # integrity loss per hit
 @export var structure_lifetime: float = 0.0 # seconds before wall crumbles (0 = never)
 var _structure_timer: float = 0.0
+
+@export var bridge_collapse_time: float = 2.5
+var bridge_stress: float = 0.0
+var _stress_update_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -228,7 +241,33 @@ func increase_min_cap(amount: int) -> void:
 func restore_to_min(require_empty: bool = false) -> void:
 	if require_empty and get_active_rat_count() > 0:
 		return
-	_restore_to_min_near_player()
+	_restore_to_min_near_spawn()
+
+func reset_respawn_and_restore() -> void:
+	_min_respawn_cooldown = 0.0
+	_restore_to_min_near_spawn()
+
+func reset_after_level_load() -> void:
+	# Reset cursor/build state so preview aligns immediately
+	_mouse_trail.clear()
+	_mouse_trail_last = Vector3.ZERO
+	_mouse_trail_last_dir = Vector3.ZERO
+	current_build_y = -1000.0
+	current_drawn_path.clear()
+	_has_last_build_pos = false
+	if immediate_mesh:
+		immediate_mesh.clear_surfaces()
+	_min_respawn_cooldown = 0.0
+	# Revive any fallen rats at the nearest spawn
+	var center := _get_nearest_spawn_pos()
+	for r in rats:
+		var rat := r as Rat
+		if rat and rat.is_fallen:
+			var angle := randf() * TAU
+			var radius := randf_range(spawn_radius_min, spawn_radius_max)
+			var pos := center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+			rat.force_respawn_at_position(pos)
+	ensure_min_cap()
 
 
 func ensure_min_cap() -> void:
@@ -252,18 +291,16 @@ func _spawn_rats(count: int) -> void:
 	if parent_node == null:
 		parent_node = self
 
-	var base_pos := global_position
-	if _player:
-		base_pos = _player.global_position
+	var base_pos := _get_horde_center()
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var spawn_nodes: Array[Node3D] = []
 	for s in spawns:
 		var n := s as Node3D
 		if n != null:
 			spawn_nodes.append(n)
-	if spawn_nodes.size() > 1 and _player:
+	if spawn_nodes.size() > 1:
 		spawn_nodes.sort_custom(func(a: Node3D, b: Node3D) -> bool:
-			return a.global_position.distance_squared_to(_player.global_position) < b.global_position.distance_squared_to(_player.global_position)
+			return a.global_position.distance_squared_to(base_pos) < b.global_position.distance_squared_to(base_pos)
 		)
 
 	for i in range(count):
@@ -285,10 +322,10 @@ func _spawn_rats(count: int) -> void:
 	build_blob_offsets()
 
 
-func _get_nearest_spawn_pos() -> Vector3:
-	var base_pos := global_position
-	if _player:
-		base_pos = _player.global_position
+func _get_nearest_spawn_pos(ref_pos: Vector3 = Vector3.INF) -> Vector3:
+	var base_pos := ref_pos
+	if base_pos == Vector3.INF:
+		base_pos = _get_horde_center()
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var nearest: Node3D = null
 	var best_dist := INF
@@ -303,6 +340,23 @@ func _get_nearest_spawn_pos() -> Vector3:
 	if nearest:
 		return nearest.global_position
 	return base_pos
+
+func _get_horde_center() -> Vector3:
+	var sum := Vector3.ZERO
+	var count := 0
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.is_fallen:
+			continue
+		sum += r.global_position
+		count += 1
+	if count > 0:
+		return sum / float(count)
+	if _player:
+		return _player.global_position
+	return global_position
 
 
 func _spawn_rats_at_center(count: int, center: Vector3) -> void:
@@ -347,36 +401,23 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var active := get_active_rat_count()
-	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_restore_to_min_near_player()
+	var total := get_total_rat_count()
+	if total < min_cap and _min_respawn_cooldown <= 0.0:
+		_restore_to_min_near_spawn()
 		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
 
-func _restore_to_min_near_player() -> void:
+func _restore_to_min_near_spawn() -> void:
 	_clamp_caps()
-	if _player == null:
-		return
 	var target := min_cap
 	if target <= 0:
 		return
-	var active := get_active_rat_count()
-	var needed := target - active
+	var total := get_total_rat_count()
+	var needed := target - total
 	if needed <= 0:
 		return
-
-	var fallen := _get_fallen_rats()
-	for r in fallen:
-		if needed <= 0:
-			break
-		var angle := randf() * TAU
-		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var pos := _player.global_position + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-		r.force_respawn_at_position(pos)
-		needed -= 1
-
-	if needed > 0:
-		_spawn_rats_at_center(needed, _player.global_position)
+	var center := _get_nearest_spawn_pos()
+	_spawn_rats_at_center(needed, center)
 
 
 func _check_rat_spawn_bonus() -> void:
@@ -434,6 +475,26 @@ func _process(delta: float) -> void:
 			structure_integrity = structure_max_integrity
 			_structure_timer = 0.0
 
+	if _stress_update_timer > 0.0:
+		_stress_update_timer -= delta
+		var shake := 0.05 * (bridge_stress / bridge_collapse_time)
+		unified_shape_combiner.position = Vector3(
+			randf_range(-shake, shake),
+			0.0,
+			randf_range(-shake, shake)
+		)
+	elif bridge_stress > 0.0:
+		bridge_stress = maxf(0.0, bridge_stress - delta * 0.5)
+		if bridge_stress <= 0.0:
+			unified_shape_combiner.position = Vector3.ZERO
+		else:
+			var shake := 0.05 * (bridge_stress / bridge_collapse_time)
+			unified_shape_combiner.position = Vector3(
+				randf_range(-shake, shake),
+				0.0,
+				randf_range(-shake, shake)
+			)
+
 	# ── Neighbor throttle ──
 	_neighbor_tick += 1
 	if _neighbor_tick >= NEIGHBOR_TICK:
@@ -444,12 +505,35 @@ func _process(delta: float) -> void:
 	_update_cursor_preview()
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
+	_update_carried_player()
 
 
 func _update_edge_avoidance() -> void:
 	# Edge avoidance completely disabled per user request.
 	# (Leaving function intact but doing nothing so it can be called safely)
 	pass
+
+func _update_carried_player() -> void:
+	if not carry_player_enabled:
+		return
+	if _player == null:
+		return
+	if grabbed_object == _player:
+		return
+	if not _carry_player_active:
+		return
+	if not _carried_player_base_set:
+		_carried_player_base_y = _player.global_position.y
+		_carried_player_base_set = true
+	var center := _get_horde_center()
+	var target := Vector3(center.x, _carried_player_base_y + carry_player_height_offset, center.z)
+	_player.set("carried_target_pos", target)
+	_player.set("has_carried_target", true)
+	# Keep player from drifting due to physics
+	if _player.has_method("set_velocity"):
+		_player.set_velocity(Vector3.ZERO)
+	elif "velocity" in _player:
+		_player.velocity = Vector3.ZERO
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
@@ -466,11 +550,40 @@ func _update_mouse_trail(mouse_world: Vector3) -> void:
 	if _mouse_trail.is_empty():
 		_mouse_trail.append(mouse_world)
 		_mouse_trail_last = mouse_world
+		_mouse_trail_last_dir = Vector3.ZERO
 	elif mouse_world.distance_to(_mouse_trail_last) >= DRAW_SAMPLE_DIST:
+		var move := mouse_world - _mouse_trail_last
+		move.y = 0.0
+		var dist := move.length()
+		if dist > 0.001 and _mouse_trail.size() >= 2:
+			var new_dir := move / dist
+			if _mouse_trail_last_dir != Vector3.ZERO and dist >= cursor_turn_reset_distance:
+				var dot := clampf(_mouse_trail_last_dir.dot(new_dir), -1.0, 1.0)
+				var angle := rad_to_deg(acos(dot))
+				if angle >= cursor_turn_reset_angle:
+					_mouse_trail.clear()
+					_mouse_trail.append(mouse_world)
+					_mouse_trail_last = mouse_world
+					_mouse_trail_last_dir = new_dir
+					return
+			_mouse_trail_last_dir = new_dir
 		_mouse_trail.append(mouse_world)
 		_mouse_trail_last = mouse_world
+		_trim_mouse_trail_max_length()
 		if _mouse_trail.size() > MOUSE_TRAIL_MAX:
 			_mouse_trail.pop_front()
+
+func _trim_mouse_trail_max_length() -> void:
+	if cursor_trail_max_length <= 0.0:
+		return
+	if _mouse_trail.size() < 2:
+		return
+	var total := 0.0
+	for i in range(1, _mouse_trail.size()):
+		total += _mouse_trail[i].distance_to(_mouse_trail[i - 1])
+	while total > cursor_trail_max_length and _mouse_trail.size() > 2:
+		total -= _mouse_trail[1].distance_to(_mouse_trail[0])
+		_mouse_trail.remove_at(0)
 
 
 func _brush_color(base: Color) -> Color:
@@ -867,7 +980,9 @@ func _mouse_to_world() -> Vector3:
 	# Physics hit
 	var ss := cam.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ro, ro + rd * 1000.0)
-	query.collision_mask = 0xFFFFFFFF
+	query.collision_mask = 1
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
 	var hit := ss.intersect_ray(query)
 	if hit:
 		return hit.position
@@ -1186,7 +1301,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret:
+					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1194,6 +1309,12 @@ func _unhandled_input(event: InputEvent) -> void:
 						grabbed_object = obj
 						if grabbed_object:
 							grabbed_object.set_meta("is_being_dragged", true)
+							if grabbed_object == _player and carry_player_enabled:
+								_carry_player_active = true
+								_carried_player_base_set = false
+								_player.set("carried_by_rats", true)
+								_player.set("is_being_carried", true)
+								grabbed_object.set("is_surrounded", true)
 						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
@@ -1208,6 +1329,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					# Release grabbed object
 					if grabbed_object != null:
 						grabbed_object.set_meta("is_being_dragged", false)
+						if grabbed_object == _player:
+							_carry_player_active = false
+							if _player:
+								_player.set("is_being_carried", false)
+								_player.set("has_carried_target", false)
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
@@ -1349,6 +1475,15 @@ func receive_laser(delta: float) -> void:
 		structure_integrity = structure_max_integrity
 
 
+func add_bridge_stress(amount: float) -> void:
+	if not _has_static_rats():
+		return
+	bridge_stress += amount
+	_stress_update_timer = 0.1
+	if bridge_stress >= bridge_collapse_time:
+		recall_all_rats()
+
+
 func on_projectile_hit() -> void:
 	if not _has_static_rats():
 		return
@@ -1362,6 +1497,11 @@ func recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
 		grabbed_object.set_meta("is_being_dragged", false)
+		if grabbed_object == _player:
+			_carry_player_active = false
+			if _player:
+				_player.set("is_being_carried", false)
+				_player.set("has_carried_target", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1395,6 +1535,8 @@ func recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 	_structure_timer = 0.0
+	bridge_stress = 0.0
+	unified_shape_combiner.position = Vector3.ZERO
 
 	# Respawn only at rat_spawn now.
 
@@ -1403,6 +1545,11 @@ func hard_recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
 		grabbed_object.set_meta("is_being_dragged", false)
+		if grabbed_object == _player:
+			_carry_player_active = false
+			if _player:
+				_player.set("is_being_carried", false)
+				_player.set("has_carried_target", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1439,6 +1586,8 @@ func hard_recall_all_rats() -> void:
 		rat.is_following_player = true
 		rat.is_carrier = false
 	_structure_timer = 0.0
+	bridge_stress = 0.0
+	unified_shape_combiner.position = Vector3.ZERO
 
 
 func _process_hover() -> void:
@@ -1452,7 +1601,7 @@ func _process_hover() -> void:
 	
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	query.collision_mask = 4 
+	query.collision_mask = 4 | 2
 	
 	var hit := space_state.intersect_ray(query)
 	var new_hover: Node3D = null

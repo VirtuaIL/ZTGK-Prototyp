@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cc6a8vpeg25d1"]
 
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player.gd" id="1_script"]
-[ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
+[ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -15,6 +15,15 @@ height = 1.6
 radius = 0.4
 height = 1.6
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Cage"]
+albedo_color = Color(0.25, 0.25, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CageBar"]
+size = Vector3(0.1, 1.8, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CageTop"]
+size = Vector3(0.9, 0.1, 0.9)
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
 shader_parameter/vignette_color = Color(1, 0, 0, 1)
@@ -22,16 +31,15 @@ shader_parameter/intensity = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_HealthPanel"]
 bg_color = Color(0, 0, 0, 0.65)
-border_color = Color(0.9, 0.9, 0.9, 0.6)
 border_width_left = 2
-border_width_right = 2
 border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.9, 0.9, 0.9, 0.6)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
-corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
-
+corner_radius_bottom_left = 6
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
@@ -44,9 +52,41 @@ mesh = SubResource("CapsuleMesh_1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="PlayerHUD" type="CanvasLayer" parent="."]
+[node name="Cage" type="Node3D" parent="." unique_id=1523216981]
 
-[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD"]
+[node name="Bar1" type="MeshInstance3D" parent="Cage" unique_id=601988243]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.9, 0.35)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageBar")
+
+[node name="Bar2" type="MeshInstance3D" parent="Cage" unique_id=1731331557]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.9, 0.35)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageBar")
+
+[node name="Bar3" type="MeshInstance3D" parent="Cage" unique_id=1246520963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.9, -0.35)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageBar")
+
+[node name="Bar4" type="MeshInstance3D" parent="Cage" unique_id=1225264962]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.9, -0.35)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageBar")
+
+[node name="Top" type="MeshInstance3D" parent="Cage" unique_id=1951876487]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageTop")
+
+[node name="Top2" type="MeshInstance3D" parent="Cage" unique_id=564743886]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03840494, 0)
+material_override = SubResource("StandardMaterial3D_Cage")
+mesh = SubResource("BoxMesh_CageTop")
+
+[node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=565583916]
+
+[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD" unique_id=639462511]
 material = SubResource("ShaderMaterial_Vignette")
 anchors_preset = 15
 anchor_right = 1.0
@@ -55,7 +95,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HealthBar" type="Panel" parent="PlayerHUD"]
+[node name="HealthBar" type="Panel" parent="PlayerHUD" unique_id=774002082]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
@@ -65,48 +106,44 @@ offset_bottom = -30.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
 
-[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar"]
-anchors_preset = 15
+[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar" unique_id=1704967935]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
 theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin" unique_id=1900460949]
+layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=67752582]
+layout_mode = 2
 text = "ZDROWIE"
-mouse_filter = 2
 
-[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=1830620814]
 custom_minimum_size = Vector2(0, 18)
-max_value = 100.0
+layout_mode = 2
+mouse_filter = 2
 value = 100.0
 show_percentage = false
-mouse_filter = 2
 
-[node name="HelpHint" type="Label" parent="PlayerHUD"]
+[node name="HelpHint" type="Label" parent="PlayerHUD" unique_id=465377058]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = -26.0
 offset_right = 220.0
 offset_bottom = -8.0
-text = "H — pomoc"
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.72, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 11
+text = "H — pomoc"
