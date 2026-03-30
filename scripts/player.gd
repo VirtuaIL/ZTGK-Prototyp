@@ -67,11 +67,17 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if carried_by_rats:
-		velocity = Vector3.ZERO
+		velocity.x = 0.0
+		velocity.z = 0.0
 		if is_being_carried and has_carried_target:
 			var motion := carried_target_pos - global_position
 			move_and_collide(motion)
 			return
+		# Allow falling even when idle
+		if not is_on_floor():
+			velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5
+		else:
+			velocity.y = 0.0
 		move_and_slide()
 		return
 
