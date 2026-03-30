@@ -17,9 +17,11 @@ var _bodies_on_button: int = 0
 var _rest_y: float = 0.0
 var _visual: button = null
 var _latched: bool = false
+var _ready_for_input: bool = false
 
 
 func _ready() -> void:
+	add_to_group("buttons")
 	# Assume the script's parent is the visual/physics node to animate
 	var p := self
 	if p is button:
@@ -30,17 +32,34 @@ func _ready() -> void:
 	var area = get_node_or_null("Area3D")
 	if area:
 		area.collision_mask = 6 # 2 (Player) + 4 (Movable Objects)
+	_ready_for_input = false
+	call_deferred("_enable_button_input")
+
+func _enable_button_input() -> void:
+	_ready_for_input = true
 
 #changed from Array[Door] to array[Node] to accomodate different entity types being triggered
 func _get_target_doors() -> Array[Node]:
 	var result: Array[Node] = []
+	var level_root := _get_level_root()
 	var objects := get_tree().get_nodes_in_group("doors") + get_tree().get_nodes_in_group("bosses")
 	print(objects)
 	for d in (objects):
+		if level_root and not level_root.is_ancestor_of(d):
+			continue
 		if ((d is Node) || (d is bossTurret)) and d.doorId == doorId:
 			result.append(d)
 	print(result)
 	return result
+
+func _get_level_root() -> Node:
+	var n: Node = self
+	while n and n.get_parent():
+		var p := n.get_parent()
+		if p and p.name == "levels":
+			return n
+		n = p
+	return null
 
 
 func _set_pressed(pressed: bool) -> void:
@@ -54,6 +73,8 @@ func _set_pressed(pressed: bool) -> void:
 
 
 func _on_area_3d_body_entered(body: Node3D) -> void:
+	if not _ready_for_input:
+		return
 	# Activated by boxes, players, or turrets
 	if not (body is box or body is player or body is turret or body is hitscan_turret):
 		return
@@ -70,6 +91,8 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 
 
 func _on_area_3d_body_exited(body: Node3D) -> void:
+	if not _ready_for_input:
+		return
 	if not (body is box or body is player or body is turret or body is hitscan_turret):
 		return
 	_bodies_on_button = max(0, _bodies_on_button - 1)
@@ -82,3 +105,8 @@ func _on_area_3d_body_exited(body: Node3D) -> void:
 				target.release(self)
 			else:
 				target.close()
+
+func reset_button_state() -> void:
+	_bodies_on_button = 0
+	_latched = false
+	_set_pressed(false)
