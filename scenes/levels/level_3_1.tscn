@@ -29,7 +29,7 @@ size = Vector3(0.8, 1.4, 0.8)
 [node name="Level3" type="Node3D" unique_id=1719073169]
 
 [node name="CameraCenter" type="Node3D" parent="." unique_id=988644282]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.432622, 0, -14.303774)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0042505, 1.9073486e-06, 4.3401165)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
