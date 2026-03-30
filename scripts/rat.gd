@@ -16,7 +16,7 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var separation_force: float = 12.0
 @export var max_speed:        float = 26.0
 @export var cursor_follow_speed_scale: float = 0.6
-@export var edge_avoidance_enabled: bool = false
+@export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
 @export var release_boost_speed: float = 14.0

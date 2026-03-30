@@ -509,9 +509,8 @@ func _process(delta: float) -> void:
 
 
 func _update_edge_avoidance() -> void:
-	# Edge avoidance completely disabled per user request.
-	# (Leaving function intact but doing nothing so it can be called safely)
-	pass
+	for rat in rats:
+		rat.edge_avoidance_enabled = true
 
 func _update_carried_player() -> void:
 	if not carry_player_enabled:
@@ -1827,35 +1826,21 @@ func _update_cursor_preview() -> void:
 		return
 
 	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
-	var hit: Dictionary = _get_mouse_ground_hit()
-	var raw_pos: Vector3
+	var constant_y: float = (player_node.global_position.y if player_node else 0.0) + build_surface_offset
 	
-	if hit:
-		raw_pos = hit.position + hit.normal * build_surface_offset
-		if current_build_y <= -500.0:
-			current_build_y = raw_pos.y
-		raw_pos.y = current_build_y
-	elif current_build_y > -500.0:
-		var fallback := _get_mouse_pos_at_y(current_build_y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	elif player_node:
-		var fallback := _get_mouse_pos_at_y(player_node.global_position.y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	else:
+	var raw_pos := _get_mouse_pos_at_y(constant_y)
+	if raw_pos == Vector3.ZERO:
 		immediate_mesh.clear_surfaces()
 		return
+
+	var hit: Dictionary = _get_mouse_ground_hit()
+	var is_invalid_surface: bool = hit.is_empty()
 
 	if build_draw_mode == DRAW_MODE_CIRCLE:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(hit.is_empty())
+		_update_circle_preview(is_invalid_surface)
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:
