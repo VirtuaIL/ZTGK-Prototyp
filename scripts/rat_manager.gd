@@ -16,7 +16,7 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat.tscn")
-@export var min_cap: int = 60
+@export var min_cap: int = 40
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -112,6 +112,9 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var capstan_cursor_ring_radius: float = 8.0
 @export var capstan_cursor_rotation_scale: float = 0.6
 @export var capstan_rat_required_radius: float = 2.4
+@export var cursor_trail_max_length: float = 9.0
+@export var cursor_turn_reset_angle: float = 120.0
+@export var cursor_turn_reset_distance: float = 1.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -143,6 +146,7 @@ const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
 var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
+var _mouse_trail_last_dir: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
 var _combat_circle_angle: float = 0.0
 var _combat_offsets: Dictionary = {}
@@ -232,7 +236,33 @@ func increase_min_cap(amount: int) -> void:
 func restore_to_min(require_empty: bool = false) -> void:
 	if require_empty and get_active_rat_count() > 0:
 		return
-	_restore_to_min_near_player()
+	_restore_to_min_near_spawn()
+
+func reset_respawn_and_restore() -> void:
+	_min_respawn_cooldown = 0.0
+	_restore_to_min_near_spawn()
+
+func reset_after_level_load() -> void:
+	# Reset cursor/build state so preview aligns immediately
+	_mouse_trail.clear()
+	_mouse_trail_last = Vector3.ZERO
+	_mouse_trail_last_dir = Vector3.ZERO
+	current_build_y = -1000.0
+	current_drawn_path.clear()
+	_has_last_build_pos = false
+	if immediate_mesh:
+		immediate_mesh.clear_surfaces()
+	_min_respawn_cooldown = 0.0
+	# Revive any fallen rats at the nearest spawn
+	var center := _get_nearest_spawn_pos()
+	for r in rats:
+		var rat := r as Rat
+		if rat and rat.is_fallen:
+			var angle := randf() * TAU
+			var radius := randf_range(spawn_radius_min, spawn_radius_max)
+			var pos := center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+			rat.force_respawn_at_position(pos)
+	ensure_min_cap()
 
 
 func ensure_min_cap() -> void:
@@ -351,36 +381,23 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var active := get_active_rat_count()
-	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_restore_to_min_near_player()
+	var total := get_total_rat_count()
+	if total < min_cap and _min_respawn_cooldown <= 0.0:
+		_restore_to_min_near_spawn()
 		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
 
-func _restore_to_min_near_player() -> void:
+func _restore_to_min_near_spawn() -> void:
 	_clamp_caps()
-	if _player == null:
-		return
 	var target := min_cap
 	if target <= 0:
 		return
-	var active := get_active_rat_count()
-	var needed := target - active
+	var total := get_total_rat_count()
+	var needed := target - total
 	if needed <= 0:
 		return
-
-	var fallen := _get_fallen_rats()
-	for r in fallen:
-		if needed <= 0:
-			break
-		var angle := randf() * TAU
-		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var pos := _player.global_position + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-		r.force_respawn_at_position(pos)
-		needed -= 1
-
-	if needed > 0:
-		_spawn_rats_at_center(needed, _player.global_position)
+	var center := _get_nearest_spawn_pos()
+	_spawn_rats_at_center(needed, center)
 
 
 func _check_rat_spawn_bonus() -> void:
@@ -490,11 +507,40 @@ func _update_mouse_trail(mouse_world: Vector3) -> void:
 	if _mouse_trail.is_empty():
 		_mouse_trail.append(mouse_world)
 		_mouse_trail_last = mouse_world
+		_mouse_trail_last_dir = Vector3.ZERO
 	elif mouse_world.distance_to(_mouse_trail_last) >= DRAW_SAMPLE_DIST:
+		var move := mouse_world - _mouse_trail_last
+		move.y = 0.0
+		var dist := move.length()
+		if dist > 0.001 and _mouse_trail.size() >= 2:
+			var new_dir := move / dist
+			if _mouse_trail_last_dir != Vector3.ZERO and dist >= cursor_turn_reset_distance:
+				var dot := clampf(_mouse_trail_last_dir.dot(new_dir), -1.0, 1.0)
+				var angle := rad_to_deg(acos(dot))
+				if angle >= cursor_turn_reset_angle:
+					_mouse_trail.clear()
+					_mouse_trail.append(mouse_world)
+					_mouse_trail_last = mouse_world
+					_mouse_trail_last_dir = new_dir
+					return
+			_mouse_trail_last_dir = new_dir
 		_mouse_trail.append(mouse_world)
 		_mouse_trail_last = mouse_world
+		_trim_mouse_trail_max_length()
 		if _mouse_trail.size() > MOUSE_TRAIL_MAX:
 			_mouse_trail.pop_front()
+
+func _trim_mouse_trail_max_length() -> void:
+	if cursor_trail_max_length <= 0.0:
+		return
+	if _mouse_trail.size() < 2:
+		return
+	var total := 0.0
+	for i in range(1, _mouse_trail.size()):
+		total += _mouse_trail[i].distance_to(_mouse_trail[i - 1])
+	while total > cursor_trail_max_length and _mouse_trail.size() > 2:
+		total -= _mouse_trail[1].distance_to(_mouse_trail[0])
+		_mouse_trail.remove_at(0)
 
 
 func _brush_color(base: Color) -> Color:
@@ -891,7 +937,9 @@ func _mouse_to_world() -> Vector3:
 	# Physics hit
 	var ss := cam.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ro, ro + rd * 1000.0)
-	query.collision_mask = 0xFFFFFFFF
+	query.collision_mask = 1
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
 	var hit := ss.intersect_ray(query)
 	if hit:
 		return hit.position

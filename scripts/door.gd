@@ -9,7 +9,7 @@ class_name door
 @export var slide_axis: Vector3 = Vector3.RIGHT
 
 # Duration of the slide animation in seconds
-@export var slide_duration: float = 1.8
+@export var slide_duration: float = 3.0
 
 # If true, the door starts open and closes when triggered
 @export var is_inverse: bool = false

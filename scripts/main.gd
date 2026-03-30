@@ -48,17 +48,33 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 @export var cam_look_ahead_smooth: float = 6.0
 var _cam_look_ahead: Vector3 = Vector3.ZERO
 
+# ── Camera level centering ────────────────────────────────────────────────────
+@export var cam_level_focus_weight: float = 0.4
+@export var cam_level_focus_weight_forced: float = 0.55
+@export var cam_level_switch_hysteresis: float = 3.0
+var _levels: Array[Node3D] = []
+var _current_level: Node3D = null
+var _forced_level: Node3D = null
+
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
 @onready var stratagem_system: Node = get_node_or_null("StratagemSystem")
 @onready var stratagem_hud: CanvasLayer = get_node_or_null("StratagemHUD")
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
+@onready var levels_root: Node3D = get_node_or_null("levels")
 
 
 func _ready() -> void:
 	_setup_input_map()
 	_init_game()
 	get_viewport().size_changed.connect(_refresh_cheatsheet_size)
+	_gather_levels()
+	call_deferred("_post_init_fixup")
+
+func _post_init_fixup() -> void:
+	await get_tree().process_frame
+	if rat_manager and rat_manager.has_method("reset_after_level_load"):
+		rat_manager.reset_after_level_load()
 
 
 func _init_game() -> void:
@@ -453,6 +469,96 @@ func _update_mode_ui() -> void:
 	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
 	if ppm_label_val: ppm_label_val.text = "buduj / przenieś"
 
+func _gather_levels() -> void:
+	_levels.clear()
+	if levels_root == null:
+		return
+	for child in levels_root.get_children():
+		var lvl := child as Node3D
+		if lvl:
+			_levels.append(lvl)
+
+func _get_level_center_node(level: Node3D) -> Node3D:
+	if level == null:
+		return null
+	var center := level.get_node_or_null("CameraCenter")
+	if center and center is Node3D:
+		return center as Node3D
+	return level
+
+func _pick_current_level(player_pos: Vector3) -> Node3D:
+	if _levels.is_empty():
+		return null
+	var best: Node3D = null
+	var best_dist := INF
+	for lvl in _levels:
+		var center := _get_level_center_node(lvl)
+		if center == null:
+			continue
+		var dist := player_pos.distance_to(center.global_position)
+		if dist < best_dist:
+			best = lvl
+			best_dist = dist
+
+	if _current_level and best and best != _current_level:
+		var cur_center := _get_level_center_node(_current_level)
+		if cur_center:
+			var cur_dist := player_pos.distance_to(cur_center.global_position)
+			if cur_dist - best_dist < cam_level_switch_hysteresis:
+				best = _current_level
+
+	return best
+
+func _set_level_occlusion(level: Node3D, enabled: bool) -> void:
+	if level == null:
+		return
+	var walls := level.get_node_or_null("walls")
+	if walls and walls is Node3D:
+		(walls as Node3D).visible = enabled
+
+func _close_level_doors(level: Node3D) -> void:
+	if level == null:
+		return
+	for door in get_tree().get_nodes_in_group("doors"):
+		var d := door as Node3D
+		if d and level.is_ancestor_of(d) and d.has_method("close"):
+			d.close()
+
+func _reset_level_objects(level: Node3D) -> void:
+	if level == null:
+		return
+	for box in get_tree().get_nodes_in_group("boxes"):
+		var b := box as Node3D
+		if b and level.is_ancestor_of(b) and b.has_method("_activate_reset_to_spawn"):
+			b._activate_reset_to_spawn()
+
+func restart_level_for_checkpoint(level: Node3D) -> void:
+	if level == null:
+		return
+	force_current_level(level)
+	_close_level_doors(level)
+	_reset_level_objects(level)
+	if rat_manager and rat_manager.has_method("reset_respawn_and_restore"):
+		rat_manager.reset_respawn_and_restore()
+
+func _update_level_occlusion(current: Node3D) -> void:
+	for lvl in _levels:
+		var is_current := lvl == current
+		_set_level_occlusion(lvl, is_current)
+		if not is_current:
+			_close_level_doors(lvl)
+
+func force_current_level(level: Node3D) -> void:
+	if level == null:
+		return
+	_forced_level = level
+	_current_level = level
+	_update_level_occlusion(_current_level)
+
+func clear_forced_level(level: Node3D = null) -> void:
+	if level == null or _forced_level == level:
+		_forced_level = null
+
 
 func _process(delta: float) -> void:
 	_update_rat_count_ui()
@@ -506,6 +612,17 @@ func _process(delta: float) -> void:
 
 		# Keep constant offset angle
 		var offset := Vector3(10, 12, 10)
+		
+		# Blend in level center for better puzzle visibility
+		var current_level := _forced_level if _forced_level else _pick_current_level(player.global_position)
+		if current_level and current_level != _current_level:
+			_current_level = current_level
+			_update_level_occlusion(_current_level)
+		var center_node := _get_level_center_node(_current_level) if _current_level else null
+		if center_node:
+			var weight := cam_level_focus_weight_forced if _forced_level else cam_level_focus_weight
+			focus = focus.lerp(center_node.global_position, weight)
+
 		cam.position = cam.position.lerp(focus + offset + _cam_look_ahead, 0.03)
 		
 		# Force strict isometric angle by looking parallel to the offset vector

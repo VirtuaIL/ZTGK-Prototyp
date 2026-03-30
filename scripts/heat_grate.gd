@@ -1,3 +1,4 @@
+@tool
 extends Area3D
 class_name HeatGrate
 
@@ -22,7 +23,8 @@ func _ready() -> void:
 	_mat_cold = StandardMaterial3D.new()
 	_mat_cold.albedo_color = Color(0.1, 0.1, 0.1)
 	
-	body_entered.connect(_on_body_entered)
+	if not Engine.is_editor_hint():
+		body_entered.connect(_on_body_entered)
 	_update_visuals()
 
 func _update_visuals() -> void:
