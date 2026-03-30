@@ -705,7 +705,7 @@ func _update_recall_hold(delta: float) -> void:
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 0.5)
 		if _recall_hold_time >= 0.5:
-			rat_manager.hard_recall_all_rats()
+			rat_manager.recall_all_rats()
 			_recall_triggered = true
 	else:
 		_recall_hold_time = 0.0

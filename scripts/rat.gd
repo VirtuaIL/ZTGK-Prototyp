@@ -17,8 +17,8 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var max_speed:        float = 26.0
 @export var cursor_follow_speed_scale: float = 0.6
 @export var edge_avoidance_enabled: bool = true
-@export var edge_probe_distance: float = 0.45
-@export var edge_max_drop: float = 0.6
+@export var edge_probe_distance: float = 0.9
+@export var edge_max_drop: float = 1.2
 @export var release_boost_speed: float = 14.0
 @export var release_boost_up: float = 20.0
 @export var release_boost_time: float = 0.25
@@ -62,6 +62,7 @@ var is_carrier: bool = false
 
 # Fall recovery
 @export var fall_death_y: float = -1.0
+@export var prevent_fall_respawn: bool = true
 @export var respawn_time: float = 5.0
 @export var spawn_player_distance: float = 3.0
 @export var respawn_near_player_when_near_spawn: bool = false
@@ -114,6 +115,19 @@ func _physics_process(delta: float) -> void:
 
 	# Fall recovery first so distance check doesn't pull rats to player mid-fall.
 	if not is_anchored and global_position.y < fall_death_y:
+		if prevent_fall_respawn:
+			_reset_to_follow()
+			var spawn := _get_nearest_spawn(global_position)
+			if spawn != null:
+				global_position = spawn.global_position + Vector3(
+					randf_range(-0.6, 0.6), 0.2, randf_range(-0.6, 0.6)
+				)
+			elif player != null:
+				global_position = player.global_position + Vector3(
+					randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
+				)
+			velocity = Vector3.ZERO
+			return
 		_start_respawn()
 		return
 
