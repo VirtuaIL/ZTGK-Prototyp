@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ratspawn"]
 
-[ext_resource type="Script" path="res://scripts/rat_spawn.gd" id="1_spawn"]
+[ext_resource type="Script" uid="uid://cgmr5c3rt7opn" path="res://scripts/rat_spawn.gd" id="1_spawn"]
+[ext_resource type="Texture2D" uid="uid://hl4slmqj3u3e" path="res://resources/hint_more_rats_alt.png" id="2_xs7lt"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spawn"]
 albedo_color = Color(0.2, 0.2, 0.2, 1)
@@ -13,9 +14,14 @@ top_radius = 0.9
 bottom_radius = 0.9
 height = 0.1
 
-[node name="RatSpawn" type="Node3D"]
+[node name="RatSpawn" type="Node3D" unique_id=1719942994]
 script = ExtResource("1_spawn")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CylinderMesh_spawn")
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1903202578]
 material_override = SubResource("StandardMaterial3D_spawn")
+mesh = SubResource("CylinderMesh_spawn")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1566500145]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -0.014049411, 0.11801529, -0.024831474)
+pixel_size = 0.0015
+texture = ExtResource("2_xs7lt")

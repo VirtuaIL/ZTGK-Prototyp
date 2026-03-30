@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqjgt7b7gcfdy"
-path.s3tc="res://.godot/imported/controls_rotate_noMouse.png-bfc581aec49e7ef0b1b0c62d429c5ec3.s3tc.ctex"
+uid="uid://d2x2p2x1rwwrb"
+path.s3tc="res://.godot/imported/hint_more_rats.png-06846f04fb8feabd2383d1c1d7e01dd6.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://resources/controls_rotate_noMouse.png"
-dest_files=["res://.godot/imported/controls_rotate_noMouse.png-bfc581aec49e7ef0b1b0c62d429c5ec3.s3tc.ctex"]
+source_file="res://resources/hint_more_rats.png"
+dest_files=["res://.godot/imported/hint_more_rats.png-06846f04fb8feabd2383d1c1d7e01dd6.s3tc.ctex"]
 
 [params]
 

@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_jmukd"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_42pt1"]
 [ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_avfv3"]
-[ext_resource type="PackedScene" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
+[ext_resource type="PackedScene" uid="uid://db2r84gbsgdwy" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://c28717wolln1n" path="res://scenes/levels/level_5_1.tscn" id="12_a8y0u"]
 [ext_resource type="PackedScene" uid="uid://dkt0qubrdcd83" path="res://scenes/levels/level_5_2.tscn" id="13_jkv2x"]
 [ext_resource type="PackedScene" uid="uid://bpggtrks5qdb3" path="res://scenes/levels/level_5_3.tscn" id="14_jbj1t"]
@@ -68,7 +68,7 @@ use_wide_brush = true
 cursor_trail_max_length = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("5_hvlyp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8732128, -1.1444092e-05, -78.459526)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.324669, -1.1444092e-05, 4.050041)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("6_r1k3v")

@@ -9,6 +9,7 @@
 [ext_resource type="Shader" uid="uid://bcow6qxhd8ac2" path="res://resources/swampWater.gdshader" id="6_sc38n"]
 [ext_resource type="Texture2D" uid="uid://2fkxex6n673l" path="res://resources/WATERBLUE.png" id="7_0pruu"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="7_fj7db"]
+[ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="11_sc38n"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="12_s07g2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ns8tc"]
@@ -117,10 +118,14 @@ mesh = SubResource("BoxMesh_sft46")
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 10.910763, 0.62949514, 8.80334)
 
 [node name="button12" parent="." unique_id=1232488624 instance=ExtResource("7_fj7db")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6728477, 0.022004224, 11.842677)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8404975, 0.022004224, 8.868788)
 doorId = 61
-latch_open = false
 
 [node name="Capstan4" parent="." unique_id=426294487 instance=ExtResource("12_s07g2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2894707, -4.7683716e-07, -7.3808336)
 doorId = 60
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=9605763]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -6.3638086, 0, 14.053219)
+pixel_size = 0.004
+texture = ExtResource("11_sc38n")
