@@ -286,18 +286,16 @@ func _spawn_rats(count: int) -> void:
 	if parent_node == null:
 		parent_node = self
 
-	var base_pos := global_position
-	if _player:
-		base_pos = _player.global_position
+	var base_pos := _get_horde_center()
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var spawn_nodes: Array[Node3D] = []
 	for s in spawns:
 		var n := s as Node3D
 		if n != null:
 			spawn_nodes.append(n)
-	if spawn_nodes.size() > 1 and _player:
+	if spawn_nodes.size() > 1:
 		spawn_nodes.sort_custom(func(a: Node3D, b: Node3D) -> bool:
-			return a.global_position.distance_squared_to(_player.global_position) < b.global_position.distance_squared_to(_player.global_position)
+			return a.global_position.distance_squared_to(base_pos) < b.global_position.distance_squared_to(base_pos)
 		)
 
 	for i in range(count):
@@ -319,10 +317,10 @@ func _spawn_rats(count: int) -> void:
 	build_blob_offsets()
 
 
-func _get_nearest_spawn_pos() -> Vector3:
-	var base_pos := global_position
-	if _player:
-		base_pos = _player.global_position
+func _get_nearest_spawn_pos(ref_pos: Vector3 = Vector3.INF) -> Vector3:
+	var base_pos := ref_pos
+	if base_pos == Vector3.INF:
+		base_pos = _get_horde_center()
 	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var nearest: Node3D = null
 	var best_dist := INF
@@ -337,6 +335,23 @@ func _get_nearest_spawn_pos() -> Vector3:
 	if nearest:
 		return nearest.global_position
 	return base_pos
+
+func _get_horde_center() -> Vector3:
+	var sum := Vector3.ZERO
+	var count := 0
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.is_fallen:
+			continue
+		sum += r.global_position
+		count += 1
+	if count > 0:
+		return sum / float(count)
+	if _player:
+		return _player.global_position
+	return global_position
 
 
 func _spawn_rats_at_center(count: int, center: Vector3) -> void:

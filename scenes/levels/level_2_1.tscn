@@ -32,7 +32,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.432622, 0, -14.303774)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("12_rat_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.466045, 0, 2.9713955)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.466045, 0, 4.9713955)
+
+[node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("12_rat_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7673, 0, -17.427391)
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)
@@ -101,7 +104,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.615858, 0, -11.661636)
 
 [node name="button" parent="doors" unique_id=1670576418 instance=ExtResource("6_ic842")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.9108715, 0, -5.979533)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3096838, 0, -8.384399)
 
 [node name="sprites" type="Node3D" parent="." unique_id=284390696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)

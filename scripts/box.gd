@@ -26,6 +26,9 @@ func _activate_reset_to_spawn() -> void:
 	velocity = Vector3.ZERO
 	object_reset.emit()
 
+func die() -> void:
+	_activate_reset_to_spawn()
+
 
 func _physics_process(delta: float) -> void:
 	# Fall reset
