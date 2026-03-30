@@ -302,7 +302,7 @@ func _check_damage() -> void:
 	for enemy in enemies:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
-			enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
+			#enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
 			attack_cooldown = 1.0
 			break
 
