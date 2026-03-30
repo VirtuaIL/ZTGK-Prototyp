@@ -9,12 +9,14 @@ class_name button
 
 # Duration of the press animation
 @export var press_duration: float = 0.1
+@export var latch_open: bool = true
 
 # Track how many valid bodies are currently pressing the button.
 # When it drops to 0 the door closes again.
 var _bodies_on_button: int = 0
 var _rest_y: float = 0.0
 var _visual: button = null
+var _latched: bool = false
 
 
 func _ready() -> void:
@@ -59,7 +61,12 @@ func _on_area_3d_body_entered(body: Node3D) -> void:
 	if _bodies_on_button == 1:
 		_set_pressed(true)
 		for target in _get_target_doors():
-			target.open()
+			if target.has_method("press"):
+				target.press(self)
+			else:
+				target.open()
+		if latch_open:
+			_latched = true
 
 
 func _on_area_3d_body_exited(body: Node3D) -> void:
@@ -67,6 +74,11 @@ func _on_area_3d_body_exited(body: Node3D) -> void:
 		return
 	_bodies_on_button = max(0, _bodies_on_button - 1)
 	if _bodies_on_button == 0:
+		if _latched:
+			return
 		_set_pressed(false)
 		for target in _get_target_doors():
-			target.close()
+			if target.has_method("release"):
+				target.release(self)
+			else:
+				target.close()

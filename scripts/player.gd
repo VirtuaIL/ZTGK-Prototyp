@@ -12,6 +12,15 @@ signal player_died
 @export var max_hp: float = 100.0
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
+@export var carried_by_rats: bool = true
+var is_being_carried: bool = false
+
+signal object_reset
+
+var is_surrounded: bool = false
+var carrier_rats: Array[CharacterBody3D] = []
+var carrier_available_max: int = 0
+var carrier_brush_desired: int = 0
 
 var current_hp: float = 100.0
 var time_since_last_damage: float = 0.0
@@ -21,6 +30,8 @@ var time_since_last_damage: float = 0.0
 
 var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
+var carried_target_pos: Vector3 = Vector3.ZERO
+var has_carried_target: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
@@ -53,6 +64,15 @@ func _physics_process(delta: float) -> void:
 	# Fall reset
 	if global_position.y < fall_death_y:
 		die()
+		return
+
+	if carried_by_rats:
+		velocity = Vector3.ZERO
+		if is_being_carried and has_carried_target:
+			var motion := carried_target_pos - global_position
+			move_and_collide(motion)
+			return
+		move_and_slide()
 		return
 
 	if is_stratagem_mode:
@@ -121,3 +141,21 @@ func _update_health_bar() -> void:
 		return
 	health_bar.max_value = max_hp
 	health_bar.value = clampf(current_hp, 0.0, max_hp)
+
+func set_highlight(enabled: bool) -> void:
+	var mesh_instance: MeshInstance3D = get_node_or_null("MeshInstance3D")
+	if not mesh_instance:
+		return
+	if enabled:
+		if mesh_instance.material_overlay:
+			return
+		var highlight_mat := StandardMaterial3D.new()
+		highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		highlight_mat.albedo_color = Color.YELLOW
+		highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+		highlight_mat.no_depth_test = true
+		highlight_mat.grow = true
+		highlight_mat.grow_amount = 0.03
+		mesh_instance.material_overlay = highlight_mat
+	else:
+		mesh_instance.material_overlay = null

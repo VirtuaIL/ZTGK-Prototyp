@@ -523,6 +523,8 @@ func _close_level_doors(level: Node3D) -> void:
 		var d := door as Node3D
 		if d and level.is_ancestor_of(d) and d.has_method("close"):
 			d.close()
+		if d and level.is_ancestor_of(d) and d.has_method("reset_presses"):
+			d.reset_presses()
 
 func _reset_level_objects(level: Node3D) -> void:
 	if level == null:

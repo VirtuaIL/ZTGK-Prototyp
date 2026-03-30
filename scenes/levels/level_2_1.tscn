@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://w7ya2jovaj51" path="res://scripts/heat_grate_controller.gd" id="9_x2i05"]
 [ext_resource type="PackedScene" path="res://scenes/objects/heat_grate_small.tscn" id="10_mhwp5"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_4kqca"]
-[ext_resource type="PackedScene" path="res://scenes/objects/rat_spawn.tscn" id="12_rat_spawn"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="12_rat_spawn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -102,9 +102,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
 
 [node name="door" parent="doors" unique_id=432057396 instance=ExtResource("5_4g7v8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.615858, 0, -11.661636)
+doorId = 1
+required_press_count = 2
 
 [node name="button" parent="doors" unique_id=1670576418 instance=ExtResource("6_ic842")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3096838, 0, -8.384399)
+doorId = 1
+latch_open = false
+
+[node name="button2" parent="doors" unique_id=591105451 instance=ExtResource("6_ic842")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.729464, 0, -8.384399)
+doorId = 1
+latch_open = false
 
 [node name="sprites" type="Node3D" parent="." unique_id=284390696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)

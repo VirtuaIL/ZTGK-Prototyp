@@ -115,6 +115,8 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var cursor_trail_max_length: float = 9.0
 @export var cursor_turn_reset_angle: float = 120.0
 @export var cursor_turn_reset_distance: float = 1.0
+@export var carry_player_enabled: bool = true
+@export var carry_player_height_offset: float = 0.6
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -151,6 +153,9 @@ var _build_in_progress: bool = false
 var _combat_circle_angle: float = 0.0
 var _combat_offsets: Dictionary = {}
 var _combat_offsets_ready: bool = false
+var _carried_player_base_y: float = 0.0
+var _carried_player_base_set: bool = false
+var _carry_player_active: bool = false
 
 const BRUSH_DIM_FACTOR: float = 0.6
 
@@ -500,12 +505,35 @@ func _process(delta: float) -> void:
 	_update_cursor_preview()
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
+	_update_carried_player()
 
 
 func _update_edge_avoidance() -> void:
 	# Edge avoidance completely disabled per user request.
 	# (Leaving function intact but doing nothing so it can be called safely)
 	pass
+
+func _update_carried_player() -> void:
+	if not carry_player_enabled:
+		return
+	if _player == null:
+		return
+	if grabbed_object == _player:
+		return
+	if not _carry_player_active:
+		return
+	if not _carried_player_base_set:
+		_carried_player_base_y = _player.global_position.y
+		_carried_player_base_set = true
+	var center := _get_horde_center()
+	var target := Vector3(center.x, _carried_player_base_y + carry_player_height_offset, center.z)
+	_player.set("carried_target_pos", target)
+	_player.set("has_carried_target", true)
+	# Keep player from drifting due to physics
+	if _player.has_method("set_velocity"):
+		_player.set_velocity(Vector3.ZERO)
+	elif "velocity" in _player:
+		_player.velocity = Vector3.ZERO
 
 
 # ── COMBAT: arc/stream follow ──────────────────────────────────────────────────
@@ -1273,7 +1301,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret:
+					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1281,6 +1309,12 @@ func _unhandled_input(event: InputEvent) -> void:
 						grabbed_object = obj
 						if grabbed_object:
 							grabbed_object.set_meta("is_being_dragged", true)
+							if grabbed_object == _player and carry_player_enabled:
+								_carry_player_active = true
+								_carried_player_base_set = false
+								_player.set("carried_by_rats", true)
+								_player.set("is_being_carried", true)
+								grabbed_object.set("is_surrounded", true)
 						grabbed_object_last_pos = obj.global_position
 						get_viewport().set_input_as_handled()
 						return
@@ -1295,6 +1329,11 @@ func _unhandled_input(event: InputEvent) -> void:
 					# Release grabbed object
 					if grabbed_object != null:
 						grabbed_object.set_meta("is_being_dragged", false)
+						if grabbed_object == _player:
+							_carry_player_active = false
+							if _player:
+								_player.set("is_being_carried", false)
+								_player.set("has_carried_target", false)
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
@@ -1458,6 +1497,11 @@ func recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
 		grabbed_object.set_meta("is_being_dragged", false)
+		if grabbed_object == _player:
+			_carry_player_active = false
+			if _player:
+				_player.set("is_being_carried", false)
+				_player.set("has_carried_target", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1501,6 +1545,11 @@ func hard_recall_all_rats() -> void:
 	# Release any grabbed object and its carrier rats first
 	if grabbed_object != null:
 		grabbed_object.set_meta("is_being_dragged", false)
+		if grabbed_object == _player:
+			_carry_player_active = false
+			if _player:
+				_player.set("is_being_carried", false)
+				_player.set("has_carried_target", false)
 		_release_object_carriers(grabbed_object)
 		grabbed_object = null
 		grabbed_object_last_pos = Vector3.ZERO
@@ -1552,7 +1601,7 @@ func _process_hover() -> void:
 	
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	query.collision_mask = 4 
+	query.collision_mask = 4 | 2
 	
 	var hit := space_state.intersect_ray(query)
 	var new_hover: Node3D = null

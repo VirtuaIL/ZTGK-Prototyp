@@ -11,6 +11,9 @@ class_name door
 # Duration of the slide animation in seconds
 @export var slide_duration: float = 3.0
 
+# How many buttons must be pressed at the same time to open
+@export var required_press_count: int = 1
+
 # If true, the door starts open and closes when triggered
 @export var is_inverse: bool = false
 
@@ -18,6 +21,8 @@ var _closed_position: Vector3
 var _open_position: Vector3
 var _is_open: bool = false
 var _current_tween: Tween
+var _press_count: int = 0
+var _press_sources: Dictionary = {}
 
 
 func _ready() -> void:
@@ -36,7 +41,42 @@ func _ready() -> void:
 		_is_open = false
 
 
+func press(source: Object = null) -> void:
+	if source != null:
+		_press_sources[source] = true
+	else:
+		_press_count += 1
+	_update_press_state()
+
+
+func release(source: Object = null) -> void:
+	if source != null:
+		_press_sources.erase(source)
+	else:
+		_press_count = maxi(0, _press_count - 1)
+	_update_press_state()
+
+
+func _update_press_state() -> void:
+	var required: int = maxi(1, required_press_count)
+	var count := _press_sources.size() if _press_sources.size() > 0 else _press_count
+	if count >= required:
+		open()
+	else:
+		close()
+
+func reset_presses() -> void:
+	_press_sources.clear()
+	_press_count = 0
+	_is_open = false
+	_animate_to(_closed_position)
+
+
 func open() -> void:
+	var required: int = maxi(1, required_press_count)
+	var count := _press_sources.size() if _press_sources.size() > 0 else _press_count
+	if count < required:
+		return
 	if is_inverse:
 		if not _is_open: return
 		_is_open = false

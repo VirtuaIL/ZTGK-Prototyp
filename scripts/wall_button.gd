@@ -41,7 +41,10 @@ func on_projectile_hit() -> void:
 	
 	# Permanently open the target doors
 	for target in _get_target_doors():
-		target.open()
+		if target.has_method("press"):
+			target.press(self)
+		else:
+			target.open()
 
 
 func _get_target_doors() -> Array[door]:

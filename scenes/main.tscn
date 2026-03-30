@@ -64,7 +64,7 @@ use_wide_brush = true
 cursor_trail_max_length = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.100222, -1.1444092e-05, 2.5039215)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.201527, -1.1444092e-05, 2.2183065)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")

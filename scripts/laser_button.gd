@@ -62,9 +62,15 @@ func _set_active(active: bool) -> void:
 	var targets := _get_target_doors()
 	for target in targets:
 		if active:
-			target.open()
+			if target.has_method("press"):
+				target.press(self)
+			else:
+				target.open()
 		else:
-			target.close()
+			if target.has_method("release"):
+				target.release(self)
+			else:
+				target.close()
 
 
 func _get_target_doors() -> Array[door]:
