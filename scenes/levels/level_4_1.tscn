@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://xwk3gx5566ja"]
 
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="3_h2ymd"]
-[ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="4_14w03"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="5_iwe2b"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="6_7di0m"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="7_1h8qf"]
@@ -78,9 +77,6 @@ transform = Transform3D(-2.7538174e-08, 0, 0.19, 0, 0.99999976, 0, -0.62999994, 
 
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
-
-[node name="box" parent="objects" unique_id=1611627930 instance=ExtResource("4_14w03")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, -7.533966, 0, 18.166142)
 
 [node name="doors" type="Node3D" parent="." unique_id=1525246903]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5937195, 0, -8.286976)
@@ -172,7 +168,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.173971, 0, -4.6355247)
 
 [node name="grate13" parent="grates" unique_id=713842180 instance=ExtResource("9_jeoa5")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.711319, 0, -7.754936)
-doorId = 7
+doorId = 6
 is_inverse = true
 
 [node name="grate25" parent="grates" unique_id=2031251797 instance=ExtResource("9_jeoa5")]
@@ -202,8 +198,8 @@ doorId = 8
 [node name="Enemy" parent="." unique_id=561977529 instance=ExtResource("11_disq3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.231726, 0.035057068, 20.004593)
 move_speed = 3.0
-fov_angle = 35.0
-view_range = 7.0
+fov_angle = 40.0
+view_range = 8.0
 patrol_path = NodePath("../PatrolPath")
 
 [node name="PatrolPath" type="Node3D" parent="." unique_id=244164800]
@@ -213,4 +209,52 @@ transform = Transform3D(0.605, 0, 0, 0, 1, 0, 0, 0, 0.005, -5.526539, 0, 20.3364
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5732107, 0, -53.416016)
 
 [node name="Marker3D2" type="Marker3D" parent="PatrolPath" unique_id=480462895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.830866, 0, -53.416016)
+
+[node name="Enemy2" parent="." unique_id=841063964 instance=ExtResource("11_disq3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18583584, 0.035057068, 11.048025)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="PatrolPath2" type="Node3D" parent="." unique_id=391346960]
+transform = Transform3D(0.605, 0, 0, 0, 1, 0, 0, 0, 0.005, -5.526539, 0, 11.259243)
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath2" unique_id=1917989527]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5732107, 0, -53.416016)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath2" unique_id=1611150888]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.830866, 0, -53.416016)
+
+[node name="Enemy3" parent="." unique_id=1102639112 instance=ExtResource("11_disq3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.231726, 0.035057068, -1.1808853)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath3")
+
+[node name="PatrolPath3" type="Node3D" parent="." unique_id=28078635]
+transform = Transform3D(0.605, 0, 0, 0, 1, 0, 0, 0, 0.005, -5.526539, 0, -1.1120377)
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath3" unique_id=96685034]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5732107, 0, -53.416016)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath3" unique_id=1743005396]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.830866, 0, -53.416016)
+
+[node name="Enemy4" parent="." unique_id=102369121 instance=ExtResource("11_disq3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3651619, 0.035057068, -8.694971)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath4")
+
+[node name="PatrolPath4" type="Node3D" parent="." unique_id=672863183]
+transform = Transform3D(0.605, 0, 0, 0, 1, 0, 0, 0, 0.005, -5.526539, 0, -8.520596)
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath4" unique_id=1888109095]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5732107, 0, -53.416016)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath4" unique_id=1965574578]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.830866, 0, -53.416016)
