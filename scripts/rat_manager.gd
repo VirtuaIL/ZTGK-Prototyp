@@ -211,8 +211,21 @@ func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
 		_player.add_to_group("player")
+	if _player and _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
+		_player.player_died.connect(_on_player_died)
 	if start_with_min and rats.is_empty():
 		ensure_min_cap()
+
+func _on_player_died() -> void:
+	if grabbed_object == _player:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_carry_player_active = false
+		_carried_player_base_set = false
+		_player.set("is_being_carried", false)
+		_player.set("has_carried_target", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
 
 
 func _clamp_caps() -> void:

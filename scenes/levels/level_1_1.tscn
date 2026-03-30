@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cc5i52fwmdxxr"]
 
+[ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="4_tyxso"]
 [ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="6_ndtll"]
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="7_7h2jl"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="8_mqh5v"]
@@ -18,7 +19,7 @@ material = SubResource("StandardMaterial3D_1")
 size = Vector2(40, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
-size = Vector3(40.17141, 0.001, 16.172592)
+size = Vector3(33.182873, 0.001, 16.172592)
 
 [node name="Level2" type="Node3D" unique_id=1719073169]
 
@@ -28,46 +29,51 @@ size = Vector3(40.17141, 0.001, 16.172592)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("15_rat_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.516551, 0, 0)
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 10.599485, 0, 4.9834614)
 
 [node name="grate" parent="grates" unique_id=16392337 instance=ExtResource("6_ndtll")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9882865, 0, 0.02170062)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9882865, 0, 2.1833677)
 doorId = 1
 
 [node name="grate1" parent="grates" unique_id=1599495499 instance=ExtResource("7_7h2jl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.1616669)
 
 [node name="grate2" parent="grates" unique_id=1981168902 instance=ExtResource("7_7h2jl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.981422, 0, 0.071195126)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.981422, 0, 2.2328615)
+
+[node name="box" parent="grates/grate2" unique_id=1936650841 instance=ExtResource("4_tyxso")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.7668915, 0, 2.9197998)
 
 [node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="floor" unique_id=439866030]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.4, 0, -0.022816658, 0)
+transform = Transform3D(0.9, 0, 0, 0, 1, 0, 0, 0, 0.41, 2.717753, -0.022816658, -0.21575737)
 mesh = SubResource("PlaneMesh_tr1x6")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4942684, 0, 0)
 shape = SubResource("BoxShape3D_d5akn")
 
 [node name="walls" type="Node3D" parent="." unique_id=58504239]
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
 
 [node name="wall" parent="walls" unique_id=410145193 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(1, 0, -1.7763568e-15, 0, 0.9999998, 0, 0, 0, 0.9999999, 0, 0, 0)
+transform = Transform3D(0.9, 0, -1.7763568e-15, 0, 0.9999998, 0, 2.1316282e-14, 0, 0.9999999, 0.24816665, 0, 0)
 
 [node name="wall2" parent="walls" unique_id=1086735907 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(0.875, 0, -1.7763568e-15, 0, 2.1342854, 0, 0, 0, 0.9999999, 0.3384268, 0, 22.711887)
+transform = Transform3D(0.875, 0, -1.7763568e-15, 0, 2.1342854, 0, 0, 0, 0.9999999, 0.3384268, 0, 22.757378)
 
 [node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("8_mqh5v")]
 transform = Transform3D(-6.556708e-08, 0, 0.36325, 0, 2.1342854, 0, -4.1293874, 0, -4.3711385e-08, -1.731529, 0, 9.369953)
 
 [node name="wall4" parent="walls" unique_id=1333403362 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(-3.2783536e-08, 0, 0.36325, 0, 2.1342854, 0, -2.0646935, 0, -4.371138e-08, -1.7315288, 0, 27.566427)
+transform = Transform3D(-8.742278e-09, 0, 0.363, 0, 2.1339998, 0, -0.2, 0, -1.5867231e-08, -1.7315288, 0, 22.880054)
 
 [node name="wall5" parent="walls" unique_id=152295184 instance=ExtResource("8_mqh5v")]
-transform = Transform3D(-2.6226832e-07, 0, 0.363, 0, 0.9999998, 0, -5.9999995, 0, -1.586723e-08, 2.3929312, 0, 14.766268)
+transform = Transform3D(-2.0981469e-07, 0, 0.363, 0, 0.99999976, 0, -4.7999997, 0, -1.5867226e-08, 2.3762393, 0, 11.999117)
 
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
@@ -96,6 +102,6 @@ pixel_size = 0.002
 texture = ExtResource("14_t4umt")
 
 [node name="capstan" parent="." unique_id=426294487 instance=ExtResource("10_o7j4k")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 1.5570588, 0, 0.39879322)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 3.5338626, 0, -0.5291004)
 doorId = 1
 trapId = 1

@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_jmukd"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_42pt1"]
 [ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_avfv3"]
+[ext_resource type="PackedScene" uid="uid://db2r84gbsgdwy" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
+[ext_resource type="PackedScene" uid="uid://ds3b7llghum2t" path="res://scenes/enemies/enemy.tscn" id="12_eb6dy"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_wja66")
@@ -64,7 +66,7 @@ use_wide_brush = true
 cursor_trail_max_length = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("5_hvlyp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1560535, -1.1444092e-05, -42.28696)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.848326, -1.1444092e-05, 4.092602)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("6_r1k3v")
@@ -81,20 +83,21 @@ target_level_path = NodePath("../../levels/Level2")
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=1704942286]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -4.74444, 1.855777, 85.402)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 2.7737823, 1.855777, -40.05264)
 collision_mask = 3
 script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level3")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=492470218]
 shape = SubResource("BoxShape3D_yq6so")
 
-[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=143068237]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 2.0114508, 1.855777, -45.7723)
+[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=1447560152]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 4.1469946, 1.855777, -78.3652)
 collision_mask = 3
 script = ExtResource("7_merrg")
 target_level_path = NodePath("../../levels/Level4")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=1594506997]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=339184219]
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=428045097]
@@ -104,5 +107,24 @@ shape = SubResource("BoxShape3D_yq6so")
 [node name="Level2" parent="levels" unique_id=202538783 instance=ExtResource("9_42pt1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
 
+[node name="Level3" parent="levels" unique_id=2081473023 instance=ExtResource("11_ya4ey")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03136635, 0, -57.334377)
+
 [node name="Level4" parent="levels" unique_id=1632914966 instance=ExtResource("10_avfv3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.568125, 0.034557343, -73.50557)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4256144, 0.034557343, -107.54593)
+
+[node name="Enemy" parent="." unique_id=561977529 instance=ExtResource("12_eb6dy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5677581, 0.035057068, -97.29028)
+move_speed = 3.0
+fov_angle = 35.0
+view_range = 7.0
+patrol_path = NodePath("../PatrolPath")
+
+[node name="PatrolPath" type="Node3D" parent="." unique_id=1096937922]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -85.599266)
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath" unique_id=250069926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.384623, 0, -53.416695)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath" unique_id=522768210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.724688, 0, -53.416695)

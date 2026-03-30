@@ -49,7 +49,19 @@ func on_projectile_hit() -> void:
 
 func _get_target_doors() -> Array[door]:
 	var result: Array[door] = []
+	var level_root := _get_level_root()
 	for d in get_tree().get_nodes_in_group("doors"):
+		if level_root and not level_root.is_ancestor_of(d):
+			continue
 		if d is door and d.doorId == doorId:
 			result.append(d)
 	return result
+
+func _get_level_root() -> Node:
+	var n: Node = self
+	while n and n.get_parent():
+		var p := n.get_parent()
+		if p and p.name == "levels":
+			return n
+		n = p
+	return null
