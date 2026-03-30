@@ -109,4 +109,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.568125, 0.034557343, -73.50557)
 
 [node name="Enemy" parent="." unique_id=561977529 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9873042, 0.035057068, -63.20353)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5677581, 0.035057068, -53.626343)
+move_speed = 3.0
+fov_angle = 35.0
+view_range = 7.0
+patrol_path = NodePath("../PatrolPath")
+
+[node name="PatrolPath" type="Node3D" parent="." unique_id=1096937922]
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath" unique_id=250069926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.384623, 0, -53.416695)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath" unique_id=522768210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.724688, 0, -53.416695)
