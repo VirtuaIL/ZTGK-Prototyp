@@ -9,7 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="8_v1bww"]
 [ext_resource type="PackedScene" uid="uid://cpxgh0yclma0o" path="res://scenes/objects/grates_doors.tscn" id="9_jeoa5"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="11_83jg5"]
-[ext_resource type="PackedScene" path="res://scenes/objects/rat_spawn.tscn" id="13_rat_spawn"]
+[ext_resource type="PackedScene" uid="uid://ds3b7llghum2t" path="res://scenes/enemies/enemy.tscn" id="11_disq3"]
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="13_rat_spawn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -169,13 +170,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.66083, 0, 7.3223457)
 [node name="grate9" parent="grates" unique_id=1935404265 instance=ExtResource("8_v1bww")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.173971, 0, -4.6355247)
 
-[node name="grate13" parent="grates" unique_id=771153052 instance=ExtResource("9_jeoa5")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.719835, 2.547398, -7.754936)
+[node name="grate13" parent="grates" unique_id=713842180 instance=ExtResource("9_jeoa5")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.711319, 0, -7.754936)
 doorId = 7
+is_inverse = true
 
-[node name="grate25" parent="grates" unique_id=809877131 instance=ExtResource("9_jeoa5")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 9.042543, 3.2310228, 10.252695)
-doorId = 6
+[node name="grate25" parent="grates" unique_id=2031251797 instance=ExtResource("9_jeoa5")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.98093, 0, 10.252695)
+doorId = 7
+is_inverse = true
 
 [node name="CameraCenter2" type="Node3D" parent="." unique_id=496389816]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.432622, 0, -17.206043)
@@ -195,3 +198,19 @@ doorId = 9
 [node name="capstan4" parent="." unique_id=453010220 instance=ExtResource("11_83jg5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 5.065217, 0, -2.93847)
 doorId = 8
+
+[node name="Enemy" parent="." unique_id=561977529 instance=ExtResource("11_disq3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.231726, 0.035057068, 20.004593)
+move_speed = 3.0
+fov_angle = 35.0
+view_range = 7.0
+patrol_path = NodePath("../PatrolPath")
+
+[node name="PatrolPath" type="Node3D" parent="." unique_id=244164800]
+transform = Transform3D(0.605, 0, 0, 0, 1, 0, 0, 0, 0.005, -5.526539, 0, 20.336433)
+
+[node name="Marker3D" type="Marker3D" parent="PatrolPath" unique_id=748037790]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5732107, 0, -53.416016)
+
+[node name="Marker3D2" type="Marker3D" parent="PatrolPath" unique_id=480462895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.830866, 0, -53.416016)
