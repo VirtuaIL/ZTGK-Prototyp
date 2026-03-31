@@ -118,6 +118,11 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var cursor_turn_reset_distance: float = 1.0
 @export var carry_player_enabled: bool = true
 @export var carry_player_height_offset: float = 0.6
+@export var cursor_hint_duration: float = 3.2
+
+var _cursor_hint_layer: CanvasLayer = null
+var _cursor_hint_label: Label = null
+var _cursor_hint_timer: float = 0.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -192,6 +197,7 @@ func _ready() -> void:
 
 	immediate_mesh = ImmediateMesh.new()
 	line_mesh_instance = MeshInstance3D.new()
+	_init_cursor_hint_ui()
 	
 	unified_shape_combiner = CSGCombiner3D.new()
 	unified_shape_combiner.use_collision = true
@@ -212,6 +218,8 @@ func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
 		_player.add_to_group("player")
+	if _player and _player.has_method("set_rat_manager"):
+		_player.set_rat_manager(self)
 	if _player and _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 	if start_with_min and rats.is_empty():
@@ -513,6 +521,7 @@ func _process(delta: float) -> void:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+	_update_cursor_hint(delta)
 	_process_formation_queue()
 	_update_edge_avoidance()
 	if orbit_active:
@@ -1397,9 +1406,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
 				var hit_m := space_state_m.intersect_ray(query_m)
 
+				var handled := false
 				if hit_m:
 					var obj = hit_m.collider
 					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
+						if obj == _player and not _player_has_enough_rats_to_move():
+							_show_cursor_hint("Brak aktywnego obiektu do przenoszenia —\nPPM dziala tylko na obiekty do przeniesienia.\nNajedz kursorem na skrzynke, wiezyczke lub gracza.")
+							get_viewport().set_input_as_handled()
+							return
 						mouse_is_down_left = true
 						left_click_start_pos = mb.position
 						is_dragging_left = false
@@ -1416,8 +1430,11 @@ func _unhandled_input(event: InputEvent) -> void:
 								_player.set("is_being_carried", true)
 								grabbed_object.set("is_surrounded", true)
 						grabbed_object_last_pos = obj.global_position
-						get_viewport().set_input_as_handled()
-						return
+						handled = true
+				if not handled:
+					_show_cursor_hint("Brak aktywnego obiektu do przenoszenia —\nPPM dziala tylko na obiekty do przeniesienia.\nNajedz kursorem na skrzynke, wiezyczke lub gracza.")
+				get_viewport().set_input_as_handled()
+				return
 			else:
 				# RMB released
 				if _lmb_is_object_drag:
@@ -1456,6 +1473,37 @@ func register_rat(rat: CharacterBody3D) -> void:
 		rat.set_wall_collision(rats_collide_with_walls)
 	if rat.has_method("set_auto_respawn_enabled"):
 		rat.set_auto_respawn_enabled(rat_auto_respawn_enabled)
+
+func _init_cursor_hint_ui() -> void:
+	_cursor_hint_layer = CanvasLayer.new()
+	_cursor_hint_label = Label.new()
+	_cursor_hint_label.visible = false
+	_cursor_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cursor_hint_label.add_theme_color_override("font_color", Color(1, 0.85, 0.75))
+	_cursor_hint_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_cursor_hint_label.add_theme_constant_override("outline_size", 4)
+	_cursor_hint_label.add_theme_font_size_override("font_size", 18)
+	_cursor_hint_layer.add_child(_cursor_hint_label)
+	add_child(_cursor_hint_layer)
+
+func _show_cursor_hint(text: String) -> void:
+	if _cursor_hint_label == null:
+		return
+	_cursor_hint_label.text = text
+	_cursor_hint_label.visible = true
+	_cursor_hint_timer = max(0.1, cursor_hint_duration)
+	var mp := get_viewport().get_mouse_position()
+	_cursor_hint_label.position = mp + Vector2(14, 18)
+
+func _update_cursor_hint(delta: float) -> void:
+	if _cursor_hint_label == null:
+		return
+	if _cursor_hint_timer > 0.0:
+		_cursor_hint_timer = max(0.0, _cursor_hint_timer - delta)
+		var mp := get_viewport().get_mouse_position()
+		_cursor_hint_label.position = mp + Vector2(14, 18)
+		if _cursor_hint_timer <= 0.0:
+			_cursor_hint_label.visible = false
 
 
 func get_active_rat_count() -> int:
@@ -1896,6 +1944,10 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 func _get_available_follow_rats() -> Array:
 	var available_rats: Array[CharacterBody3D] = []
 	for rat in rats:
+		if rat == null:
+			continue
+		if rat.is_fallen:
+			continue
 		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
 			available_rats.append(rat)
 	return available_rats
@@ -2365,6 +2417,10 @@ func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
 	var radius_sq := carrier_pick_radius * carrier_pick_radius
 
 	for rat in rats:
+		if rat == null:
+			continue
+		if rat.is_fallen:
+			continue
 		if rat.is_carrier:
 			continue
 		if rat.is_anchored:
@@ -2387,6 +2443,23 @@ func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
 	result.append_array(nearby)
 	result.append_array(others)
 	return result
+
+
+func _get_player_movement_rat_requirement() -> int:
+	if _player == null:
+		return 0
+	if _player.has_method("get_required_available_rats_for_movement"):
+		return maxi(0, int(_player.get_required_available_rats_for_movement()))
+	if "required_available_rats_for_movement" in _player:
+		return maxi(0, int(_player.get("required_available_rats_for_movement")))
+	return 0
+
+
+func _player_has_enough_rats_to_move() -> bool:
+	var required := _get_player_movement_rat_requirement()
+	if required <= 0:
+		return true
+	return get_available_rat_count() >= required
 
 
 func _update_carrier_rat_targets() -> void:

@@ -69,7 +69,7 @@ cursor_trail_max_length = 22.0
 bridge_collapse_time = 1.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("5_hvlyp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.964937, -1.1444092e-05, -12.056507)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.773588, -1.1444092e-05, 4.709811)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("6_r1k3v")

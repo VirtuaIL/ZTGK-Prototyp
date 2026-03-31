@@ -135,6 +135,7 @@ value = 100.0
 show_percentage = false
 
 [node name="HelpHint" type="Label" parent="PlayerHUD" unique_id=465377058]
+visible = false
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0

@@ -15,6 +15,7 @@ var cheatsheet_title: Label
 var cheatsheet_hint: Label
 var goal_label: Label
 var rat_count_label: RichTextLabel
+var mechanics_hint_label: RichTextLabel
 var recall_indicator: Control
 var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
@@ -85,6 +86,7 @@ func _init_game() -> void:
 	_setup_cheatsheet_ui()
 	_setup_goal_ui()
 	_setup_rat_count_ui()
+	_setup_mechanics_hint_ui()
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
 	
@@ -124,10 +126,10 @@ func _create_action_box(title: String) -> VBoxContainer:
 	title_lbl.add_theme_color_override("font_color", UI_TEXT)
 	title_lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
 	title_lbl.add_theme_constant_override("outline_size", 3)
-	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_font_size_override("font_size", 18)
 	
 	var rect = ColorRect.new()
-	rect.custom_minimum_size = Vector2(120, 36)
+	rect.custom_minimum_size = Vector2(150, 44)
 	rect.color = UI_BG_STRONG
 	
 	var val_lbl = Label.new()
@@ -137,7 +139,7 @@ func _create_action_box(title: String) -> VBoxContainer:
 	val_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	val_lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
 	val_lbl.add_theme_constant_override("outline_size", 3)
-	val_lbl.add_theme_font_size_override("font_size", 13)
+	val_lbl.add_theme_font_size_override("font_size", 16)
 	rect.add_child(val_lbl)
 	
 	vbox.add_child(title_lbl)
@@ -150,12 +152,12 @@ func _setup_mode_ui() -> void:
 
 	var main_vbox = VBoxContainer.new()
 	main_vbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	main_vbox.position = Vector2(-480, -140)
-	main_vbox.add_theme_constant_override("separation", 15)
+	main_vbox.position = Vector2(-560, -170)
+	main_vbox.add_theme_constant_override("separation", 18)
 
 	# Action buttons (LPM, SCROLL, PPM)
 	var actions_hbox = HBoxContainer.new()
-	actions_hbox.add_theme_constant_override("separation", 10)
+	actions_hbox.add_theme_constant_override("separation", 14)
 	actions_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	var lpm_box = _create_action_box("LPM")
@@ -172,7 +174,7 @@ func _setup_mode_ui() -> void:
 	space_rect_val = space_box.get_child(1) as ColorRect
 	var space_label_val = space_rect_val.get_child(0) as Label
 	space_label_val.text = "hard-recall szczury"
-	space_rect_val.custom_minimum_size = Vector2(160, 36)
+	space_rect_val.custom_minimum_size = Vector2(220, 44)
 
 	var space_hbox = HBoxContainer.new()
 	space_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -197,7 +199,7 @@ func _setup_cheatsheet_ui() -> void:
 	panel.visible = true
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.position = Vector2(20, 95)
-	panel.custom_minimum_size = Vector2(380, 300)
+	panel.custom_minimum_size = Vector2(440, 330)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = UI_BG
@@ -231,7 +233,7 @@ func _setup_cheatsheet_ui() -> void:
 	cheatsheet_title = title
 	title.text = "STEROWANIE"
 	title.add_theme_color_override("font_color", UI_TEXT)
-	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(title)
 
 	var body = RichTextLabel.new()
@@ -242,8 +244,8 @@ func _setup_cheatsheet_ui() -> void:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	body.add_theme_font_size_override("normal_font_size", 12)
-	body.add_theme_font_size_override("bold_font_size", 12)
+	body.add_theme_font_size_override("normal_font_size", 13)
+	body.add_theme_font_size_override("bold_font_size", 13)
 	body.text = \
 		"[b]Ruch[/b]\n" + \
 		"WASD — ruch\n" + \
@@ -254,6 +256,8 @@ func _setup_cheatsheet_ui() -> void:
 		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
+		"Respawn szczurów: horda wejdzie w strefę RatSpawn\n" + \
+		"Gdy 0 szczurów — respawn na startowym RatSpawn\n" + \
 		"F2 — tryb pasywny wrogów"
 	body.add_theme_color_override("default_color", UI_TEXT)
 	body.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
@@ -266,12 +270,13 @@ func _setup_cheatsheet_ui() -> void:
 	hint.add_theme_color_override("font_color", UI_HINT)
 	hint.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
 	hint.add_theme_constant_override("outline_size", 3)
-	hint.add_theme_font_size_override("font_size", 15)
+	hint.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(hint)
 
 	layer.add_child(panel)
 	add_child(layer)
 	call_deferred("_refresh_cheatsheet_size")
+	cheatsheet_panel.visible = false
 
 func _refresh_cheatsheet_size() -> void:
 	if not cheatsheet_panel or not cheatsheet_margin or not cheatsheet_body or not cheatsheet_vbox or not cheatsheet_title or not cheatsheet_hint:
@@ -279,13 +284,13 @@ func _refresh_cheatsheet_size() -> void:
 	# Fit panel to its content, but keep it on-screen and reasonably wide.
 	var vp_size: Vector2 = get_viewport().get_visible_rect().size
 	var max_w: float = vp_size.x - 20.0
-	var target_w: float = 440.0
+	var target_w: float = 480.0
 	if max_w <= 0.0:
 		return
 	if max_w < 200.0:
 		target_w = max_w
 	else:
-		target_w = clampf(440.0, 260.0, max_w)
+		target_w = clampf(480.0, 260.0, max_w)
 
 	var m_left: int = cheatsheet_margin.get_theme_constant("margin_left")
 	var m_right: int = cheatsheet_margin.get_theme_constant("margin_right")
@@ -351,7 +356,32 @@ func _setup_rat_count_ui() -> void:
 	label.offset_top = 60
 	label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_constant_override("outline_size", 5)
+	label.add_theme_font_size_override("normal_font_size", 16)
+	label.add_theme_font_size_override("bold_font_size", 16)
+	layer.add_child(label)
+	add_child(layer)
+
+func _setup_mechanics_hint_ui() -> void:
+	var layer = CanvasLayer.new()
+	var label = RichTextLabel.new()
+	mechanics_hint_label = label
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.text = "[b]RESPAWN SZCZURÓW:[/b] \n Wejdz cala horda w strefe RatSpawn, aby odnowic liczbe szczurów.\n Gdy 0 szczurów — respawn na startowym RatSpawn."
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	label.offset_right = -25
+	label.offset_top = 18
+	label.offset_left = -760
+	label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("outline_size", 5)
+	label.add_theme_font_size_override("normal_font_size", 19)
+	label.add_theme_font_size_override("bold_font_size", 19)
 	layer.add_child(label)
 	add_child(layer)
 
