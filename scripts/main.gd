@@ -249,8 +249,8 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD — ruch\n" + \
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
-		"LPM (przytrzymaj) — atak (okrąg wokół kursora)\n" + \
-		"PPM (ciągnij) — rysuj strukturę lub przenieś obiekt\n" + \
+		"LPM (przytrzymaj) — rysuj szczury (pędzel)\n" + \
+		"PPM (ciągnij) — przenieś obiekt / gracza\n" + \
 		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
@@ -317,7 +317,7 @@ func _setup_goal_ui() -> void:
 	var layer = CanvasLayer.new()
 	var label = Label.new()
 	goal_label = label
-	label.text = "Cel prototypu: wydostań się z labiryntu, pokonując kolejne poziomy i bossa na końcu."
+	label.text = "Cel prototypu: Pokonaj zagadki i ucieknij z lochu"
 	label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	label.offset_left = 0
 	label.offset_right = 0
@@ -468,9 +468,9 @@ func _update_rat_count_ui() -> void:
 
 
 func _update_mode_ui() -> void:
-	if lpm_label_val: lpm_label_val.text = "atak"
+	if lpm_label_val: lpm_label_val.text = "rysuj szczury"
 	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
-	if ppm_label_val: ppm_label_val.text = "buduj / przenieś"
+	if ppm_label_val: ppm_label_val.text = "przenieś"
 
 func _gather_levels() -> void:
 	_levels.clear()
@@ -705,7 +705,7 @@ func _update_recall_hold(delta: float) -> void:
 	if holding and not _recall_triggered:
 		_recall_hold_time = min(_recall_hold_time + delta, 0.5)
 		if _recall_hold_time >= 0.5:
-			rat_manager.hard_recall_all_rats()
+			rat_manager.recall_all_rats()
 			_recall_triggered = true
 	else:
 		_recall_hold_time = 0.0

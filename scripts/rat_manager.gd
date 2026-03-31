@@ -285,12 +285,13 @@ func reset_after_level_load() -> void:
 
 func ensure_min_cap() -> void:
 	_clamp_caps()
-	var total := get_total_rat_count()
 	var target := min_cap
-	if total >= target:
+	if target <= 0:
 		return
-	var spawn_count := target - total
-	_spawn_rats(spawn_count)
+	var active := get_active_rat_count()
+	if active >= target:
+		return
+	_restore_to_min_near_spawn()
 
 
 func _spawn_rats(count: int) -> void:
@@ -414,8 +415,8 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var total := get_total_rat_count()
-	if total < min_cap and _min_respawn_cooldown <= 0.0:
+	var active := get_active_rat_count()
+	if active < min_cap and _min_respawn_cooldown <= 0.0:
 		_restore_to_min_near_spawn()
 		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
@@ -425,12 +426,26 @@ func _restore_to_min_near_spawn() -> void:
 	var target := min_cap
 	if target <= 0:
 		return
-	var total := get_total_rat_count()
-	var needed := target - total
-	if needed <= 0:
-		return
 	var center := _get_nearest_spawn_pos()
-	_spawn_rats_at_center(needed, center)
+	var active := get_active_rat_count()
+	if active >= target:
+		return
+	var needed := target - active
+
+	# Revive fallen rats first
+	var fallen := _get_fallen_rats()
+	for r in fallen:
+		if needed <= 0:
+			break
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		var pos := center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		r.force_respawn_at_position(pos)
+		needed -= 1
+
+	# Spawn new rats if still under cap
+	if needed > 0:
+		_spawn_rats_at_center(needed, center)
 
 
 func _check_rat_spawn_bonus() -> void:
@@ -704,11 +719,19 @@ func _update_cursor_follow(delta: float) -> void:
 	if count == 0:
 		return
 	_set_cursor_following(active, true)
+	var base_y := mouse_world.y
+	if count > 0:
+		var sum_y := 0.0
+		for rat in active:
+			sum_y += rat.global_position.y
+		base_y = sum_y / float(count)
 
 	# Need at least 2 points for arc distribution
 	if _mouse_trail.size() < 2:
 		for rat in active:
-			rat.set_target(mouse_world)
+			var t := mouse_world
+			t.y = base_y
+			rat.set_target(t)
 		return
 
 	# Arc-length parameterization of the trail
@@ -779,9 +802,10 @@ func _update_cursor_follow(delta: float) -> void:
 		var t_blob := mouse_world
 		if i < _blob_offsets.size():
 			t_blob += _blob_offsets[i] * blob_scale
-		t_blob.y = mouse_world.y
+		t_blob.y = base_y
 
 		# 3) Blend based on brush size
+		t_stream.y = base_y
 		var final_target = t_stream.lerp(t_blob, blob_blend)
 		active[i].set_target(final_target)
 
@@ -1520,8 +1544,7 @@ func recall_all_rats() -> void:
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
-	for rat in rats:
-		rat.release_rat(true)
+	_gather_rats_to_horde_center()
 	# Reset drawing state
 	mouse_is_down_left = false
 	is_dragging_left = false
@@ -1568,11 +1591,7 @@ func hard_recall_all_rats() -> void:
 	for child in unified_shape_combiner.get_children():
 		child.queue_free()
 		
-	for rat in rats:
-		if rat.has_method("hard_recall_to_player"):
-			rat.hard_recall_to_player()
-		else:
-			rat.release_rat(true)
+	_gather_rats_to_horde_center()
 	# Reset drawing state
 	mouse_is_down_left = false
 	is_dragging_left = false
@@ -1592,6 +1611,54 @@ func hard_recall_all_rats() -> void:
 	_structure_timer = 0.0
 	bridge_stress = 0.0
 	unified_shape_combiner.position = Vector3.ZERO
+
+func _gather_rats_to_horde_center() -> void:
+	var center := _get_recall_center()
+
+	var move_list: Array[Rat] = []
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.is_fallen:
+			continue
+		if r.state != r.State.FOLLOW or r.is_carrier:
+			r.is_carrier = false
+			r.release_rat(false)
+			move_list.append(r)
+
+	if move_list.is_empty():
+		return
+
+	var count := move_list.size()
+	var ring_radius := 0.6
+	if count > 10:
+		ring_radius = 1.0
+	if count > 24:
+		ring_radius = 1.4
+	var angle_step := TAU / float(count)
+
+	for i in range(count):
+		var angle := angle_step * float(i)
+		var target := center + Vector3(cos(angle) * ring_radius, 0.2, sin(angle) * ring_radius)
+		var r := move_list[i]
+		r.global_position = target
+		if "velocity" in r:
+			r.velocity = Vector3.ZERO
+
+func _get_recall_center() -> Vector3:
+	var hit := _get_mouse_ground_hit()
+	if hit:
+		return hit.position
+
+	var follow_rats := _get_active_follow_rats()
+	if not follow_rats.is_empty():
+		var sum := Vector3.ZERO
+		for fr in follow_rats:
+			sum += fr.global_position
+		return sum / float(follow_rats.size())
+
+	return _get_horde_center()
 
 
 func _process_hover() -> void:
@@ -2196,17 +2263,9 @@ func _process_object_drag(delta: float) -> void:
 		return
 
 	var current_pos: Vector3 = grabbed_object.global_position
-	var target_pos: Vector3
-	
-	var hit := _get_mouse_ground_hit()
-	if hit:
-		target_pos = hit.position
-		target_pos.y = current_pos.y
-	else:
-		var fallback := _get_mouse_pos_at_y(current_pos.y)
-		if fallback == Vector3.ZERO:
-			return
-		target_pos = fallback
+	var target_pos := _get_mouse_pos_at_y(current_pos.y)
+	if target_pos == Vector3.ZERO:
+		return
 
 	var to_cursor := target_pos - current_pos
 	if to_cursor.length() > box_drag_max_radius:

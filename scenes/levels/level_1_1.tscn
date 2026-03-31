@@ -6,8 +6,12 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="8_mqh5v"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="10_o7j4k"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="11_31oqk"]
+[ext_resource type="Texture2D" uid="uid://brfli80kgb7sw" path="res://resources/controls_move_box.png" id="11_bdtp5"]
+[ext_resource type="Texture2D" uid="uid://3oasq0yky3q1" path="res://resources/mouse.png" id="12_mahri"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="12_x7jkp"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="13_0qwwm"]
+[ext_resource type="Texture2D" uid="uid://doaa8733t3l3c" path="res://resources/controls_press_button.png" id="13_ri5l0"]
+[ext_resource type="Texture2D" uid="uid://cqjgt7b7gcfdy" path="res://resources/controls_rotate_noMouse.png" id="14_nxxpi"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="14_t4umt"]
 [ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="15_rat_spawn"]
 
@@ -45,7 +49,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.1616669)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.981422, 0, 2.2328615)
 
 [node name="box" parent="grates/grate2" unique_id=1936650841 instance=ExtResource("4_tyxso")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.7668915, 0, 2.9197998)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000002, 0.766891, 0, 4.1287575)
 
 [node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
 
@@ -105,3 +109,23 @@ texture = ExtResource("14_t4umt")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 3.5338626, 0, -0.5291004)
 doorId = 1
 trapId = 1
+
+[node name="Sprite3D5" type="Sprite3D" parent="." unique_id=171055828]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 14.367288, 0, -3.7007077)
+pixel_size = 0.002
+texture = ExtResource("11_bdtp5")
+
+[node name="Sprite3D2" type="Sprite3D" parent="." unique_id=371932893]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 6.5630617, 0, -0.55198884)
+pixel_size = 0.004
+texture = ExtResource("12_mahri")
+
+[node name="Sprite3D4" type="Sprite3D" parent="." unique_id=1434426496]
+transform = Transform3D(1, -5.9604645e-08, -3.5527137e-15, 0, -4.371139e-08, 1, -5.9604645e-08, -1, -4.371139e-08, -1.497632, 0, -5.1000443)
+pixel_size = 0.0015
+texture = ExtResource("13_ri5l0")
+
+[node name="Sprite3D3" type="Sprite3D" parent="." unique_id=943801284]
+transform = Transform3D(-6.9938224e-08, -1.6, -4.371139e-08, 0, -6.9938224e-08, 1, -1.6, 6.9938224e-08, 1.9106855e-15, 3.6588483, 9.536743e-07, -0.49612737)
+pixel_size = 0.004
+texture = ExtResource("14_nxxpi")

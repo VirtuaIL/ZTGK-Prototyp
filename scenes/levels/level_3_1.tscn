@@ -9,6 +9,8 @@
 [ext_resource type="Shader" uid="uid://bcow6qxhd8ac2" path="res://resources/swampWater.gdshader" id="6_sc38n"]
 [ext_resource type="Texture2D" uid="uid://2fkxex6n673l" path="res://resources/WATERBLUE.png" id="7_0pruu"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="7_fj7db"]
+[ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="11_sc38n"]
+[ext_resource type="Texture2D" uid="uid://b6q2gf4xmewgk" path="res://resources/controls_build_bridge.png" id="12_0pruu"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="12_s07g2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ns8tc"]
@@ -35,25 +37,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0042505, 1.9073486e-06, 4.3
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("1_0pruu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.453342, 0, -1.2726746)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.858059, 0, 6.884675)
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("1_0pruu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.506058, 0, -16.443695)
 
+[node name="RatSpawn3" parent="RatSpawns" unique_id=1719942994 instance=ExtResource("1_0pruu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.651133, 0, 3.46072)
+
 [node name="door90" parent="." unique_id=1981168902 instance=ExtResource("4_4bxto")]
-transform = Transform3D(-1.2376442e-07, 0, 1.453, 0, 1.494, 0, -2.8314002, 0, -6.3512644e-08, 6.965702, -2.5662239, 14.254329)
+transform = Transform3D(-1.732702e-07, 0, 1.453, 0, 1.494, 0, -3.9639602, 0, -6.3512644e-08, 6.965702, -2.5662239, 12.254329)
 
 [node name="door94" parent="." unique_id=33587360 instance=ExtResource("4_4bxto")]
-transform = Transform3D(2.8314002, 0, 7.1054274e-15, 0, 1.494, 0, 1.4210855e-14, 0, 1.453, -4.918316, -0.4289105, -16.942081)
-
-[node name="door95" parent="." unique_id=1552198845 instance=ExtResource("4_4bxto")]
-transform = Transform3D(1.4157001, 0, 7.1054274e-15, 0, 1.494, 0, 7.1054274e-15, 0, 1.453, 10.081684, -0.4289105, -16.942081)
+transform = Transform3D(4.983265, 0, 7.1054274e-15, 0, 1.494, 0, 2.5011106e-14, 0, 1.453, 1.0816841, -0.4289105, -16.942081)
 
 [node name="door91" parent="." unique_id=1985816006 instance=ExtResource("4_4bxto")]
-transform = Transform3D(-1.2376442e-07, 0, 1.453, 0, 1.494, 0, -2.8314002, 0, -6.3512644e-08, -10.034298, -0.56622386, 14.254329)
+transform = Transform3D(-6.1263385e-08, 0, 1.453, 0, 1.494, 0, -1.401543, 0, -6.3512644e-08, -10.034298, -0.56622386, 18.04943)
 
-[node name="door93" parent="." unique_id=740249268 instance=ExtResource("4_4bxto")]
-transform = Transform3D(-3.712932e-07, 0, 19.818922, 0, 1.494, 0, -8.494199, 0, -8.6631263e-07, -17.191685, 3.4337761, 1.2780714)
+[node name="door96" parent="." unique_id=959283036 instance=ExtResource("4_4bxto")]
+transform = Transform3D(-2.7290055e-08, 0, 1.453, 0, 1.494, 0, -0.62432367, 0, -6.3512644e-08, -10.131725, -0.56622386, 8.453457)
 
 [node name="door92" parent="." unique_id=850593503 instance=ExtResource("4_4bxto")]
 transform = Transform3D(-1.3614087e-07, 0, 1.453, 0, 1.494, 0, -3.1145403, 0, -6.3512644e-08, -10.034298, -0.56622386, -11.745671)
@@ -77,7 +79,7 @@ transform = Transform3D(0.32107487, 0, 6.217249e-15, 0, 0.66934407, 0, -7.105427
 transform = Transform3D(0.32107487, 0, 6.217249e-15, 0, 0.66934407, 0, -1.0658141e-14, 0, 0.6882313, -3.3604584, 1.3402998, -0.20324326)
 
 [node name="door39" parent="." unique_id=1360759537 instance=ExtResource("6_ea7ne")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3720512, 0.016834497, -16.946049)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -10.001461, 0.016834497, 12.263958)
 doorId = 61
 
 [node name="door41" parent="." unique_id=477383107 instance=ExtResource("6_ea7ne")]
@@ -114,13 +116,22 @@ transform = Transform3D(-18.140303, 0, -2.5705565e-06, 0, 1, 0, 2.739107e-06, 0,
 mesh = SubResource("BoxMesh_sft46")
 
 [node name="box19" parent="." unique_id=2118801659 instance=ExtResource("5_2ikv8")]
-transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 10.910763, 0.62949514, 8.80334)
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 0.8782072, 0.62949514, 9.972236)
 
 [node name="button12" parent="." unique_id=1232488624 instance=ExtResource("7_fj7db")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6728477, 0.022004224, 11.842677)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8404975, 0.022004224, 8.868788)
 doorId = 61
-latch_open = false
 
 [node name="Capstan4" parent="." unique_id=426294487 instance=ExtResource("12_s07g2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2894707, -4.7683716e-07, -7.3808336)
 doorId = 60
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=9605763]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -6.3638086, 0, 14.053219)
+pixel_size = 0.004
+texture = ExtResource("11_sc38n")
+
+[node name="Sprite3D2" type="Sprite3D" parent="." unique_id=1029514709]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 3.126752, 0, 14.249346)
+pixel_size = 0.004
+texture = ExtResource("12_0pruu")

@@ -2,15 +2,18 @@
 
 [ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/main.gd" id="1_fjo1f"]
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_wja66"]
-[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="3_ff6ke"]
+[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="3_ff6ke"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat_manager.gd" id="4_jufax"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="5_hvlyp"]
-[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="6_r1k3v"]
+[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="6_r1k3v"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/checkpoint.gd" id="7_merrg"]
 [ext_resource type="PackedScene" uid="uid://cc5i52fwmdxxr" path="res://scenes/levels/level_1_1.tscn" id="8_jmukd"]
 [ext_resource type="PackedScene" uid="uid://jtyjfnfke2a5" path="res://scenes/levels/level_2_1.tscn" id="9_42pt1"]
 [ext_resource type="PackedScene" uid="uid://xwk3gx5566ja" path="res://scenes/levels/level_4_1.tscn" id="10_avfv3"]
 [ext_resource type="PackedScene" uid="uid://db2r84gbsgdwy" path="res://scenes/levels/level_3_1.tscn" id="11_ya4ey"]
+[ext_resource type="PackedScene" uid="uid://c28717wolln1n" path="res://scenes/levels/level_5_1.tscn" id="12_a8y0u"]
+[ext_resource type="PackedScene" uid="uid://dkt0qubrdcd83" path="res://scenes/levels/level_5_2.tscn" id="13_jkv2x"]
+[ext_resource type="PackedScene" uid="uid://bpggtrks5qdb3" path="res://scenes/levels/level_5_3.tscn" id="14_jbj1t"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_wja66")
@@ -63,14 +66,24 @@ script = ExtResource("3_ff6ke")
 script = ExtResource("4_jufax")
 use_wide_brush = true
 cursor_trail_max_length = 22.0
+bridge_collapse_time = 1.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("5_hvlyp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8732128, -1.1444092e-05, -78.459526)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.231577, -1.1444092e-05, -40.731953)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("6_r1k3v")
 
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+
+[node name="Area3D7" type="Area3D" parent="checkpoints" unique_id=181496802]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 16.169622, 1.855777, 4.058918)
+collision_mask = 3
+script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D7" unique_id=370830372]
+shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -9.289364, 1.855777, -11.356438)
@@ -91,12 +104,39 @@ target_level_path = NodePath("../../levels/Level3")
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=1447560152]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 4.1469946, 1.855777, -78.3652)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -14.592094, 1.855777, -44.685444)
 collision_mask = 3
 script = ExtResource("7_merrg")
 target_level_path = NodePath("../../levels/Level4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=339184219]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D4" type="Area3D" parent="checkpoints" unique_id=955788450]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -21.559937, 1.855777, -90.1261)
+collision_mask = 3
+script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level5")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D4" unique_id=350656263]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D5" type="Area3D" parent="checkpoints" unique_id=1182494703]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -18.331247, 1.855777, -107.87626)
+collision_mask = 3
+script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D5" unique_id=820763313]
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D6" type="Area3D" parent="checkpoints" unique_id=560752789]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -18.331247, 1.855777, -132.15558)
+collision_mask = 3
+script = ExtResource("7_merrg")
+target_level_path = NodePath("../../levels/Level7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D6" unique_id=536288684]
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=428045097]
@@ -107,7 +147,16 @@ shape = SubResource("BoxShape3D_yq6so")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.530717, 0, -16.495487)
 
 [node name="Level3" parent="levels" unique_id=2081473023 instance=ExtResource("11_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03136635, 0, -57.334377)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05296135, 0, -57.333775)
 
 [node name="Level4" parent="levels" unique_id=1632914966 instance=ExtResource("10_avfv3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4256144, 0.034557343, -107.54593)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.768604, 0.034557343, -70.631966)
+
+[node name="Level5" parent="levels" unique_id=710712999 instance=ExtResource("12_a8y0u")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.793482, 0, -97.86201)
+
+[node name="Level6" parent="levels" unique_id=1243877704 instance=ExtResource("13_jkv2x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23.167723, 0, -117.707695)
+
+[node name="Level7" parent="levels" unique_id=565527455 instance=ExtResource("14_jbj1t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.732412, 0, -155.16383)
