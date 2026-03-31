@@ -18,7 +18,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.53932285, 1.9073486e-06, -0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("1_mjsmt")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.596653, 0, -0.8712301)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.402, 0, -0.8712301)
 
 [node name="Node3" type="Node3D" parent="." unique_id=1033632909]
 
