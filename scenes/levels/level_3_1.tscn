@@ -49,7 +49,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.167446, 0, 3.46072)
 transform = Transform3D(-1.732702e-07, 0, 1.453, 0, 1.494, 0, -3.9639602, 0, -6.3512644e-08, 6.965702, -2.5662239, 12.254329)
 
 [node name="door94" parent="." unique_id=33587360 instance=ExtResource("4_4bxto")]
-transform = Transform3D(4.983265, 0, 7.1054274e-15, 0, 1.494, 0, 2.5011106e-14, 0, 1.453, 1.0816841, -0.4289105, -16.942081)
+transform = Transform3D(4.983, 0, -7.292635e-15, 0, 0.7, 0, 2.5009774e-14, 0, 1.453, 1.0816841, -0.4289105, -14.729179)
 
 [node name="door91" parent="." unique_id=1985816006 instance=ExtResource("4_4bxto")]
 transform = Transform3D(-6.1263385e-08, 0, 1.453, 0, 1.494, 0, -1.401543, 0, -6.3512644e-08, -10.034298, -0.56622386, 18.04943)
@@ -116,7 +116,7 @@ transform = Transform3D(-18.140303, 0, -2.5705565e-06, 0, 1, 0, 2.739107e-06, 0,
 mesh = SubResource("BoxMesh_sft46")
 
 [node name="box19" parent="." unique_id=2118801659 instance=ExtResource("5_2ikv8")]
-transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 0.8782072, 0.62949514, 9.972236)
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 10.715606, 0.62949514, 9.972236)
 
 [node name="button12" parent="." unique_id=1232488624 instance=ExtResource("7_fj7db")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8404975, 0.022004224, 8.868788)
