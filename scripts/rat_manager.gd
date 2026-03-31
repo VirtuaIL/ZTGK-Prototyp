@@ -123,6 +123,8 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 var _cursor_hint_layer: CanvasLayer = null
 var _cursor_hint_label: Label = null
 var _cursor_hint_timer: float = 0.0
+var _cursor_info_layer: CanvasLayer = null
+var _cursor_info_label: Label = null
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -522,6 +524,7 @@ func _process(delta: float) -> void:
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
 	_update_cursor_hint(delta)
+	_update_cursor_info()
 	_process_formation_queue()
 	_update_edge_avoidance()
 	if orbit_active:
@@ -1410,6 +1413,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				if hit_m:
 					var obj = hit_m.collider
 					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
+						var available := get_available_rat_count()
+						if obj != _player and available <= 0:
+							_show_cursor_hint("Brak wolnych szczurów do przenoszenia")
+							get_viewport().set_input_as_handled()
+							return
 						if obj == _player and not _player_has_enough_rats_to_move():
 							_show_cursor_hint("Brak aktywnego obiektu do przenoszenia —\nPPM dziala tylko na obiekty do przeniesienia.\nNajedz kursorem na skrzynke, wiezyczke lub gracza.")
 							get_viewport().set_input_as_handled()
@@ -1486,6 +1494,17 @@ func _init_cursor_hint_ui() -> void:
 	_cursor_hint_layer.add_child(_cursor_hint_label)
 	add_child(_cursor_hint_layer)
 
+	_cursor_info_layer = CanvasLayer.new()
+	_cursor_info_label = Label.new()
+	_cursor_info_label.visible = false
+	_cursor_info_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cursor_info_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
+	_cursor_info_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_cursor_info_label.add_theme_constant_override("outline_size", 4)
+	_cursor_info_label.add_theme_font_size_override("font_size", 15)
+	_cursor_info_layer.add_child(_cursor_info_label)
+	add_child(_cursor_info_layer)
+
 func _show_cursor_hint(text: String) -> void:
 	if _cursor_hint_label == null:
 		return
@@ -1504,6 +1523,61 @@ func _update_cursor_hint(delta: float) -> void:
 		_cursor_hint_label.position = mp + Vector2(14, 18)
 		if _cursor_hint_timer <= 0.0:
 			_cursor_hint_label.visible = false
+
+func _update_cursor_info() -> void:
+	if _cursor_info_label == null:
+		return
+	var text := ""
+	var available := get_available_rat_count()
+	var hovered := _get_hovered_movable()
+	if hovered != null:
+		if hovered == _player:
+			var required_player := _get_required_carriers_for_object(hovered)
+			text = "Przenoszenie: potrzebne %d | masz %d" % [required_player, available]
+		else:
+			text = "Przenoszenie: dostepne %d szczurów" % available
+	else:
+		if build_draw_mode == DRAW_MODE_CIRCLE:
+			var hit: Dictionary = _get_mouse_ground_hit()
+			if not hit.is_empty():
+				var path_for_preview := current_drawn_path
+				if path_for_preview.is_empty():
+					path_for_preview = PackedVector3Array()
+					path_for_preview.append(current_circle_center)
+				var required_build := _compute_circle_path_fill_positions(path_for_preview).size()
+				if required_build > 0:
+					text = "Budowa: potrzebne %d | masz %d" % [required_build, available]
+		elif build_draw_mode == DRAW_MODE_PATH:
+			text = "Budowa: uzyje do %d szczurów" % available
+
+	if text == "":
+		_cursor_info_label.visible = false
+		return
+	_cursor_info_label.text = text
+	_cursor_info_label.visible = true
+	var mp := get_viewport().get_mouse_position()
+	_cursor_info_label.position = mp + Vector2(16, -30)
+
+func _get_hovered_movable() -> CharacterBody3D:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return null
+	var mp := get_viewport().get_mouse_position()
+	var ray_origin := cam.project_ray_origin(mp)
+	var ray_dir := cam.project_ray_normal(mp)
+	var space_state := cam.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
+	var hit := space_state.intersect_ray(query)
+	if hit:
+		var obj = hit.collider
+		if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
+			return obj
+	return null
+
+func _get_required_carriers_for_object(obj: CharacterBody3D) -> int:
+	if obj == _player:
+		return max(1, _get_player_movement_rat_requirement())
+	return max(0, get_available_rat_count())
 
 
 func get_active_rat_count() -> int:
@@ -2409,6 +2483,27 @@ func _get_brush_desired_carriers(total_count: int) -> int:
 	var min_c: int = clampi(carrier_min_count, 1, total_count)
 	var desired: int = int(round(lerpf(float(min_c), float(total_count), t)))
 	return clampi(desired, 1, total_count)
+
+func _get_carrier_arrival_ratio() -> float:
+	if grabbed_object == null:
+		return 0.0
+	var carriers = grabbed_object.get("carrier_rats")
+	if carriers == null or carriers.is_empty():
+		return 0.0
+	var arrival_dist_sq := 0.2 * 0.2
+	var arrived := 0
+	var total := 0
+	for r in carriers:
+		if r == null:
+			continue
+		total += 1
+		var flat_pos := Vector2(r.global_position.x, r.global_position.z)
+		var flat_target := Vector2(r.blob_target.x, r.blob_target.z)
+		if flat_pos.distance_squared_to(flat_target) <= arrival_dist_sq:
+			arrived += 1
+	if total <= 0:
+		return 0.0
+	return clampf(float(arrived) / float(total), 0.0, 1.0)
 
 
 func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:

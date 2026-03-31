@@ -1,7 +1,7 @@
 extends CharacterBody3D
 class_name box
 
-@export var carriers_required: int = 4
+@export var carriers_required: int = 2
 @export var fall_death_y: float = -1.0
 @export var gravity_multiplier: float = 5.0
 
