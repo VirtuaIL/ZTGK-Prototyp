@@ -2263,17 +2263,9 @@ func _process_object_drag(delta: float) -> void:
 		return
 
 	var current_pos: Vector3 = grabbed_object.global_position
-	var target_pos: Vector3
-	
-	var hit := _get_mouse_ground_hit()
-	if hit:
-		target_pos = hit.position
-		target_pos.y = current_pos.y
-	else:
-		var fallback := _get_mouse_pos_at_y(current_pos.y)
-		if fallback == Vector3.ZERO:
-			return
-		target_pos = fallback
+	var target_pos := _get_mouse_pos_at_y(current_pos.y)
+	if target_pos == Vector3.ZERO:
+		return
 
 	var to_cursor := target_pos - current_pos
 	if to_cursor.length() > box_drag_max_radius:
