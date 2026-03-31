@@ -4,6 +4,8 @@ class_name Rat
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
 @export var follow_speed: float = 6.0
+@export var carrier_speed_mult: float = 1.8
+@export var carrier_spring_mult: float = 1.4
 @export var orbit_radius: float = 4.0
 @export var orbit_speed: float = 4.0
 @export var max_follow_distance: float = 22.0
@@ -180,8 +182,9 @@ func _process_follow_spring(delta: float) -> void:
 		return
 
 	var speed_scale := cursor_follow_speed_scale if is_cursor_following else 1.0
-	var stiffness := spring_stiffness * speed_scale
-	var max_spd := max_speed * speed_scale
+	var carrier_mult := carrier_speed_mult if is_carrier else 1.0
+	var stiffness := spring_stiffness * speed_scale * (carrier_spring_mult if is_carrier else 1.0)
+	var max_spd := max_speed * speed_scale * carrier_mult
 
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position

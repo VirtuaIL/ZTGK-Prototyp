@@ -13,7 +13,7 @@ signal player_died
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
 @export var carried_by_rats: bool = true
-@export var required_available_rats_for_movement: int = 2
+@export var required_available_rats_for_movement: int = 1
 var is_being_carried: bool = false
 
 signal object_reset
