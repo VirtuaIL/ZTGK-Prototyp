@@ -116,7 +116,7 @@ transform = Transform3D(-18.140303, 0, -2.5705565e-06, 0, 1, 0, 2.739107e-06, 0,
 mesh = SubResource("BoxMesh_sft46")
 
 [node name="box19" parent="." unique_id=2118801659 instance=ExtResource("5_2ikv8")]
-transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 9.465869, 0.62949514, 8.80334)
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 0.8782072, 0.62949514, 9.972236)
 
 [node name="button12" parent="." unique_id=1232488624 instance=ExtResource("7_fj7db")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8404975, 0.022004224, 8.868788)
