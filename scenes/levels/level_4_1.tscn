@@ -74,10 +74,13 @@ transform = Transform3D(-2.7538174e-08, 0, 0.19, 0, 0.9999998, 0, -0.62999994, 0
 transform = Transform3D(-2.7538174e-08, 0, 0.19, 0, 0.99999976, 0, -0.62999994, 0, -8.3051575e-09, -2.7034028, 0, 14.027648)
 
 [node name="invisible_wall" parent="walls" unique_id=590886537 instance=ExtResource("3_disq3")]
-transform = Transform3D(-1.5211563e-07, 0, -0.015, 0, 0.99999994, 0, 3.4799998, 0, -6.5567074e-10, 8.378662, 0, 16.633818)
+transform = Transform3D(-4.371139e-08, 0, -0.015, 0, 0.99999964, 0, 0.9999999, 0, -6.5567074e-10, 8.378662, 0, 10.635285)
+
+[node name="invisible_wall3" parent="walls" unique_id=1554610630 instance=ExtResource("3_disq3")]
+transform = Transform3D(-8.742278e-08, 0, -0.015, 0, 0.99999994, 0, 1.9999999, 0, -6.5567074e-10, 8.4321375, 0, 20.997143)
 
 [node name="invisible_wall2" parent="walls" unique_id=946211084 instance=ExtResource("3_disq3")]
-transform = Transform3D(2.515, 0, -8.6042284e-16, 0, 0.99999994, 0, 1.4210855e-13, 0, 0.014999999, 1.952258, 0, 8.4417515)
+transform = Transform3D(2, 0, -7.2164497e-16, 0, 0.99999994, 0, 1.1368684e-13, 0, 0.014999999, 1.0668467, 0, 8.441751)
 
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
