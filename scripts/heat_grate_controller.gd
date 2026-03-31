@@ -50,7 +50,7 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
 		
-	if mode == ControlMode.TIMER and patterns.size() > 1:
+	if mode == ControlMode.TIMER:
 		if _get_pattern_count() <= 1:
 			return
 		_timer += delta
@@ -93,6 +93,9 @@ func _apply_pattern(idx: int) -> void:
 		if idx >= patterns.size():
 			return
 		var p = patterns[idx]
+		for g in grates:
+			if g != null:
+				g.is_active = false
 		for i in range(min(p.length(), grates.size())):
 			var grate = grates[i]
 			if grate != null:
