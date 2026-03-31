@@ -58,10 +58,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.432622, 0, -14.303774)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("12_rat_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32.466045, 0, 4.9713955)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.882874, 0, 4.535583)
+activation_radius = null
+show_radius_in_game = null
+is_level_start = null
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("12_rat_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.7673, 0, -15.975976)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.349987, 0, -15.975976)
+activation_radius = null
+show_radius_in_game = null
+is_level_start = null
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)

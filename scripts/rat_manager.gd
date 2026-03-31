@@ -25,6 +25,7 @@ var wave_pending: bool = false
 @export var rat_spawn_bonus_radius: float = 2.5
 @export var rat_spawn_one_shot: bool = true
 @export var min_cap_respawn_cooldown: float = 0.75
+@export var rat_auto_respawn_enabled: bool = false
 
 var _player: CharacterBody3D = null
 var _empty_respawn_triggered: bool = false
@@ -355,6 +356,47 @@ func _get_nearest_spawn_pos(ref_pos: Vector3 = Vector3.INF) -> Vector3:
 		return nearest.global_position
 	return base_pos
 
+func _get_start_spawn_pos() -> Vector3:
+	var start_spawns := get_tree().get_nodes_in_group("rat_spawn_start")
+	if start_spawns.is_empty():
+		return _get_nearest_spawn_pos()
+	var ref_pos := _player.global_position if _player != null else _get_horde_center()
+	var best: Node3D = null
+	var best_dist := INF
+	for s in start_spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		var d := n.global_position.distance_squared_to(ref_pos)
+		if d < best_dist:
+			best_dist = d
+			best = n
+	if best:
+		return best.global_position
+	return _get_nearest_spawn_pos()
+
+func _get_spawn_in_activation_range() -> Node3D:
+	var center := _get_horde_center()
+	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var best: Node3D = null
+	var best_dist := INF
+	for s in spawns:
+		var n := s as Node3D
+		if n == null:
+			continue
+		var radius := 0.0
+		if n.has_method("get_activation_radius"):
+			radius = n.get_activation_radius()
+		if radius <= 0.0:
+			continue
+		var dx := center.x - n.global_position.x
+		var dz := center.z - n.global_position.z
+		var d2 := dx * dx + dz * dz
+		if d2 <= radius * radius and d2 < best_dist:
+			best_dist = d2
+			best = n
+	return best
+
 func _get_horde_center() -> Vector3:
 	var sum := Vector3.ZERO
 	var count := 0
@@ -416,17 +458,30 @@ func _get_fallen_rats() -> Array[Rat]:
 
 func _check_empty_respawn() -> void:
 	var active := get_active_rat_count()
+	if active <= 0:
+		if not auto_respawn_if_empty:
+			return
+		if _min_respawn_cooldown <= 0.0:
+			_restore_to_min_at_center(_get_start_spawn_pos())
+			_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+		return
 	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_restore_to_min_near_spawn()
+		var spawn := _get_spawn_in_activation_range()
+		if spawn == null:
+			return
+		_restore_to_min_at_center(spawn.global_position)
 		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
 
 
 func _restore_to_min_near_spawn() -> void:
+	var center := _get_nearest_spawn_pos()
+	_restore_to_min_at_center(center)
+
+func _restore_to_min_at_center(center: Vector3) -> void:
 	_clamp_caps()
 	var target := min_cap
 	if target <= 0:
 		return
-	var center := _get_nearest_spawn_pos()
 	var active := get_active_rat_count()
 	if active >= target:
 		return
@@ -1399,6 +1454,8 @@ func register_rat(rat: CharacterBody3D) -> void:
 	rats.append(rat)
 	if rat.has_method("set_wall_collision"):
 		rat.set_wall_collision(rats_collide_with_walls)
+	if rat.has_method("set_auto_respawn_enabled"):
+		rat.set_auto_respawn_enabled(rat_auto_respawn_enabled)
 
 
 func get_active_rat_count() -> int:
