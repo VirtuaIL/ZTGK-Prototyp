@@ -1804,7 +1804,7 @@ func _gather_rats_to_horde_center() -> void:
 		if r.state != r.State.FOLLOW or r.is_carrier:
 			r.is_carrier = false
 			r.release_rat(false)
-			move_list.append(r)
+		move_list.append(r)
 
 	if move_list.is_empty():
 		return
