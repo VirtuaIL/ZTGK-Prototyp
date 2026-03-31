@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://2fkxex6n673l" path="res://resources/WATERBLUE.png" id="7_0pruu"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="7_fj7db"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="11_sc38n"]
+[ext_resource type="Texture2D" uid="uid://b6q2gf4xmewgk" path="res://resources/controls_build_bridge.png" id="12_0pruu"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/objects/capstan.tscn" id="12_s07g2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ns8tc"]
@@ -129,3 +130,8 @@ doorId = 60
 transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -6.3638086, 0, 14.053219)
 pixel_size = 0.004
 texture = ExtResource("11_sc38n")
+
+[node name="Sprite3D2" type="Sprite3D" parent="." unique_id=1029514709]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 3.126752, 0, 14.249346)
+pixel_size = 0.004
+texture = ExtResource("12_0pruu")
