@@ -6,6 +6,7 @@ class_name Capstan
 @export var required_rotations: float = 3.0
 @export var cursor_rotate_strength: float = 0.45
 @export var cursor_rotate_max_speed: float = 3.0
+@export var invert_rotation: bool = false
 
 var _current_total_rotation: float = 0.0
 var _previous_rotation: float = 0.0
@@ -61,19 +62,20 @@ func _physics_process(delta: float) -> void:
     var diff = wrapf(rotation.y - _previous_rotation, -PI, PI)
     # We use abs(diff) or allow bidirectional winding? 
     # If potentiometer, it must be bidirectional (positive winds, negative unwinds)
-    _current_total_rotation += diff
+    var dir := -1.0 if invert_rotation else 1.0
+    _current_total_rotation += diff * dir
     _previous_rotation = rotation.y
     
     # Limit rotation values
     var hit_limit = false
     if _current_total_rotation <= 0.0:
         _current_total_rotation = 0.0
-        if angular_velocity.y < 0:
+        if angular_velocity.y * dir < 0:
             angular_velocity.y = 0
             hit_limit = true
     elif _current_total_rotation >= _max_rotation:
         _current_total_rotation = _max_rotation
-        if angular_velocity.y > 0:
+        if angular_velocity.y * dir > 0:
             angular_velocity.y = 0
             hit_limit = true
             

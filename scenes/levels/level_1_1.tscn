@@ -34,7 +34,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("15_rat_spawn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.516551, 0, 0)
-show_radius_in_game = true
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 10.599485, 0, 4.9834614)
@@ -110,6 +109,7 @@ texture = ExtResource("14_t4umt")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.0000001, 3.5338626, 0, -0.5291004)
 doorId = 1
 trapId = 1
+invert_rotation = true
 
 [node name="Sprite3D5" type="Sprite3D" parent="." unique_id=171055828]
 transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 14.367288, 0, -3.7007077)
