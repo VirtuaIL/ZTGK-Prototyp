@@ -211,6 +211,8 @@ func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
 		_player.add_to_group("player")
+	if _player and _player.has_method("set_rat_manager"):
+		_player.set_rat_manager(self)
 	if _player and _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 	if start_with_min and rats.is_empty():
@@ -1345,6 +1347,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				if hit_m:
 					var obj = hit_m.collider
 					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
+						if obj == _player and not _player_has_enough_rats_to_move():
+							get_viewport().set_input_as_handled()
+							return
 						mouse_is_down_left = true
 						left_click_start_pos = mb.position
 						is_dragging_left = false
@@ -1839,6 +1844,10 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 func _get_available_follow_rats() -> Array:
 	var available_rats: Array[CharacterBody3D] = []
 	for rat in rats:
+		if rat == null:
+			continue
+		if rat.is_fallen:
+			continue
 		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
 			available_rats.append(rat)
 	return available_rats
@@ -2308,6 +2317,10 @@ func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
 	var radius_sq := carrier_pick_radius * carrier_pick_radius
 
 	for rat in rats:
+		if rat == null:
+			continue
+		if rat.is_fallen:
+			continue
 		if rat.is_carrier:
 			continue
 		if rat.is_anchored:
@@ -2330,6 +2343,23 @@ func _get_nearest_available_rats(center: Vector3) -> Array[CharacterBody3D]:
 	result.append_array(nearby)
 	result.append_array(others)
 	return result
+
+
+func _get_player_movement_rat_requirement() -> int:
+	if _player == null:
+		return 0
+	if _player.has_method("get_required_available_rats_for_movement"):
+		return maxi(0, int(_player.get_required_available_rats_for_movement()))
+	if "required_available_rats_for_movement" in _player:
+		return maxi(0, int(_player.get("required_available_rats_for_movement")))
+	return 0
+
+
+func _player_has_enough_rats_to_move() -> bool:
+	var required := _get_player_movement_rat_requirement()
+	if required <= 0:
+		return true
+	return get_available_rat_count() >= required
 
 
 func _update_carrier_rat_targets() -> void:

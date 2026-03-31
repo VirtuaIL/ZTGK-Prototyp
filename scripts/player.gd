@@ -13,6 +13,7 @@ signal player_died
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
 @export var carried_by_rats: bool = true
+@export var required_available_rats_for_movement: int = 2
 var is_being_carried: bool = false
 
 signal object_reset
@@ -32,6 +33,7 @@ var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var carried_target_pos: Vector3 = Vector3.ZERO
 var has_carried_target: bool = false
+var _rat_manager: Node = null
 
 func _ready() -> void:
 	add_to_group("player")
@@ -40,6 +42,7 @@ func _ready() -> void:
 	_spawn_position = global_position
 	current_hp = max_hp
 	_update_health_bar()
+	_cache_rat_manager()
 
 
 func _physics_process(delta: float) -> void:
@@ -86,9 +89,11 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	var can_move := _has_required_rats_for_manual_movement()
 	var input_dir := Vector3.ZERO
-	input_dir.x = Input.get_axis("move_left", "move_right")
-	input_dir.z = Input.get_axis("move_forward", "move_back")
+	if can_move:
+		input_dir.x = Input.get_axis("move_left", "move_right")
+		input_dir.z = Input.get_axis("move_forward", "move_back")
 	# Rotate input to match isometric camera (45° around Y)
 	input_dir = input_dir.rotated(Vector3.UP, deg_to_rad(45.0))
 
@@ -143,11 +148,34 @@ func set_stratagem_mode(active: bool) -> void:
 	is_stratagem_mode = active
 
 
+func set_rat_manager(rat_manager: Node) -> void:
+	_rat_manager = rat_manager
+
+
+func get_required_available_rats_for_movement() -> int:
+	return max(0, required_available_rats_for_movement)
+
+
 func _update_health_bar() -> void:
 	if not health_bar:
 		return
 	health_bar.max_value = max_hp
 	health_bar.value = clampf(current_hp, 0.0, max_hp)
+
+
+func _cache_rat_manager() -> void:
+	if _rat_manager == null:
+		_rat_manager = get_tree().get_first_node_in_group("rat_manager")
+
+
+func _has_required_rats_for_manual_movement() -> bool:
+	var required := get_required_available_rats_for_movement()
+	if required <= 0:
+		return true
+	_cache_rat_manager()
+	if _rat_manager == null or not _rat_manager.has_method("get_available_rat_count"):
+		return true
+	return _rat_manager.get_available_rat_count() >= required
 
 func set_highlight(enabled: bool) -> void:
 	var mesh_instance: MeshInstance3D = get_node_or_null("MeshInstance3D")
