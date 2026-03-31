@@ -14,12 +14,28 @@ top_radius = 0.9
 bottom_radius = 0.9
 height = 0.1
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_radius"]
+transparency = 1
+albedo_color = Color(0.1, 0.8, 0.6, 0.18)
+emission_enabled = true
+emission = Color(0.1, 0.8, 0.6, 1)
+emission_energy_multiplier = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_radius"]
+top_radius = 2.5
+bottom_radius = 2.5
+height = 0.03
+
 [node name="RatSpawn" type="Node3D" unique_id=1719942994]
 script = ExtResource("1_spawn")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1903202578]
 material_override = SubResource("StandardMaterial3D_spawn")
 mesh = SubResource("CylinderMesh_spawn")
+
+[node name="RadiusMesh" type="MeshInstance3D" parent="." unique_id=1542151365]
+material_override = SubResource("StandardMaterial3D_radius")
+mesh = SubResource("CylinderMesh_radius")
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1566500145]
 transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, -0.014049411, 0.11801529, -0.024831474)
