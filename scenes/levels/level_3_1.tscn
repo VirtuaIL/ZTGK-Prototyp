@@ -31,7 +31,7 @@ size = Vector3(0.8, 1.4, 0.8)
 [node name="Level3" type="Node3D" unique_id=1719073169]
 
 [node name="CameraCenter" type="Node3D" parent="." unique_id=988644282]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0042505, 1.9073486e-06, 4.3401165)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0912981, 1.9073486e-06, -0.7041888)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
@@ -40,7 +40,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.466793, 0, 10.3580885)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.64178, 0, 6.884675)
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("1_0pruu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.945724, 0, -18.436567)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.945724, 0, -16.901924)
 
 [node name="RatSpawn3" parent="RatSpawns" unique_id=1719942994 instance=ExtResource("1_0pruu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.167446, 0, 3.46072)
@@ -49,7 +49,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.167446, 0, 3.46072)
 transform = Transform3D(-1.732702e-07, 0, 1.453, 0, 1.494, 0, -3.9639602, 0, -6.3512644e-08, 6.965702, -2.5662239, 12.254329)
 
 [node name="door94" parent="." unique_id=33587360 instance=ExtResource("4_4bxto")]
-transform = Transform3D(4.983, 0, -7.292635e-15, 0, 0.7, 0, 2.5009774e-14, 0, 1.453, 1.0816841, -0.4289105, -14.729179)
+transform = Transform3D(4.983, 0, -7.292635e-15, 0, 0.7, 0, 2.5009774e-14, 0, 1.453, 1.0816841, -0.4289105, -13.194536)
 
 [node name="door91" parent="." unique_id=1985816006 instance=ExtResource("4_4bxto")]
 transform = Transform3D(-6.1263385e-08, 0, 1.453, 0, 1.494, 0, -1.401543, 0, -6.3512644e-08, -10.034298, -0.56622386, 18.04943)
@@ -58,7 +58,7 @@ transform = Transform3D(-6.1263385e-08, 0, 1.453, 0, 1.494, 0, -1.401543, 0, -6.
 transform = Transform3D(-2.7290055e-08, 0, 1.453, 0, 1.494, 0, -0.62432367, 0, -6.3512644e-08, -10.131725, -0.56622386, 8.453457)
 
 [node name="door92" parent="." unique_id=850593503 instance=ExtResource("4_4bxto")]
-transform = Transform3D(-1.3614087e-07, 0, 1.453, 0, 1.494, 0, -3.1145403, 0, -6.3512644e-08, -10.034298, -0.56622386, -11.745671)
+transform = Transform3D(-1.3614087e-07, 0, 1.453, 0, 1.494, 0, -3.1145403, 0, -6.3512644e-08, -10.034298, -0.56622386, -10.211029)
 
 [node name="grate" parent="door92" unique_id=944677497 instance=ExtResource("3_4oykg")]
 transform = Transform3D(0.32107484, 0, 5.3290705e-15, 0, 0.66934407, 0, -3.5527137e-15, 0, 0.6882313, -4.9658203, -1.3370764, -0.20324326)
@@ -97,7 +97,7 @@ slide_distance = 2.0
 transform = Transform3D(-47.599968, 0, -2.5705567e-06, 0, 1, 0, 7.1873956e-06, 0, -17.024027, -5.5046997, -1.4567499, 14.089259)
 
 [node name="floorTile14" parent="." unique_id=1742970592 instance=ExtResource("5_qw7qn")]
-transform = Transform3D(-47.599968, 0, -2.5705567e-06, 0, 1, 0, 7.1873956e-06, 0, -17.024027, -5.5046997, -1.4567499, -11.464543)
+transform = Transform3D(-47.599968, 0, -2.5705567e-06, 0, 1, 0, 7.1873956e-06, 0, -17.024027, -5.5046997, -1.4567499, -9.929901)
 
 [node name="Body17" type="MeshInstance3D" parent="." unique_id=1586952492]
 transform = Transform3D(-18.140303, 0, -2.5705565e-06, 0, 1, 0, 2.739108e-06, 0, -17.024025, 10.4952965, -1.8949325, 0.9905958)
@@ -123,7 +123,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8404975, 0.022004224, 8.86
 doorId = 61
 
 [node name="Capstan4" parent="." unique_id=426294487 instance=ExtResource("12_s07g2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2894707, -4.7683716e-07, -7.3808336)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2894707, -4.7683716e-07, -5.846191)
 doorId = 60
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=9605763]
