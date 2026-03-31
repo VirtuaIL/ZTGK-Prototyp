@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://diqlf855r4560" path="res://scenes/objects/grates.tscn" id="2_yhmlo"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="3_c0cgf"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/objects/box.tscn" id="4_clsa1"]
+[ext_resource type="PackedScene" uid="uid://dfxnb0x71pss8" path="res://scenes/objects/floor_tile.tscn" id="4_gs1mk"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/objects/door.tscn" id="5_4g7v8"]
 [ext_resource type="PackedScene" uid="uid://cjtbc0km2fxcw" path="res://scenes/objects/button.tscn" id="6_ic842"]
 [ext_resource type="Texture2D" uid="uid://ckvnirljtaeht" path="res://resources/controls_scroll_white.png" id="7_506bi"]
@@ -59,15 +60,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
 
 [node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("12_rat_spawn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.882874, 0, 4.535583)
-activation_radius = null
-show_radius_in_game = null
-is_level_start = null
 
 [node name="RatSpawn2" parent="RatSpawns" unique_id=1862411539 instance=ExtResource("12_rat_spawn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.349987, 0, -15.975976)
-activation_radius = null
-show_radius_in_game = null
-is_level_start = null
 
 [node name="grates" type="Node3D" parent="." unique_id=290464308]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 3.5994859, 0, 4.9834614)
@@ -122,6 +117,9 @@ shape = SubResource("BoxShape3D_7o223")
 [node name="CollisionShape3D4" type="CollisionShape3D" parent="floor" unique_id=1876506381]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.83222, 0, -1.1931152)
 shape = SubResource("BoxShape3D_jhgwk")
+
+[node name="floorTile14" parent="floor" unique_id=1776565332 instance=ExtResource("4_gs1mk")]
+transform = Transform3D(-5, 0, -9.0597484e-07, 0, 1, 0, 7.54979e-07, 0, -6, -17.32015, -1.4567499, -2.2231948)
 
 [node name="walls" type="Node3D" parent="." unique_id=58504239]
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)

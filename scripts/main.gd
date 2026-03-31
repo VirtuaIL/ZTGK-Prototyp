@@ -587,6 +587,10 @@ func _reset_level_objects(level: Node3D) -> void:
 		var n := btn as Node
 		if n and level.is_ancestor_of(n) and n.has_method("reset_button_state"):
 			n.reset_button_state()
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		var e := enemy as Node3D
+		if e and level.is_ancestor_of(e) and e.has_method("_respawn"):
+			e._respawn()
 
 func restart_level_for_checkpoint(level: Node3D) -> void:
 	if level == null:
