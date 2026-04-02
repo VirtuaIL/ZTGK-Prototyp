@@ -44,6 +44,12 @@ var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 # Attack target: fixed world position recorded at LMB click
 var _attack_target_pos: Vector3 = Vector3.ZERO
 var _attack_target_valid: bool = false
+var _lmb_draw_active: bool = false
+var _attack_formation_ready: bool = false
+var _attack_formation_offsets: Dictionary = {}
+var _attack_formation_consumed: bool = false
+var _attack_formation_anchor_pos: Vector3 = Vector3.ZERO
+var _attack_formation_anchor_valid: bool = false
 
 # Charge system: player must hold LPM to charge before rats attack
 @export var charge_duration: float = 0.5  # seconds to hold LPM before attack fires
@@ -352,6 +358,12 @@ func reset_after_level_load() -> void:
 	_mouse_trail.clear()
 	_mouse_trail_last = Vector3.ZERO
 	_mouse_trail_last_dir = Vector3.ZERO
+	_lmb_draw_active = false
+	_attack_target_valid = false
+	_attack_formation_ready = false
+	_attack_formation_offsets.clear()
+	_attack_formation_consumed = false
+	_attack_formation_anchor_valid = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
 	_has_last_build_pos = false
@@ -625,6 +637,7 @@ func _process(delta: float) -> void:
 			if _charge_timer >= charge_duration:
 				# Charge complete! Release the rats!
 				_charge_complete = true
+				_attack_formation_consumed = true
 				_is_charging = false
 				_set_rats_charging(false)
 				_set_rats_attacking(true)
@@ -655,6 +668,10 @@ func _process(delta: float) -> void:
 					is_dragging_left = true
 			if is_dragging_left:
 				_process_build_drag()
+	# ── LMB: combat formation drawing ──
+	if _lmb_draw_active:
+		_process_build_drag()
+		_preview_combat_formation_from_draw()
 
 	_check_formation_sync()
 	_check_carrier_arrival()
@@ -979,6 +996,27 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 	# Skip when LMB attack is active or charging
 	if mouse_is_down_left and _attack_target_valid:
 		return
+	# Skip when drawing combat formation
+	if _lmb_draw_active:
+		return
+	# If a formation is ready, keep rats arranged at the saved anchor point
+	if _attack_formation_ready and _attack_formation_anchor_valid and not mouse_is_down_left:
+		var active := _get_active_follow_rats()
+		if not active.is_empty():
+			var base_y := _attack_formation_anchor_pos.y
+			var sum_y := 0.0
+			for rat in active:
+				sum_y += rat.global_position.y
+			base_y = sum_y / float(active.size())
+			for rat in active:
+				var id := rat.get_instance_id()
+				if _attack_formation_offsets.has(id):
+					var target : Vector3= _attack_formation_anchor_pos + _attack_formation_offsets[id]
+					target.y = base_y
+					rat.set_target(target)
+			_set_cursor_following(active, false)
+			_clear_cursor_capstan()
+			return
 	# Skip when RMB build drag is handling rats
 	if mouse_is_down_right and _rmb_is_build:
 		_set_cursor_following(_get_active_follow_rats(), false)
@@ -1046,9 +1084,14 @@ func _send_rats_to_attack_point() -> void:
 		spread_factor = clampf((total_dist - CONVERGE_END) / (CONVERGE_START - CONVERGE_END), 0.0, 1.0)
 
 	for rat in active:
-		# Offset = this rat's position relative to horde center
-		var offset := rat.global_position - horde_center
-		offset.y = 0.0
+		# Offset = stored formation if available, otherwise current relative position
+		var offset := Vector3.ZERO
+		var id := rat.get_instance_id()
+		if _attack_formation_ready and _attack_formation_offsets.has(id):
+			offset = _attack_formation_offsets[id]
+		else:
+			offset = rat.global_position - horde_center
+			offset.y = 0.0
 
 		# Target = attack point + preserved formation offset (shrinking near target)
 		var target := _attack_target_pos + offset * spread_factor
@@ -1498,7 +1541,7 @@ func _form_unified_mesh() -> void:
 			box.material = mat
 
 
-# ── Input handling ────────────────────────────────────────────────────────────
+	# ── Input handling ────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
 	if wave_pending and event is InputEventMouseButton:
@@ -1511,6 +1554,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		# ── RMB: cancel stored combat formation ──
+		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+			if _attack_formation_ready and not _lmb_draw_active and not mouse_is_down_left:
+				_attack_formation_ready = false
+				_attack_formation_offsets.clear()
+				_attack_formation_consumed = false
+				_attack_formation_anchor_valid = false
+				get_viewport().set_input_as_handled()
+				return
 		
 		# ── Scroll: rotate object if grabbed, otherwise change brush size ──
 		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
@@ -1541,17 +1593,69 @@ func _unhandled_input(event: InputEvent) -> void:
 		# ── LMB: ATTACK MODE (rats rush to FIXED cursor point) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
-				mouse_is_down_left = true
-				# Record cursor world position at the moment of click
-				var attack_pos := _mouse_to_world()
-				if attack_pos != Vector3.ZERO:
-					_attack_target_pos = attack_pos
-					_attack_target_valid = true
-				else:
-					_attack_target_valid = false
-			else:
-				mouse_is_down_left = false
+				# Reset any active attack state on fresh press
 				_attack_target_valid = false
+				_is_charging = false
+				_charge_complete = false
+				_charge_timer = 0.0
+				_set_rats_charging(false)
+				_set_rats_attacking(false)
+				if _attack_formation_ready:
+					# Second click: start charge + attack using stored formation
+					mouse_is_down_left = true
+					_lmb_draw_active = false
+					var attack_pos := _mouse_to_world()
+					if attack_pos != Vector3.ZERO:
+						_attack_target_pos = attack_pos
+						_attack_target_valid = true
+						_charge_timer = 0.0
+						_charge_complete = false
+						_is_charging = false
+					else:
+						_attack_target_valid = false
+				else:
+					# First hold: draw formation with rats
+					mouse_is_down_left = true
+					_lmb_draw_active = true
+					_attack_target_valid = false
+					_attack_formation_ready = false
+					_attack_formation_offsets.clear()
+					_attack_formation_consumed = false
+					_attack_formation_anchor_valid = false
+					current_drawn_path.clear()
+					current_build_y = -1000.0
+					_has_last_build_pos = false
+					_mouse_trail.clear()
+					_mouse_trail_last = Vector3.ZERO
+					_mouse_trail_last_dir = Vector3.ZERO
+			else:
+				if _lmb_draw_active:
+					mouse_is_down_left = false
+					_lmb_draw_active = false
+					_attack_target_valid = false
+					_charge_timer = 0.0
+					_charge_complete = false
+					_is_charging = false
+					_set_rats_charging(false)
+					_set_rats_attacking(false)
+					_commit_combat_formation_from_draw()
+					current_build_y = -1000.0
+					current_drawn_path.clear()
+					_has_last_build_pos = false
+					immediate_mesh.clear_surfaces()
+				else:
+					mouse_is_down_left = false
+					_attack_target_valid = false
+					_is_charging = false
+					_charge_complete = false
+					_charge_timer = 0.0
+					_set_rats_charging(false)
+					_set_rats_attacking(false)
+					if _attack_formation_consumed:
+						_attack_formation_ready = false
+						_attack_formation_offsets.clear()
+						_attack_formation_consumed = false
+						_attack_formation_anchor_valid = false
 			get_viewport().set_input_as_handled()
 			return
 
@@ -1910,6 +2014,11 @@ func recall_all_rats() -> void:
 	# Reset drawing state
 	mouse_is_down_left = false
 	_attack_target_valid = false
+	_lmb_draw_active = false
+	_attack_formation_ready = false
+	_attack_formation_offsets.clear()
+	_attack_formation_consumed = false
+	_attack_formation_anchor_valid = false
 	is_dragging_left = false
 	mouse_is_down_right = false
 	_lmb_is_object_drag = false
@@ -1959,6 +2068,11 @@ func hard_recall_all_rats() -> void:
 	# Reset drawing state
 	mouse_is_down_left = false
 	_attack_target_valid = false
+	_lmb_draw_active = false
+	_attack_formation_ready = false
+	_attack_formation_offsets.clear()
+	_attack_formation_consumed = false
+	_attack_formation_anchor_valid = false
 	is_dragging_left = false
 	mouse_is_down_right = false
 	_lmb_is_object_drag = false
@@ -2214,6 +2328,46 @@ func _get_available_follow_rats() -> Array:
 	return available_rats
 
 
+func _assign_rats_to_positions(positions: Array[Vector3], store_offsets: bool) -> void:
+	var available_rats := _get_available_follow_rats()
+	if available_rats.is_empty():
+		return
+	if positions.is_empty():
+		return
+
+	var valid_positions: Array[Vector3] = []
+	for p in positions:
+		if not _is_pos_too_close_to_player(p):
+			valid_positions.append(p)
+
+	var assign_count : int= min(available_rats.size(), valid_positions.size())
+	if assign_count <= 0:
+		return
+
+	var center := Vector3.ZERO
+	for i in range(assign_count):
+		center += valid_positions[i]
+	center /= float(assign_count)
+
+	if store_offsets:
+		_attack_formation_offsets.clear()
+
+	for i in range(assign_count):
+		var rat : CharacterBody3D = available_rats[i]
+		var pos := valid_positions[i]
+		rat.set_target(pos)
+		if store_offsets:
+			var offset := pos - center
+			offset.y = 0.0
+			_attack_formation_offsets[rat.get_instance_id()] = offset
+
+	if store_offsets:
+		_attack_formation_ready = true
+		_attack_formation_anchor_pos = center
+		_attack_formation_anchor_valid = true
+		_attack_formation_consumed = false
+
+
 func _is_pos_too_close_to_player(pos: Vector3) -> bool:
 	if _player == null:
 		return false
@@ -2260,11 +2414,110 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 	return positions
 
 
+func _compute_path_positions_for_rats(rat_count: int) -> Array[Vector3]:
+	var positions: Array[Vector3] = []
+	if current_drawn_path.size() < 2:
+		return positions
+	if rat_count <= 0:
+		return positions
+
+	var path_length: float = 0.0
+	var segs: Array[float] = []
+	for i in range(1, current_drawn_path.size()):
+		var segment_len = current_drawn_path[i - 1].distance_to(current_drawn_path[i])
+		path_length += segment_len
+		segs.append(segment_len)
+
+	if rat_count == 1:
+		positions.append(current_drawn_path[0])
+		return positions
+
+	var dist_between_rats := path_length / float(rat_count - 1)
+	for i in range(rat_count):
+		if i == 0:
+			positions.append(current_drawn_path[0])
+			continue
+		elif i == rat_count - 1:
+			positions.append(current_drawn_path[-1])
+			continue
+
+		var target_dist := i * dist_between_rats
+		var accum: float = 0.0
+		var segment_idx: int = 0
+		var segment_start: float = 0.0
+		for j in range(segs.size()):
+			if accum + segs[j] >= target_dist:
+				segment_idx = j
+				segment_start = accum
+				break
+			accum += segs[j]
+
+		var segment_t : int= (target_dist - segment_start) / max(0.0001, segs[segment_idx])
+		var point_a: Vector3 = current_drawn_path[segment_idx]
+		var point_b: Vector3 = current_drawn_path[segment_idx + 1]
+		var interp_pos := point_a.lerp(point_b, segment_t)
+
+		if use_wide_brush:
+			var dir := point_b - point_a
+			dir.y = 0.0
+			if dir.length() < 0.001:
+				dir = Vector3.FORWARD
+			else:
+				dir = dir.normalized()
+			var lateral_dir := dir.cross(Vector3.UP).normalized()
+
+			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+			if pairs > 0:
+				var lane_count := 1 + pairs * 2
+				var center_index := float(lane_count - 1) / 2.0
+				var lane_index := i % lane_count
+				var factor := float(lane_index) - center_index
+				interp_pos += lateral_dir * brush_lane_spacing * factor
+
+		positions.append(interp_pos)
+
+	return positions
+
+
+func _preview_combat_formation_from_draw() -> void:
+	var available_rats := _get_available_follow_rats()
+	if available_rats.is_empty():
+		return
+
+	var target_positions: Array[Vector3] = []
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		target_positions = _compute_circle_path_fill_positions(current_drawn_path)
+	elif build_draw_mode == DRAW_MODE_PATH:
+		target_positions = _compute_path_positions_for_rats(available_rats.size())
+
+	_assign_rats_to_positions(target_positions, false)
+
+
+func _commit_combat_formation_from_draw() -> void:
+	var available_rats := _get_available_follow_rats()
+	if available_rats.is_empty():
+		return
+
+	var target_positions: Array[Vector3] = []
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		target_positions = _compute_circle_path_fill_positions(current_drawn_path)
+	elif build_draw_mode == DRAW_MODE_PATH:
+		target_positions = _compute_path_positions_for_rats(available_rats.size())
+
+	_attack_formation_ready = false
+	_attack_formation_anchor_valid = false
+	_attack_formation_offsets.clear()
+	_assign_rats_to_positions(target_positions, true)
+
+
 # ── Brush UI Preview ─────────────────────────────────────────────────────────
 
 func _update_cursor_preview() -> void:
 	# Ignore if we are actively drawing a build path (RMB build)
 	if mouse_is_down_right and _rmb_is_build:
+		return
+	# Ignore if we are drawing combat formation with LMB
+	if _lmb_draw_active:
 		return
 
 	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D

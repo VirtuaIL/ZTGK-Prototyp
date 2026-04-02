@@ -32,8 +32,8 @@ var is_charging: bool = false  # Charging before attack — rats wiggle in place
 var _charge_wiggle_time: float = 0.0
 
 # Idle follow (lazy): higher stiffness for quick formation response, low max speed for lazy cursor follow
-@export var idle_spring_stiffness: float = 15.0
-@export var idle_max_speed: float = 4.0
+@export var idle_spring_stiffness: float = 22.0
+@export var idle_max_speed: float = 7.5
 @export var idle_damping: float = 0.92
 
 # Attack follow (aggressive): constant-speed rush, no deceleration
