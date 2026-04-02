@@ -251,9 +251,12 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD — ruch\n" + \
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
-		"LPM (przytrzymaj) — rysuj szczury (pędzel)\n" + \
-		"PPM (ciągnij) — przenieś obiekt / gracza\n" + \
+		"LPM (przytrzymaj) — ATAK: szczury biegną szybko do kursora i zadają obrażenia\n" + \
+		"PPM (przytrzymaj) — buduj struktury / przenieś obiekt\n" + \
 		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
+		"\n[b]Walka[/b]\n" + \
+		"Bez LPM szczury leniwie podążają za kursorem (idle)\n" + \
+		"Z LPM szczury szybko atakują wrogów w pobliżu kursora\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
 		"Respawn szczurów: horda wejdzie w strefę RatSpawn\n" + \
@@ -498,9 +501,9 @@ func _update_rat_count_ui() -> void:
 
 
 func _update_mode_ui() -> void:
-	if lpm_label_val: lpm_label_val.text = "rysuj szczury"
+	if lpm_label_val: lpm_label_val.text = "ATAK (szczury)"
 	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
-	if ppm_label_val: ppm_label_val.text = "przenieś"
+	if ppm_label_val: ppm_label_val.text = "buduj / przenieś"
 
 func _gather_levels() -> void:
 	_levels.clear()

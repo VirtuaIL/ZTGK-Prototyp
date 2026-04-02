@@ -25,6 +25,21 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var release_boost_up: float = 20.0
 @export var release_boost_time: float = 0.25
 
+# Attack mode — controlled by RatManager when LPM is held
+var is_attacking: bool = false
+var is_charging: bool = false  # Charging before attack — rats wiggle in place
+@export var charge_wiggle_intensity: float = 0.15
+var _charge_wiggle_time: float = 0.0
+
+# Idle follow (lazy): higher stiffness for quick formation response, low max speed for lazy cursor follow
+@export var idle_spring_stiffness: float = 15.0
+@export var idle_max_speed: float = 4.0
+@export var idle_damping: float = 0.92
+
+# Attack follow (aggressive): constant-speed rush, no deceleration
+@export var attack_speed: float = 28.0
+@export var attack_min_speed: float = 18.0  # minimum speed to prevent slowdown near target
+
 var state: State = State.FOLLOW
 var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
@@ -156,16 +171,24 @@ func _physics_process(delta: float) -> void:
 
 		# Fall recovery is handled above before distance checks.
 
+	# Charging: rats wiggle in place, don't move toward target
+	if is_charging and state == State.FOLLOW and not is_carrier:
+		_process_charging(delta)
+		return
+
 	match state:
 		State.FOLLOW:
 			_process_follow_spring(delta)
-			_check_damage()
+			if is_attacking:
+				_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
-			_check_damage()
+			if is_attacking:
+				_check_damage()
 		State.WAVE:
 			_process_wave(delta)
-			_check_damage()
+			if is_attacking:
+				_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:
@@ -181,15 +204,60 @@ func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:
 		return
 
-	var speed_scale := cursor_follow_speed_scale if is_cursor_following else 1.0
-	var carrier_mult := carrier_speed_mult if is_carrier else 1.0
-	var stiffness := spring_stiffness * speed_scale * (carrier_spring_mult if is_carrier else 1.0)
-	var max_spd := max_speed * speed_scale * carrier_mult
+	# ── ATTACK MODE: constant-speed rush (no spring deceleration) ──
+	if is_attacking and not is_carrier:
+		var to_target := _target_position - global_position
+		to_target.y = 0.0
+		var dist := to_target.length()
+		if dist > 0.15:
+			var dir := to_target / dist
+			var spd := attack_speed
+			# Enforce minimum speed — no deceleration near target
+			if spd < attack_min_speed:
+				spd = attack_min_speed
+			velocity.x = dir.x * spd
+			velocity.z = dir.z * spd
+			_spring_velocity.x = velocity.x
+			_spring_velocity.z = velocity.z
+		else:
+			# Arrived — hold position
+			velocity.x = 0.0
+			velocity.z = 0.0
+			_spring_velocity.x = 0.0
+			_spring_velocity.z = 0.0
+		if _should_block_edge(Vector2(velocity.x, velocity.z)):
+			velocity.x = 0.0
+			velocity.z = 0.0
+			_spring_velocity.x = 0.0
+			_spring_velocity.z = 0.0
+		_do_move_and_slide()
+		_spring_velocity.x = velocity.x
+		_spring_velocity.z = velocity.z
+		# Face direction of travel
+		if extra_spin_speed == 0.0:
+			var move_dir := Vector3(velocity.x, 0.0, velocity.z)
+			if move_dir.length() > 0.4:
+				rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
+		return
+
+	# ── IDLE / CARRIER: spring-damped follow ──
+	var effective_stiffness: float
+	var effective_max_speed: float
+	var effective_damping: float
+
+	if is_carrier:
+		effective_stiffness = spring_stiffness * carrier_spring_mult
+		effective_max_speed = max_speed * carrier_speed_mult
+		effective_damping = damping
+	else:
+		effective_stiffness = idle_spring_stiffness
+		effective_max_speed = idle_max_speed
+		effective_damping = idle_damping
 
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position
 	to_target.y *= 0.2
-	_spring_velocity += to_target * stiffness * delta
+	_spring_velocity += to_target * effective_stiffness * delta
 
 	# Separation from neighbors
 	for neighbor in _neighbors:
@@ -205,12 +273,12 @@ func _process_follow_spring(delta: float) -> void:
 			_spring_velocity += diff.normalized() * (separation_dist - dist) * separation_force * delta
 
 	# Framerate-independent damping
-	_spring_velocity *= pow(damping, delta * 60.0)
+	_spring_velocity *= pow(effective_damping, delta * 60.0)
 
 	# Clamp horizontal speed
 	var hvel := Vector2(_spring_velocity.x, _spring_velocity.z)
-	if hvel.length() > max_spd:
-		hvel = hvel.normalized() * max_spd
+	if hvel.length() > effective_max_speed:
+		hvel = hvel.normalized() * effective_max_speed
 		_spring_velocity.x = hvel.x
 		_spring_velocity.z = hvel.y
 
@@ -232,6 +300,32 @@ func _process_follow_spring(delta: float) -> void:
 		var move_dir := Vector3(velocity.x, 0.0, velocity.z)
 		if move_dir.length() > 0.4:
 			rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
+
+
+func _process_charging(delta: float) -> void:
+	# Rats stay in place but wiggle rapidly to show they're preparing to attack
+	_charge_wiggle_time += delta * 25.0  # Fast wiggle frequency
+	
+	# Small random-ish positional shake using sine with unique offset per rat
+	var id_offset := float(get_instance_id() % 1000) * 0.1
+	var wiggle_x := sin(_charge_wiggle_time + id_offset) * charge_wiggle_intensity
+	var wiggle_z := cos(_charge_wiggle_time * 1.3 + id_offset * 2.0) * charge_wiggle_intensity
+	
+	# Stop horizontal movement
+	velocity.x = wiggle_x * 20.0
+	velocity.z = wiggle_z * 20.0
+	_spring_velocity = Vector3.ZERO
+	
+	# Still apply gravity
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+	else:
+		velocity.y = 0.0
+	
+	_do_move_and_slide()
+	
+	# Quick rotation wiggle (rats look around nervously)
+	rotation.y += sin(_charge_wiggle_time * 2.0 + id_offset) * 0.08
 
 
 func set_target(pos: Vector3) -> void:
@@ -312,16 +406,18 @@ func _process_wave(delta: float) -> void:
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
+	if not is_attacking:
+		return
 		
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	enemies += (get_tree().get_nodes_in_group("bosses"))
-	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
 	
 	for enemy in enemies:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
-			#enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
-			attack_cooldown = 1.0
+			if enemy.has_method("take_damage"):
+				enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
+			attack_cooldown = 0.3
 			break
 
 

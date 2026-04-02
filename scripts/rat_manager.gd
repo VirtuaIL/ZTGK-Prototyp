@@ -36,15 +36,28 @@ var mode: int = 1 # Always BUILD-like unified mode
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
-var mouse_is_down_left: bool = false
+var mouse_is_down_left: bool = false  # LMB = attack mode
 var left_click_start_pos: Vector2 = Vector2(-1, -1)
 var is_dragging_left: bool = false
 var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 
-var mouse_is_down_right: bool = false
-var combat_rmb_down: bool = false
+# Attack target: fixed world position recorded at LMB click
+var _attack_target_pos: Vector3 = Vector3.ZERO
+var _attack_target_valid: bool = false
 
-# LMB unified: true when LMB started on a movable object (drag mode), false = build mode
+# Charge system: player must hold LPM to charge before rats attack
+@export var charge_duration: float = 0.5  # seconds to hold LPM before attack fires
+var _charge_timer: float = 0.0
+var _is_charging: bool = false   # true while charging (rats wiggle)
+var _charge_complete: bool = false  # true after charge completes (rats attack)
+var _charge_bar: ProgressBar = null
+var _charge_bar_container: Control = null
+
+var mouse_is_down_right: bool = false  # RMB = build/drag
+var combat_rmb_down: bool = false
+var _rmb_is_build: bool = false  # true when RMB is in build mode (no object under cursor)
+
+# RMB unified: true when RMB started on a movable object (drag mode), false = build mode
 var _lmb_is_object_drag: bool = false
 
 # Rats that are currently acting as box carriers
@@ -215,6 +228,69 @@ func _ready() -> void:
 	line_mesh_instance.material_override = line_material
 	
 	add_child(line_mesh_instance)
+	_init_charge_bar_ui()
+
+func _init_charge_bar_ui() -> void:
+	# Container centered on screen
+	_charge_bar_container = Control.new()
+	_charge_bar_container.set_anchors_preset(Control.PRESET_CENTER)
+	_charge_bar_container.position = Vector2(-75, 40)  # Offset below center
+	_charge_bar_container.size = Vector2(150, 16)
+	_charge_bar_container.visible = false
+	_charge_bar_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Progress bar
+	_charge_bar = ProgressBar.new()
+	_charge_bar.min_value = 0.0
+	_charge_bar.max_value = 1.0
+	_charge_bar.value = 0.0
+	_charge_bar.show_percentage = false
+	_charge_bar.size = Vector2(150, 16)
+	_charge_bar.position = Vector2.ZERO
+	_charge_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Style the bar
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.1, 0.1, 0.1, 0.8)
+	bg_style.corner_radius_top_left = 4
+	bg_style.corner_radius_top_right = 4
+	bg_style.corner_radius_bottom_left = 4
+	bg_style.corner_radius_bottom_right = 4
+	_charge_bar.add_theme_stylebox_override("background", bg_style)
+	
+	var fill_style := StyleBoxFlat.new()
+	fill_style.bg_color = Color(1.0, 0.6, 0.1, 0.95)  # Orange charge color
+	fill_style.corner_radius_top_left = 4
+	fill_style.corner_radius_top_right = 4
+	fill_style.corner_radius_bottom_left = 4
+	fill_style.corner_radius_bottom_right = 4
+	_charge_bar.add_theme_stylebox_override("fill", fill_style)
+	
+	_charge_bar_container.add_child(_charge_bar)
+
+func _update_charge_bar() -> void:
+	if _charge_bar_container == null:
+		return
+	# Add to canvas layer on first use
+	if _charge_bar_container.get_parent() == null:
+		var canvas := get_tree().get_first_node_in_group("player")
+		if canvas and canvas.has_node("PlayerHUD"):
+			canvas.get_node("PlayerHUD").add_child(_charge_bar_container)
+		else:
+			return
+	
+	if _is_charging:
+		_charge_bar_container.visible = true
+		var ratio := clampf(_charge_timer / charge_duration, 0.0, 1.0)
+		_charge_bar.value = ratio
+		
+		# Pulse the fill color as it charges
+		var pulse := sin(ratio * TAU * 2.0) * 0.15
+		var fill_style := _charge_bar.get_theme_stylebox("fill") as StyleBoxFlat
+		if fill_style:
+			fill_style.bg_color = Color(1.0, 0.5 + pulse, 0.1, 0.95)
+	else:
+		_charge_bar_container.visible = false
 
 func setup_player(player: CharacterBody3D) -> void:
 	_player = player
@@ -538,17 +614,40 @@ func _process(delta: float) -> void:
 			wave_active = false
 			wave_ended.emit()
 
-	# ── RMB held: combat attack circle ──
-	if combat_rmb_down:
-		_update_combat_attack_circle(delta)
+	# ── LMB: charge → attack system ──
+	if mouse_is_down_left and _attack_target_valid:
+		if not _charge_complete:
+			# Still charging
+			_is_charging = true
+			_charge_timer += delta
+			_set_rats_charging(true)
+			_set_rats_attacking(false)
+			if _charge_timer >= charge_duration:
+				# Charge complete! Release the rats!
+				_charge_complete = true
+				_is_charging = false
+				_set_rats_charging(false)
+				_set_rats_attacking(true)
+		else:
+			# Attack is active — rats rushing
+			_send_rats_to_attack_point()
+	else:
+		# Not holding LMB or no valid target
+		if _is_charging or _charge_complete:
+			_is_charging = false
+			_charge_complete = false
+			_charge_timer = 0.0
+			_set_rats_charging(false)
+			_set_rats_attacking(false)
+	_update_charge_bar()
 
-	# ── LMB: build drag or object drag ──
-	if mouse_is_down_left:
+	# ── RMB: build drag or object drag ──
+	if mouse_is_down_right:
 		if _lmb_is_object_drag:
-			# Object dragging via LMB
+			# Object dragging via RMB
 			if grabbed_object:
 				_process_object_drag(delta)
-		else:
+		elif _rmb_is_build:
 			# Build drawing
 			if not is_dragging_left:
 				var current_mouse_pos := get_viewport().get_mouse_position()
@@ -877,14 +976,84 @@ func _update_cursor_follow(delta: float) -> void:
 		active[i].set_target(final_target)
 
 func _update_free_rats_follow_cursor(delta: float) -> void:
-	# Skip when build drag is handling rats
-	if mouse_is_down_left and not _lmb_is_object_drag:
+	# Skip when LMB attack is active or charging
+	if mouse_is_down_left and _attack_target_valid:
+		return
+	# Skip when RMB build drag is handling rats
+	if mouse_is_down_right and _rmb_is_build:
 		_set_cursor_following(_get_active_follow_rats(), false)
 		_clear_cursor_capstan()
 		return
 	if _update_capstan_cursor(delta):
 		return
 	_update_cursor_follow(delta)
+
+
+func _set_rats_attacking(attacking: bool) -> void:
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.is_fallen or r.is_carrier:
+			continue
+		r.is_attacking = attacking
+
+
+func _set_rats_charging(charging: bool) -> void:
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.is_fallen or r.is_carrier:
+			continue
+		r.is_charging = charging
+		if not charging:
+			r._charge_wiggle_time = 0.0
+
+
+func _send_rats_to_attack_point() -> void:
+	# Send rats to the attack point while MAINTAINING their formation spread.
+	# Rats keep their relative offset from horde center during travel,
+	# and only converge into a tight group in the last stretch.
+	if not _attack_target_valid:
+		return
+	var active := _get_active_follow_rats()
+	if active.is_empty():
+		return
+
+	# Use rat average Y for the target height
+	var base_y := _attack_target_pos.y
+	var sum_y := 0.0
+	var horde_center := Vector3.ZERO
+	for rat in active:
+		sum_y += rat.global_position.y
+		horde_center += rat.global_position
+	base_y = sum_y / float(active.size())
+	horde_center /= float(active.size())
+
+	# Distance from horde center to attack target (flat)
+	var center_to_target := _attack_target_pos - horde_center
+	center_to_target.y = 0.0
+	var total_dist := center_to_target.length()
+
+	# Converge radius: rats fully converge when within this distance of target
+	const CONVERGE_START := 5.0   # start shrinking spread at this distance
+	const CONVERGE_END := 1.0     # fully converged at this distance
+
+	# How much to preserve the formation spread (1.0 = full spread, 0.0 = all same point)
+	var spread_factor := 1.0
+	if total_dist < CONVERGE_START:
+		spread_factor = clampf((total_dist - CONVERGE_END) / (CONVERGE_START - CONVERGE_END), 0.0, 1.0)
+
+	for rat in active:
+		# Offset = this rat's position relative to horde center
+		var offset := rat.global_position - horde_center
+		offset.y = 0.0
+
+		# Target = attack point + preserved formation offset (shrinking near target)
+		var target := _attack_target_pos + offset * spread_factor
+		target.y = base_y
+		rat.set_target(target)
 
 
 func _update_capstan_cursor(delta: float) -> bool:
@@ -1363,42 +1532,30 @@ func _unhandled_input(event: InputEvent) -> void:
 					else:
 						circle_radius -= circle_radius_step
 					circle_radius = clampf(circle_radius, circle_radius_min, circle_radius_max)
-					if mouse_is_down_left and not _lmb_is_object_drag:
+					if mouse_is_down_right and _rmb_is_build:
 						_update_circle_preview()
 
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: build draw ──
+		# ── LMB: ATTACK MODE (rats rush to FIXED cursor point) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
 				mouse_is_down_left = true
-				left_click_start_pos = mb.position
-				is_dragging_left = false
-				_lmb_is_object_drag = false
-				# Prepare for build drawing
-				current_drawn_path.clear()
-				current_build_y = -1000.0
-				_has_last_build_pos = false
+				# Record cursor world position at the moment of click
+				var attack_pos := _mouse_to_world()
+				if attack_pos != Vector3.ZERO:
+					_attack_target_pos = attack_pos
+					_attack_target_valid = true
+				else:
+					_attack_target_valid = false
 			else:
-				# LMB released → finalize build
-				if is_dragging_left:
-					if build_draw_mode == DRAW_MODE_PATH:
-						_distribute_rats_on_path()
-					elif build_draw_mode == DRAW_MODE_CIRCLE:
-						_build_circle_if_possible()
-
 				mouse_is_down_left = false
-				_lmb_is_object_drag = false
-				current_build_y = -1000.0
-				is_drawing_line = false
-				current_drawn_path.clear()
-				_has_last_build_pos = false
-				immediate_mesh.clear_surfaces()
+				_attack_target_valid = false
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── RMB: raycast for object → drag ──
+		# ── RMB: BUILD or DRAG (depending on what's under cursor) ──
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
 				# Raycast to check if we clicked on a movable object
@@ -1409,23 +1566,26 @@ func _unhandled_input(event: InputEvent) -> void:
 				var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
 				var hit_m := space_state_m.intersect_ray(query_m)
 
-				var handled := false
+				var is_movable := false
 				if hit_m:
 					var obj = hit_m.collider
 					if obj is box or obj is turret or obj is hitscan_turret or obj == _player:
+						is_movable = true
 						var available := get_available_rat_count()
 						if obj != _player and available <= 0:
 							_show_cursor_hint("Brak wolnych szczurów do przenoszenia")
 							get_viewport().set_input_as_handled()
 							return
 						if obj == _player and not _player_has_enough_rats_to_move():
-							_show_cursor_hint("Brak aktywnego obiektu do przenoszenia —\nPPM dziala tylko na obiekty do przeniesienia.\nNajedz kursorem na skrzynke, wiezyczke lub gracza.")
+							_show_cursor_hint("Za mało szczurów")
 							get_viewport().set_input_as_handled()
 							return
-						mouse_is_down_left = true
+						# Object drag mode
+						mouse_is_down_right = true
 						left_click_start_pos = mb.position
 						is_dragging_left = false
 						_lmb_is_object_drag = true
+						_rmb_is_build = false
 						if not obj.is_surrounded:
 							_surround_object_with_rats(obj)
 						grabbed_object = obj
@@ -1438,9 +1598,19 @@ func _unhandled_input(event: InputEvent) -> void:
 								_player.set("is_being_carried", true)
 								grabbed_object.set("is_surrounded", true)
 						grabbed_object_last_pos = obj.global_position
-						handled = true
-				if not handled:
-					_show_cursor_hint("Brak aktywnego obiektu do przenoszenia —\nPPM dziala tylko na obiekty do przeniesienia.\nNajedz kursorem na skrzynke, wiezyczke lub gracza.")
+
+				if not is_movable:
+					# No movable object → build mode
+					mouse_is_down_right = true
+					left_click_start_pos = mb.position
+					is_dragging_left = false
+					_lmb_is_object_drag = false
+					_rmb_is_build = true
+					# Prepare for build drawing
+					current_drawn_path.clear()
+					current_build_y = -1000.0
+					_has_last_build_pos = false
+
 				get_viewport().set_input_as_handled()
 				return
 			else:
@@ -1457,9 +1627,22 @@ func _unhandled_input(event: InputEvent) -> void:
 						_release_object_carriers(grabbed_object)
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
+				elif _rmb_is_build:
+					# RMB released → finalize build
+					if is_dragging_left:
+						if build_draw_mode == DRAW_MODE_PATH:
+							_distribute_rats_on_path()
+						elif build_draw_mode == DRAW_MODE_CIRCLE:
+							_build_circle_if_possible()
+					current_build_y = -1000.0
+					is_drawing_line = false
+					current_drawn_path.clear()
+					_has_last_build_pos = false
+					immediate_mesh.clear_surfaces()
 
-				mouse_is_down_left = false
+				mouse_is_down_right = false
 				_lmb_is_object_drag = false
+				_rmb_is_build = false
 			get_viewport().set_input_as_handled()
 			return
 
@@ -1726,9 +1909,11 @@ func recall_all_rats() -> void:
 	_gather_rats_to_horde_center()
 	# Reset drawing state
 	mouse_is_down_left = false
+	_attack_target_valid = false
 	is_dragging_left = false
 	mouse_is_down_right = false
 	_lmb_is_object_drag = false
+	_rmb_is_build = false
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
@@ -1773,9 +1958,11 @@ func hard_recall_all_rats() -> void:
 	_gather_rats_to_horde_center()
 	# Reset drawing state
 	mouse_is_down_left = false
+	_attack_target_valid = false
 	is_dragging_left = false
 	mouse_is_down_right = false
 	_lmb_is_object_drag = false
+	_rmb_is_build = false
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
@@ -2076,8 +2263,8 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 # ── Brush UI Preview ─────────────────────────────────────────────────────────
 
 func _update_cursor_preview() -> void:
-	# Ignore if we are actively drawing a path
-	if mouse_is_down_left and not _lmb_is_object_drag:
+	# Ignore if we are actively drawing a build path (RMB build)
+	if mouse_is_down_right and _rmb_is_build:
 		return
 
 	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D

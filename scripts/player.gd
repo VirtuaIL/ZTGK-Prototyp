@@ -4,7 +4,7 @@ class_name player
 signal stratagem_activated(stratagem_id: String)
 signal player_died
 
-@export var speed: float = 7.0
+@export var speed: float = 4.0
 @export var rotation_speed: float = 10.0
 
 @export var fall_death_y: float = -1.0
@@ -12,7 +12,7 @@ signal player_died
 @export var max_hp: float = 100.0
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
-@export var carried_by_rats: bool = true
+@export var carried_by_rats: bool = false
 @export var required_available_rats_for_movement: int = 1
 var is_being_carried: bool = false
 
