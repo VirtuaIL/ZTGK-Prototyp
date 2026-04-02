@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://da3ho70def0en"]
+
+[ext_resource type="PackedScene" uid="uid://ratspawn" path="res://scenes/objects/rat_spawn.tscn" id="1_f1k6i"]
+[ext_resource type="PackedScene" uid="uid://ds3b7llghum2t" path="res://scenes/enemies/enemy.tscn" id="3_a1d61"]
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/objects/wall.tscn" id="5_bengm"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_tr1x6"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector2(40, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
+size = Vector3(39.124153, 0.001, 40.05804)
+
+[node name="Level2" type="Node3D" unique_id=1719073169]
+
+[node name="CameraCenter" type="Node3D" parent="." unique_id=1736285385]
+
+[node name="RatSpawns" type="Node3D" parent="." unique_id=1767960997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.237718, 0, 0)
+visible = false
+
+[node name="RatSpawn" parent="RatSpawns" unique_id=189235421 instance=ExtResource("1_f1k6i")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.516551, 0, 0)
+
+[node name="floor" type="StaticBody3D" parent="." unique_id=8888888]
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="floor" unique_id=439866030]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.717753, -0.022816658, -0.21575737)
+mesh = SubResource("PlaneMesh_tr1x6")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9706402, 0, -0.22537422)
+shape = SubResource("BoxShape3D_d5akn")
+
+[node name="walls" type="Node3D" parent="." unique_id=58504239]
+transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
+
+[node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("5_bengm")]
+transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999999, 0, -5.9999995, 0, -1.3113416e-08, -4.8301435, 0, 12.779287)
+
+[node name="wall4" parent="walls" unique_id=1981168902 instance=ExtResource("5_bengm")]
+transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999995, 0, -5.9999995, 0, -1.3113411e-08, 5.3649793, 0, 12.779285)
+
+[node name="wall5" parent="walls" unique_id=1987497867 instance=ExtResource("5_bengm")]
+transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999996, 0, 0, 0, 0.9999999, 0.08237687, 0, 26.386265)
+
+[node name="wall6" parent="walls" unique_id=541017354 instance=ExtResource("5_bengm")]
+transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999995, 0, 0, 0, 0.9999999, 0.08237642, 0, -1.8068695)
+
+[node name="objects" type="Node3D" parent="." unique_id=510466418]
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
+
+[node name="enemies" type="Node3D" parent="." unique_id=1273903785]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9706402, 0, -0.22537422)
+
+[node name="Enemy" parent="enemies" unique_id=561977529 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18583584, 0.035057068, 11.048025)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy2" parent="enemies" unique_id=1854087615 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.039733, 0.035057068, -0.6923542)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy3" parent="enemies" unique_id=1222926515 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18583584, 0.035057068, -14.554647)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
