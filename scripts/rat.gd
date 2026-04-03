@@ -1,7 +1,7 @@
 extends CharacterBody3D
 class_name Rat
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, ATTACK_PATH}
 
 @export var follow_speed: float = 6.0
 @export var carrier_speed_mult: float = 1.8
@@ -50,13 +50,19 @@ var wave_timer: float = 0.0
 var wave_duration: float = 0.8
 
 # Damage
-var damage_per_hit: float = 10.0
+var damage_per_hit: float = 2.5
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
 # Build state
+# Build state
 var build_target: Vector3 = Vector3.ZERO
 var _travel_timer: float = 0.0
+
+# Attack Path state
+var attack_path: PackedVector3Array = []
+var attack_path_index: int = 0
+var attack_path_speed: float = 18.0
 
 # Carrier flag — set while this rat is assigned to carry a box;
 # prevents brush operations from reassigning it
@@ -159,19 +165,19 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.FOLLOW:
 			_process_follow_spring(delta)
-			_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
-			_check_damage()
 		State.WAVE:
 			_process_wave(delta)
-			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:
 			return
 		State.STATIC:
 			return
+		State.ATTACK_PATH:
+			_process_attack_path(delta)
+			_check_damage()
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
@@ -320,8 +326,9 @@ func _check_damage() -> void:
 	for enemy in enemies:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
-			#enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
-			attack_cooldown = 1.0
+			if enemy.has_method("take_damage"):
+				enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
+			attack_cooldown = 0.5
 			break
 
 
@@ -402,6 +409,45 @@ func release_rat(with_boost: bool = false) -> void:
 		# Lose solidity
 		set_collision_layer_value(1, false)
 		show_visuals()
+
+
+func set_attack_path(path: PackedVector3Array) -> void:
+	if is_carrier:
+		return
+	if path.size() == 0:
+		return
+	attack_path = path.duplicate()
+	attack_path_index = 0
+	state = State.ATTACK_PATH
+	is_anchored = false
+	_spring_velocity = Vector3.ZERO
+
+func _process_attack_path(delta: float) -> void:
+	if attack_path.size() == 0 or attack_path_index >= attack_path.size():
+		set_follow()
+		return
+
+	var target := attack_path[attack_path_index]
+	var flat_self := Vector2(global_position.x, global_position.z)
+	var flat_target := Vector2(target.x, target.z)
+	var dist := flat_self.distance_to(flat_target)
+
+	if dist < 0.5:
+		attack_path_index += 1
+		if attack_path_index >= attack_path.size():
+			set_follow()
+			return
+		target = attack_path[attack_path_index]
+		flat_target = Vector2(target.x, target.z)
+		dist = flat_self.distance_to(flat_target)
+
+	var dir := Vector2(flat_target - flat_self).normalized()
+	velocity.x = dir.x * attack_path_speed
+	velocity.z = dir.y * attack_path_speed
+	global_position.y = lerpf(global_position.y, target.y, 5.0 * delta)
+	var target_angle := atan2(dir.x, dir.y)
+	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
+	_do_move_and_slide()
 
 
 func _teleport_to_player() -> void:

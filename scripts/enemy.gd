@@ -24,6 +24,14 @@ var _current_patrol_index: int = 0
 @export var wander_pause_min: float = 1.0
 @export var wander_pause_max: float = 3.0
 
+# ── Health ──
+@export var max_hp: float = 100.0
+var current_hp: float = 100.0
+
+var _hp_viewport: SubViewport
+var _hp_bar: ProgressBar
+var _hp_sprite: Sprite3D
+
 # ── Internal state ──
 var ai_state: AIState = AIState.WANDER
 var _spawn_transform: Transform3D
@@ -56,9 +64,12 @@ func _ready() -> void:
 	_spawn_transform = global_transform
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
+	
+	current_hp = max_hp
 
 	_create_indicator()
-	_create_fov_cone()
+	# _create_fov_cone() # Vision system disabled
+	_create_hp_bar()
 
 	if patrol_path != NodePath():
 		var path_node = get_node_or_null(patrol_path)
@@ -286,6 +297,8 @@ func _catch_player() -> void:
 #  FOV DETECTION
 # ═══════════════════════════════════════════════
 func _can_see_player() -> bool:
+	return false # Vision disabled
+	
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		_find_player()
 		if _player_ref == null:
@@ -347,8 +360,20 @@ func is_passive() -> bool:
 # ═══════════════════════════════════════════════
 #  DEATH / RESPAWN (preserved for compatibility)
 # ═══════════════════════════════════════════════
-func take_damage(_amount: float, _source_id: int = -1, _hit_pos: Vector3 = Vector3.ZERO) -> void:
-	pass
+func take_damage(amount: float, _source_id: int = -1, _hit_pos: Vector3 = Vector3.ZERO) -> void:
+	if _is_dead:
+		return
+	# Aggro to player immediately on taking damage
+	if ai_state == AIState.WANDER or ai_state == AIState.PASSIVE:
+		ai_state = AIState.CHASE
+		_suspicion_level = suspicion_time
+	
+	current_hp -= amount
+	if _hp_bar:
+		_hp_bar.value = current_hp
+	
+	if current_hp <= 0:
+		_die()
 
 
 func _die() -> void:
@@ -370,6 +395,11 @@ func _respawn() -> void:
 	global_transform = _spawn_transform
 	collision_layer = _collision_layer_saved
 	collision_mask = _collision_mask_saved
+	
+	current_hp = max_hp
+	if _hp_bar:
+		_hp_bar.value = current_hp
+		
 	ai_state = AIState.WANDER
 	_has_wander_target = false
 	_suspicion_level = 0.0
@@ -436,6 +466,50 @@ func _update_indicator() -> void:
 			_indicator.text = "!"
 			_indicator.modulate = Color(1.0, 0.1, 0.1)
 			_indicator.font_size = 72
+
+# ═══════════════════════════════════════════════
+#  HEALTH BAR INDICATOR
+# ═══════════════════════════════════════════════
+func _create_hp_bar() -> void:
+	_hp_viewport = SubViewport.new()
+	_hp_viewport.transparent_bg = true
+	_hp_viewport.size = Vector2i(256, 32)
+	_hp_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	
+	_hp_bar = ProgressBar.new()
+	_hp_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_hp_bar.min_value = 0
+	_hp_bar.max_value = max_hp
+	_hp_bar.value = current_hp
+	_hp_bar.show_percentage = false
+	
+	var sb_bg := StyleBoxFlat.new()
+	sb_bg.bg_color = Color(0.2, 0.2, 0.2, 0.8)
+	sb_bg.border_width_bottom = 2
+	sb_bg.border_width_top = 2
+	sb_bg.border_width_left = 2
+	sb_bg.border_width_right = 2
+	sb_bg.border_color = Color.BLACK
+	_hp_bar.add_theme_stylebox_override("background", sb_bg)
+
+	var sb_fill := StyleBoxFlat.new()
+	sb_fill.bg_color = Color(0.8, 0.2, 0.2, 1.0)
+	sb_fill.border_width_bottom = 2
+	sb_fill.border_width_top = 2
+	sb_fill.border_width_left = 2
+	sb_fill.border_width_right = 2
+	sb_fill.border_color = Color.TRANSPARENT
+	_hp_bar.add_theme_stylebox_override("fill", sb_fill)
+
+	_hp_viewport.add_child(_hp_bar)
+	add_child(_hp_viewport)
+
+	_hp_sprite = Sprite3D.new()
+	_hp_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_hp_sprite.position.y = 2.8 # Place above the detection indicator
+	_hp_sprite.pixel_size = 0.005
+	_hp_sprite.texture = _hp_viewport.get_texture()
+	add_child(_hp_sprite)
 
 
 # ═══════════════════════════════════════════════

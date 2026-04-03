@@ -1,9 +1,11 @@
 extends Node3D
 
 var lpm_label_val: Label
+var mmb_label_val: Label
 var spm_label_val: Label
 var ppm_label_val: Label
 var lpm_rect_val: ColorRect
+var mmb_rect_val: ColorRect
 var spm_rect_val: ColorRect
 var ppm_rect_val: ColorRect
 var space_rect_val: ColorRect
@@ -163,6 +165,9 @@ func _setup_mode_ui() -> void:
 	var lpm_box = _create_action_box("LPM")
 	lpm_rect_val = lpm_box.get_child(1) as ColorRect
 	lpm_label_val = lpm_rect_val.get_child(0) as Label
+	var mmb_box = _create_action_box("ŚPM")
+	mmb_rect_val = mmb_box.get_child(1) as ColorRect
+	mmb_label_val = mmb_rect_val.get_child(0) as Label
 	var spm_box = _create_action_box("SCROLL")
 	spm_rect_val = spm_box.get_child(1) as ColorRect
 	spm_label_val = spm_rect_val.get_child(0) as Label
@@ -181,6 +186,7 @@ func _setup_mode_ui() -> void:
 	space_hbox.add_child(space_box)
 
 	actions_hbox.add_child(lpm_box)
+	actions_hbox.add_child(mmb_box)
 	actions_hbox.add_child(spm_box)
 	actions_hbox.add_child(ppm_box)
 
@@ -251,7 +257,8 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD — ruch\n" + \
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
-		"LPM (przytrzymaj) — rysuj szczury (pędzel)\n" + \
+		"LPM (przytrzymaj) — zaatakuj swarmiem\n" + \
+		"ŚPM (przytrzymaj) — buduj szczurami\n" + \
 		"PPM (ciągnij) — przenieś obiekt / gracza\n" + \
 		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
 		"\n[b]Inne[/b]\n" + \
@@ -498,7 +505,8 @@ func _update_rat_count_ui() -> void:
 
 
 func _update_mode_ui() -> void:
-	if lpm_label_val: lpm_label_val.text = "rysuj szczury"
+	if lpm_label_val: lpm_label_val.text = "atak rojem"
+	if mmb_label_val: mmb_label_val.text = "rysuj szczury"
 	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
 	if ppm_label_val: ppm_label_val.text = "przenieś"
 
@@ -651,6 +659,7 @@ func _process(delta: float) -> void:
 	var normal_color = Color(0.1, 0.1, 0.1, 0.8)
 	
 	if lpm_rect_val: lpm_rect_val.color = highlight_color if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) else normal_color
+	if mmb_rect_val: mmb_rect_val.color = highlight_color if Input.is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE) else normal_color
 	if ppm_rect_val: ppm_rect_val.color = highlight_color if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) else normal_color
 	if space_rect_val: space_rect_val.color = highlight_color if Input.is_action_pressed("recall_rats") else normal_color
 	

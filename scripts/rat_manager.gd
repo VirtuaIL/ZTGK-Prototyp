@@ -40,6 +40,7 @@ var mouse_is_down_left: bool = false
 var left_click_start_pos: Vector2 = Vector2(-1, -1)
 var is_dragging_left: bool = false
 var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
+var _drawing_attack_path: bool = false
 
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
@@ -1369,24 +1370,28 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: build draw ──
-		if mb.button_index == MOUSE_BUTTON_LEFT:
+		# ── LMB/MMB: attack draw / build draw ──
+		if mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_MIDDLE:
 			if mb.pressed:
+				_drawing_attack_path = (mb.button_index == MOUSE_BUTTON_LEFT)
 				mouse_is_down_left = true
 				left_click_start_pos = mb.position
 				is_dragging_left = false
 				_lmb_is_object_drag = false
-				# Prepare for build drawing
+				# Prepare for build or attack drawing
 				current_drawn_path.clear()
 				current_build_y = -1000.0
 				_has_last_build_pos = false
 			else:
-				# LMB released → finalize build
+				# Released → finalize build or send attack wave
 				if is_dragging_left:
-					if build_draw_mode == DRAW_MODE_PATH:
-						_distribute_rats_on_path()
-					elif build_draw_mode == DRAW_MODE_CIRCLE:
-						_build_circle_if_possible()
+					if _drawing_attack_path:
+						_send_attack_wave()
+					else:
+						if build_draw_mode == DRAW_MODE_PATH:
+							_distribute_rats_on_path()
+						elif build_draw_mode == DRAW_MODE_CIRCLE:
+							_build_circle_if_possible()
 
 				mouse_is_down_left = false
 				_lmb_is_object_drag = false
@@ -2022,7 +2027,7 @@ func _get_available_follow_rats() -> Array:
 			continue
 		if rat.is_fallen:
 			continue
-		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
+		if (rat.state == rat.State.FOLLOW or rat.state == rat.State.ATTACK_PATH) and not rat.is_carrier:
 			available_rats.append(rat)
 	return available_rats
 
@@ -2297,6 +2302,63 @@ func _distribute_rats_on_path() -> void:
 		_build_force_timer = max(0.1, build_force_timeout)
 
 
+func _send_attack_wave() -> void:
+	if current_drawn_path.size() < 2:
+		return
+
+	var available_rats: Array = []
+	for rat in rats:
+		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
+			available_rats.append(rat)
+
+	if available_rats.size() == 0:
+		return
+
+	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+	var lane_count := 1
+	if use_wide_brush and pairs > 0:
+		lane_count = 1 + pairs * 2
+
+	var lane_paths: Array[PackedVector3Array] = []
+	
+	for lane_idx in range(lane_count):
+		var center_index := float(lane_count - 1) / 2.0
+		var factor := float(lane_idx) - center_index
+		var path := PackedVector3Array()
+		
+		for i in range(current_drawn_path.size()):
+			var p = current_drawn_path[i]
+			if factor != 0.0:
+				var dir: Vector3
+				if i == 0:
+					dir = current_drawn_path[1] - current_drawn_path[0]
+				elif i == current_drawn_path.size() - 1:
+					dir = current_drawn_path[i] - current_drawn_path[i-1]
+				else:
+					var in_dir = current_drawn_path[i] - current_drawn_path[i-1]
+					var out_dir = current_drawn_path[i+1] - current_drawn_path[i]
+					in_dir.y = 0.0
+					out_dir.y = 0.0
+					if in_dir.length() > 0.001 and out_dir.length() > 0.001:
+						dir = (in_dir.normalized() + out_dir.normalized())
+					else:
+						dir = Vector3.FORWARD
+				dir.y = 0.0
+				if dir.length() < 0.001:
+					dir = Vector3.FORWARD
+				else:
+					dir = dir.normalized()
+				var lateral_dir := dir.cross(Vector3.UP).normalized()
+				p += lateral_dir * brush_lane_spacing * factor
+			path.append(p)
+		lane_paths.append(path)
+
+	for i in range(available_rats.size()):
+		var rat = available_rats[i]
+		var lane_idx = i % lane_count
+		rat.set_attack_path(lane_paths[lane_idx])
+
+
 func _send_horde_to_point() -> void:
 	var hit := _get_mouse_ground_hit()
 	if not hit:
@@ -2548,6 +2610,7 @@ func _get_player_movement_rat_requirement() -> int:
 	if "required_available_rats_for_movement" in _player:
 		return maxi(0, int(_player.get("required_available_rats_for_movement")))
 	return 0
+
 
 
 func _player_has_enough_rats_to_move() -> bool:
