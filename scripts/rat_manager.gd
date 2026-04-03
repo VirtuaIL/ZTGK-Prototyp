@@ -154,6 +154,16 @@ const BLOB_RADIUS_BASE: float = 2.6
 const BLOB_SPREAD: float = 0.3
 var _blob_offsets: Array[Vector3] = []
 
+# ── Dynamic formation ─────────────────────────────────────────────────────────
+var _dyn_offsets: Dictionary = {}         # rat instance_id → Vector3 (normalized offset, max=1)
+var _dyn_base_radius: float = 2.0        # base radius of formation when captured
+@export var formation_scale: float = 1.0
+@export var formation_scale_min: float = 0.3
+@export var formation_scale_max: float = 3.0
+@export var formation_scale_step: float = 0.1
+const FORMATION_CAPTURE_INTERVAL: int = 3
+var _formation_capture_tick: int = 0
+
 # ── Combat draw (stream/arc) ──────────────────────────────────────────────────
 const STREAM_SPACING: float = 0.7
 const DRAW_SAMPLE_DIST: float = 0.2
@@ -797,88 +807,44 @@ func _update_cursor_follow(delta: float) -> void:
 			sum_y += rat.global_position.y
 		base_y = sum_y / float(count)
 
-	# Need at least 2 points for arc distribution
-	if _mouse_trail.size() < 2:
-		for rat in active:
-			var t := mouse_world
-			t.y = base_y
-			rat.set_target(t)
-		return
+	# ── Capture formation from actual rat positions (post-collision) ──
+	_formation_capture_tick += 1
+	if _formation_capture_tick >= FORMATION_CAPTURE_INTERVAL:
+		_formation_capture_tick = 0
+		_capture_dynamic_formation()
 
-	# Arc-length parameterization of the trail
-	var arc: Array[float] = [0.0]
-	for i in range(1, _mouse_trail.size()):
-		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
-	var total: float = arc[-1]
+	# ── Initialize offsets for rats that don't have one yet ──
+	for rat in active:
+		var id := rat.get_instance_id()
+		if not _dyn_offsets.has(id):
+			var offset := rat.global_position - mouse_world
+			offset.y = 0.0
+			if _dyn_base_radius > 0.1:
+				_dyn_offsets[id] = offset / _dyn_base_radius
+			else:
+				_dyn_offsets[id] = Vector3.ZERO
 
-	# Calculate how much to resemble a blob based on brush size
-	var blob_blend := 0.0
-	var blob_scale := 1.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
-		blob_scale = circle_radius / 0.5
-	elif build_draw_mode == DRAW_MODE_PATH:
-		blob_blend = clampf(float(brush_lane_pairs - brush_lane_pairs_min) / maxf(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min)), 0.0, 1.0)
-		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-		blob_scale = float(1 + pairs * 2) / 2.5
+	# ── Clean up offsets for rats that no longer exist ──
+	var active_ids: Dictionary = {}
+	for rat in active:
+		active_ids[rat.get_instance_id()] = true
+	var to_remove: Array = []
+	for key in _dyn_offsets:
+		if not active_ids.has(key):
+			to_remove.append(key)
+	for key in to_remove:
+		_dyn_offsets.erase(key)
 
-	if _blob_offsets.size() != count:
-		build_blob_offsets()
-
-	for i in range(count):
-		# 1) Calculate Arc/Stream Target
-		var dist_back := float(i) * STREAM_SPACING
-		var arc_pos := total - dist_back
-
-		var t_stream: Vector3
-		var lateral_dir := Vector3.ZERO
-
-		if arc_pos <= 0.0:
-			t_stream = _mouse_trail[0]
-			if _mouse_trail.size() >= 2:
-				var dir := _mouse_trail[1] - _mouse_trail[0]
-				dir.y = 0.0
-				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
-		else:
-			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-
-			var lo := 0
-			var hi := arc.size() - 1
-			while lo < hi - 1:
-				var mid := (lo + hi) / 2
-				if arc[mid] <= arc_pos:
-					lo = mid
-				else:
-					hi = mid
-
-			var dir := _mouse_trail[hi] - _mouse_trail[lo]
-			dir.y = 0.0
-			lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
-
-		# Apply brush width to arc target
-		if lateral_dir != Vector3.ZERO:
-			if build_draw_mode == DRAW_MODE_PATH:
-				var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-				if pairs > 0:
-					var lane_count := 1 + pairs * 2
-					var center_index := float(lane_count - 1) / 2.0
-					var lane_index := i % lane_count
-					var factor := float(lane_index) - center_index
-					t_stream += lateral_dir * (brush_lane_spacing / 1.5) * factor
-			elif build_draw_mode == DRAW_MODE_CIRCLE:
-				var pseudo_rand := fmod(float(active[i].get_instance_id()) * 0.6180339887, 2.0) - 1.0
-				t_stream += lateral_dir * (pseudo_rand * circle_radius / 1.5)
-
-		# 2) Calculate Blob Target
-		var t_blob := mouse_world
-		if i < _blob_offsets.size():
-			t_blob += _blob_offsets[i] * blob_scale
-		t_blob.y = base_y
-
-		# 3) Blend based on brush size
-		t_stream.y = base_y
-		var final_target = t_stream.lerp(t_blob, blob_blend)
-		active[i].set_target(final_target)
+	# ── Set targets using dynamic formation offsets ──
+	var effective_scale := formation_scale * _dyn_base_radius
+	for rat in active:
+		var id: int = rat.get_instance_id()
+		var off := Vector3.ZERO
+		if _dyn_offsets.has(id):
+			off = Vector3(_dyn_offsets[id])
+		var target := mouse_world + off * effective_scale
+		target.y = base_y
+		rat.set_target(target)
 
 func _update_free_rats_follow_cursor(delta: float) -> void:
 	# Skip when build drag is handling rats
@@ -1034,6 +1000,57 @@ func build_blob_offsets() -> void:
 		var r := BLOB_RADIUS_BASE * sqrt(float(i + 1) / float(count)) + BLOB_SPREAD * float(i) * 0.04
 		var a := golden_angle * float(i)
 		_blob_offsets.append(Vector3(cos(a) * r, 0.0, sin(a) * r))
+
+
+func _capture_dynamic_formation() -> void:
+	var active := _get_active_follow_rats()
+	if active.is_empty():
+		return
+
+	# Compute center of active follow rats
+	var center := Vector3.ZERO
+	for rat in active:
+		center += rat.global_position
+	center /= float(active.size())
+
+	# Compute offsets from center and find max distance
+	var max_dist := 0.0
+	var raw_offsets: Dictionary = {}
+	for rat in active:
+		var offset := rat.global_position - center
+		offset.y = 0.0
+		raw_offsets[rat.get_instance_id()] = offset
+		var d := offset.length()
+		if d > max_dist:
+			max_dist = d
+
+	# Normalize so the furthest rat has offset magnitude = 1.0
+	if max_dist < 0.1:
+		max_dist = 0.1
+	_dyn_base_radius = max_dist
+
+	_dyn_offsets.clear()
+	for key in raw_offsets:
+		var raw_off: Vector3 = raw_offsets[key]
+		_dyn_offsets[key] = raw_off / max_dist
+
+
+func _init_default_formation() -> void:
+	_dyn_offsets.clear()
+	_dyn_base_radius = 2.0
+	_formation_capture_tick = 0
+
+
+func _get_formation_max_extent() -> float:
+	if _dyn_offsets.is_empty():
+		return 0.0
+	var max_d := 0.0
+	for key in _dyn_offsets:
+		var off: Vector3 = _dyn_offsets[key]
+		var d: float = off.length()
+		if d > max_d:
+			max_d = d
+	return max_d * formation_scale * _dyn_base_radius
 
 
 func _assign_neighbors() -> void:
@@ -1347,14 +1364,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		
-		# ── Scroll: rotate object if grabbed, otherwise change brush size ──
+		# ── Scroll: rotate object if grabbed, change formation scale or brush size ──
 		if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 			if grabbed_object != null:
 				# Rotate grabbed object
 				var rot_dir := 1.0 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -1.0
 				grabbed_object.rotate_y(deg_to_rad(object_rotation_step * rot_dir))
-			else:
-				# Change brush size
+			elif mouse_is_down_left and not _drawing_attack_path:
+				# MMB held (building) → change brush size
 				if build_draw_mode == DRAW_MODE_PATH:
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 						brush_lane_pairs += 1
@@ -1367,8 +1384,14 @@ func _unhandled_input(event: InputEvent) -> void:
 					else:
 						circle_radius -= circle_radius_step
 					circle_radius = clampf(circle_radius, circle_radius_min, circle_radius_max)
-					if mouse_is_down_left and not _lmb_is_object_drag:
-						_update_circle_preview()
+					_update_circle_preview()
+			else:
+				# Idle or LMB attack → change formation scale
+				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+					formation_scale += formation_scale_step
+				else:
+					formation_scale -= formation_scale_step
+				formation_scale = clampf(formation_scale, formation_scale_min, formation_scale_max)
 
 			get_viewport().set_input_as_handled()
 			return
@@ -1753,6 +1776,7 @@ func recall_all_rats() -> void:
 	_structure_timer = 0.0
 	bridge_stress = 0.0
 	unified_shape_combiner.position = Vector3.ZERO
+	_init_default_formation()
 
 	# Respawn only at rat_spawn now.
 
@@ -1801,6 +1825,7 @@ func hard_recall_all_rats() -> void:
 	_structure_timer = 0.0
 	bridge_stress = 0.0
 	unified_shape_combiner.position = Vector3.ZERO
+	_init_default_formation()
 
 func _gather_rats_to_horde_center() -> void:
 	var center := _get_recall_center()
@@ -2069,7 +2094,9 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	var end_lateral := end_dir.cross(Vector3.UP).normalized()
 
 	var width := 0.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
+	if _drawing_attack_path:
+		width = _get_formation_max_extent() * 2.0
+	elif build_draw_mode == DRAW_MODE_CIRCLE:
 		width = circle_radius * 1.5
 	else:
 		var pairs_val := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
@@ -2168,49 +2195,31 @@ func _update_cursor_preview() -> void:
 	if mouse_is_down_left and not _lmb_is_object_drag:
 		return
 
-	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
-	var constant_y: float = (player_node.global_position.y if player_node else 0.0) + build_surface_offset
-	
-	var raw_pos := _get_mouse_pos_at_y(constant_y)
-	if raw_pos == Vector3.ZERO:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
 		immediate_mesh.clear_surfaces()
 		return
 
-	var hit: Dictionary = _get_mouse_ground_hit()
-	var is_invalid_surface: bool = hit.is_empty()
+	immediate_mesh.clear_surfaces()
+	if line_material:
+		line_material.albedo_color = _brush_color(Color(0.8, 0.85, 1.0, 0.7))
 
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		current_circle_center = raw_pos
-		var old_path = current_drawn_path.duplicate()
-		current_drawn_path.clear()
-		_update_circle_preview(is_invalid_surface)
-		current_drawn_path = old_path
-		
-	elif build_draw_mode == DRAW_MODE_PATH:
-		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-		if pairs <= 0:
-			immediate_mesh.clear_surfaces()
-			return
+	if _dyn_offsets.is_empty():
+		return
 
-		var lane_count := 1 + pairs * 2
-		var width := float(lane_count - 1) * brush_lane_spacing
-		
-		# Determine lateral direction
-		var lateral := Vector3.RIGHT
-		if current_drawn_path.size() >= 2:
-			var dir: Vector3 = current_drawn_path[-1] - current_drawn_path[-2]
-			dir.y = 0.0
-			if dir.length() > 0.001:
-				lateral = dir.normalized().cross(Vector3.UP).normalized()
-				
-		immediate_mesh.clear_surfaces()
-		if line_material:
-			line_material.albedo_color = _brush_color(Color.WHITE)
-		
-		var offset := Vector3(0, 0.1, 0)
+	var offset := Vector3(0, 0.1, 0)
+	var effective_scale := formation_scale * _dyn_base_radius
+	var mark_size := 0.12
+
+	# Draw small cross markers at each rat's formation position
+	for key in _dyn_offsets:
+		var dyn_off: Vector3 = _dyn_offsets[key]
+		var pos := mouse_world + dyn_off * effective_scale + offset
 		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-		immediate_mesh.surface_add_vertex(raw_pos - lateral * (width / 2.0) + offset)
-		immediate_mesh.surface_add_vertex(raw_pos + lateral * (width / 2.0) + offset)
+		immediate_mesh.surface_add_vertex(pos + Vector3(-mark_size, 0, 0))
+		immediate_mesh.surface_add_vertex(pos + Vector3(mark_size, 0, 0))
+		immediate_mesh.surface_add_vertex(pos + Vector3(0, 0, -mark_size))
+		immediate_mesh.surface_add_vertex(pos + Vector3(0, 0, mark_size))
 		immediate_mesh.surface_end()
 
 
@@ -2397,20 +2406,29 @@ func _send_attack_wave() -> void:
 	if available_rats.size() == 0:
 		return
 
-	var width := 0.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		width = circle_radius * 1.5
+	var effective_scale := formation_scale * _dyn_base_radius
+
+	# Compute reference lateral direction from path start
+	var ref_dir: Vector3 = current_drawn_path[1] - current_drawn_path[0]
+	ref_dir.y = 0.0
+	if ref_dir.length() < 0.001:
+		ref_dir = Vector3.FORWARD
 	else:
-		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-		width = float(pairs * 2) * brush_lane_spacing
+		ref_dir = ref_dir.normalized()
+	var ref_lateral := ref_dir.cross(Vector3.UP).normalized()
 
 	for rat in available_rats:
-		var factor = randf_range(-0.5, 0.5) if width > 0.05 else 0.0
+		var rat_id: int = rat.get_instance_id()
+		var formation_off := Vector3.ZERO
+		if _dyn_offsets.has(rat_id):
+			var dyn_off: Vector3 = _dyn_offsets[rat_id]
+			formation_off = dyn_off * effective_scale
+
 		var rat_path := PackedVector3Array()
-		
+
 		for i in range(current_drawn_path.size()):
 			var p = current_drawn_path[i]
-			if factor != 0.0:
+			if formation_off.length() > 0.01:
 				var dir: Vector3
 				if i == 0:
 					dir = current_drawn_path[1] - current_drawn_path[0]
@@ -2431,9 +2449,11 @@ func _send_attack_wave() -> void:
 				else:
 					dir = dir.normalized()
 				var lateral_dir := dir.cross(Vector3.UP).normalized()
-				p += lateral_dir * width * factor
+				# Project formation offset onto path-relative lateral axis
+				var lat_component := formation_off.dot(ref_lateral)
+				p += lateral_dir * lat_component
 			rat_path.append(p)
-		
+
 		rat.set_attack_path(rat_path)
 
 
@@ -2605,11 +2625,7 @@ func _get_brush_ratio(value: float, min_v: float, max_v: float) -> float:
 
 
 func _get_brush_thickness_t() -> float:
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		return _get_brush_ratio(circle_radius, circle_radius_min, circle_radius_max)
-	if use_wide_brush:
-		return _get_brush_ratio(float(brush_lane_pairs), float(brush_lane_pairs_min), float(brush_lane_pairs_max))
-	return _get_brush_ratio(brush_half_width, brush_half_width_min, brush_half_width_max)
+	return _get_brush_ratio(formation_scale, formation_scale_min, formation_scale_max)
 
 
 func _get_effective_attack_path_length() -> float:
