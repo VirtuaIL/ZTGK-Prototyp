@@ -12,7 +12,7 @@ material = SubResource("StandardMaterial3D_1")
 size = Vector2(40, 40)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_d5akn"]
-size = Vector3(39.124153, 0.001, 40.05804)
+size = Vector3(40.8721, 0.001, 40.92247)
 
 [node name="Level2" type="Node3D" unique_id=1719073169]
 
@@ -32,23 +32,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.717753, -0.022816658, -0.21
 mesh = SubResource("PlaneMesh_tr1x6")
 
 [node name="CollisionShape3D2" type="CollisionShape3D" parent="floor" unique_id=301822270]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9706402, 0, -0.22537422)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7411633, 0, -0.26717377)
 shape = SubResource("BoxShape3D_d5akn")
 
 [node name="walls" type="Node3D" parent="." unique_id=58504239]
 transform = Transform3D(-1.7484555e-07, 0, -1.453, 0, 0.7, 0, 4, 0, -6.3512644e-08, 20.408815, 0, -1.3984146)
 
 [node name="wall3" parent="walls" unique_id=712880464 instance=ExtResource("5_bengm")]
-transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999999, 0, -5.9999995, 0, -1.3113416e-08, -4.8301435, 0, 12.779287)
+transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999996, 0, -5.9999995, 0, -1.3113413e-08, -4.741024, 0, 12.779287)
 
 [node name="wall4" parent="walls" unique_id=1981168902 instance=ExtResource("5_bengm")]
-transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999995, 0, -5.9999995, 0, -1.3113411e-08, 5.3649793, 0, 12.779285)
+transform = Transform3D(-2.6226832e-07, 0, 0.3, 0, 1.9999993, 0, -5.9999995, 0, -1.3113407e-08, 5.2111535, 0, 12.779284)
 
 [node name="wall5" parent="walls" unique_id=1987497867 instance=ExtResource("5_bengm")]
-transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999996, 0, 0, 0, 0.9999999, 0.08237687, 0, 26.386265)
+transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999995, 0, 0, 0, 0.9999999, 0.08237684, 0, 26.093884)
 
 [node name="wall6" parent="walls" unique_id=541017354 instance=ExtResource("5_bengm")]
-transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999995, 0, 0, 0, 0.9999999, 0.08237642, 0, -1.8068695)
+transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999993, 0, 0, 0, 0.9999999, 0.08237642, 0, -1.6612844)
 
 [node name="wall7" parent="walls" unique_id=32014392 instance=ExtResource("5_bengm")]
 transform = Transform3D(-1.57361e-08, 0, 0.63, 0, 0.815, 0, -0.36, 0, -2.7538174e-08, -0.082975924, 0, 12.779285)

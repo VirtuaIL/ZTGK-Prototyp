@@ -1959,6 +1959,32 @@ func _process_build_drag() -> void:
 		_update_circle_preview()
 
 
+func _get_attack_line_color() -> Color:
+	# No available rats → red
+	var available := _get_available_follow_rats()
+	if available.size() == 0:
+		return Color(1.0, 0.15, 0.1)
+
+	var max_len := _get_effective_attack_path_length()
+	if max_len <= 0.01:
+		return Color(1.0, 0.15, 0.1)
+
+	var fill := clampf(_current_drawn_path_length / max_len, 0.0, 1.0)
+
+	# 0.0 → white,  0.7 → orange,  1.0 → red
+	if fill < 0.7:
+		return Color.WHITE
+	else:
+		var t := clampf((fill - 0.7) / 0.3, 0.0, 1.0)
+		# white → orange at t=0..0.5, orange → red at t=0.5..1.0
+		if t < 0.5:
+			var sub_t := t / 0.5
+			return Color.WHITE.lerp(Color(1.0, 0.6, 0.1), sub_t)
+		else:
+			var sub_t := (t - 0.5) / 0.5
+			return Color(1.0, 0.6, 0.1).lerp(Color(1.0, 0.15, 0.1), sub_t)
+
+
 func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void:
 	immediate_mesh.clear_surfaces()
 	
@@ -1966,7 +1992,13 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 		return
 
 	if line_material:
-		var base := Color(1, 0, 0) if invalid_surface else Color.WHITE
+		var base: Color
+		if invalid_surface:
+			base = Color(1, 0, 0)
+		elif _drawing_attack_path:
+			base = _get_attack_line_color()
+		else:
+			base = Color.WHITE
 		line_material.albedo_color = _brush_color(base)
 	
 	var offset := Vector3(0, 0.1, 0)
@@ -1976,6 +2008,29 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 		immediate_mesh.surface_add_vertex(pos + offset)
 	immediate_mesh.surface_add_vertex(end_pos + offset)
 	immediate_mesh.surface_end()
+
+	# Draw end-cap marker when attack path is at its limit
+	if _drawing_attack_path:
+		var max_len := _get_effective_attack_path_length()
+		var at_limit := max_len > 0.01 and _current_drawn_path_length >= max_len - 0.1
+		if at_limit and current_drawn_path.size() >= 2:
+			var tip := current_drawn_path[current_drawn_path.size() - 1] + offset
+			var prev := current_drawn_path[current_drawn_path.size() - 2]
+			var fwd := (current_drawn_path[current_drawn_path.size() - 1] - prev)
+			fwd.y = 0.0
+			if fwd.length() > 0.001:
+				fwd = fwd.normalized()
+			else:
+				fwd = Vector3.FORWARD
+			var lat := fwd.cross(Vector3.UP).normalized()
+			var mark_size := 0.4
+			# Draw X mark at the end of the path
+			immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+			immediate_mesh.surface_add_vertex(tip + lat * mark_size + fwd * mark_size)
+			immediate_mesh.surface_add_vertex(tip - lat * mark_size - fwd * mark_size)
+			immediate_mesh.surface_add_vertex(tip - lat * mark_size + fwd * mark_size)
+			immediate_mesh.surface_add_vertex(tip + lat * mark_size - fwd * mark_size)
+			immediate_mesh.surface_end()
 
 	if not use_wide_brush and not _drawing_attack_path:
 		return
