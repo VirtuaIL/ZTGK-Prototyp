@@ -58,7 +58,8 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var _current_drawn_path_length: float = 0.0
-var max_attack_path_length: float = 25.0
+@export var attack_path_length_max: float = 25.0  # thinnest brush
+@export var attack_path_length_min: float = 8.0   # widest brush
 var min_point_dist_squared: float = 0.05
 var _last_build_pos: Vector3 = Vector3.ZERO
 var _has_last_build_pos: bool = false
@@ -1938,7 +1939,7 @@ func _process_build_drag() -> void:
 			var last_recorded_pos = current_drawn_path[current_drawn_path.size() - 1]
 			var dist = last_recorded_pos.distance_to(raw_pos)
 			if dist * dist > min_point_dist_squared:
-				if _drawing_attack_path and _current_drawn_path_length + dist > max_attack_path_length:
+				if _drawing_attack_path and _current_drawn_path_length + dist > _get_effective_attack_path_length():
 					pass
 				else:
 					current_drawn_path.append(raw_pos)
@@ -2554,6 +2555,11 @@ func _get_brush_thickness_t() -> float:
 	if use_wide_brush:
 		return _get_brush_ratio(float(brush_lane_pairs), float(brush_lane_pairs_min), float(brush_lane_pairs_max))
 	return _get_brush_ratio(brush_half_width, brush_half_width_min, brush_half_width_max)
+
+
+func _get_effective_attack_path_length() -> float:
+	var t := _get_brush_thickness_t()
+	return lerpf(attack_path_length_max, attack_path_length_min, t)
 
 
 func _get_brush_desired_carriers(total_count: int) -> int:
