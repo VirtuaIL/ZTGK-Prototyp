@@ -57,6 +57,8 @@ var is_drawing_line: bool = false
 var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
+var _current_drawn_path_length: float = 0.0
+var max_attack_path_length: float = 25.0
 var min_point_dist_squared: float = 0.05
 var _last_build_pos: Vector3 = Vector3.ZERO
 var _has_last_build_pos: bool = false
@@ -1352,7 +1354,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				grabbed_object.rotate_y(deg_to_rad(object_rotation_step * rot_dir))
 			else:
 				# Change brush size
-				if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+				if build_draw_mode == DRAW_MODE_PATH:
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 						brush_lane_pairs += 1
 					else:
@@ -1380,6 +1382,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_lmb_is_object_drag = false
 				# Prepare for build or attack drawing
 				current_drawn_path.clear()
+				_current_drawn_path_length = 0.0
 				current_build_y = -1000.0
 				_has_last_build_pos = false
 			else:
@@ -1398,6 +1401,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				current_build_y = -1000.0
 				is_drawing_line = false
 				current_drawn_path.clear()
+				_current_drawn_path_length = 0.0
 				_has_last_build_pos = false
 				immediate_mesh.clear_surfaces()
 			get_viewport().set_input_as_handled()
@@ -1784,6 +1788,7 @@ func hard_recall_all_rats() -> void:
 	is_drawing_line = false
 	current_build_y = -1000.0
 	current_drawn_path.clear()
+	_current_drawn_path_length = 0.0
 	_has_last_build_pos = false
 	immediate_mesh.clear_surfaces()
 	_formation_queue.clear()
@@ -1922,16 +1927,26 @@ func _process_build_drag() -> void:
 	_last_build_pos = raw_pos
 	_has_last_build_pos = true
 
-	if build_draw_mode == DRAW_MODE_PATH:
+	var effective_draw_mode := build_draw_mode
+	if _drawing_attack_path:
+		effective_draw_mode = DRAW_MODE_PATH
+
+	if effective_draw_mode == DRAW_MODE_PATH:
 		if current_drawn_path.is_empty():
 			current_drawn_path.append(raw_pos)
 		else:
 			var last_recorded_pos = current_drawn_path[current_drawn_path.size() - 1]
-			if last_recorded_pos.distance_squared_to(raw_pos) > min_point_dist_squared:
-				current_drawn_path.append(raw_pos)
+			var dist = last_recorded_pos.distance_to(raw_pos)
+			if dist * dist > min_point_dist_squared:
+				if _drawing_attack_path and _current_drawn_path_length + dist > max_attack_path_length:
+					pass
+				else:
+					current_drawn_path.append(raw_pos)
+					if _drawing_attack_path:
+						_current_drawn_path_length += dist
 		
 		_update_drawn_line(raw_pos)
-	elif build_draw_mode == DRAW_MODE_CIRCLE:
+	elif effective_draw_mode == DRAW_MODE_CIRCLE:
 		if current_drawn_path.is_empty():
 			current_drawn_path.append(raw_pos)
 		else:
@@ -1961,7 +1976,7 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	immediate_mesh.surface_add_vertex(end_pos + offset)
 	immediate_mesh.surface_end()
 
-	if not use_wide_brush:
+	if not use_wide_brush and not _drawing_attack_path:
 		return
 
 	var count := current_drawn_path.size()
@@ -1997,11 +2012,19 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 		end_dir = end_dir.normalized()
 	var end_lateral := end_dir.cross(Vector3.UP).normalized()
 
-	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-	if pairs <= 0:
-		return
+	var width := 0.0
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		width = circle_radius * 1.5
+	else:
+		var pairs_val := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		width = float(pairs_val * 2) * brush_lane_spacing
 
-	var lane_count := 1 + pairs * 2
+	var lane_count := 1
+	if width > 0.05:
+		lane_count = int(width / brush_lane_spacing) + 1
+		if lane_count % 2 == 0:
+			lane_count += 1
+	
 	var center_index := float(lane_count - 1) / 2.0
 
 	for lane_index in range(lane_count):
@@ -2009,7 +2032,11 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 			continue
 
 		var factor := float(lane_index) - center_index
-		var lateral_offset_scale := factor * brush_lane_spacing
+		var spacing_to_use := brush_lane_spacing
+		if lane_count > 1:
+			spacing_to_use = width / float(lane_count - 1)
+		
+		var lateral_offset_scale := factor * spacing_to_use
 
 		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		for j in range(count):
@@ -2270,7 +2297,7 @@ func _distribute_rats_on_path() -> void:
 			var point_b: Vector3 = current_drawn_path[segment_idx + 1]
 			var interp_pos = point_a.lerp(point_b, segment_t)
 			
-			if use_wide_brush:
+			if true: # removed use_wide_brush restriction
 				var dir := point_b - point_a
 				dir.y = 0.0
 				if dir.length() < 0.001:
@@ -2314,17 +2341,16 @@ func _send_attack_wave() -> void:
 	if available_rats.size() == 0:
 		return
 
-	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
-	var lane_count := 1
-	if use_wide_brush and pairs > 0:
-		lane_count = 1 + pairs * 2
+	var width := 0.0
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		width = circle_radius * 1.5
+	else:
+		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+		width = float(pairs * 2) * brush_lane_spacing
 
-	var lane_paths: Array[PackedVector3Array] = []
-	
-	for lane_idx in range(lane_count):
-		var center_index := float(lane_count - 1) / 2.0
-		var factor := float(lane_idx) - center_index
-		var path := PackedVector3Array()
+	for rat in available_rats:
+		var factor = randf_range(-0.5, 0.5) if width > 0.05 else 0.0
+		var rat_path := PackedVector3Array()
 		
 		for i in range(current_drawn_path.size()):
 			var p = current_drawn_path[i]
@@ -2349,14 +2375,10 @@ func _send_attack_wave() -> void:
 				else:
 					dir = dir.normalized()
 				var lateral_dir := dir.cross(Vector3.UP).normalized()
-				p += lateral_dir * brush_lane_spacing * factor
-			path.append(p)
-		lane_paths.append(path)
-
-	for i in range(available_rats.size()):
-		var rat = available_rats[i]
-		var lane_idx = i % lane_count
-		rat.set_attack_path(lane_paths[lane_idx])
+				p += lateral_dir * width * factor
+			rat_path.append(p)
+		
+		rat.set_attack_path(rat_path)
 
 
 func _send_horde_to_point() -> void:
