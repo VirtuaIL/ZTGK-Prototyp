@@ -63,6 +63,10 @@ var _travel_timer: float = 0.0
 var attack_path: PackedVector3Array = []
 var attack_path_index: int = 0
 var attack_path_speed: float = 18.0
+var _attack_path_stuck_timer: float = 0.0
+var _attack_path_last_pos: Vector3 = Vector3.ZERO
+const ATTACK_PATH_STUCK_TIMEOUT: float = 1.5
+const ATTACK_PATH_STUCK_MOVE_THRESHOLD: float = 0.15
 
 # Carrier flag — set while this rat is assigned to carry a box;
 # prevents brush operations from reassigning it
@@ -387,11 +391,14 @@ func build_at(pos: Vector3) -> void:
 
 
 func release_rat(with_boost: bool = false) -> void:
-	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
+	if state == State.STATIC or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION or state == State.ATTACK_PATH:
 		state = State.FOLLOW
 		is_anchored = false
 		is_carrier = false
 		_spring_velocity = Vector3.ZERO
+		attack_path.clear()
+		attack_path_index = 0
+		_attack_path_stuck_timer = 0.0
 		if with_boost and player != null:
 			var to_player := player.global_position - global_position
 			to_player.y = 0.0
@@ -421,11 +428,27 @@ func set_attack_path(path: PackedVector3Array) -> void:
 	state = State.ATTACK_PATH
 	is_anchored = false
 	_spring_velocity = Vector3.ZERO
+	_attack_path_stuck_timer = 0.0
+	_attack_path_last_pos = global_position
 
 func _process_attack_path(delta: float) -> void:
 	if attack_path.size() == 0 or attack_path_index >= attack_path.size():
 		set_follow()
 		return
+
+	# Stuck detection: if the rat hasn't moved enough, it's probably blocked
+	var moved := _flat_distance(global_position, _attack_path_last_pos)
+	if moved < ATTACK_PATH_STUCK_MOVE_THRESHOLD:
+		_attack_path_stuck_timer += delta
+		if _attack_path_stuck_timer >= ATTACK_PATH_STUCK_TIMEOUT:
+			attack_path.clear()
+			attack_path_index = 0
+			_attack_path_stuck_timer = 0.0
+			set_follow()
+			return
+	else:
+		_attack_path_stuck_timer = 0.0
+	_attack_path_last_pos = global_position
 
 	var target := attack_path[attack_path_index]
 	var flat_self := Vector2(global_position.x, global_position.z)
@@ -434,6 +457,7 @@ func _process_attack_path(delta: float) -> void:
 
 	if dist < 0.5:
 		attack_path_index += 1
+		_attack_path_stuck_timer = 0.0
 		if attack_path_index >= attack_path.size():
 			set_follow()
 			return
@@ -578,6 +602,9 @@ func _reset_to_follow() -> void:
 	is_cursor_following = false
 	_spring_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
+	attack_path.clear()
+	attack_path_index = 0
+	_attack_path_stuck_timer = 0.0
 	set_collision_layer_value(1, false)
 	# Restore floor collision in case it was disabled during TRAVEL_TO_BUILD
 	set_collision_mask_value(1, true)

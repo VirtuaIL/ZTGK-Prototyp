@@ -50,6 +50,27 @@ transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999996, 0, 0, 0, 0.9999999, 
 [node name="wall6" parent="walls" unique_id=541017354 instance=ExtResource("5_bengm")]
 transform = Transform3D(2, 0, -1.7763568e-15, 0, 1.9999995, 0, 0, 0, 0.9999999, 0.08237642, 0, -1.8068695)
 
+[node name="wall7" parent="walls" unique_id=32014392 instance=ExtResource("5_bengm")]
+transform = Transform3D(-1.57361e-08, 0, 0.63, 0, 0.815, 0, -0.36, 0, -2.7538174e-08, -0.082975924, 0, 12.779285)
+
+[node name="wall8" parent="walls" unique_id=1502120776 instance=ExtResource("5_bengm")]
+transform = Transform3D(-1.5736099e-08, 0, 0.63, 0, 0.815, 0, -0.35999998, 0, -2.753817e-08, 1.3063008, 0, 12.7792845)
+
+[node name="wall9" parent="walls" unique_id=1101769797 instance=ExtResource("5_bengm")]
+transform = Transform3D(-1.5736099e-08, 0, 0.63, 0, 0.815, 0, -0.35999995, 0, -2.753817e-08, 0.6669216, 0, 18.351624)
+
+[node name="wall10" parent="walls" unique_id=712983600 instance=ExtResource("5_bengm")]
+transform = Transform3D(-4.6115513e-08, 0, 0.24, 0, 0.815, 0, -1.055, 0, -1.0490733e-08, -1.4024501, 0, 7.370982)
+
+[node name="wall11" parent="walls" unique_id=1007578005 instance=ExtResource("5_bengm")]
+transform = Transform3D(-4.611551e-08, 0, 0.24, 0, 0.815, 0, -1.055, 0, -1.0490732e-08, -1.4024502, 0, 1.4853945)
+
+[node name="wall12" parent="walls" unique_id=404684938 instance=ExtResource("5_bengm")]
+transform = Transform3D(0.505, 0, -8.881784e-16, 0, 0.815, 0, 0, 0, 0.6049999, 3.1163266, 0, 9.030739)
+
+[node name="wall13" parent="walls" unique_id=1013330607 instance=ExtResource("5_bengm")]
+transform = Transform3D(-4.611551e-08, 0, 0.24, 0, 0.815, 0, -1.055, 0, -1.0490732e-08, 3.2296512, 0, 6.4362135)
+
 [node name="objects" type="Node3D" parent="." unique_id=510466418]
 transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 1.7, 16.43684, -3.8146973e-06, -3.7021036)
 
@@ -72,6 +93,34 @@ patrol_path = NodePath("../PatrolPath2")
 
 [node name="Enemy3" parent="enemies" unique_id=1222926515 instance=ExtResource("3_a1d61")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18583584, 0.035057068, -14.554647)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy4" parent="enemies" unique_id=543039605 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5679803, 0.035057068, -7.4468956)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy5" parent="enemies" unique_id=930722632 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.747409, 0.035057068, -14.554647)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy6" parent="enemies" unique_id=1048710355 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.149035, 0.035057068, 6.5750523)
+move_speed = 3.0
+fov_angle = 40.0
+view_range = 8.0
+patrol_path = NodePath("../PatrolPath2")
+
+[node name="Enemy7" parent="enemies" unique_id=1007179813 instance=ExtResource("3_a1d61")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.822301, 0.035057068, 13.882311)
 move_speed = 3.0
 fov_angle = 40.0
 view_range = 8.0
