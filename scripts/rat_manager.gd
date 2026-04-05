@@ -163,6 +163,8 @@ var _dyn_base_radius: float = 2.0        # base radius of formation when capture
 @export var formation_scale_step: float = 0.1
 const FORMATION_CAPTURE_INTERVAL: int = 3
 var _formation_capture_tick: int = 0
+var _dyn_last_targets: Dictionary = {}    # rat instance_id → Vector3 (last assigned target pos)
+var _scroll_snap_cooldown: float = 0.0    # suppresses wall-deformation check after scroll snap
 
 # ── Combat draw (stream/arc) ──────────────────────────────────────────────────
 const STREAM_SPACING: float = 0.7
@@ -537,6 +539,8 @@ func _process(delta: float) -> void:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+	if _scroll_snap_cooldown > 0.0:
+		_scroll_snap_cooldown = max(0.0, _scroll_snap_cooldown - delta)
 	_update_cursor_hint(delta)
 	_update_cursor_info()
 	_process_formation_queue()
@@ -807,11 +811,8 @@ func _update_cursor_follow(delta: float) -> void:
 			sum_y += rat.global_position.y
 		base_y = sum_y / float(count)
 
-	# ── Capture formation from actual rat positions (post-collision) ──
-	_formation_capture_tick += 1
-	if _formation_capture_tick >= FORMATION_CAPTURE_INTERVAL:
-		_formation_capture_tick = 0
-		_capture_dynamic_formation()
+	# Formation is no longer re-captured every few frames.
+	# Shape only changes when rats collide with walls (see _check_wall_deformation).
 
 	# ── Initialize offsets for rats that don't have one yet ──
 	for rat in active:
@@ -819,18 +820,28 @@ func _update_cursor_follow(delta: float) -> void:
 		if not _dyn_offsets.has(id):
 			var offset := rat.global_position - mouse_world
 			offset.y = 0.0
-			if _dyn_base_radius > 0.1:
-				_dyn_offsets[id] = offset / _dyn_base_radius
+			var effective := _dyn_base_radius * formation_scale
+			if effective > 0.1:
+				_dyn_offsets[id] = offset / effective
 			else:
 				_dyn_offsets[id] = Vector3.ZERO
 
-	# ── Clean up offsets for rats that no longer exist ──
-	var active_ids: Dictionary = {}
-	for rat in active:
-		active_ids[rat.get_instance_id()] = true
+	# ── Clean up offsets for rats that no longer exist or are permanently gone ──
+	# Keep offsets for ATTACK_PATH rats so they return to their formation
+	var all_alive_ids: Dictionary = {}
+	for rat in rats:
+		if rat == null:
+			continue
+		var r := rat as Rat
+		if r != null and r.is_fallen:
+			continue
+		# Skip rats that are permanently consumed (static/building)
+		if r != null and (r.state == r.State.STATIC or r.state == r.State.TRAVEL_TO_BUILD or r.state == r.State.WAITING_FOR_FORMATION):
+			continue
+		all_alive_ids[rat.get_instance_id()] = true
 	var to_remove: Array = []
 	for key in _dyn_offsets:
-		if not active_ids.has(key):
+		if not all_alive_ids.has(key):
 			to_remove.append(key)
 	for key in to_remove:
 		_dyn_offsets.erase(key)
@@ -845,6 +856,10 @@ func _update_cursor_follow(delta: float) -> void:
 		var target := mouse_world + off * effective_scale
 		target.y = base_y
 		rat.set_target(target)
+		_dyn_last_targets[id] = target
+
+	# ── Re-capture formation only when rats are blocked by walls ──
+	_check_wall_deformation()
 
 func _update_free_rats_follow_cursor(delta: float) -> void:
 	# Skip when build drag is handling rats
@@ -1027,7 +1042,12 @@ func _capture_dynamic_formation() -> void:
 	# Normalize so the furthest rat has offset magnitude = 1.0
 	if max_dist < 0.1:
 		max_dist = 0.1
-	_dyn_base_radius = max_dist
+	# Divide by formation_scale so base radius is the unscaled size.
+	# This prevents scale from compounding when recapture happens.
+	if formation_scale > 0.01:
+		_dyn_base_radius = max_dist / formation_scale
+	else:
+		_dyn_base_radius = max_dist
 
 	_dyn_offsets.clear()
 	for key in raw_offsets:
@@ -1035,8 +1055,74 @@ func _capture_dynamic_formation() -> void:
 		_dyn_offsets[key] = raw_off / max_dist
 
 
+func _check_wall_deformation() -> void:
+	# Skip right after a scroll-snap so zeroed velocity doesn't falsely trigger
+	if _scroll_snap_cooldown > 0.0:
+		return
+	var active := _get_active_follow_rats()
+	if active.is_empty():
+		return
+
+	var any_blocked := false
+	for rat in active:
+		var id := rat.get_instance_id()
+		if not _dyn_last_targets.has(id):
+			continue
+		var target: Vector3 = _dyn_last_targets[id]
+		var actual := rat.global_position
+		# Compare in the XZ plane
+		var diff := Vector2(target.x - actual.x, target.z - actual.z).length()
+		# If rat is far from target (blocked by wall) and nearly stopped (truly blocked)
+		var vel_len := Vector2(rat.velocity.x, rat.velocity.z).length()
+		if diff > 0.3 and vel_len < 0.3:
+			any_blocked = true
+			break
+
+	if any_blocked:
+		_capture_dynamic_formation()
+
+
+func _snap_formation_to_scale(old_scale: float) -> void:
+	var mouse_world := _mouse_to_world()
+	if mouse_world == Vector3.ZERO:
+		return
+	var active := _get_active_follow_rats()
+	if active.is_empty():
+		return
+	var old_effective := old_scale * _dyn_base_radius
+	var new_effective := formation_scale * _dyn_base_radius
+	# Compute a consistent base_y (average of all active rats) to avoid Y oscillation
+	var base_y := mouse_world.y
+	if active.size() > 0:
+		var sum_y := 0.0
+		for rat in active:
+			sum_y += rat.global_position.y
+		base_y = sum_y / float(active.size())
+	for rat in active:
+		var id := rat.get_instance_id()
+		var off := Vector3.ZERO
+		if _dyn_offsets.has(id):
+			off = Vector3(_dyn_offsets[id])
+		# Shift rat position by the delta the target moved
+		var delta_pos := off * (new_effective - old_effective)
+		rat.global_position.x += delta_pos.x
+		rat.global_position.z += delta_pos.z
+		# Set new target at the shifted position
+		var target := mouse_world + off * new_effective
+		target.y = base_y
+		rat.set_target(target)
+		# Kill ALL momentum so rats stop immediately (knob feel)
+		rat._spring_velocity = Vector3.ZERO
+		rat.velocity.x = 0.0
+		rat.velocity.z = 0.0
+		_dyn_last_targets[id] = target
+	# Suppress wall-deformation check so zeroed velocity doesn't falsely trigger
+	_scroll_snap_cooldown = 0.5
+
+
 func _init_default_formation() -> void:
 	_dyn_offsets.clear()
+	_dyn_last_targets.clear()
 	_dyn_base_radius = 2.0
 	_formation_capture_tick = 0
 
@@ -1387,11 +1473,14 @@ func _unhandled_input(event: InputEvent) -> void:
 					_update_circle_preview()
 			else:
 				# Idle or LMB attack → change formation scale
+				var old_scale := formation_scale
 				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 					formation_scale += formation_scale_step
 				else:
 					formation_scale -= formation_scale_step
 				formation_scale = clampf(formation_scale, formation_scale_min, formation_scale_max)
+				# Immediately apply new spacing and kill momentum (knob feel)
+				_snap_formation_to_scale(old_scale)
 
 			get_viewport().set_input_as_handled()
 			return
