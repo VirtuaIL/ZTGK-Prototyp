@@ -1,7 +1,7 @@
 extends CharacterBody3D
 class_name Rat
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, FLEE_LIGHT}
 
 @export var follow_speed: float = 6.0
 @export var carrier_speed_mult: float = 1.8
@@ -14,8 +14,8 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 30.0
 @export var damping:          float = 0.8
-@export var separation_dist:  float = 0.5
-@export var separation_force: float = 12.0
+@export var separation_dist:  float = 0.65
+@export var separation_force: float = 22.0
 @export var max_speed:        float = 26.0
 @export var cursor_follow_speed_scale: float = 0.6
 @export var edge_avoidance_enabled: bool = true
@@ -78,8 +78,15 @@ var is_anchored: bool = false
 var is_fallen: bool = false
 var _recall_boost_timer: float = 0.0
 
+# Dynamic aesthetics
+var _spawn_grace_timer: float = 0.0
+var _eye_glow_timer: float = 0.0
+var _smoke_particles: GPUParticles3D = null
+var _flee_timer: float = 0.0
+
 
 func _ready() -> void:
+	_spawn_grace_timer = 1.5
 	follow_offset = Vector3(
 		randf_range(-1.5, 1.5),
 		0.0,
@@ -97,6 +104,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if player == null:
 		return
+		
+	if _spawn_grace_timer > 0.0:
+		_spawn_grace_timer = maxf(0.0, _spawn_grace_timer - delta)
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -133,6 +143,11 @@ func _physics_process(delta: float) -> void:
 			return
 		_start_respawn()
 		return
+
+	# Light Check
+	if _spawn_grace_timer <= 0.0 and state != State.FLEE_LIGHT and state != State.STATIC and state != State.WAITING_FOR_FORMATION and not is_carrier and not is_anchored:
+		if _is_in_light(global_position):
+			_enter_flee_light()
 
 	# Distance recovery — if a follower gets too far (e.g., stuck behind doors), snap near player.
 	# Avoid snapping while falling off the world.
@@ -172,6 +187,8 @@ func _physics_process(delta: float) -> void:
 			return
 		State.STATIC:
 			return
+		State.FLEE_LIGHT:
+			_process_flee_light(delta)
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
@@ -217,6 +234,23 @@ func _process_follow_spring(delta: float) -> void:
 	# Preserve gravity-driven vertical velocity, add spring horizontal
 	velocity.x = _spring_velocity.x
 	velocity.z = _spring_velocity.z
+	
+	# Forecast Light Collision (Edge Gathering)
+	var forecast_dir := Vector3(velocity.x, 0.0, velocity.z)
+	if forecast_dir.length() > 0.1:
+		# check slightly ahead
+		var forecast_pos := global_position + forecast_dir * delta * 5.0
+		if _is_in_light(forecast_pos):
+			# Refuse to enter light! Slip and bounce on the edge creating a blockade.
+			velocity.x = 0.0
+			velocity.z = 0.0
+			_spring_velocity.x *= 0.5
+			_spring_velocity.z *= 0.5
+			_spring_velocity -= forecast_dir.normalized() * 8.0 # push backward into the swarm
+			_set_smoke(true, delta)
+		else:
+			_set_smoke(false, delta)
+			
 	if _should_block_edge(Vector2(velocity.x, velocity.z)):
 		velocity.x = 0.0
 		velocity.z = 0.0
@@ -521,6 +555,7 @@ func _flat_distance_squared(a: Vector3, b: Vector3) -> float:
 func _finish_respawn() -> void:
 	is_fallen = false
 	show_visuals()
+	_spawn_grace_timer = 1.5
 	set_physics_process(true)
 
 
@@ -598,3 +633,119 @@ func _do_move_and_slide() -> void:
 		var collider = c.get_collider()
 		if collider is RigidBody3D and collider.is_in_group("capstan"):
 			collider.apply_impulse(-c.get_normal() * push_force * get_physics_process_delta_time(), c.get_position() - collider.global_position)
+
+# ── LIGHT & SHADOW MECHANICS ──
+
+func _is_in_light(check_pos: Vector3) -> bool:
+	var world := get_world_3d()
+	if not world:
+		return false
+	var ss := world.direct_space_state
+	var lights := get_tree().get_nodes_in_group("rat_light")
+	
+	var origin := check_pos + Vector3(0, 0.2, 0)
+	
+	for l in lights:
+		var light_node: Light3D = null
+		# Support both: direct Light3D in group, or wrapper Node3D with Light3D child
+		if l is Light3D:
+			light_node = l as Light3D
+		else:
+			for child in l.get_children():
+				if child is Light3D:
+					light_node = child as Light3D
+					break
+		if light_node == null or not light_node.is_inside_tree():
+			continue
+			
+		var light_pos := light_node.global_position
+		var max_dist := 15.0
+		if light_node is OmniLight3D:
+			max_dist = light_node.omni_range
+		elif light_node is SpotLight3D:
+			max_dist = light_node.spot_range
+			
+		var dist_sq := origin.distance_squared_to(light_pos)
+		if dist_sq > max_dist * max_dist:
+			continue
+			
+		if light_node is SpotLight3D:
+			var dir_to_rat := (origin - light_pos).normalized()
+			var forward := -light_node.global_transform.basis.z.normalized()
+			var angle := rad_to_deg(acos(clampf(dir_to_rat.dot(forward), -1.0, 1.0)))
+			if angle > light_node.spot_angle:
+				continue
+				
+		var query := PhysicsRayQueryParameters3D.create(origin, light_pos)
+		query.collision_mask = 1 | 2 | 4 | 8
+		query.exclude = [self]
+		var hit := ss.intersect_ray(query)
+		
+		if not hit or hit.position.distance_squared_to(light_pos) < 0.3:
+			return true
+	return false
+
+
+func _enter_flee_light() -> void:
+	state = State.FLEE_LIGHT
+	is_carrier = false
+	is_following_player = false
+	set_cursor_following(false)
+	_target_ready = false
+	_flee_timer = 3.0
+	_set_smoke(true, 1.0)
+	
+	# Emit a squeak sound? If there's an AudioStreamPlayer3D, we can play it.
+	if has_node("SqueakPlayer"):
+		get_node("SqueakPlayer").play()
+
+
+func _process_flee_light(delta: float) -> void:
+	_flee_timer -= delta
+	
+	# If we are in darkness again and flee timer is low, maybe we just vanish to simulate escaping into a hole.
+	if _flee_timer <= 0.0 or (not _is_in_light(global_position) and _flee_timer < 2.0):
+		hide_visuals()
+		is_fallen = true
+		_start_respawn()
+		return
+		
+	# Panic frantic movement
+	var flee_speed := max_speed * 1.2
+	var random_dir := Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
+	velocity.x = lerp(velocity.x, random_dir.x * flee_speed, delta * 5.0)
+	velocity.z = lerp(velocity.z, random_dir.z * flee_speed, delta * 5.0)
+	
+	var move_dir := Vector3(velocity.x, 0.0, velocity.z)
+	if move_dir.length() > 0.4:
+		rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 18.0 * delta)
+		
+	_do_move_and_slide()
+
+
+func _set_smoke(enable: bool, delta: float) -> void:
+	if enable and _smoke_particles == null:
+		_smoke_particles = GPUParticles3D.new()
+		add_child(_smoke_particles)
+		_smoke_particles.position = Vector3(0, 0.2, 0)
+		_smoke_particles.amount = 12
+		_smoke_particles.lifetime = 0.5
+		var mat := ParticleProcessMaterial.new()
+		mat.direction = Vector3(0, 1, 0)
+		mat.spread = 45.0
+		mat.initial_velocity_min = 1.0
+		mat.initial_velocity_max = 2.0
+		mat.color = Color(0.1, 0.1, 0.1, 0.6)
+		_smoke_particles.process_material = mat
+		
+		var draw_pass := QuadMesh.new()
+		draw_pass.size = Vector2(0.2, 0.2)
+		var pmat := StandardMaterial3D.new()
+		pmat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		pmat.vertex_color_use_as_albedo = true
+		draw_pass.material = pmat
+		_smoke_particles.draw_pass_1 = draw_pass
+		
+	if _smoke_particles:
+		_smoke_particles.emitting = enable

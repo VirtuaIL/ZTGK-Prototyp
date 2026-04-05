@@ -150,7 +150,7 @@ var _blob_offsets: Array[Vector3] = []
 const STREAM_SPACING: float = 0.7
 const DRAW_SAMPLE_DIST: float = 0.2
 const MOUSE_TRAIL_MAX: int = 500
-var _mouse_trail: Array[Vector3] = []   # continuous mouse position history
+var _mouse_trail: Array[Vector3] = [] # continuous mouse position history
 var _mouse_trail_last: Vector3 = Vector3.ZERO
 var _mouse_trail_last_dir: Vector3 = Vector3.ZERO
 var _build_in_progress: bool = false
@@ -167,7 +167,6 @@ const BRUSH_DIM_FACTOR: float = 0.6
 var _formation_queue: Array[Rat] = []
 var _formation_index: int = 0
 var _formation_active: bool = false
-
 
 
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
@@ -217,7 +216,7 @@ func setup_player(player: CharacterBody3D) -> void:
 	if _player and not _player.is_in_group("player"):
 		_player.add_to_group("player")
 	if _player and _player.has_method("set_rat_manager"):
-		_player.set_rat_manager(self)
+		_player.set_rat_manager(self )
 	if _player and _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 	if start_with_min and rats.is_empty():
@@ -781,6 +780,7 @@ func _update_cursor_follow(delta: float) -> void:
 	var count := active.size()
 	if count == 0:
 		return
+		
 	_set_cursor_following(active, true)
 	var base_y := mouse_world.y
 	if count > 0:
@@ -826,11 +826,20 @@ func _update_cursor_follow(delta: float) -> void:
 		var lateral_dir := Vector3.ZERO
 
 		if arc_pos <= 0.0:
-			t_stream = _mouse_trail[0]
+			var back_dir := Vector3(0, 0, 1)
 			if _mouse_trail.size() >= 2:
-				var dir := _mouse_trail[1] - _mouse_trail[0]
-				dir.y = 0.0
-				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
+				back_dir = (_mouse_trail[0] - _mouse_trail[1]).normalized()
+				back_dir.y = 0.0
+				lateral_dir = back_dir.cross(Vector3.UP).normalized()
+			elif _mouse_trail_last_dir != Vector3.ZERO:
+				back_dir = -_mouse_trail_last_dir
+				back_dir.y = 0.0
+				lateral_dir = back_dir.cross(Vector3.UP).normalized()
+			
+			if _mouse_trail.size() > 0:
+				t_stream = _mouse_trail[0] + back_dir * absf(arc_pos)
+			else:
+				t_stream = mouse_world + back_dir * absf(arc_pos)
 		else:
 			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
 
@@ -880,9 +889,6 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 	_update_cursor_follow(delta)
 
 
-
-
-
 func build_blob_offsets() -> void:
 	_blob_offsets.clear()
 	var count := rats.size()
@@ -916,7 +922,6 @@ func _flat_distance_squared(a: Vector3, b: Vector3) -> float:
 	var dx := a.x - b.x
 	var dz := a.z - b.z
 	return dx * dx + dz * dz
-
 
 
 func _assign_neighbors() -> void:
@@ -1189,7 +1194,7 @@ func _form_unified_mesh() -> void:
 		
 		for nb in all_neighbors[i]:
 			var j = nb["index"]
-			if i > j: 
+			if i > j:
 				continue # avoid double drawing edges (undirected graph equivalent)
 				
 			var pos_b = rat_positions[j]
@@ -1723,7 +1728,6 @@ func _get_recall_center() -> Vector3:
 
 
 func _process_hover() -> void:
-
 	var camera := get_viewport().get_camera_3d()
 	if not camera: return
 	
@@ -2088,7 +2092,7 @@ func _distribute_rats_on_path() -> void:
 	var path_length: float = 0.0
 	var segs: Array[float] = []
 	for i in range(1, current_drawn_path.size()):
-		var segment_len = current_drawn_path[i-1].distance_to(current_drawn_path[i])
+		var segment_len = current_drawn_path[i - 1].distance_to(current_drawn_path[i])
 		path_length += segment_len
 		segs.append(segment_len)
 		

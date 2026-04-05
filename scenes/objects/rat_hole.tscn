@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" uid="uid://cgmr5c3rt7opn" path="res://scripts/rat_spawn.gd" id="1_y4o7j"]
+[ext_resource type="Texture2D" uid="uid://hl4slmqj3u3e" path="res://resources/hint_more_rats_alt.png" id="2_h8f3d"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hole"]
+albedo_color = Color(0.02, 0.02, 0.02, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hole"]
+size = Vector3(1.0, 1.0, 0.2)
+
+[node name="RatHole" type="Node3D"]
+script = ExtResource("1_y4o7j")
+
+[node name="HoleVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -0.1)
+material_override = SubResource("StandardMaterial3D_hole")
+mesh = SubResource("BoxMesh_hole")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 1.4, 0.02)
+texture = ExtResource("2_h8f3d")

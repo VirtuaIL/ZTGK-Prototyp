@@ -12,8 +12,8 @@ signal player_died
 @export var max_hp: float = 100.0
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
-@export var carried_by_rats: bool = true
-@export var required_available_rats_for_movement: int = 1
+@export var carried_by_rats: bool = false
+@export var required_available_rats_for_movement: int = 0
 var is_being_carried: bool = false
 
 signal object_reset
@@ -92,8 +92,14 @@ func _physics_process(delta: float) -> void:
 	var can_move := _has_required_rats_for_manual_movement()
 	var input_dir := Vector3.ZERO
 	if can_move:
-		input_dir.x = Input.get_axis("move_left", "move_right")
-		input_dir.z = Input.get_axis("move_forward", "move_back")
+		if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP):
+			input_dir.z -= 1.0
+		if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
+			input_dir.z += 1.0
+		if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
+			input_dir.x -= 1.0
+		if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
+			input_dir.x += 1.0
 	# Rotate input to match isometric camera (45° around Y)
 	input_dir = input_dir.rotated(Vector3.UP, deg_to_rad(45.0))
 

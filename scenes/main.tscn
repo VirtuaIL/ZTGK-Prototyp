@@ -16,12 +16,11 @@ panorama = ExtResource("2_wja66")
 sky_material = SubResource("PanoramaSkyMaterial_dp3eg")
 
 [sub_resource type="Environment" id="Environment_1"]
-background_mode = 2
-background_color = Color(0.7083283, 0.11449968, 0.5420097, 1)
-sky = SubResource("Sky_0ld40")
-ambient_light_source = 2
-ambient_light_color = Color(0.3, 0.28, 0.35, 1)
-ambient_light_energy = 0.5
+background_mode = 1
+background_color = Color(0.02, 0.02, 0.03, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.05, 0.06, 0.1, 1)
+ambient_light_energy = 0.4
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
 cull_mode = 2
@@ -40,6 +39,8 @@ environment = SubResource("Environment_1")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1775225366]
 transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 5, 10, 5)
+light_energy = 0.1
+shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=278822171]
 transform = Transform3D(0.25881907, -0.9330127, 0.25000006, 0, 0.2588191, 0.9659258, -0.9659258, -0.25000006, 0.06698732, 10, 50, 10)
@@ -59,7 +60,7 @@ script = ExtResource("4_jufax")
 min_cap = 35
 
 [node name="Player" parent="." unique_id=20062774 instance=ExtResource("5_hvlyp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 11)
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1566928310]
 script = ExtResource("6_r1k3v")
@@ -71,4 +72,4 @@ script = ExtResource("6_r1k3v")
 [node name="enemies" type="Node3D" parent="." unique_id=2019632589]
 
 [node name="Enemy" parent="enemies" unique_id=466276773 instance=ExtResource("8_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -25.15907)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 100, 0, 100)
