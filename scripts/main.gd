@@ -255,12 +255,11 @@ func _setup_cheatsheet_ui() -> void:
 	body.text = \
 		"[b]Ruch[/b]\n" + \
 		"WASD — ruch\n" + \
-		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
 		"LPM (przytrzymaj) — zaatakuj swarmiem\n" + \
-		"ŚPM (przytrzymaj) — buduj szczurami\n" + \
+		"ŚPM — przywołaj szczury\n" + \
 		"PPM (ciągnij) — przenieś obiekt / gracza\n" + \
-		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
+		"Scroll — rozstaw hordy (obrót przy przenoszeniu)\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
 		"Respawn szczurów: horda wejdzie w strefę RatSpawn\n" + \
@@ -506,8 +505,8 @@ func _update_rat_count_ui() -> void:
 
 func _update_mode_ui() -> void:
 	if lpm_label_val: lpm_label_val.text = "atak rojem"
-	if mmb_label_val: mmb_label_val.text = "rysuj szczury"
-	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
+	if mmb_label_val: mmb_label_val.text = "przywołaj szczury"
+	if spm_label_val: spm_label_val.text = "rozstaw hordy"
 	if ppm_label_val: ppm_label_val.text = "przenieś"
 
 func _gather_levels() -> void:

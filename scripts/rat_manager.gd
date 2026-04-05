@@ -159,7 +159,7 @@ var _dyn_offsets: Dictionary = {}         # rat instance_id → Vector3 (normali
 var _dyn_base_radius: float = 2.0        # base radius of formation when captured
 @export var formation_scale: float = 1.0
 @export var formation_scale_min: float = 0.3
-@export var formation_scale_max: float = 3.0
+@export var formation_scale_max: float = 5.0
 @export var formation_scale_step: float = 0.1
 const FORMATION_CAPTURE_INTERVAL: int = 3
 var _formation_capture_tick: int = 0
@@ -1059,6 +1059,10 @@ func _check_wall_deformation() -> void:
 	# Skip right after a scroll-snap so zeroed velocity doesn't falsely trigger
 	if _scroll_snap_cooldown > 0.0:
 		return
+	# Skip while any rat is attacking — recapture with partial rats would break formation
+	for rat in rats:
+		if rat != null and rat.state == rat.State.ATTACK_PATH:
+			return
 	var active := _get_active_follow_rats()
 	if active.is_empty():
 		return
@@ -1485,29 +1489,29 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB/MMB: attack draw / build draw ──
-		if mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_MIDDLE:
+		# ── MMB: recall all rats ──
+		if mb.button_index == MOUSE_BUTTON_MIDDLE:
 			if mb.pressed:
-				_drawing_attack_path = (mb.button_index == MOUSE_BUTTON_LEFT)
+				recall_all_rats()
+			get_viewport().set_input_as_handled()
+			return
+
+		# ── LMB: attack draw ──
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			if mb.pressed:
+				_drawing_attack_path = true
 				mouse_is_down_left = true
 				left_click_start_pos = mb.position
 				is_dragging_left = false
 				_lmb_is_object_drag = false
-				# Prepare for build or attack drawing
 				current_drawn_path.clear()
 				_current_drawn_path_length = 0.0
 				current_build_y = -1000.0
 				_has_last_build_pos = false
 			else:
-				# Released → finalize build or send attack wave
-				if is_dragging_left:
-					if _drawing_attack_path:
-						_send_attack_wave()
-					else:
-						if build_draw_mode == DRAW_MODE_PATH:
-							_distribute_rats_on_path()
-						elif build_draw_mode == DRAW_MODE_CIRCLE:
-							_build_circle_if_possible()
+				# Released → send attack wave
+				if is_dragging_left and _drawing_attack_path:
+					_send_attack_wave()
 
 				mouse_is_down_left = false
 				_lmb_is_object_drag = false
