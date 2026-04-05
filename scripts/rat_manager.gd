@@ -2123,10 +2123,12 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	immediate_mesh.surface_add_vertex(end_pos + offset)
 	immediate_mesh.surface_end()
 
-	# Draw end-cap marker when attack path is at its limit
+	# ── Attack path: draw formation markers along the path ──
 	if _drawing_attack_path:
 		var max_len := _get_effective_attack_path_length()
 		var at_limit := max_len > 0.01 and _current_drawn_path_length >= max_len - 0.1
+
+		# Draw end-cap X mark when at limit
 		if at_limit and current_drawn_path.size() >= 2:
 			var tip := current_drawn_path[current_drawn_path.size() - 1] + offset
 			var prev := current_drawn_path[current_drawn_path.size() - 2]
@@ -2138,7 +2140,6 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 				fwd = Vector3.FORWARD
 			var lat := fwd.cross(Vector3.UP).normalized()
 			var mark_size := 0.4
-			# Draw X mark at the end of the path
 			immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 			immediate_mesh.surface_add_vertex(tip + lat * mark_size + fwd * mark_size)
 			immediate_mesh.surface_add_vertex(tip - lat * mark_size - fwd * mark_size)
@@ -2146,7 +2147,71 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 			immediate_mesh.surface_add_vertex(tip + lat * mark_size - fwd * mark_size)
 			immediate_mesh.surface_end()
 
-	if not use_wide_brush and not _drawing_attack_path:
+		# Draw formation markers at regular intervals along the path
+		if not _dyn_offsets.is_empty() and current_drawn_path.size() >= 2:
+			var eff_scale := formation_scale * _dyn_base_radius
+			var marker_sz := 0.1
+			var marker_interval := 2.0  # units between marker sets
+
+			# Build arc-length table for the path
+			var arc_lengths: Array[float] = [0.0]
+			var path_count := current_drawn_path.size()
+			for pi in range(1, path_count):
+				arc_lengths.append(arc_lengths[pi - 1] + current_drawn_path[pi].distance_to(current_drawn_path[pi - 1]))
+			var total_arc: float = arc_lengths[path_count - 1]
+
+			# Determine sample distances along the path
+			var sample_dists: Array[float] = []
+			var d := 0.0
+			while d <= total_arc + 0.01:
+				sample_dists.append(minf(d, total_arc))
+				d += marker_interval
+			# Always include the tip
+			if sample_dists.is_empty() or sample_dists[sample_dists.size() - 1] < total_arc - 0.1:
+				sample_dists.append(total_arc)
+
+			for sd in sample_dists:
+				# Find position on path at arc distance sd
+				var seg_idx := 0
+				for si in range(1, path_count):
+					if arc_lengths[si] >= sd:
+						seg_idx = si - 1
+						break
+				var seg_len: float = arc_lengths[seg_idx + 1] - arc_lengths[seg_idx]
+				var t := 0.0
+				if seg_len > 0.001:
+					t = (sd - arc_lengths[seg_idx]) / seg_len
+				var sample_pos: Vector3 = current_drawn_path[seg_idx].lerp(current_drawn_path[seg_idx + 1], t)
+
+				# Compute path direction at this point
+				var path_fwd: Vector3
+				if seg_idx + 1 < path_count:
+					path_fwd = current_drawn_path[seg_idx + 1] - current_drawn_path[seg_idx]
+				else:
+					path_fwd = current_drawn_path[path_count - 1] - current_drawn_path[path_count - 2]
+				path_fwd.y = 0.0
+				if path_fwd.length() < 0.001:
+					path_fwd = Vector3.FORWARD
+				else:
+					path_fwd = path_fwd.normalized()
+
+				# Rotation angle from FORWARD to path direction
+				var rot_angle := atan2(path_fwd.x, path_fwd.z)
+
+				# Draw formation markers at this sample point
+				for key in _dyn_offsets:
+					var dyn_off: Vector3 = _dyn_offsets[key]
+					var rotated := Vector3(dyn_off.x, 0.0, dyn_off.z).rotated(Vector3.UP, rot_angle) * eff_scale
+					var mpos := sample_pos + rotated + offset
+					immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+					immediate_mesh.surface_add_vertex(mpos + Vector3(-marker_sz, 0, 0))
+					immediate_mesh.surface_add_vertex(mpos + Vector3(marker_sz, 0, 0))
+					immediate_mesh.surface_add_vertex(mpos + Vector3(0, 0, -marker_sz))
+					immediate_mesh.surface_add_vertex(mpos + Vector3(0, 0, marker_sz))
+					immediate_mesh.surface_end()
+		return
+
+	if not use_wide_brush:
 		return
 
 	var count := current_drawn_path.size()
@@ -2183,9 +2248,7 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	var end_lateral := end_dir.cross(Vector3.UP).normalized()
 
 	var width := 0.0
-	if _drawing_attack_path:
-		width = _get_formation_max_extent() * 2.0
-	elif build_draw_mode == DRAW_MODE_CIRCLE:
+	if build_draw_mode == DRAW_MODE_CIRCLE:
 		width = circle_radius * 1.5
 	else:
 		var pairs_val := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
@@ -2538,9 +2601,10 @@ func _send_attack_wave() -> void:
 				else:
 					dir = dir.normalized()
 				var lateral_dir := dir.cross(Vector3.UP).normalized()
-				# Project formation offset onto path-relative lateral axis
+				# Use full 2D formation offset rotated to path orientation
 				var lat_component := formation_off.dot(ref_lateral)
-				p += lateral_dir * lat_component
+				var fwd_component := formation_off.dot(ref_dir)
+				p += lateral_dir * lat_component + dir * fwd_component
 			rat_path.append(p)
 
 		rat.set_attack_path(rat_path)
