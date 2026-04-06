@@ -637,53 +637,8 @@ func _do_move_and_slide() -> void:
 # ── LIGHT & SHADOW MECHANICS ──
 
 func _is_in_light(check_pos: Vector3) -> bool:
-	var world := get_world_3d()
-	if not world:
-		return false
-	var ss := world.direct_space_state
-	var lights := get_tree().get_nodes_in_group("rat_light")
-	
-	var origin := check_pos + Vector3(0, 0.2, 0)
-	
-	for l in lights:
-		var light_node: Light3D = null
-		# Support both: direct Light3D in group, or wrapper Node3D with Light3D child
-		if l is Light3D:
-			light_node = l as Light3D
-		else:
-			for child in l.get_children():
-				if child is Light3D:
-					light_node = child as Light3D
-					break
-		if light_node == null or not light_node.is_inside_tree():
-			continue
-			
-		var light_pos := light_node.global_position
-		var max_dist := 15.0
-		if light_node is OmniLight3D:
-			max_dist = light_node.omni_range
-		elif light_node is SpotLight3D:
-			max_dist = light_node.spot_range
-			
-		var dist_sq := origin.distance_squared_to(light_pos)
-		if dist_sq > max_dist * max_dist:
-			continue
-			
-		if light_node is SpotLight3D:
-			var dir_to_rat := (origin - light_pos).normalized()
-			var forward := -light_node.global_transform.basis.z.normalized()
-			var angle := rad_to_deg(acos(clampf(dir_to_rat.dot(forward), -1.0, 1.0)))
-			if angle > light_node.spot_angle:
-				continue
-				
-		var query := PhysicsRayQueryParameters3D.create(origin, light_pos)
-		query.collision_mask = 1 | 2 | 4 | 8
-		query.exclude = [self]
-		var hit := ss.intersect_ray(query)
-		
-		if not hit or hit.position.distance_squared_to(light_pos) < 0.3:
-			return true
 	return false
+
 
 
 func _enter_flee_light() -> void:

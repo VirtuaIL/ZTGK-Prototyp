@@ -33,6 +33,7 @@ var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
 
 var mode: int = 1 # Always BUILD-like unified mode
+var is_trans_mode: bool = false  # Set by SwarmStateMachine during swarm trans
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -311,27 +312,13 @@ func _spawn_rats(count: int) -> void:
 	if parent_node == null:
 		parent_node = self
 
-	var base_pos := _get_horde_center()
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
-	var spawn_nodes: Array[Node3D] = []
-	for s in spawns:
-		var n := s as Node3D
-		if n != null:
-			spawn_nodes.append(n)
-	if spawn_nodes.size() > 1:
-		spawn_nodes.sort_custom(func(a: Node3D, b: Node3D) -> bool:
-			return a.global_position.distance_squared_to(base_pos) < b.global_position.distance_squared_to(base_pos)
-		)
+	var base_pos := _player.global_position if _player else Vector3.ZERO
 
 	for i in range(count):
 		var rat := rat_scene.instantiate()
 		var angle := randf() * TAU
 		var radius := randf_range(spawn_radius_min, spawn_radius_max)
-		var spawn_center := base_pos
-		if not spawn_nodes.is_empty():
-			var idx := i % spawn_nodes.size()
-			spawn_center = spawn_nodes[idx].global_position
-		rat.position = spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+		rat.position = base_pos + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		rat.player = _player
 		parent_node.add_child(rat)
 		if _player:
@@ -342,43 +329,11 @@ func _spawn_rats(count: int) -> void:
 	build_blob_offsets()
 
 
-func _get_nearest_spawn_pos(ref_pos: Vector3 = Vector3.INF) -> Vector3:
-	var base_pos := ref_pos
-	if base_pos == Vector3.INF:
-		base_pos = _get_horde_center()
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
-	var nearest: Node3D = null
-	var best_dist := INF
-	for s in spawns:
-		var n := s as Node3D
-		if n == null:
-			continue
-		var d := n.global_position.distance_squared_to(base_pos)
-		if d < best_dist:
-			best_dist = d
-			nearest = n
-	if nearest:
-		return nearest.global_position
-	return base_pos
+func _get_nearest_spawn_pos(_ref_pos: Vector3 = Vector3.INF) -> Vector3:
+	return _player.global_position if _player else Vector3.ZERO
 
 func _get_start_spawn_pos() -> Vector3:
-	var start_spawns := get_tree().get_nodes_in_group("rat_spawn_start")
-	if start_spawns.is_empty():
-		return _get_nearest_spawn_pos()
-	var ref_pos := _player.global_position if _player != null else _get_horde_center()
-	var best: Node3D = null
-	var best_dist := INF
-	for s in start_spawns:
-		var n := s as Node3D
-		if n == null:
-			continue
-		var d := n.global_position.distance_squared_to(ref_pos)
-		if d < best_dist:
-			best_dist = d
-			best = n
-	if best:
-		return best.global_position
-	return _get_nearest_spawn_pos()
+	return _player.global_position if _player else Vector3.ZERO
 
 func _get_spawn_in_activation_range() -> Node3D:
 	var center := _get_horde_center()
@@ -514,6 +469,8 @@ func _check_rat_spawn_bonus() -> void:
 
 
 func _process(delta: float) -> void:
+	if is_trans_mode:
+		return
 	if _build_force_timer > 0.0:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
@@ -1224,6 +1181,8 @@ func _form_unified_mesh() -> void:
 # ── Input handling ────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_trans_mode:
+		return
 	if wave_pending and event is InputEventMouseButton:
 		var mb_wave := event as InputEventMouseButton
 		if mb_wave.button_index == MOUSE_BUTTON_RIGHT and mb_wave.pressed:
@@ -1261,34 +1220,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: build draw ──
-		if mb.button_index == MOUSE_BUTTON_LEFT:
-			if mb.pressed:
-				mouse_is_down_left = true
-				left_click_start_pos = mb.position
-				is_dragging_left = false
-				_lmb_is_object_drag = false
-				# Prepare for build drawing
-				current_drawn_path.clear()
-				current_build_y = -1000.0
-				_has_last_build_pos = false
-			else:
-				# LMB released → finalize build
-				if is_dragging_left:
-					if build_draw_mode == DRAW_MODE_PATH:
-						_distribute_rats_on_path()
-					elif build_draw_mode == DRAW_MODE_CIRCLE:
-						_build_circle_if_possible()
-
-				mouse_is_down_left = false
-				_lmb_is_object_drag = false
-				current_build_y = -1000.0
-				is_drawing_line = false
-				current_drawn_path.clear()
-				_has_last_build_pos = false
-				immediate_mesh.clear_surfaces()
-			get_viewport().set_input_as_handled()
-			return
+		# ── LMB: build draw removed ──
 
 		# ── RMB: raycast for object → drag ──
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
@@ -2494,3 +2426,59 @@ func _try_build_at(raw_pos: Vector3) -> void:
 	if free_rat:
 		free_rat.build_at(build_pos)
 		built_positions[build_pos] = true
+
+
+# ── Swarm Trans Mode: Suspend / Resume ────────────────────────────────────────
+
+func suspend_all_rats() -> void:
+	## Hide and disable all individual rats for swarm trans mode.
+	# Release any grabbed objects first
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		if grabbed_object == _player:
+			_carry_player_active = false
+			if _player:
+				_player.set("is_being_carried", false)
+				_player.set("has_carried_target", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if r.state != r.State.FOLLOW:
+			r.release_rat(false)
+		r.hide_visuals()
+		r.set_physics_process(false)
+
+	# Clear drawing state
+	mouse_is_down_left = false
+	is_dragging_left = false
+	mouse_is_down_right = false
+	_lmb_is_object_drag = false
+	immediate_mesh.clear_surfaces()
+
+
+func resume_all_rats(positions: Array[Vector3]) -> void:
+	## Re-enable individual rats, placing them at the given positions.
+	var idx := 0
+	for rat in rats:
+		var r := rat as Rat
+		if r == null:
+			continue
+		if idx < positions.size():
+			r.global_position = positions[idx]
+		elif _player:
+			r.global_position = _player.global_position + Vector3(
+				randf_range(-1.0, 1.0), 0.3, randf_range(-1.0, 1.0)
+			)
+		r.show_visuals()
+		r.set_physics_process(true)
+		r.state = r.State.FOLLOW
+		r.is_following_player = true
+		r.is_cursor_following = false
+		r._spring_velocity = Vector3.ZERO
+		r.velocity = Vector3.ZERO
+		idx += 1

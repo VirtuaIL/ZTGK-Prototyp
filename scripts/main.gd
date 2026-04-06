@@ -61,6 +61,9 @@ var _forced_level: Node3D = null
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
 @onready var levels_root: Node3D = get_node_or_null("levels")
 
+const SwarmStateMachineScript = preload("res://scripts/swarm/swarm_state_machine.gd")
+var _swarm_state_machine: Node = null
+
 func _ready() -> void:
 	_setup_input_map()
 	_init_game()
@@ -95,6 +98,11 @@ func _init_game() -> void:
 	if ability_hud:
 		ability_hud.rat_manager = rat_manager
 
+	# Swarm State Machine
+	_swarm_state_machine = SwarmStateMachineScript.new()
+	_swarm_state_machine.setup(self, player, rat_manager, $Camera3D)
+	add_child(_swarm_state_machine)
+
 func _setup_input_map() -> void:
 	_add_action("move_forward", KEY_W)
 	_add_action("move_back", KEY_S)
@@ -103,6 +111,7 @@ func _setup_input_map() -> void:
 	_add_action_key("recall_rats", KEY_SPACE)
 	_add_action_key("toggle_cheatsheet", KEY_H)
 	_add_action_key("toggle_enemy_passive", KEY_F2)
+	_add_action_key("toggle_swarm_trans", KEY_SHIFT)
 
 func _create_action_box(title: String) -> VBoxContainer:
 	var vbox = VBoxContainer.new()
@@ -465,16 +474,26 @@ func _process(delta: float) -> void:
 	if cam and player:
 		var focus := player.position
 		var mouse_pos := get_viewport().get_mouse_position()
-		var ray_origin := cam.project_ray_origin(mouse_pos)
-		var ray_dir := cam.project_ray_normal(mouse_pos)
-		if abs(ray_dir.y) > 0.001:
-			var t := -ray_origin.y / ray_dir.y
-			if t > 0.0:
-				var cursor_world := ray_origin + ray_dir * t
-				focus = player.position.lerp(cursor_world, 1.0 / 6.0)
+
+		# In swarm trans mode, focus between player and swarm head
+		var in_trans: bool = _swarm_state_machine != null and _swarm_state_machine.is_in_trans_mode()
+		if in_trans:
+			var mass: Node3D = _swarm_state_machine.get_swarm_mass() as Node3D
+			if mass and mass.has_method("get_head_position"):
+				var head_pos: Vector3 = mass.get_head_position()
+				focus = player.position.lerp(head_pos, 0.45)
+			_cam_look_ahead = _cam_look_ahead.lerp(Vector3.ZERO, 1.0 - exp(-6.0 * delta))
+		else:
+			var ray_origin := cam.project_ray_origin(mouse_pos)
+			var ray_dir := cam.project_ray_normal(mouse_pos)
+			if abs(ray_dir.y) > 0.001:
+				var t := -ray_origin.y / ray_dir.y
+				if t > 0.0:
+					var cursor_world := ray_origin + ray_dir * t
+					focus = player.position.lerp(cursor_world, 1.0 / 6.0)
 
 		var viewport_size: Vector2 = get_viewport().get_visible_rect().size
-		if viewport_size.x > 0.0 and viewport_size.y > 0.0:
+		if not in_trans and viewport_size.x > 0.0 and viewport_size.y > 0.0:
 			var center := viewport_size * 0.5
 			var norm := (mouse_pos - center) / center
 			norm.x = clampf(norm.x, -1.0, 1.0)
@@ -482,7 +501,7 @@ func _process(delta: float) -> void:
 			if norm.length() < cam_look_ahead_deadzone: norm = Vector2.ZERO
 			var desired := Vector3(norm.x, 0.0, norm.y) * cam_look_ahead_max
 			_cam_look_ahead = _cam_look_ahead.lerp(desired, 1.0 - exp(-cam_look_ahead_smooth * delta))
-		else:
+		elif not in_trans:
 			_cam_look_ahead = _cam_look_ahead.lerp(Vector3.ZERO, 1.0 - exp(-cam_look_ahead_smooth * delta))
 
 		var offset := Vector3(10, 12, 10)

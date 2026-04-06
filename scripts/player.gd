@@ -30,6 +30,7 @@ var time_since_last_damage: float = 0.0
 @onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
 
 var is_stratagem_mode: bool = false
+var is_trans_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var carried_target_pos: Vector3 = Vector3.ZERO
 var has_carried_target: bool = false
@@ -85,6 +86,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if is_stratagem_mode:
+		velocity = Vector3.ZERO
+		move_and_slide()
+		return
+
+	if is_trans_mode:
 		velocity = Vector3.ZERO
 		move_and_slide()
 		return
