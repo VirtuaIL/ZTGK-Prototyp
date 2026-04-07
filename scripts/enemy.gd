@@ -1,5 +1,8 @@
 extends CharacterBody3D
 
+const CheeseScene := preload("res://scenes/cheese.tscn")
+const DamageTextScene := preload("res://scenes/damage_text.tscn")
+
 signal enemy_died
 
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
@@ -258,7 +261,8 @@ func _pick_and_start_attack() -> void:
 	var rat_count = 0
 	if mgr != null and "rats" in mgr:
 		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
-		if are_visible:
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
 			for rat in mgr.rats:
 				if is_instance_valid(rat) and rat.global_position.distance_squared_to(global_position) < attack_range * attack_range:
 					rat_count += 1
@@ -321,7 +325,8 @@ func _execute_attack() -> void:
 	targets.append_array(players)
 	if mgr != null and "rats" in mgr:
 		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
-		if are_visible:
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
 			for r in mgr.rats:
 				if is_instance_valid(r):
 					targets.append(r)
@@ -380,7 +385,7 @@ func is_passive() -> bool:
 # ═══════════════════════════════════════════════
 #  DAMAGE & DEATH (preserved from original)
 # ═══════════════════════════════════════════════
-func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO) -> void:
+func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO, text_color: Color = Color.WHITE) -> void:
 	
 	if _is_dead or ai_state == AIState.PASSIVE:
 		return
@@ -393,6 +398,14 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 	health = maxf(health, 0.0)
 	_update_hp_bar()
 	_flash_hit()
+
+	if DamageTextScene:
+		var dt = DamageTextScene.instantiate()
+		get_parent().add_child(dt)
+		dt.global_position = global_position + Vector3(0, 1.5, 0)
+		if hit_pos != Vector3.ZERO:
+			dt.global_position = hit_pos + Vector3(0, 0.5, 0)
+		dt.set_damage(int(ceil(amount)), text_color)
 
 	if hit_pos != Vector3.ZERO:
 		var dir := (global_position - hit_pos)
@@ -428,6 +441,14 @@ func _die() -> void:
 	tween.tween_callback(func() -> void:
 		visible = false
 		enemy_died.emit()
+		
+		if randf() <= 0.5:
+			if CheeseScene:
+				var c = CheeseScene.instantiate()
+				get_parent().add_child(c)
+				c.global_position = global_position
+				if c.has_method("set_type"):
+					c.set_type(randi() % 4)
 	)
 
 	# Stay dead — no auto-respawn. F2 toggle revives all enemies.
@@ -464,7 +485,8 @@ func _find_target() -> void:
 	if mgr != null and "rats" in mgr:
 		# Exclude rats from targeting entirely if they are hidden
 		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
-		if are_visible:
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
 			for rat in mgr.rats:
 				if is_instance_valid(rat):
 					targets.append(rat as Node3D)

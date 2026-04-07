@@ -2,6 +2,7 @@ extends CharacterBody3D
 class_name Rat
 
 const DeathEffect := preload("res://scenes/rat_death_effect.tscn")
+const GasCloudScene := preload("res://scenes/gas_cloud.tscn")
 
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
@@ -54,6 +55,8 @@ var damage_per_hit: float = 10.0
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
+var _gas_timer: float = 0.0
+
 # Build state
 var build_target: Vector3 = Vector3.ZERO
 var _travel_timer: float = 0.0
@@ -102,6 +105,30 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 		
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and "buff_purple_timer" in mgr:
+		if mgr.buff_purple_timer > 0.0:
+			if not is_on_floor():
+				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+			else:
+				velocity.y = 0.0
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+			return
+			
+		if mgr.buff_green_timer > 0.0:
+			_gas_timer -= delta
+			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
+			if _gas_timer <= 0.0 and speed_sq > 0.1:
+				_gas_timer = 0.2
+				if GasCloudScene:
+					var p = get_parent()
+					if p:
+						var g = GasCloudScene.instantiate()
+						p.add_child(g)
+						g.global_position = global_position
+		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
 
@@ -144,6 +171,12 @@ func _physics_process(delta: float) -> void:
 			velocity.y = 0.0
 
 		# Fall recovery is handled above before distance checks.
+		
+	if mgr != null and mgr.has_method("get_current_buff_material"):
+		var mat = mgr.get_current_buff_material()
+		$Body.material_override = mat
+		$Tail.material_override = mat
+		$Head.material_override = mat
 
 	match state:
 		State.FOLLOW:
@@ -300,10 +333,16 @@ func _check_damage() -> void:
 	enemies += (get_tree().get_nodes_in_group("bosses"))
 	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
 	
+	var final_dmg = damage_per_hit
+	var dmg_color = Color.WHITE
+	if "buff_red_timer" in mgr and mgr.buff_red_timer > 0.0:
+		final_dmg *= 2.0
+		dmg_color = Color(0.9, 0.1, 0.1)
+	
 	for enemy in enemies:
 		var dist: float = global_position.distance_to(enemy.global_position)
 		if dist < hit_range:
-			enemy.take_damage(damage_per_hit, get_instance_id(), global_position)
+			enemy.take_damage(final_dmg, get_instance_id(), global_position, dmg_color)
 			attack_cooldown = 1.0
 			break
 
@@ -563,12 +602,15 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	return hit.position.y >= global_position.y - max_drop
 
 func die() -> void:
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and "buff_yellow_timer" in mgr and mgr.buff_yellow_timer > 0.0:
+		return
+
 	if DeathEffect:
 		var eff = DeathEffect.instantiate()
 		get_parent().add_child(eff)
 		eff.global_position = global_position
 		
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "rats" in mgr:
 		var idx = mgr.rats.find(self)
 		if idx != -1:

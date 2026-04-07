@@ -1,6 +1,8 @@
 extends CharacterBody3D
 class_name bossTurret
 
+const DamageTextScene := preload("res://scenes/damage_text.tscn")
+
 # The ID used by buttons to target this entity
 @export var doorId: int = 0
 
@@ -387,9 +389,17 @@ func set_highlight(enabled: bool) -> void:
 			else:
 				child.material_overlay = null
 
-func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO) -> void:
+func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO, text_color: Color = Color.WHITE) -> void:
 	if current_state == State.DEAD:
 		return
+		
+	if DamageTextScene:
+		var dt = DamageTextScene.instantiate()
+		get_parent().add_child(dt)
+		dt.global_position = global_position + Vector3(0, 3.0, 0)
+		if hit_pos != Vector3.ZERO:
+			dt.global_position = hit_pos + Vector3(0, 1.0, 0)
+		dt.set_damage(int(ceil(amount)), text_color)
 		
 	health -= amount
 	health = maxf(health, 0.0)

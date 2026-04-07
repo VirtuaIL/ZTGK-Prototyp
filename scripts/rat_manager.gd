@@ -33,6 +33,30 @@ var _rat_spawn_used: Dictionary = {}
 
 var mode: int = 1 # Always BUILD-like unified mode
 
+var buff_red_timer: float = 0.0
+var buff_green_timer: float = 0.0
+var buff_yellow_timer: float = 0.0
+var buff_purple_timer: float = 0.0
+
+var buff_mat_red: StandardMaterial3D
+var buff_mat_green: StandardMaterial3D
+var buff_mat_yellow: StandardMaterial3D
+var buff_mat_purple: StandardMaterial3D
+
+func get_current_buff_material():
+	if buff_red_timer > 0.0: return buff_mat_red
+	if buff_green_timer > 0.0: return buff_mat_green
+	if buff_yellow_timer > 0.0: return buff_mat_yellow
+	if buff_purple_timer > 0.0: return buff_mat_purple
+	return null
+
+func apply_cheese_buff(type: int) -> void:
+	match type:
+		0: buff_red_timer = 5.0
+		1: buff_green_timer = 5.0
+		2: buff_yellow_timer = 5.0
+		3: buff_purple_timer = 5.0
+
 # Drawing & Blob
 var built_positions: Dictionary = {}
 var mouse_is_down_left: bool = false
@@ -167,6 +191,15 @@ var _structure_timer: float = 0.0
 func _ready() -> void:
 	add_to_group("rat_manager")
 	_clamp_caps()
+
+	buff_mat_red = StandardMaterial3D.new()
+	buff_mat_red.albedo_color = Color(0.9, 0.1, 0.1)
+	buff_mat_green = StandardMaterial3D.new()
+	buff_mat_green.albedo_color = Color(0.1, 0.9, 0.1)
+	buff_mat_yellow = StandardMaterial3D.new()
+	buff_mat_yellow.albedo_color = Color(0.9, 0.9, 0.1)
+	buff_mat_purple = StandardMaterial3D.new()
+	buff_mat_purple.albedo_color = Color(0.6, 0.1, 0.9)
 
 	immediate_mesh = ImmediateMesh.new()
 	line_mesh_instance = MeshInstance3D.new()
@@ -398,6 +431,11 @@ func _process(delta: float) -> void:
 		if wave_timer <= 0.0:
 			wave_active = false
 			wave_ended.emit()
+
+	if buff_red_timer > 0.0: buff_red_timer -= delta
+	if buff_green_timer > 0.0: buff_green_timer -= delta
+	if buff_yellow_timer > 0.0: buff_yellow_timer -= delta
+	if buff_purple_timer > 0.0: buff_purple_timer -= delta
 
 	# ── RMB held: combat attack circle ──
 	if combat_rmb_down:
