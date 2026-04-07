@@ -4,12 +4,11 @@ class_name Rat
 const DeathEffect := preload("res://scenes/rat_death_effect.tscn")
 const GasCloudScene := preload("res://scenes/gas_cloud.tscn")
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
 enum RatType { NORMAL, RED, GREEN }
 @export var rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
 var _speed_mult: float = 1.0
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
