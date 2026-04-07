@@ -97,6 +97,8 @@ func _physics_process(delta: float) -> void:
 
 	
 
+	
+
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount

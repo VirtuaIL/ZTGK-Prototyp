@@ -58,6 +58,9 @@ var hp_bar_fill: MeshInstance3D
 var hp_bar_fill_mat: StandardMaterial3D
 var hp_label: Label3D
 
+var is_stuck_in_blob: bool = false
+var blob_center: Vector3 = Vector3.ZERO
+
 
 func _ready() -> void:
 	for child in find_children("*", "VisualInstance3D"):
@@ -89,6 +92,18 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
+		
+	if is_stuck_in_blob:
+		var target := blob_center
+		target.y = global_position.y
+		global_position = target
+		velocity = Vector3.ZERO
+		move_and_slide()
+		current_attack = AttackType.NONE
+		if attack_marker != null:
+			attack_marker.visible = false
+		return
+
 	# ── Gravity ──
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5.0

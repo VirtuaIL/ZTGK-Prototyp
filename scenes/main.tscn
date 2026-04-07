@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://6hrls1c66kbk" path="res://scripts/stratagem_system.gd" id="5_strat_sys"]
 [ext_resource type="PackedScene" path="res://scenes/ui/stratagem_hud.tscn" id="6_strat_hud"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="Script" path="res://scripts/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://divan6b1wixm4" path="res://scenes/box.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/door.tscn" id="9_85g3d"]
 [ext_resource type="PackedScene" uid="uid://dujlhiqakpum2" path="res://scenes/turret_solid.tscn" id="9_vxglm"]

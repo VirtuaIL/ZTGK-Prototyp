@@ -9,6 +9,7 @@ enum RatType { NORMAL, RED, GREEN }
 @export var rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
 var _speed_mult: float = 1.0
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -56,6 +57,11 @@ var wave_speed: float = 18.0
 var wave_timer: float = 0.0
 var wave_duration: float = 0.8
 
+var _dash_path: PackedVector3Array
+var _dash_index: int = 0
+var _dash_lateral_offset: float = 0.0
+@export var dash_speed: float = 30.0
+
 # Damage
 var damage_per_hit: float = 10.0
 var hit_range: float = 0.8
@@ -91,6 +97,8 @@ var _mgr_refresh_timer: float = 0.0
 var _edge_check_timer: float = 0.0
 var _edge_blocked_cached: bool = false
 var _current_buff_material: Material = null
+var _blob_mesh: MeshInstance3D = null
+var _is_showing_blob: bool = false
 
 func _ready() -> void:
 	for child in find_children("*", "VisualInstance3D"):
@@ -111,6 +119,17 @@ func _ready() -> void:
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
 	_mgr = get_tree().get_first_node_in_group("rat_manager")
+	
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.25 
+	sphere.height = 0.5
+	_blob_mesh = MeshInstance3D.new()
+	_blob_mesh.mesh = sphere
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.30, 0.18)
+	_blob_mesh.material_override = mat
+	_blob_mesh.visible = false
+	add_child(_blob_mesh)
 
 
 func _physics_process(delta: float) -> void:
@@ -128,19 +147,33 @@ func _physics_process(delta: float) -> void:
 			_mgr = get_tree().get_first_node_in_group("rat_manager")
 			_mgr_refresh_timer = mgr_refresh_interval
 	var mgr = _mgr
-	_speed_mult = 1.0
 	
-	if mgr != null:
-		if "buff_purple_timer" in mgr and mgr.buff_purple_timer > 0.0:
-			_speed_mult = 0.15
+	var should_be_blob = mgr != null and mgr.get("combat_rmb_down") and mgr.get("current_attack_mode") == 1 and state == State.FOLLOW and not is_carrier and not is_wild and not is_fallen
+	if should_be_blob != _is_showing_blob:
+		_is_showing_blob = should_be_blob
+		show_visuals()
+		
+	if mgr != null and "buff_purple_timer" in mgr:
+		if mgr.buff_purple_timer > 0.0:
+			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
+			if mgr.has_method("get_current_buff_material"):
+				var mat = mgr.get_current_buff_material()
+				if mat != _current_buff_material:
+					_current_buff_material = mat
+					$Body.material_override = mat
+					$Tail.material_override = mat
+					$Head.material_override = mat
+			if not is_on_floor():
+				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+			else:
+				velocity.y = 0.0
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+			return
 			
-		var has_green_buff = (rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
-		if has_green_buff:
-			if (mgr.buff_green_timer > 0.0):
-				_gas_timer -= delta
-			elif (rat_type == RatType.GREEN):
-				_gas_timer -= delta
-				
+		if mgr.buff_green_timer > 0.0:
+			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
 			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
 			if _gas_timer <= 0.0 and speed_sq > 0.05:
@@ -232,6 +265,9 @@ func _physics_process(delta: float) -> void:
 			return
 		State.STATIC:
 			return
+		State.PATH_DASH:
+			_process_path_dash(delta)
+			_check_damage()
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
@@ -241,25 +277,32 @@ func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:
 		return
 
+	var current_stiffness = spring_stiffness
+	var current_separation = separation_force
+	if _is_showing_blob:
+		current_stiffness = spring_stiffness * 4.0
+		current_separation = 0.0
+
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position
 	to_target.y *= 0.2
-	_spring_velocity += to_target * spring_stiffness * delta
+	_spring_velocity += to_target * current_stiffness * delta
 
 	var sep_dist_sq := separation_dist * separation_dist
 	# Separation from neighbors
-	for neighbor in _neighbors:
-		if not is_instance_valid(neighbor):
-			continue
-		var nb := neighbor as Node3D
-		if nb == null:
-			continue
-		var diff: Vector3 = global_position - nb.global_position
-		diff.y = 0.0
-		var dist_sq: float = diff.length_squared()
-		if dist_sq < sep_dist_sq and dist_sq > 0.000001:
-			var dist: float = sqrt(dist_sq)
-			_spring_velocity += (diff / dist) * (separation_dist - dist) * separation_force * delta
+	if current_separation > 0.0:
+		for neighbor in _neighbors:
+			if not is_instance_valid(neighbor):
+				continue
+			var nb := neighbor as Node3D
+			if nb == null:
+				continue
+			var diff: Vector3 = global_position - nb.global_position
+			diff.y = 0.0
+			var dist_sq: float = diff.length_squared()
+			if dist_sq < sep_dist_sq and dist_sq > 0.000001:
+				var dist: float = sqrt(dist_sq)
+				_spring_velocity += (diff / dist) * (separation_dist - dist) * current_separation * delta
 
 	# Framerate-independent damping
 	_spring_velocity *= pow(damping, delta * 60.0)
@@ -362,12 +405,66 @@ func _process_wave(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 
 
+func start_path_dash(path: PackedVector3Array, lateral_offset: float) -> void:
+	_dash_path = path
+	_dash_index = 0
+	_dash_lateral_offset = lateral_offset
+	state = State.PATH_DASH
+	is_following_player = false
+	_spring_velocity = Vector3.ZERO
+
+
+func _process_path_dash(delta: float) -> void:
+	if _dash_path.size() == 0 or _dash_index >= _dash_path.size():
+		set_follow()
+		return
+		
+	var p0 = _dash_path[_dash_index]
+	var dir_forward := Vector3.FORWARD
+	
+	if _dash_path.size() > 1:
+		if _dash_index < _dash_path.size() - 1:
+			dir_forward = (_dash_path[_dash_index + 1] - p0).normalized()
+		else:
+			dir_forward = (p0 - _dash_path[_dash_index - 1]).normalized()
+			
+	dir_forward.y = 0.0
+	if dir_forward.length() < 0.001:
+		dir_forward = Vector3.FORWARD
+		
+	var lateral_dir := dir_forward.cross(Vector3.UP).normalized()
+	var target = p0 + lateral_dir * _dash_lateral_offset
+	target.y = global_position.y
+	
+	var dist = global_position.distance_to(target)
+	if dist < 0.8:
+		_dash_index += 1
+		if _dash_index >= _dash_path.size():
+			set_follow()
+			return
+			
+	var dir := (target - global_position).normalized()
+	velocity.x = dir.x * dash_speed
+	velocity.z = dir.z * dash_speed
+	
+	if _should_block_edge(Vector2(velocity.x, velocity.z)):
+		velocity.x = 0.0
+		velocity.z = 0.0
+		
+	move_and_slide()
+	if Vector2(velocity.x, velocity.z).length() > 0.1:
+		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), lerp_speed * delta)
+
+
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
 		
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
-	if mgr == null or not mgr.get("combat_rmb_down"):
+	if mgr == null or (not mgr.get("combat_rmb_down") and state != State.PATH_DASH):
+		return
+		
+	if mgr.get("current_attack_mode") == 1: # BLOB mode
 		return
 		
 	var enemies := get_tree().get_nodes_in_group("enemies")
@@ -600,12 +697,24 @@ func hide_visuals() -> void:
 	$Body.hide()
 	$Tail.hide()
 	$Head.hide()
+	_is_showing_blob = false
+	if _blob_mesh:
+		_blob_mesh.hide()
 
 
 func show_visuals() -> void:
-	$Body.show()
-	$Tail.show()
-	$Head.show()
+	if _is_showing_blob:
+		$Body.hide()
+		$Tail.hide()
+		$Head.hide()
+		if _blob_mesh:
+			_blob_mesh.show()
+	else:
+		$Body.show()
+		$Tail.show()
+		$Head.show()
+		if _blob_mesh:
+			_blob_mesh.hide()
 
 
 func set_wall_collision(enabled: bool) -> void:
