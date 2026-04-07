@@ -446,7 +446,14 @@ func _die() -> void:
 			if CheeseScene:
 				var c = CheeseScene.instantiate()
 				get_parent().add_child(c)
-				c.global_position = global_position
+				# Losowe wyrzucenie przedmiotu – nie centralnie pod wrogiem
+				var throw_angle := randf() * TAU
+				var throw_dist := randf_range(1.2, 2.5)
+				c.global_position = global_position + Vector3(
+					cos(throw_angle) * throw_dist,
+					0.0,
+					sin(throw_angle) * throw_dist
+				)
 				if c.has_method("set_type"):
 					c.set_type(randi() % 4)
 	)

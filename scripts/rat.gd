@@ -108,6 +108,12 @@ func _physics_process(delta: float) -> void:
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "buff_purple_timer" in mgr:
 		if mgr.buff_purple_timer > 0.0:
+			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
+			if mgr.has_method("get_current_buff_material"):
+				var mat = mgr.get_current_buff_material()
+				$Body.material_override = mat
+				$Tail.material_override = mat
+				$Head.material_override = mat
 			if not is_on_floor():
 				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 			else:
@@ -120,8 +126,9 @@ func _physics_process(delta: float) -> void:
 		if mgr.buff_green_timer > 0.0:
 			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
-			if _gas_timer <= 0.0 and speed_sq > 0.1:
-				_gas_timer = 0.2
+			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
+			if _gas_timer <= 0.0 and speed_sq > 0.05:
+				_gas_timer = 0.07
 				if GasCloudScene:
 					var p = get_parent()
 					if p:

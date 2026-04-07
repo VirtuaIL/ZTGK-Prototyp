@@ -45,8 +45,18 @@ func _physics_process(delta: float) -> void:
 	# Check for nearby rats manually (since rats have collision_layer=0)
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "rats" in mgr:
+		# Podnoszenie przedmiotów jest możliwe TYLKO gdy szczury podążają za kursorem
+		# (nie atakują i nie niosą barda / obiektu)
+		var combat_active: bool = mgr.get("combat_rmb_down") == true
+		var carrying_bard: bool = mgr.get("grabbed_object") != null
+		if combat_active or carrying_bard:
+			return
+
 		for rat in mgr.rats:
 			if not is_instance_valid(rat):
+				continue
+			# Dodatkowa blokada: szczury w trybie carrier (niosą obiekt)
+			if rat.get("is_carrier") == true:
 				continue
 			var d_sq = global_position.distance_squared_to(rat.global_position)
 			if d_sq < pickup_radius * pickup_radius:
