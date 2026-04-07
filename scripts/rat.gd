@@ -4,7 +4,7 @@ class_name Rat
 const DeathEffect := preload("res://scenes/rat_death_effect.tscn")
 const GasCloudScene := preload("res://scenes/gas_cloud.tscn")
 
-enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
+enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -51,6 +51,11 @@ var wave_direction: Vector3 = Vector3.ZERO
 var wave_speed: float = 18.0
 var wave_timer: float = 0.0
 var wave_duration: float = 0.8
+
+var _dash_path: PackedVector3Array
+var _dash_index: int = 0
+var _dash_lateral_offset: float = 0.0
+@export var dash_speed: float = 30.0
 
 # Damage
 var damage_per_hit: float = 10.0
@@ -248,6 +253,9 @@ func _physics_process(delta: float) -> void:
 			return
 		State.STATIC:
 			return
+		State.PATH_DASH:
+			_process_path_dash(delta)
+			_check_damage()
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
@@ -384,12 +392,63 @@ func _process_wave(delta: float) -> void:
 	rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 
 
+func start_path_dash(path: PackedVector3Array, lateral_offset: float) -> void:
+	_dash_path = path
+	_dash_index = 0
+	_dash_lateral_offset = lateral_offset
+	state = State.PATH_DASH
+	is_following_player = false
+	_spring_velocity = Vector3.ZERO
+
+
+func _process_path_dash(delta: float) -> void:
+	if _dash_path.size() == 0 or _dash_index >= _dash_path.size():
+		set_follow()
+		return
+		
+	var p0 = _dash_path[_dash_index]
+	var dir_forward := Vector3.FORWARD
+	
+	if _dash_path.size() > 1:
+		if _dash_index < _dash_path.size() - 1:
+			dir_forward = (_dash_path[_dash_index + 1] - p0).normalized()
+		else:
+			dir_forward = (p0 - _dash_path[_dash_index - 1]).normalized()
+			
+	dir_forward.y = 0.0
+	if dir_forward.length() < 0.001:
+		dir_forward = Vector3.FORWARD
+		
+	var lateral_dir := dir_forward.cross(Vector3.UP).normalized()
+	var target = p0 + lateral_dir * _dash_lateral_offset
+	target.y = global_position.y
+	
+	var dist = global_position.distance_to(target)
+	if dist < 0.8:
+		_dash_index += 1
+		if _dash_index >= _dash_path.size():
+			set_follow()
+			return
+			
+	var dir := (target - global_position).normalized()
+	velocity.x = dir.x * dash_speed
+	velocity.z = dir.z * dash_speed
+	
+	if _should_block_edge(Vector2(velocity.x, velocity.z)):
+		velocity.x = 0.0
+		velocity.z = 0.0
+		
+	move_and_slide()
+	if Vector2(velocity.x, velocity.z).length() > 0.1:
+		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), lerp_speed * delta)
+
+
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
 		
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
-	if mgr == null or not mgr.get("combat_rmb_down"):
+	if mgr == null or (not mgr.get("combat_rmb_down") and state != State.PATH_DASH):
 		return
 		
 	if mgr.get("current_attack_mode") == 1: # BLOB mode

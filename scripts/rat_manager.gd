@@ -67,7 +67,7 @@ var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
-enum AttackMode { ROTATION, BLOB }
+enum AttackMode { ROTATION, BLOB, PATH_DASH }
 var current_attack_mode: AttackMode = AttackMode.ROTATION
 var _combat_blob_offsets: Array[Vector3] = []
 var blob_radius: float = 2.5
@@ -613,6 +613,15 @@ func _update_combat_attack_circle(delta: float) -> void:
 		return
 
 	_update_mouse_trail(mouse_world)
+
+	if current_attack_mode == AttackMode.PATH_DASH:
+		if combat_rmb_down:
+			if current_drawn_path.size() > 0:
+				var last_pos = current_drawn_path[-1]
+				if mouse_world.distance_squared_to(last_pos) > min_point_dist_squared:
+					current_drawn_path.append(mouse_world)
+			_update_drawn_line(mouse_world)
+		return
 
 	var active := _get_active_follow_rats()
 	var count := active.size()
@@ -1184,6 +1193,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			current_attack_mode = AttackMode.BLOB
 			get_viewport().set_input_as_handled()
 			return
+		elif event.keycode == KEY_3:
+			current_attack_mode = AttackMode.PATH_DASH
+			get_viewport().set_input_as_handled()
+			return
 
 
 	if wave_pending and event is InputEventMouseButton:
@@ -1205,7 +1218,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				grabbed_object.rotate_y(deg_to_rad(object_rotation_step * rot_dir))
 			else:
 				# Change brush size
-				if build_draw_mode == DRAW_MODE_PATH and use_wide_brush:
+				var modify_lanes: bool = (build_draw_mode == DRAW_MODE_PATH and use_wide_brush) or current_attack_mode == AttackMode.PATH_DASH
+				if modify_lanes:
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 						brush_lane_pairs += 1
 					else:
@@ -1229,11 +1243,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			if combat_rmb_down:
 				var mouse_world := _mouse_to_world()
 				if mouse_world != Vector3.ZERO:
-					_capture_combat_offsets(mouse_world)
+					if current_attack_mode == AttackMode.PATH_DASH:
+						current_drawn_path.clear()
+						current_drawn_path.append(mouse_world)
+						_has_last_build_pos = true
+						_last_build_pos = mouse_world
+						current_build_y = mouse_world.y
+						is_dragging_left = true
+					else:
+						_capture_combat_offsets(mouse_world)
 			else:
+				if current_attack_mode == AttackMode.PATH_DASH and current_drawn_path.size() > 1:
+					_trigger_path_dash()
 				_combat_offsets_ready = false
 				_combat_offsets.clear()
 				_release_all_stuck_enemies()
+				is_dragging_left = false
+				current_drawn_path.clear()
+				immediate_mesh.clear_surfaces()
 			get_viewport().set_input_as_handled()
 			return
 
@@ -1405,6 +1432,29 @@ func _fire_wave_at_mouse(screen_pos: Vector2) -> void:
 		rats[i].set_wave(dir, delay)
 	wave_started.emit()
 
+
+func _trigger_path_dash() -> void:
+	if current_drawn_path.size() < 2:
+		return
+		
+	var active := _get_active_follow_rats()
+	var count := active.size()
+	if count == 0:
+		return
+
+	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+	var lane_count := 1 + pairs * 2
+	var center_index := float(lane_count - 1) / 2.0
+	
+	for i in range(count):
+		var rat = active[i]
+		var lane_index := i % lane_count
+		var factor := float(lane_index) - center_index
+		var base_offset := brush_lane_spacing * factor
+		var rand_offset := randf_range(-0.15, 0.15)
+		
+		if rat.has_method("start_path_dash"):
+			rat.start_path_dash(current_drawn_path.duplicate(), base_offset + rand_offset)
 
 func on_stratagem_activated(stratagem_id: String) -> void:
 	match stratagem_id:
@@ -1631,7 +1681,7 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	immediate_mesh.surface_add_vertex(end_pos + offset)
 	immediate_mesh.surface_end()
 
-	if not use_wide_brush:
+	if not use_wide_brush and current_attack_mode != AttackMode.PATH_DASH:
 		return
 
 	var count := current_drawn_path.size()
@@ -1749,6 +1799,8 @@ func _compute_circle_path_fill_positions(path: PackedVector3Array) -> Array[Vect
 func _update_cursor_preview() -> void:
 	# Ignore if we are actively drawing a path
 	if mouse_is_down_left and not _lmb_is_object_drag:
+		return
+	if combat_rmb_down and current_attack_mode == AttackMode.PATH_DASH:
 		return
 
 	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
