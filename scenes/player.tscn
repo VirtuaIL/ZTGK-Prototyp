@@ -75,8 +75,8 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
-offset_top = -90.0
-offset_right = 240.0
+offset_top = -130.0
+offset_right = 320.0
 offset_bottom = -30.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
@@ -89,9 +89,9 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 10
 
 [node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin" unique_id=370931974]
 layout_mode = 2
@@ -101,9 +101,10 @@ theme_override_constants/separation = 4
 [node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=39119267]
 layout_mode = 2
 text = "ZDROWIE"
+theme_override_font_sizes/font_size = 16
 
 [node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=228333768]
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
 mouse_filter = 2
 value = 100.0

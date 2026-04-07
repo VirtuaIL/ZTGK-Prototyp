@@ -123,6 +123,8 @@ var build_draw_mode: int = DRAW_MODE_CIRCLE
 @export var brush_lane_pairs_min: int = 0
 @export var brush_lane_pairs_max: int = 4
 @export var brush_lane_spacing: float = 0.5
+@export var path_dash_length_min: float = 8.0
+@export var path_dash_length_max: float = 28.0
 
 @export var circle_radius: float = 0.5
 @export var circle_radius_min: float = 0.25
@@ -319,8 +321,13 @@ func _spawn_rats(count: int) -> void:
 	var base_pos := global_position
 	if _player:
 		base_pos = _player.global_position
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var spawn_nodes: Array[Node3D] = []
+	var current_scene := get_tree().current_scene
+	var spawns: Array = []
+	if current_scene != null and current_scene.has_method("get_current_level_rat_spawns"):
+		spawns = current_scene.get_current_level_rat_spawns()
+	else:
+		spawns = get_tree().get_nodes_in_group("rat_spawn")
 	for s in spawns:
 		var n := s as Node3D
 		if n != null:
@@ -353,7 +360,12 @@ func _get_nearest_spawn_pos() -> Vector3:
 	var base_pos := global_position
 	if _player:
 		base_pos = _player.global_position
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var spawns: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_current_level_rat_spawns"):
+		spawns = current_scene.get_current_level_rat_spawns()
+	else:
+		spawns = get_tree().get_nodes_in_group("rat_spawn")
 	var nearest: Node3D = null
 	var best_dist := INF
 	for s in spawns:
@@ -521,8 +533,17 @@ func _process(delta: float) -> void:
 
 
 func _process_damage(delta: float) -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	enemies += get_tree().get_nodes_in_group("bosses")
+	if not combat_rmb_down or current_attack_mode != AttackMode.ROTATION:
+		return
+
+	var enemies: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+	else:
+		enemies = get_tree().get_nodes_in_group("enemies")
+		enemies += get_tree().get_nodes_in_group("bosses")
 	if enemies.is_empty() or rats.is_empty():
 		return
 
@@ -534,7 +555,10 @@ func _process_damage(delta: float) -> void:
 	var cell_size: float = 1.5
 	var grid := {}
 	for rat in rats:
-		if not is_instance_valid(rat) or rat.is_fallen: continue
+		if not is_instance_valid(rat) or rat.is_fallen:
+			continue
+		if rat.is_carrier or rat.state != rat.State.FOLLOW:
+			continue
 		var pos := rat.global_position
 		var key := Vector2i(int(floor(pos.x / cell_size)), int(floor(pos.z / cell_size)))
 		if not grid.has(key): grid[key] = []
@@ -663,10 +687,11 @@ func _update_combat_attack_circle(delta: float) -> void:
 	if current_attack_mode == AttackMode.PATH_DASH:
 		if combat_rmb_down:
 			if current_drawn_path.size() > 0:
-				var last_pos = current_drawn_path[-1]
-				if mouse_world.distance_squared_to(last_pos) > min_point_dist_squared:
-					current_drawn_path.append(mouse_world)
-			_update_drawn_line(mouse_world)
+				var capped_mouse_world := _get_capped_path_dash_point(mouse_world)
+				var last_pos := current_drawn_path[-1]
+				if capped_mouse_world.distance_squared_to(last_pos) > min_point_dist_squared:
+					current_drawn_path.append(capped_mouse_world)
+				_update_drawn_line(capped_mouse_world)
 		return
 
 	var active := _get_active_follow_rats()
@@ -696,19 +721,26 @@ func _update_combat_attack_circle(delta: float) -> void:
 			t.y = mouse_world.y
 			active[i].set_target(t)
 			
-		var enemies = get_tree().get_nodes_in_group("enemies")
-		if count > 0:
-			for enemy in enemies:
-				if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
-					var dist = enemy.global_position.distance_to(actual_blob_center)
-					var is_already_stuck = _stuck_enemies.has(enemy)
-					if is_already_stuck or dist <= blob_radius:
-						if not is_already_stuck:
-							_stuck_enemies.append(enemy)
-						enemy.set("is_stuck_in_blob", true)
-						enemy.set("blob_center", actual_blob_center)
-						if tick_damage:
-							enemy.take_damage(blob_damage_per_tick)
+			var enemies: Array = []
+			var current_scene := get_tree().current_scene
+			if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+				enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+				enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+			else:
+				enemies = get_tree().get_nodes_in_group("enemies")
+				enemies += get_tree().get_nodes_in_group("bosses")
+			if count > 0:
+				for enemy in enemies:
+					if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
+						var dist = enemy.global_position.distance_to(actual_blob_center)
+						var is_already_stuck = _stuck_enemies.has(enemy)
+						if is_already_stuck or dist <= blob_radius:
+							if not is_already_stuck:
+								_stuck_enemies.append(enemy)
+							enemy.set("is_stuck_in_blob", true)
+							enemy.set("blob_center", actual_blob_center)
+							if tick_damage:
+								enemy.take_damage(blob_damage_per_tick)
 		return
 
 	_combat_circle_angle += combat_circle_rotation_speed * delta
@@ -1502,6 +1534,64 @@ func _trigger_path_dash() -> void:
 		if rat.has_method("start_path_dash"):
 			rat.start_path_dash(current_drawn_path.duplicate(), base_offset + rand_offset)
 
+
+func _get_path_dash_brush_t() -> float:
+	return _get_brush_ratio(float(brush_lane_pairs), float(brush_lane_pairs_min), float(brush_lane_pairs_max))
+
+
+func _get_path_dash_max_length() -> float:
+	return lerpf(path_dash_length_max, path_dash_length_min, _get_path_dash_brush_t())
+
+
+func _get_current_drawn_path_length() -> float:
+	if current_drawn_path.size() < 2:
+		return 0.0
+
+	var length := 0.0
+	for i in range(1, current_drawn_path.size()):
+		length += current_drawn_path[i - 1].distance_to(current_drawn_path[i])
+	return length
+
+
+func _get_capped_path_dash_point(candidate: Vector3) -> Vector3:
+	if current_drawn_path.is_empty():
+		return candidate
+
+	var last_pos: Vector3 = current_drawn_path[-1]
+	var remaining := _get_path_dash_max_length() - _get_current_drawn_path_length()
+	if remaining <= 0.0:
+		return last_pos
+
+	var segment_len := last_pos.distance_to(candidate)
+	if segment_len <= remaining:
+		return candidate
+	return last_pos.move_toward(candidate, remaining)
+
+
+func _get_path_dash_preview_lateral(center: Vector3) -> Vector3:
+	var dir := Vector3.ZERO
+	if combat_rmb_down and current_drawn_path.size() >= 1:
+		dir = center - current_drawn_path[-1]
+	elif current_drawn_path.size() >= 2:
+		dir = current_drawn_path[-1] - current_drawn_path[-2]
+
+	dir.y = 0.0
+	if dir.length() <= 0.001:
+		return Vector3.RIGHT
+	return dir.normalized().cross(Vector3.UP).normalized()
+
+
+func _draw_path_dash_brush_marker(center: Vector3, lateral: Vector3) -> void:
+	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+	var lane_count := 1 + pairs * 2
+	var half_width := maxf(0.25, float(max(1, lane_count - 1)) * brush_lane_spacing * 0.5)
+	var offset := Vector3(0, 0.1, 0)
+
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	immediate_mesh.surface_add_vertex(center - lateral * half_width + offset)
+	immediate_mesh.surface_add_vertex(center + lateral * half_width + offset)
+	immediate_mesh.surface_end()
+
 func on_stratagem_activated(stratagem_id: String) -> void:
 	match stratagem_id:
 		"rat_orbit":
@@ -1762,6 +1852,8 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 	else:
 		end_dir = end_dir.normalized()
 	var end_lateral := end_dir.cross(Vector3.UP).normalized()
+	if current_attack_mode == AttackMode.PATH_DASH:
+		_draw_path_dash_brush_marker(end_pos, end_lateral)
 
 	var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 	if pairs <= 0:
@@ -1872,6 +1964,13 @@ func _update_cursor_preview() -> void:
 		raw_pos = fallback
 	else:
 		immediate_mesh.clear_surfaces()
+		return
+
+	if current_attack_mode == AttackMode.PATH_DASH:
+		immediate_mesh.clear_surfaces()
+		if line_material:
+			line_material.albedo_color = _brush_color(Color.WHITE)
+		_draw_path_dash_brush_marker(raw_pos, _get_path_dash_preview_lateral(raw_pos))
 		return
 
 	if build_draw_mode == DRAW_MODE_CIRCLE:

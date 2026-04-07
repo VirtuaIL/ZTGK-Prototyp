@@ -31,6 +31,7 @@
 [ext_resource type="PackedScene" path="res://scenes/obstacle_pillar.tscn" id="31_dgi5k"]
 [ext_resource type="Texture2D" uid="uid://b7funigwvq1o8" path="res://resources/controls_drag_white.png" id="31_tel4y"]
 [ext_resource type="PackedScene" uid="uid://ch30pw45vrons" path="res://scenes/capstan.tscn" id="32_cpst"]
+[ext_resource type="Script" path="res://scripts/level_tag.gd" id="33_level_tag"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -129,6 +130,24 @@ transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.688231
 transform = Transform3D(-4.619189e-09, 0, 0.10567476, 0, 1.4285715, 0, -0.6882313, 0, -3.008354e-08, 5.797042, -0.024049282, 13.253286)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1251990227]
+
+[node name="RatSpawnLevel1" type="Marker3D" parent="RatSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+groups=["rat_spawn"]
+script = ExtResource("33_level_tag")
+level_id = 1
+
+[node name="RatSpawnLevel2" type="Marker3D" parent="RatSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.923809, 0, 79.96922)
+groups=["rat_spawn"]
+script = ExtResource("33_level_tag")
+level_id = 2
+
+[node name="RatSpawnLevel3" type="Marker3D" parent="RatSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.122421, 0, 158.77776)
+groups=["rat_spawn"]
+script = ExtResource("33_level_tag")
+level_id = 3
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=519523457]
 
@@ -250,6 +269,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.
 
 [node name="door" parent="doors" unique_id=1508054242 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.582687, 0, -87.88536)
+target_level_id = 4
+target_spawn_path = NodePath("../../boss_arena/boss_nav_node5")
 slide_distance = 5.0
 
 [node name="floor_tiles" type="Node3D" parent="." unique_id=1371514873]
@@ -332,6 +353,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.575489, 0.30049878, 13.511
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 21.448513, 1.855777, 42.26465)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
+level_id = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
@@ -341,12 +363,15 @@ shape = SubResource("BoxShape3D_yq6so")
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 2.9580193, 1.855777, 121.85188)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
+level_id = 3
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=901618589]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="boss_arena" type="Node" parent="." unique_id=916825965]
+script = ExtResource("33_level_tag")
+level_id = 4
 
 [node name="boss_nav_node" parent="boss_arena" unique_id=1230759990 instance=ExtResource("21_og1vs")]
 transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, -57.381523, -0.056754112, -206.33633)
@@ -399,6 +424,8 @@ pixel_size = 0.002
 texture = ExtResource("31_tel4y")
 
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=1599193067]
+script = ExtResource("33_level_tag")
+level_id = 1
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=935799069 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8315115, 0, 26.622547)
@@ -582,6 +609,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9202156, 0, -28.889374)
 
 [node name="enemies_spawnpoints2" type="Node3D" parent="." unique_id=1218284379]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.923809, 0, 79.96922)
+script = ExtResource("33_level_tag")
+level_id = 2
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints2" unique_id=774007457 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8315115, 0, 26.622547)
@@ -765,6 +794,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9202156, 0, -28.889374)
 
 [node name="enemies_spawnpoints3" type="Node3D" parent="." unique_id=733957617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.122421, 0, 158.77776)
+script = ExtResource("33_level_tag")
+level_id = 3
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints3" unique_id=189143435 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8315115, 0, 26.622547)

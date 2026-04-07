@@ -3,16 +3,20 @@ class_name SpikeCylinder
 
 @export var radius: float = 1.2
 @export var height: float = 2.0
+@export var player_damage: float = 20.0
+@export var player_damage_interval: float = 0.5
+var _player_dmg_timer: float = 0.0
 
 func _ready() -> void:
 	_create_spikes_visuals()
 
 func _physics_process(_delta: float) -> void:
+	var effective_radius = radius * maxf(scale.x, scale.z)
+	var effective_height = height * scale.y
+	var r_sq = effective_radius * effective_radius
+
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "rats" in mgr:
-		var effective_radius = radius * maxf(scale.x, scale.z)
-		var effective_height = height * scale.y
-		var r_sq = effective_radius * effective_radius
 		for rat in mgr.rats:
 			if is_instance_valid(rat):
 				var diff: Vector3 = rat.global_position - global_position
@@ -21,6 +25,18 @@ func _physics_process(_delta: float) -> void:
 					if diff.y > -0.5 and diff.y < effective_height:
 						if rat.has_method("die"):
 							rat.die()
+
+	# Player damage
+	_player_dmg_timer = maxf(0.0, _player_dmg_timer - _delta)
+	var p = get_tree().get_first_node_in_group("player") as Node3D
+	if p != null:
+		var diff: Vector3 = p.global_position - global_position
+		var dist_sq: float = diff.x * diff.x + diff.z * diff.z
+		if dist_sq <= r_sq and diff.y > -0.5 and diff.y < effective_height:
+			if _player_dmg_timer <= 0.0:
+				_player_dmg_timer = player_damage_interval
+				if p.has_method("take_damage"):
+					p.take_damage(player_damage)
 
 func _create_spikes_visuals() -> void:
 	var mat = StandardMaterial3D.new()

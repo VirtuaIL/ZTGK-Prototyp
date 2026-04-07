@@ -51,6 +51,7 @@ var attack_marker: MeshInstance3D = null
 
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
+var level_id: int = 0
 
 # ── HP bar visuals ──
 var hp_bar_bg: MeshInstance3D
@@ -395,6 +396,10 @@ func toggle_passive() -> void:
 
 func is_passive() -> bool:
 	return ai_state == AIState.PASSIVE
+
+
+func is_dead() -> bool:
+	return _is_dead
 
 
 # ═══════════════════════════════════════════════
