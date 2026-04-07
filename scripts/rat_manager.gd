@@ -638,8 +638,22 @@ func _update_cursor_follow(delta: float) -> void:
 
 	# Need at least 2 points for arc distribution
 	if _mouse_trail.size() < 2:
-		for rat in active:
-			rat.set_target(mouse_world)
+		if _blob_offsets.size() != count:
+			build_blob_offsets()
+			
+		var blob_scale := 1.0
+		if build_draw_mode == DRAW_MODE_CIRCLE:
+			blob_scale = maxf(1.0, circle_radius / 0.5)
+		elif build_draw_mode == DRAW_MODE_PATH:
+			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
+			blob_scale = float(1 + pairs * 2) / 2.5
+			
+		for i in range(count):
+			var t_blob := mouse_world
+			if i < _blob_offsets.size():
+				t_blob += _blob_offsets[i] * blob_scale
+			t_blob.y = mouse_world.y
+			active[i].set_target(t_blob)
 		return
 
 	# Arc-length parameterization of the trail

@@ -1,4 +1,4 @@
-extends Area3D
+extends Node3D
 
 # Pojedynczy segment śladu gazowego zostawiany przez szczury.
 # Pojawia się jako półprzezroczysty dysk i zanika przez `duration` sekund.

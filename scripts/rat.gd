@@ -81,10 +81,10 @@ var _recall_boost_timer: float = 0.0
 var _mgr: Node = null
 var _mgr_refresh_timer: float = 0.0
 @export var mgr_refresh_interval: float = 1.0
-@export var edge_check_interval: float = 0.08
+@export var edge_check_interval: float = 0.15
 var _edge_check_timer: float = 0.0
 var _edge_blocked_cached: bool = false
-
+var _current_buff_material: Material = null
 
 func _ready() -> void:
 	for child in find_children("*", "VisualInstance3D"):
@@ -124,9 +124,11 @@ func _physics_process(delta: float) -> void:
 			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
 			if mgr.has_method("get_current_buff_material"):
 				var mat = mgr.get_current_buff_material()
-				$Body.material_override = mat
-				$Tail.material_override = mat
-				$Head.material_override = mat
+				if mat != _current_buff_material:
+					_current_buff_material = mat
+					$Body.material_override = mat
+					$Tail.material_override = mat
+					$Head.material_override = mat
 			if not is_on_floor():
 				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 			else:
@@ -200,9 +202,11 @@ func _physics_process(delta: float) -> void:
 		
 	if mgr != null and mgr.has_method("get_current_buff_material"):
 		var mat = mgr.get_current_buff_material()
-		$Body.material_override = mat
-		$Tail.material_override = mat
-		$Head.material_override = mat
+		if mat != _current_buff_material:
+			_current_buff_material = mat
+			$Body.material_override = mat
+			$Tail.material_override = mat
+			$Head.material_override = mat
 
 	match state:
 		State.FOLLOW:
@@ -234,6 +238,7 @@ func _process_follow_spring(delta: float) -> void:
 	to_target.y *= 0.2
 	_spring_velocity += to_target * spring_stiffness * delta
 
+	var sep_dist_sq := separation_dist * separation_dist
 	# Separation from neighbors
 	for neighbor in _neighbors:
 		if not is_instance_valid(neighbor):
@@ -243,9 +248,10 @@ func _process_follow_spring(delta: float) -> void:
 			continue
 		var diff: Vector3 = global_position - nb.global_position
 		diff.y = 0.0
-		var dist: float = diff.length()
-		if dist < separation_dist and dist > 0.001:
-			_spring_velocity += diff.normalized() * (separation_dist - dist) * separation_force * delta
+		var dist_sq: float = diff.length_squared()
+		if dist_sq < sep_dist_sq and dist_sq > 0.000001:
+			var dist: float = sqrt(dist_sq)
+			_spring_velocity += (diff / dist) * (separation_dist - dist) * separation_force * delta
 
 	# Framerate-independent damping
 	_spring_velocity *= pow(damping, delta * 60.0)
@@ -658,14 +664,18 @@ func set_wild(wild: bool) -> void:
 		state = State.STATIC
 		var mat = StandardMaterial3D.new()
 		mat.albedo_color = Color.BLACK
-		$Body.material_override = mat
-		$Tail.material_override = mat
-		$Head.material_override = mat
+		if mat != _current_buff_material:
+			_current_buff_material = mat
+			$Body.material_override = mat
+			$Tail.material_override = mat
+			$Head.material_override = mat
 	else:
 		state = State.FOLLOW
-		$Body.material_override = null
-		$Tail.material_override = null
-		$Head.material_override = null
+		if _current_buff_material != null:
+			_current_buff_material = null
+			$Body.material_override = null
+			$Tail.material_override = null
+			$Head.material_override = null
 
 func _process_wild(delta: float) -> void:
 	if not is_on_floor():

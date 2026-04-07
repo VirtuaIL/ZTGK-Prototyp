@@ -17,11 +17,8 @@ material = SubResource("StandardMaterial3D_g")
 radius = 0.4
 height = 0.8
 
-[node name="GasCloud" type="Area3D"]
+[node name="GasCloud" type="Node3D"]
 script = ExtResource("1_gas")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-shape = SubResource("SphereShape3D_g")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("SphereMesh_g")
