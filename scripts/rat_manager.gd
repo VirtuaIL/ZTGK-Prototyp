@@ -177,6 +177,14 @@ var _formation_active: bool = false
 const NEIGHBOR_RADIUS: float = 1.1
 const NEIGHBOR_TICK: int = 3
 var _neighbor_tick: int = 0
+@export var heavy_cursor_follow_threshold: int = 80
+@export var heavy_cursor_follow_interval: float = 0.05
+var _cursor_follow_timer: float = 0.0
+
+# Green gas emission budget (global) to avoid perf spikes
+@export var gas_emit_per_second: float = 25.0
+@export var gas_emit_budget_max: float = 20.0
+var _gas_emit_budget: float = 0.0
 
 
 # ── Structure Integrity ──
@@ -436,6 +444,8 @@ func _process(delta: float) -> void:
 	if buff_green_timer > 0.0: buff_green_timer -= delta
 	if buff_yellow_timer > 0.0: buff_yellow_timer -= delta
 	if buff_purple_timer > 0.0: buff_purple_timer -= delta
+	if gas_emit_per_second > 0.0:
+		_gas_emit_budget = min(gas_emit_budget_max, _gas_emit_budget + gas_emit_per_second * delta)
 
 	# ── RMB held: combat attack circle ──
 	if combat_rmb_down:
@@ -712,6 +722,14 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 		return
 	if mouse_is_down_left and not _lmb_is_object_drag:
 		return
+	# Throttle heavy cursor-follow updates when many rats are active
+	if rats.size() >= heavy_cursor_follow_threshold:
+		_cursor_follow_timer -= delta
+		if _cursor_follow_timer > 0.0:
+			return
+		_cursor_follow_timer = heavy_cursor_follow_interval
+	else:
+		_cursor_follow_timer = 0.0
 	_update_cursor_follow(delta)
 
 
@@ -1216,6 +1234,13 @@ func get_active_rat_count() -> int:
 func get_available_rat_count() -> int:
 	var available := _get_available_follow_rats()
 	return available.size()
+
+
+func request_gas_emit() -> bool:
+	if _gas_emit_budget <= 0.0:
+		return false
+	_gas_emit_budget -= 1.0
+	return true
 
 
 func activate_orbit() -> void:

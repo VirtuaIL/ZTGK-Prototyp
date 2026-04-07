@@ -78,6 +78,12 @@ var is_anchored: bool = false
 
 var is_fallen: bool = false
 var _recall_boost_timer: float = 0.0
+var _mgr: Node = null
+var _mgr_refresh_timer: float = 0.0
+@export var mgr_refresh_interval: float = 1.0
+@export var edge_check_interval: float = 0.08
+var _edge_check_timer: float = 0.0
+var _edge_blocked_cached: bool = false
 
 
 func _ready() -> void:
@@ -95,6 +101,7 @@ func _ready() -> void:
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
+	_mgr = get_tree().get_first_node_in_group("rat_manager")
 
 
 func _physics_process(delta: float) -> void:
@@ -105,7 +112,13 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 		
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if _mgr_refresh_timer > 0.0:
+		_mgr_refresh_timer = max(0.0, _mgr_refresh_timer - delta)
+	if _mgr == null or not is_instance_valid(_mgr):
+		if _mgr_refresh_timer <= 0.0:
+			_mgr = get_tree().get_first_node_in_group("rat_manager")
+			_mgr_refresh_timer = mgr_refresh_interval
+	var mgr = _mgr
 	if mgr != null and "buff_purple_timer" in mgr:
 		if mgr.buff_purple_timer > 0.0:
 			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
@@ -129,7 +142,10 @@ func _physics_process(delta: float) -> void:
 			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
 			if _gas_timer <= 0.0 and speed_sq > 0.05:
 				_gas_timer = 0.07
-				if GasCloudScene:
+				var can_emit := true
+				if mgr.has_method("request_gas_emit"):
+					can_emit = mgr.request_gas_emit()
+				if GasCloudScene and can_emit:
 					var p = get_parent()
 					if p:
 						var g = GasCloudScene.instantiate()
@@ -138,6 +154,9 @@ func _physics_process(delta: float) -> void:
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
+
+	if _edge_check_timer > 0.0:
+		_edge_check_timer = max(0.0, _edge_check_timer - delta)
 
 	if _recall_boost_timer > 0.0:
 		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
@@ -588,9 +607,16 @@ func _should_block_edge(hvel: Vector2) -> bool:
 	if hvel.length() < 0.01:
 		return false
 
+	if edge_check_interval > 0.0 and _edge_check_timer > 0.0:
+		return _edge_blocked_cached
+
 	var forward := Vector3(hvel.x, 0.0, hvel.y).normalized()
 	var probe_pos := global_position + forward * edge_probe_distance
-	return not _has_floor_near(probe_pos, edge_max_drop)
+	var blocked := not _has_floor_near(probe_pos, edge_max_drop)
+	if edge_check_interval > 0.0:
+		_edge_blocked_cached = blocked
+		_edge_check_timer = edge_check_interval
+	return blocked
 
 
 func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
@@ -609,7 +635,9 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	return hit.position.y >= global_position.y - max_drop
 
 func die() -> void:
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	var mgr = _mgr
+	if mgr == null or not is_instance_valid(mgr):
+		mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "buff_yellow_timer" in mgr and mgr.buff_yellow_timer > 0.0:
 		return
 

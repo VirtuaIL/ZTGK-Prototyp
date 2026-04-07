@@ -4,8 +4,11 @@ enum Type { RED, GREEN, YELLOW, PURPLE }
 
 var type: int = Type.YELLOW
 var time_alive: float = 0.0
+var _scan_timer: float = 0.0
+var _mgr: Node = null
 
 @export var pickup_radius: float = 1.5
+@export var scan_interval: float = 0.1
 
 func set_type(new_type: int) -> void:
 	type = new_type
@@ -13,6 +16,7 @@ func set_type(new_type: int) -> void:
 
 func _ready() -> void:
 	_update_visuals()
+	_mgr = get_tree().get_first_node_in_group("rat_manager")
 
 func _update_visuals() -> void:
 	var mesh_inst = $MeshInstance3D
@@ -43,7 +47,13 @@ func _physics_process(delta: float) -> void:
 		mesh_inst.rotation.y += delta * 2.0
 	
 	# Check for nearby rats manually (since rats have collision_layer=0)
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	_scan_timer -= delta
+	if _scan_timer > 0.0:
+		return
+	_scan_timer = max(0.02, scan_interval)
+	if _mgr == null or not is_instance_valid(_mgr):
+		_mgr = get_tree().get_first_node_in_group("rat_manager")
+	var mgr = _mgr
 	if mgr != null and "rats" in mgr:
 		# Podnoszenie przedmiotów jest możliwe TYLKO gdy szczury podążają za kursorem
 		# (nie atakują i nie niosą barda / obiektu)
