@@ -190,13 +190,31 @@ func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
 		_player.add_to_group("player")
-	if start_with_min and rats.is_empty():
-		ensure_min_cap()
+		
+	if _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
+		_player.player_died.connect(_on_player_died)
+		
+	_spawn_rats_near_player(60)
+
+func are_rats_hidden() -> bool:
+	if combat_rmb_down:
+		return false
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		return circle_radius >= 2.0
+	elif build_draw_mode == DRAW_MODE_PATH:
+		return brush_lane_pairs >= 2
+	return false
+
+func _on_player_died() -> void:
+	for r in rats.duplicate():
+		if is_instance_valid(r) and r.has_method("die"):
+			r.die()
+	rats.clear()
+	_spawn_rats_near_player(60)
 
 
 func _clamp_caps() -> void:
-	if min_cap < 0:
-		min_cap = 0
+	pass
 
 
 func get_total_rat_count() -> int:
@@ -208,29 +226,19 @@ func get_total_rat_count() -> int:
 
 
 func get_min_cap() -> int:
-	return min_cap
+	return 0
 
 
 func increase_min_cap(amount: int) -> void:
-	if amount <= 0:
-		return
-	min_cap = max(0, min_cap + amount)
+	pass
 
 
 func restore_to_min(require_empty: bool = false) -> void:
-	if require_empty and get_active_rat_count() > 0:
-		return
-	_restore_to_min_near_player()
+	pass
 
 
 func ensure_min_cap() -> void:
-	_clamp_caps()
-	var total := get_total_rat_count()
-	var target := min_cap
-	if total >= target:
-		return
-	var spawn_count := target - total
-	_spawn_rats(spawn_count)
+	pass
 
 
 func _spawn_rats(count: int) -> void:
@@ -339,10 +347,7 @@ func _get_fallen_rats() -> Array[Rat]:
 
 
 func _check_empty_respawn() -> void:
-	var active := get_active_rat_count()
-	if active < min_cap and _min_respawn_cooldown <= 0.0:
-		_restore_to_min_near_player()
-		_min_respawn_cooldown = max(0.05, min_cap_respawn_cooldown)
+	pass
 
 
 func _restore_to_min_near_player() -> void:
@@ -437,6 +442,11 @@ func _process(delta: float) -> void:
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
 
+	# Reset game if all rats die
+	if get_total_rat_count() <= 0 and _player != null:
+		if _player.has_method("die"):
+			_player.die()
+
 
 func _update_edge_avoidance() -> void:
 	for rat in rats:
@@ -457,7 +467,7 @@ func _update_edge_avoidance() -> void:
 func _get_active_follow_rats() -> Array[CharacterBody3D]:
 	var active: Array[CharacterBody3D] = []
 	for rat in rats:
-		if not rat.is_carrier and rat.state == rat.State.FOLLOW:
+		if is_instance_valid(rat) and not rat.is_carrier and rat.state == rat.State.FOLLOW:
 			active.append(rat)
 	return active
 
@@ -1041,7 +1051,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── RMB: raycast for object → drag, otherwise → build ──
+		# ── RMB: raycast for object → drag, otherwise → do nothing ──
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
 				mouse_is_down_left = true
@@ -1055,11 +1065,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				var ray_dir_m: Vector3 = camera_m.project_ray_normal(mb.position)
 				var space_state_m := camera_m.get_world_3d().direct_space_state
 				var query_m := PhysicsRayQueryParameters3D.create(ray_origin_m, ray_origin_m + ray_dir_m * 1000.0)
+				query_m.collision_mask = 6
 				var hit_m := space_state_m.intersect_ray(query_m)
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret:
+					if obj is box or obj is turret or obj is hitscan_turret or obj.is_in_group("player"):
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1071,7 +1082,8 @@ func _unhandled_input(event: InputEvent) -> void:
 						get_viewport().set_input_as_handled()
 						return
 
-				# No object hit — prepare for build drawing
+				# No object hit — abort building, building mechanic has been disabled
+				mouse_is_down_left = false
 				current_drawn_path.clear()
 				current_build_y = -1000.0
 				_has_last_build_pos = false
@@ -1085,12 +1097,8 @@ func _unhandled_input(event: InputEvent) -> void:
 						grabbed_object = null
 						grabbed_object_last_pos = Vector3.ZERO
 				else:
-					# Finalize build (only if we dragged)
-					if is_dragging_left:
-						if build_draw_mode == DRAW_MODE_PATH:
-							_distribute_rats_on_path()
-						elif build_draw_mode == DRAW_MODE_CIRCLE:
-							_build_circle_if_possible()
+					# Finalize build disabled, pass
+					pass
 
 				mouse_is_down_left = false
 				_lmb_is_object_drag = false
@@ -1325,7 +1333,7 @@ func _process_hover() -> void:
 	
 	var space_state := camera.get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_dir * 1000.0)
-	query.collision_mask = 4 
+	query.collision_mask = 6 
 	
 	var hit := space_state.intersect_ray(query)
 	var new_hover: Node3D = null
@@ -1492,7 +1500,7 @@ func _update_drawn_line(end_pos: Vector3, invalid_surface: bool = false) -> void
 func _get_available_follow_rats() -> Array:
 	var available_rats: Array[CharacterBody3D] = []
 	for rat in rats:
-		if rat.state == rat.State.FOLLOW and not rat.is_carrier:
+		if is_instance_valid(rat) and rat.state == rat.State.FOLLOW and not rat.is_carrier:
 			available_rats.append(rat)
 	return available_rats
 
@@ -1942,11 +1950,18 @@ func _process_object_drag(delta: float) -> void:
 			return
 		target_pos = fallback
 
-	var to_cursor := target_pos - current_pos
-	if to_cursor.length() > box_drag_max_radius:
-		target_pos = current_pos + to_cursor.normalized() * box_drag_max_radius
+	var effective_radius: float = box_drag_max_radius
+	var effective_speed: float = max(0.0, box_drag_speed)
+	
+	if grabbed_object.is_in_group("player"):
+		effective_speed *= 2.5
+		effective_radius *= 1.5
 
-	var step: float = max(0.0, box_drag_speed) * delta
+	var to_cursor := target_pos - current_pos
+	if to_cursor.length() > effective_radius:
+		target_pos = current_pos + to_cursor.normalized() * effective_radius
+
+	var step: float = effective_speed * delta
 	grabbed_object.global_position = current_pos.move_toward(target_pos, step)
 
 

@@ -25,6 +25,26 @@ var indicator_root: Control
 var indicator_pool: Array[Label] = []
 var _indicator_blink_time: float = 0.0
 
+# ── Wave Spawner ──────────────────────────────────────────────────────────────
+@export_group("Wave Spawner")
+@export var wave_total_enemies: int = 20
+@export var wave_max_concurrent: int = 5
+@export var wave_spawn_interval: float = 1.0
+
+var _wave_enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
+var _wave_spawned: int = 0
+var _wave_active: int = 0
+var _wave_killed: int = 0
+var _wave_timer: float = 0.0
+
+@export_group("Wild Rat Spawner")
+@export var wild_rat_spawn_interval: float = 15.0
+@export var wild_rat_group_count_min: int = 1
+@export var wild_rat_group_count_max: int = 2
+@export var wild_rat_count_per_group_min: int = 3
+@export var wild_rat_count_per_group_max: int = 6
+
+var _wild_rat_timer: float = 0.0
 # ── UI Theme ──────────────────────────────────────────────────────────────────
 const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.65)
 const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.75)
@@ -80,6 +100,8 @@ func _init_game() -> void:
 	
 	# Setup Ability HUD
 	ability_hud.rat_manager = rat_manager
+	if player and player.has_signal("player_died"):
+		player.player_died.connect(_on_player_died)
 
 
 func _setup_input_map() -> void:
@@ -321,7 +343,7 @@ func _setup_rat_count_ui() -> void:
 	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	label.custom_minimum_size = Vector2(10, 20)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.text = "Szczury: 0 | cap " + str(min_cap) + " | do wykorzystania [color=#9aa0a6]0[/color] | bonus [color=#9aa0a6]+0[/color]"
+	label.text = "Szczury: 0"
 	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	label.offset_left = 20
 	label.offset_top = 60
@@ -427,20 +449,8 @@ func _update_offscreen_indicators() -> void:
 func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
-	var current_count := 0
-	var min_cap := 0
-	if rat_manager.has_method("get_active_rat_count"):
-		current_count = rat_manager.get_active_rat_count()
-	else:
-		current_count = rat_manager.rats.size()
-	if rat_manager.has_method("get_min_cap"):
-		min_cap = rat_manager.get_min_cap()
-	var available_count := current_count
-	if rat_manager.has_method("get_available_rat_count"):
-		available_count = rat_manager.get_available_rat_count()
-	var extra: int = maxi(current_count - min_cap, 0)
-	var extra_color: String = "#4ccf6a" if extra > 0 else "#9aa0a6"
-	rat_count_label.text = "Szczury: " + str(current_count) + " | cap " + str(min_cap) + " | do wykorzystania [color=#9aa0a6]" + str(available_count) + "[/color] | bonus [color=" + extra_color + "]+" + str(extra) + "[/color]"
+	var current_count: int = rat_manager.rats.size()
+	rat_count_label.text = "Szczury: " + str(current_count)
 
 
 func _update_mode_ui() -> void:
@@ -453,6 +463,20 @@ func _process(delta: float) -> void:
 	_update_rat_count_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
+	
+	# ── Wave Spawner Logic ──
+	if _wave_spawned < wave_total_enemies and _wave_active < wave_max_concurrent:
+		_wave_timer -= delta
+		if _wave_timer <= 0.0:
+			_spawn_wave_enemy()
+			_wave_timer = wave_spawn_interval
+			
+	# ── Wild Rat Spawner Logic ──
+	_wild_rat_timer += delta
+	if _wild_rat_timer >= wild_rat_spawn_interval:
+		_wild_rat_timer = 0.0
+		if has_method("_spawn_wild_rat_groups"):
+			_spawn_wild_rat_groups()
 	
 	# ── Update Action Colors (LPM, SCROLL, PPM) ──
 	var highlight_color = Color(0.9, 0.9, 0.9, 1.0)
@@ -593,3 +617,68 @@ func _toggle_all_enemies_passive() -> void:
 	for enemy in enemies:
 		if enemy.has_method("toggle_passive"):
 			enemy.toggle_passive()
+
+
+# ── Wave Spawner Methods ──────────────────────────────────────────────────────
+func _spawn_wave_enemy() -> void:
+	var markers = get_tree().get_nodes_in_group("spawn_markers")
+	if markers.is_empty():
+		return
+		
+	if markers.size() > 1 and player != null:
+		var closest_marker = null
+		var min_dist_sq = INF
+		var p_pos = player.global_position
+		for m in markers:
+			if m is Node3D:
+				var dist_sq = p_pos.distance_squared_to(m.global_position)
+				if dist_sq < min_dist_sq:
+					min_dist_sq = dist_sq
+					closest_marker = m
+		if closest_marker != null:
+			markers.erase(closest_marker)
+			
+	var marker = markers[randi() % markers.size()] as Node3D
+	var enemy = _wave_enemy_scene.instantiate()
+	add_child(enemy)
+	if enemy is Node3D:
+		enemy.global_position = marker.global_position
+	if enemy.has_signal("enemy_died"):
+		enemy.enemy_died.connect(_on_wave_enemy_died.bind(enemy))
+	_wave_spawned += 1
+	_wave_active += 1
+
+func _on_wave_enemy_died(enemy: Node) -> void:
+	_wave_active -= 1
+	_wave_killed += 1
+	if is_instance_valid(enemy):
+		enemy.queue_free()
+	if _wave_killed >= wave_total_enemies:
+		print("Fala zakończona!")
+
+func _on_player_died() -> void:
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+			
+	_wave_spawned = 0
+	_wave_active = 0
+	_wave_killed = 0
+	_wave_timer = wave_spawn_interval
+
+func _spawn_wild_rat_groups() -> void:
+	var markers = get_tree().get_nodes_in_group("spawn_markers")
+	if markers.is_empty():
+		return
+	var group_count = randi_range(wild_rat_group_count_min, wild_rat_group_count_max)
+	for i in range(group_count):
+		var m = markers[randi() % markers.size()] as Node3D
+		var amount = randi_range(wild_rat_count_per_group_min, wild_rat_count_per_group_max)
+		for j in range(amount):
+			var rat = rat_manager.rat_scene.instantiate()
+			rat.player = player
+			rat_manager.add_child(rat)
+			rat.global_position = m.global_position + Vector3(randf_range(-1.5, 1.5), 0.2, randf_range(-1.5, 1.5))
+			if rat.has_method("set_wild"):
+				rat.set_wild(true)

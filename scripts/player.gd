@@ -3,6 +3,7 @@ class_name player
 
 signal stratagem_activated(stratagem_id: String)
 signal player_died
+signal object_reset
 
 @export var speed: float = 7.0
 @export var rotation_speed: float = 10.0
@@ -12,15 +13,23 @@ signal player_died
 @export var max_hp: float = 100.0
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
+@export var carriers_required: int = 1
 
 var current_hp: float = 100.0
 var time_since_last_damage: float = 0.0
+
+var is_surrounded: bool = false
+var carrier_rats: Array[CharacterBody3D] = []
+var carrier_available_max: int = 0
+var carrier_brush_desired: int = 0
 
 @onready var damage_overlay: ColorRect = $PlayerHUD/DamageOverlay
 @onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
 
 var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
+
+@onready var minimap_camera: Camera3D = $PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport/MinimapCamera
 
 func _ready() -> void:
 	add_to_group("player")
@@ -30,6 +39,12 @@ func _ready() -> void:
 	current_hp = max_hp
 	_update_health_bar()
 
+	if minimap_camera:
+		minimap_camera.top_level = true
+		minimap_camera.global_position = Vector3(0, 50.0, 0)
+		minimap_camera.size = 65.0
+		minimap_camera.cull_mask = 1048575 - 2
+
 
 func _physics_process(delta: float) -> void:
 	# HP Regeneration
@@ -37,6 +52,8 @@ func _physics_process(delta: float) -> void:
 	if time_since_last_damage >= regen_delay and current_hp < max_hp:
 		current_hp = min(current_hp + hp_regen_rate * delta, max_hp)
 		_update_health_bar()
+
+
 		
 	# Update Damage Vignette Overlay
 	if damage_overlay and damage_overlay.material:
@@ -60,22 +77,9 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	var input_dir := Vector3.ZERO
-	input_dir.x = Input.get_axis("move_left", "move_right")
-	input_dir.z = Input.get_axis("move_forward", "move_back")
-	# Rotate input to match isometric camera (45° around Y)
-	input_dir = input_dir.rotated(Vector3.UP, deg_to_rad(45.0))
-
-	if input_dir.length() > 0.0:
-		input_dir = input_dir.normalized()
-		velocity.x = input_dir.x * speed
-		velocity.z = input_dir.z * speed
-
-		var target_angle := atan2(input_dir.x, input_dir.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, speed * delta * 5.0)
-		velocity.z = move_toward(velocity.z, 0.0, speed * delta * 5.0)
+	# Bard cannot walk on his own. Reset horizontal velocity from physics.
+	velocity.x = 0.0
+	velocity.z = 0.0
 
 	# Gravity — accumulated independently of horizontal movement
 	if not is_on_floor():
@@ -85,11 +89,15 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	
+
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount
 	time_since_last_damage = 0.0
 	_update_health_bar()
+
+
 	
 	if current_hp <= 0:
 		die()
@@ -109,15 +117,38 @@ func die() -> void:
 	current_hp = max_hp
 	time_since_last_damage = 0.0
 	_update_health_bar()
+
+
+	object_reset.emit()
 	player_died.emit()
 
 
 func set_stratagem_mode(active: bool) -> void:
 	is_stratagem_mode = active
-
+	
 
 func _update_health_bar() -> void:
 	if not health_bar:
 		return
 	health_bar.max_value = max_hp
 	health_bar.value = clampf(current_hp, 0.0, max_hp)
+
+func set_highlight(enabled: bool) -> void:
+	_set_highlight_recursive(self, enabled)
+
+func _set_highlight_recursive(node: Node, enabled: bool) -> void:
+	if node is MeshInstance3D:
+		if enabled:
+			if not node.material_overlay:
+				var highlight_mat = StandardMaterial3D.new()
+				highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				highlight_mat.albedo_color = Color.YELLOW
+				highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+				highlight_mat.no_depth_test = true
+				highlight_mat.grow = true
+				highlight_mat.grow_amount = 0.05
+				node.material_overlay = highlight_mat
+		else:
+			node.material_overlay = null
+	for child in node.get_children():
+		_set_highlight_recursive(child, enabled)

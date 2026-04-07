@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dmj6b1wixm4x"]
+[gd_scene format=3 uid="uid://dmj6b1wixm4x"]
 
 [ext_resource type="Script" path="res://scripts/laser_emitter.gd" id="1_script"]
 

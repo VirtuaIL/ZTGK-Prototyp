@@ -23,6 +23,8 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 @export var release_boost_time: float = 0.25
 
 var state: State = State.FOLLOW
+var is_wild: bool = false
+@export var recruitment_range: float = 3.5
 var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
@@ -74,6 +76,8 @@ var _recall_boost_timer: float = 0.0
 
 
 func _ready() -> void:
+	for child in find_children("*", "VisualInstance3D"):
+		child.layers = 2
 	follow_offset = Vector3(
 		randf_range(-1.5, 1.5),
 		0.0,
@@ -89,6 +93,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_wild:
+		_process_wild(delta)
+		return
+
 	if player == null:
 		return
 		
@@ -115,13 +123,12 @@ func _physics_process(delta: float) -> void:
 		_start_respawn()
 		return
 
-	# Distance recovery — if a follower gets too far (e.g., stuck behind doors), snap near player.
-	# Avoid snapping while falling off the world.
-	if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
-		var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
-		if dist_sq > max_follow_distance * max_follow_distance:
-			_teleport_to_player()
-			return
+	# Distance recovery — temporarily disabled to prevent rats from teleporting back when far away
+	#if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
+	#	var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
+	#	if dist_sq > max_follow_distance * max_follow_distance:
+	#		_teleport_to_player()
+	#		return
 
 	# Gravity and fall-recovery are skipped for anchored rats (near build target)
 	# so they can float as bridge pieces
@@ -281,6 +288,10 @@ func _process_wave(delta: float) -> void:
 
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
+		return
+		
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr == null or not mgr.get("combat_rmb_down"):
 		return
 		
 	var enemies := get_tree().get_nodes_in_group("enemies")
@@ -548,3 +559,69 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	if not hit:
 		return false
 	return hit.position.y >= global_position.y - max_drop
+
+func die() -> void:
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and "rats" in mgr:
+		var idx = mgr.rats.find(self)
+		if idx != -1:
+			mgr.rats.remove_at(idx)
+	queue_free()
+
+func set_wild(wild: bool) -> void:
+	is_wild = wild
+	if is_wild:
+		state = State.STATIC
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color.BLACK
+		$Body.material_override = mat
+		$Tail.material_override = mat
+		$Head.material_override = mat
+	else:
+		state = State.FOLLOW
+		$Body.material_override = null
+		$Tail.material_override = null
+		$Head.material_override = null
+
+func _process_wild(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+	else:
+		velocity.y = 0.0
+	velocity.x = 0.0
+	velocity.z = 0.0
+	move_and_slide()
+
+	rotation.y += 0.5 * delta
+	
+	if player == null:
+		return
+		
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr == null:
+		return
+		
+	if mgr.get("combat_rmb_down") == true:
+		return
+		
+	var dist = _flat_distance(global_position, player.global_position)
+	var can_recruit = false
+	if dist <= recruitment_range:
+		can_recruit = true
+	else:
+		if "rats" in mgr:
+			for r in mgr.rats:
+				if not is_instance_valid(r):
+					continue
+				if _flat_distance(global_position, r.global_position) <= recruitment_range:
+					can_recruit = true
+					break
+					
+	if can_recruit:
+		add_collision_exception_with(player)
+		player.add_collision_exception_with(self)
+		set_wild(false)
+		if mgr.has_method("register_rat"):
+			mgr.register_rat(self)
+			if mgr.has_method("build_blob_offsets"):
+				mgr.build_blob_offsets()

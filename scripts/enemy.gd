@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal enemy_died
+
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 
 # ── Health ──
@@ -38,6 +40,12 @@ var _has_wander_target: bool = false
 var _attack_timer: float = 0.0
 var _player_ref: CharacterBody3D = null
 
+enum AttackType { NONE, SLASH, STEP }
+var current_attack: AttackType = AttackType.NONE
+var attack_prepare_timer: float = 0.0
+@export var attack_delay: float = 0.5
+var attack_marker: MeshInstance3D = null
+
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
 
@@ -49,6 +57,8 @@ var hp_label: Label3D
 
 
 func _ready() -> void:
+	for child in find_children("*", "VisualInstance3D"):
+		child.layers = 2
 	add_to_group("enemies")
 	# Decouple from parent's non-uniform transform so move_and_slide works
 	top_level = true
@@ -70,7 +80,7 @@ func _ready() -> void:
 	if players.size() > 0:
 		var p = players[0]
 		if p.has_signal("player_died"):
-			p.player_died.connect(_respawn)
+			pass #p.player_died.connect(_respawn)
 
 
 func _physics_process(delta: float) -> void:
@@ -125,8 +135,8 @@ func _physics_process(delta: float) -> void:
 #  WANDER — idle patrol around spawn
 # ═══════════════════════════════════════════════
 func _process_wander(delta: float) -> void:
-	# Check if player is near
-	_find_player()
+	# Check if player/rat is near
+	_find_target()
 	if _player_ref and _distance_to_player() < detection_range:
 		ai_state = AIState.CHASE
 		_has_wander_target = false
@@ -176,6 +186,7 @@ func _pick_wander_target() -> void:
 #  CHASE — move toward player
 # ═══════════════════════════════════════════════
 func _process_chase(delta: float) -> void:
+	_find_target()
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		return
@@ -214,29 +225,133 @@ func _process_attack(delta: float) -> void:
 
 	var dist := _distance_to_player()
 
-	# Player moved away
-	if dist > attack_range * 1.5:
-		ai_state = AIState.CHASE
-		return
-
-	# Face player
-	var to_player := _player_ref.global_position - global_position
-	to_player.y = 0.0
-	if to_player.length() > 0.01:
-		var target_angle := atan2(to_player.x, to_player.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-
 	# Slow down while attacking
 	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 5.0)
 	velocity.z = move_toward(velocity.z, 0.0, chase_speed * delta * 5.0)
 
+	if current_attack != AttackType.NONE:
+		# We are winding up an attack
+		attack_prepare_timer -= delta
+		if attack_prepare_timer <= 0.0:
+			_execute_attack()
+			current_attack = AttackType.NONE
+			_attack_timer = attack_cooldown
+		return
+
 	# Attack timer
 	_attack_timer -= delta
 	if _attack_timer <= 0.0:
-		_attack_timer = attack_cooldown
-		if _player_ref.has_method("take_damage"):
-			_player_ref.take_damage(attack_damage)
-		_flash_attack()
+		if dist > attack_range * 1.5:
+			ai_state = AIState.CHASE
+			return
+		_pick_and_start_attack()
+	else:
+		# Face target while waiting
+		var to_player := _player_ref.global_position - global_position
+		to_player.y = 0.0
+		if to_player.length() > 0.01:
+			var target_angle := atan2(to_player.x, to_player.z)
+			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+
+func _pick_and_start_attack() -> void:
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	var rat_count = 0
+	if mgr != null and "rats" in mgr:
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		if are_visible:
+			for rat in mgr.rats:
+				if is_instance_valid(rat) and rat.global_position.distance_squared_to(global_position) < 2.5*2.5:
+					rat_count += 1
+				
+	if rat_count > 3:
+		current_attack = AttackType.STEP
+	else:
+		current_attack = AttackType.SLASH
+		
+	attack_prepare_timer = attack_delay
+	# Flash yellow to indicate windup
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body and body.material_override:
+		body.material_override.albedo_color = Color(1.0, 1.0, 0.0)
+		
+	if attack_marker == null:
+		attack_marker = MeshInstance3D.new()
+		attack_marker.layers = 2
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.2, 0.0, 0.4)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		attack_marker.material_override = mat
+		add_child(attack_marker)
+		
+	attack_marker.visible = true
+	var immediate = ImmediateMesh.new()
+	attack_marker.mesh = immediate
+	immediate.clear_surfaces()
+	immediate.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	
+	var r = 2.5
+	if current_attack == AttackType.STEP:
+		var segments = 32
+		for i in range(segments):
+			var a1 = (float(i) / segments) * TAU
+			var a2 = (float(i + 1) / segments) * TAU
+			immediate.surface_add_vertex(Vector3(0, 0.1, 0))
+			immediate.surface_add_vertex(Vector3(sin(a1)*r, 0.1, cos(a1)*r))
+			immediate.surface_add_vertex(Vector3(sin(a2)*r, 0.1, cos(a2)*r))
+	else:
+		var segments = 16
+		for i in range(segments):
+			var a1 = -PI/4 + (float(i)/segments) * (PI/2)
+			var a2 = -PI/4 + (float(i+1)/segments) * (PI/2)
+			immediate.surface_add_vertex(Vector3(0, 0.1, 0))
+			immediate.surface_add_vertex(Vector3(-sin(a1)*r, 0.1, cos(a1)*r)) # local forward in godot is +z normally? We used -sin, 0, cos for forward.
+			immediate.surface_add_vertex(Vector3(-sin(a2)*r, 0.1, cos(a2)*r))
+	immediate.surface_end()
+
+func _execute_attack() -> void:
+	if attack_marker != null:
+		attack_marker.visible = false
+	_flash_attack()
+	
+	var targets = []
+	var players = get_tree().get_nodes_in_group("player")
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	targets.append_array(players)
+	if mgr != null and "rats" in mgr:
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		if are_visible:
+			for r in mgr.rats:
+				if is_instance_valid(r):
+					targets.append(r)
+		
+	var attack_radius = 2.5
+	var slash_angle = deg_to_rad(45.0) # 45 each side = 90 deg total
+	var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y))
+	
+	for t in targets:
+		if not is_instance_valid(t) or not t.is_inside_tree():
+			continue
+		var to_t = t.global_position - global_position
+		to_t.y = 0.0
+		var d = to_t.length()
+		
+		if current_attack == AttackType.STEP:
+			if d <= attack_radius:
+				_damage_target(t)
+		elif current_attack == AttackType.SLASH:
+			if d <= attack_radius:
+				var dir = to_t.normalized()
+				var angle_diff = acos(clampf(my_forward.dot(dir), -1.0, 1.0))
+				if angle_diff <= slash_angle:
+					_damage_target(t)
+
+func _damage_target(t: Node3D) -> void:
+	if t.is_in_group("player") and t.has_method("take_damage"):
+		t.take_damage(attack_damage)
+	elif t is Rat and t.has_method("die"):
+		t.die()
 
 
 # ═══════════════════════════════════════════════
@@ -283,11 +398,12 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		var dir := (global_position - hit_pos)
 		dir.y = 0.0
 		if dir.length() > 0.01:
-			_knockback += dir.normalized() * 10.0
+			_knockback += dir.normalized() * 1.0
+			if _knockback.length() > 5.0:
+				_knockback = _knockback.normalized() * 5.0
 
-	# Being hit by rats? Chase that player!
 	if ai_state == AIState.WANDER:
-		_find_player()
+		_find_target()
 		if _player_ref:
 			ai_state = AIState.CHASE
 
@@ -311,6 +427,7 @@ func _die() -> void:
 		tween.tween_property(body, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
 		visible = false
+		enemy_died.emit()
 	)
 
 	# Stay dead — no auto-respawn. F2 toggle revives all enemies.
@@ -338,12 +455,35 @@ func _respawn() -> void:
 # ═══════════════════════════════════════════════
 #  HELPERS
 # ═══════════════════════════════════════════════
-func _find_player() -> void:
-	if _player_ref != null and is_instance_valid(_player_ref):
-		return
+func _find_target() -> void:
+	var targets: Array[Node3D] = []
 	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		_player_ref = players[0] as CharacterBody3D
+	targets.append_array(players)
+	
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and "rats" in mgr:
+		# Exclude rats from targeting entirely if they are hidden
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		if are_visible:
+			for rat in mgr.rats:
+				if is_instance_valid(rat):
+					targets.append(rat as Node3D)
+				
+	var best_d := INF
+	var best_t: Node3D = null
+	
+	for t in targets:
+		if is_instance_valid(t) and t.is_inside_tree():
+			var curr_d = global_position.distance_squared_to(t.global_position)
+			# Reduce effective distance to player so enemies heavily prioritize Bard over Rats at similar distances
+			if t.is_in_group("player"):
+				curr_d -= 3.0
+				
+			if curr_d < best_d:
+				best_d = curr_d
+				best_t = t
+				
+	_player_ref = best_t as CharacterBody3D
 
 
 func _distance_to_player() -> float:
@@ -381,6 +521,7 @@ func _create_hp_bar() -> void:
 	var bar_height: float = 0.08
 
 	hp_bar_bg = MeshInstance3D.new()
+	hp_bar_bg.layers = 2
 	var bg_mesh := QuadMesh.new()
 	bg_mesh.size = Vector2(bar_width, bar_height)
 	hp_bar_bg.mesh = bg_mesh
@@ -396,6 +537,7 @@ func _create_hp_bar() -> void:
 	add_child(hp_bar_bg)
 
 	hp_bar_fill = MeshInstance3D.new()
+	hp_bar_fill.layers = 2
 	var fill_mesh := QuadMesh.new()
 	fill_mesh.size = Vector2(bar_width, bar_height)
 	hp_bar_fill.mesh = fill_mesh
