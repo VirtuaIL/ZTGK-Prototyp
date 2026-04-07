@@ -7,6 +7,13 @@ const LEVEL_BOUNDS := {
 	4: {"min_z": -240.0, "max_z": -140.0},
 }
 
+const LEVEL_CLAMP_BOUNDS := {
+	1: {"min_x": -82.0, "max_x": 42.0, "min_z": -138.0, "max_z": 46.0},
+	2: {"min_x": -28.0, "max_x": 56.0, "min_z": 46.0, "max_z": 124.0},
+	3: {"min_x": -55.0, "max_x": 29.0, "min_z": 124.0, "max_z": 206.0},
+	4: {"min_x": -62.0, "max_x": -6.0, "min_z": -210.0, "max_z": -166.0},
+}
+
 const GLOBAL_VISIBILITY_ROOTS := {
 	"Player": true,
 	"Skydome": true,
@@ -767,6 +774,40 @@ func set_current_level(level_id: int) -> void:
 	_current_level_cleared = is_current_level_cleared()
 	_refresh_level_visibility()
 	_update_level_doors()
+
+
+func transition_to_level(level_id: int, target_position: Vector3) -> void:
+	if level_id <= 0:
+		return
+	if not can_activate_level(level_id):
+		return
+
+	if player != null:
+		player.velocity = Vector3.ZERO
+		player.global_position = target_position
+		if player.has_method("set_spawn_position"):
+			player.set_spawn_position(target_position)
+
+	set_current_level(level_id)
+
+	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
+		rat_manager.hard_recall_all_rats()
+
+
+func clamp_position_to_current_level(pos: Vector3) -> Vector3:
+	return clamp_position_to_level(current_level_id, pos)
+
+
+func clamp_position_to_level(level_id: int, pos: Vector3) -> Vector3:
+	if not LEVEL_CLAMP_BOUNDS.has(level_id):
+		return pos
+
+	var bounds: Dictionary = LEVEL_CLAMP_BOUNDS[level_id]
+	return Vector3(
+		clampf(pos.x, float(bounds["min_x"]), float(bounds["max_x"])),
+		pos.y,
+		clampf(pos.z, float(bounds["min_z"]), float(bounds["max_z"]))
+	)
 
 
 func get_nodes_in_current_level(group_name: String) -> Array[Node3D]:

@@ -81,6 +81,7 @@ func _physics_process(delta: float) -> void:
 	if is_stratagem_mode:
 		velocity = Vector3.ZERO
 		move_and_slide()
+		_clamp_to_current_level()
 		_update_minimap_camera(delta)
 		return
 
@@ -93,6 +94,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	move_and_slide()
+	_clamp_to_current_level()
 	_update_minimap_camera(delta)
 
 	
@@ -163,6 +165,20 @@ func _get_move_direction(input_vector: Vector2) -> Vector3:
 	var move_direction := (right * input_vector.x) - (forward * input_vector.y)
 	move_direction.y = 0.0
 	return move_direction.normalized()
+
+
+func _clamp_to_current_level() -> void:
+	var current_scene := get_tree().current_scene
+	if current_scene == null or not current_scene.has_method("clamp_position_to_current_level"):
+		return
+
+	var clamped_pos: Vector3 = current_scene.clamp_position_to_current_level(global_position)
+	if clamped_pos.is_equal_approx(global_position):
+		return
+
+	global_position = clamped_pos
+	velocity.x = 0.0
+	velocity.z = 0.0
 
 
 func _configure_minimap_visuals() -> void:

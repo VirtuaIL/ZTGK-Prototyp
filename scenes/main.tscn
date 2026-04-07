@@ -269,6 +269,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.671204, 0.016834497, -22.
 
 [node name="door" parent="doors" unique_id=1508054242 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.582687, 0, -87.88536)
+target_level_id = 4
+target_spawn_path = NodePath("../../boss_arena/boss_nav_node5")
 slide_distance = 5.0
 
 [node name="floor_tiles" type="Node3D" parent="." unique_id=1371514873]
