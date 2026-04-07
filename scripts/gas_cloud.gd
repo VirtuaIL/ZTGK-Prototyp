@@ -6,7 +6,7 @@ extends Node3D
 @export var duration: float = 2.5
 @export var damage_per_tick: float = 10.0   # zmienione z 5 na 10
 @export var damage_interval: float = 0.5
-@export var cloud_radius: float = 0.35
+@export var cloud_radius: float = 1.2
 
 var _time_alive: float = 0.0
 var _tick_timer: float = 0.0

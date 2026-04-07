@@ -247,6 +247,13 @@ func are_rats_hidden() -> bool:
 	return false
 
 func _on_player_died() -> void:
+	for wild in get_tree().get_nodes_in_group("wild_rats"):
+		if is_instance_valid(wild):
+			wild.queue_free()
+	for item in get_tree().get_nodes_in_group("dropped_items"):
+		if is_instance_valid(item):
+			item.queue_free()
+
 	for r in rats.duplicate():
 		if is_instance_valid(r) and r.has_method("die"):
 			r.die()

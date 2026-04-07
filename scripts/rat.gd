@@ -28,6 +28,8 @@ enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 var state: State = State.FOLLOW
 var is_wild: bool = false
 @export var recruitment_range: float = 3.5
+@export var wild_lifespan: float = 10.0
+var _wild_timer: float = 0.0
 var player: Node3D = null
 var follow_offset: Vector3 = Vector3.ZERO
 var orbit_angle: float = 0.0
@@ -94,6 +96,9 @@ func _ready() -> void:
 		0.0,
 		randf_range(-1.5, 1.5)
 	)
+	
+	if is_wild:
+		add_to_group("wild_rats")
 	
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
@@ -661,6 +666,8 @@ func die() -> void:
 func set_wild(wild: bool) -> void:
 	is_wild = wild
 	if is_wild:
+		add_to_group("wild_rats")
+		_wild_timer = wild_lifespan
 		state = State.STATIC
 		var mat = StandardMaterial3D.new()
 		mat.albedo_color = Color.BLACK
@@ -670,6 +677,8 @@ func set_wild(wild: bool) -> void:
 			$Tail.material_override = mat
 			$Head.material_override = mat
 	else:
+		if is_in_group("wild_rats"):
+			remove_from_group("wild_rats")
 		state = State.FOLLOW
 		if _current_buff_material != null:
 			_current_buff_material = null
@@ -678,6 +687,11 @@ func set_wild(wild: bool) -> void:
 			$Head.material_override = null
 
 func _process_wild(delta: float) -> void:
+	_wild_timer -= delta
+	if _wild_timer <= 0.0:
+		queue_free()
+		return
+		
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 	else:

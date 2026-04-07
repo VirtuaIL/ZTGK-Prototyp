@@ -17,6 +17,7 @@ func set_type(new_type: int) -> void:
 func _ready() -> void:
 	_update_visuals()
 	_mgr = get_tree().get_first_node_in_group("rat_manager")
+	add_to_group("dropped_items")
 
 func _update_visuals() -> void:
 	var mesh_inst = $MeshInstance3D
