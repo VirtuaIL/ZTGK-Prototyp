@@ -56,6 +56,9 @@ var _fov_material: StandardMaterial3D
 const FOV_SEGMENTS: int = 24
 const FOV_Y_OFFSET: float = 0.05  # Slightly above floor to avoid z-fighting
 
+var is_stuck_in_blob: bool = false
+var blob_center: Vector3 = Vector3.ZERO
+
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -91,6 +94,20 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
+<<<<<<< Updated upstream
+=======
+		
+	if is_stuck_in_blob:
+		var target := blob_center
+		target.y = global_position.y
+		global_position = target
+		velocity = Vector3.ZERO
+		move_and_slide()
+		current_attack = AttackType.NONE
+		if attack_marker != null:
+			attack_marker.visible = false
+		return
+>>>>>>> Stashed changes
 
 	# ── Gravity ──
 	if not is_on_floor():

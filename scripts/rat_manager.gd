@@ -45,6 +45,22 @@ var _drawing_attack_path: bool = false
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
+enum AttackMode { ROTATION, BLOB }
+var current_attack_mode: AttackMode = AttackMode.ROTATION
+var _combat_blob_offsets: Array[Vector3] = []
+var blob_radius: float = 2.5
+var _blob_damage_timer: float = 0.0
+var blob_damage_interval: float = 0.5
+var blob_damage_per_tick: float = 10.0
+var _blob_drag_pos: Vector3 = Vector3.ZERO
+var _stuck_enemies: Array[Node3D] = []
+
+func _release_all_stuck_enemies() -> void:
+	for e in _stuck_enemies:
+		if is_instance_valid(e):
+			e.set("is_stuck_in_blob", false)
+	_stuck_enemies.clear()
+
 # LMB unified: true when LMB started on a movable object (drag mode), false = build mode
 var _lmb_is_object_drag: bool = false
 
@@ -726,6 +742,14 @@ func _capture_combat_offsets(mouse_world: Vector3) -> void:
 			offset = Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		_combat_offsets[rat.get_instance_id()] = offset
 
+	_combat_blob_offsets.clear()
+	var golden_angle := PI * (3.0 - sqrt(5.0))
+	for i in range(count):
+		var r := 0.2 + 1.2 * sqrt(float(i + 1) / float(count))
+		var a := golden_angle * float(i)
+		_combat_blob_offsets.append(Vector3(cos(a) * r, 0.0, sin(a) * r))
+
+	_blob_drag_pos = mouse_world
 	_combat_offsets_ready = true
 
 
@@ -739,6 +763,43 @@ func _update_combat_attack_circle(delta: float) -> void:
 	var active := _get_active_follow_rats()
 	var count := active.size()
 	if count == 0:
+		return
+
+	if current_attack_mode == AttackMode.BLOB:
+		_blob_drag_pos = _blob_drag_pos.lerp(mouse_world, delta * 0.625)
+		
+		_blob_damage_timer -= delta
+		var tick_damage = false
+		if _blob_damage_timer <= 0.0:
+			tick_damage = true
+			_blob_damage_timer = blob_damage_interval
+			
+		var actual_blob_center = Vector3.ZERO
+		if count > 0:
+			for rat in active:
+				actual_blob_center += rat.global_position
+			actual_blob_center /= count
+			
+		for i in range(count):
+			var t := _blob_drag_pos
+			if i < _combat_blob_offsets.size():
+				t += _combat_blob_offsets[i]
+			t.y = mouse_world.y
+			active[i].set_target(t)
+			
+		var enemies = get_tree().get_nodes_in_group("enemies")
+		if count > 0:
+			for enemy in enemies:
+				if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
+					var dist = enemy.global_position.distance_to(actual_blob_center)
+					var is_already_stuck = _stuck_enemies.has(enemy)
+					if is_already_stuck or dist <= blob_radius:
+						if not is_already_stuck:
+							_stuck_enemies.append(enemy)
+						enemy.set("is_stuck_in_blob", true)
+						enemy.set("blob_center", actual_blob_center)
+						if tick_damage:
+							enemy.take_damage(blob_damage_per_tick)
 		return
 
 	_combat_circle_angle += combat_circle_rotation_speed * delta
@@ -1336,6 +1397,18 @@ func _form_unified_mesh() -> void:
 # ── Input handling ────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_1:
+			current_attack_mode = AttackMode.ROTATION
+			_release_all_stuck_enemies()
+			get_viewport().set_input_as_handled()
+			return
+		elif event.keycode == KEY_2:
+			current_attack_mode = AttackMode.BLOB
+			get_viewport().set_input_as_handled()
+			return
+
+
 	if wave_pending and event is InputEventMouseButton:
 		var mb_wave := event as InputEventMouseButton
 		if mb_wave.button_index == MOUSE_BUTTON_RIGHT and mb_wave.pressed:
@@ -1373,8 +1446,27 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+<<<<<<< Updated upstream
 		# ── LMB/MMB: attack draw / build draw ──
 		if mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_MIDDLE:
+=======
+		# ── LMB: combat attack (circle around cursor) ──
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			combat_rmb_down = mb.pressed
+			if combat_rmb_down:
+				var mouse_world := _mouse_to_world()
+				if mouse_world != Vector3.ZERO:
+					_capture_combat_offsets(mouse_world)
+			else:
+				_combat_offsets_ready = false
+				_combat_offsets.clear()
+				_release_all_stuck_enemies()
+			get_viewport().set_input_as_handled()
+			return
+
+		# ── RMB: raycast for object → drag, otherwise → do nothing ──
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+>>>>>>> Stashed changes
 			if mb.pressed:
 				_drawing_attack_path = (mb.button_index == MOUSE_BUTTON_LEFT)
 				mouse_is_down_left = true

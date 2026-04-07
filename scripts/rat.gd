@@ -87,7 +87,19 @@ var is_anchored: bool = false
 
 var is_fallen: bool = false
 var _recall_boost_timer: float = 0.0
+<<<<<<< Updated upstream
 
+=======
+var _mgr: Node = null
+var _mgr_refresh_timer: float = 0.0
+@export var mgr_refresh_interval: float = 1.0
+@export var edge_check_interval: float = 0.15
+var _edge_check_timer: float = 0.0
+var _edge_blocked_cached: bool = false
+var _current_buff_material: Material = null
+var _blob_mesh: MeshInstance3D = null
+var _is_showing_blob: bool = false
+>>>>>>> Stashed changes
 
 func _ready() -> void:
 	follow_offset = Vector3(
@@ -102,12 +114,78 @@ func _ready() -> void:
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
+<<<<<<< Updated upstream
+=======
+	_mgr = get_tree().get_first_node_in_group("rat_manager")
+	
+	var sphere = SphereMesh.new()
+	sphere.radius = 0.25 
+	sphere.height = 0.5
+	_blob_mesh = MeshInstance3D.new()
+	_blob_mesh.mesh = sphere
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.30, 0.18)
+	_blob_mesh.material_override = mat
+	_blob_mesh.visible = false
+	add_child(_blob_mesh)
+>>>>>>> Stashed changes
 
 
 func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 		
+<<<<<<< Updated upstream
+=======
+	if _mgr_refresh_timer > 0.0:
+		_mgr_refresh_timer = max(0.0, _mgr_refresh_timer - delta)
+	if _mgr == null or not is_instance_valid(_mgr):
+		if _mgr_refresh_timer <= 0.0:
+			_mgr = get_tree().get_first_node_in_group("rat_manager")
+			_mgr_refresh_timer = mgr_refresh_interval
+	var mgr = _mgr
+	
+	var should_be_blob = mgr != null and mgr.get("combat_rmb_down") and mgr.get("current_attack_mode") == 1 and state == State.FOLLOW and not is_carrier and not is_wild and not is_fallen
+	if should_be_blob != _is_showing_blob:
+		_is_showing_blob = should_be_blob
+		show_visuals()
+		
+	if mgr != null and "buff_purple_timer" in mgr:
+		if mgr.buff_purple_timer > 0.0:
+			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
+			if mgr.has_method("get_current_buff_material"):
+				var mat = mgr.get_current_buff_material()
+				if mat != _current_buff_material:
+					_current_buff_material = mat
+					$Body.material_override = mat
+					$Tail.material_override = mat
+					$Head.material_override = mat
+			if not is_on_floor():
+				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
+			else:
+				velocity.y = 0.0
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+			return
+			
+		if mgr.buff_green_timer > 0.0:
+			_gas_timer -= delta
+			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
+			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
+			if _gas_timer <= 0.0 and speed_sq > 0.05:
+				_gas_timer = 0.07
+				var can_emit := true
+				if mgr.has_method("request_gas_emit"):
+					can_emit = mgr.request_gas_emit()
+				if GasCloudScene and can_emit:
+					var p = get_parent()
+					if p:
+						var g = GasCloudScene.instantiate()
+						p.add_child(g)
+						g.global_position = global_position
+		
+>>>>>>> Stashed changes
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
 
@@ -191,17 +269,30 @@ func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:
 		return
 
+<<<<<<< Updated upstream
 	var speed_scale := cursor_follow_speed_scale if is_cursor_following else 1.0
 	var carrier_mult := carrier_speed_mult if is_carrier else 1.0
 	var stiffness := spring_stiffness * speed_scale * (carrier_spring_mult if is_carrier else 1.0)
 	var max_spd := max_speed * speed_scale * carrier_mult
+=======
+	var current_stiffness = spring_stiffness
+	var current_separation = separation_force
+	if _is_showing_blob:
+		current_stiffness = spring_stiffness * 4.0
+		current_separation = 0.0
+>>>>>>> Stashed changes
 
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position
 	to_target.y *= 0.2
+<<<<<<< Updated upstream
 	_spring_velocity += to_target * stiffness * delta
+=======
+	_spring_velocity += to_target * current_stiffness * delta
+>>>>>>> Stashed changes
 
 	# Separation from neighbors
+<<<<<<< Updated upstream
 	for neighbor in _neighbors:
 		if not is_instance_valid(neighbor):
 			continue
@@ -213,6 +304,21 @@ func _process_follow_spring(delta: float) -> void:
 		var dist: float = diff.length()
 		if dist < separation_dist and dist > 0.001:
 			_spring_velocity += diff.normalized() * (separation_dist - dist) * separation_force * delta
+=======
+	if current_separation > 0.0:
+		for neighbor in _neighbors:
+			if not is_instance_valid(neighbor):
+				continue
+			var nb := neighbor as Node3D
+			if nb == null:
+				continue
+			var diff: Vector3 = global_position - nb.global_position
+			diff.y = 0.0
+			var dist_sq: float = diff.length_squared()
+			if dist_sq < sep_dist_sq and dist_sq > 0.000001:
+				var dist: float = sqrt(dist_sq)
+				_spring_velocity += (diff / dist) * (separation_dist - dist) * current_separation * delta
+>>>>>>> Stashed changes
 
 	# Framerate-independent damping
 	_spring_velocity *= pow(damping, delta * 60.0)
@@ -323,6 +429,16 @@ func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
 		
+<<<<<<< Updated upstream
+=======
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr == null or not mgr.get("combat_rmb_down"):
+		return
+		
+	if mgr.get("current_attack_mode") == 1: # BLOB mode
+		return
+		
+>>>>>>> Stashed changes
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	enemies += (get_tree().get_nodes_in_group("bosses"))
 	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
@@ -615,12 +731,24 @@ func hide_visuals() -> void:
 	$Body.hide()
 	$Tail.hide()
 	$Head.hide()
+	_is_showing_blob = false
+	if _blob_mesh:
+		_blob_mesh.hide()
 
 
 func show_visuals() -> void:
-	$Body.show()
-	$Tail.show()
-	$Head.show()
+	if _is_showing_blob:
+		$Body.hide()
+		$Tail.hide()
+		$Head.hide()
+		if _blob_mesh:
+			_blob_mesh.show()
+	else:
+		$Body.show()
+		$Tail.show()
+		$Head.show()
+		if _blob_mesh:
+			_blob_mesh.hide()
 
 
 func set_wall_collision(enabled: bool) -> void:
