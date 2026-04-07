@@ -43,6 +43,9 @@ var _wave_timer: float = 0.0
 @export var wild_rat_group_count_max: int = 2
 @export var wild_rat_count_per_group_min: int = 3
 @export var wild_rat_count_per_group_max: int = 6
+@export var wild_rat_prob_normal: float = 80.0
+@export var wild_rat_prob_red: float = 10.0
+@export var wild_rat_prob_green: float = 10.0
 
 var _wild_rat_timer: float = 0.0
 # ── UI Theme ──────────────────────────────────────────────────────────────────
@@ -675,9 +678,20 @@ func _spawn_wild_rat_groups() -> void:
 	for i in range(group_count):
 		var m = markers[randi() % markers.size()] as Node3D
 		var amount = randi_range(wild_rat_count_per_group_min, wild_rat_count_per_group_max)
+		
+		var total_prob = wild_rat_prob_normal + wild_rat_prob_red + wild_rat_prob_green
+		var roll = randf_range(0.0, total_prob)
+		var grp_type = 0 # NORMAL
+		if roll < wild_rat_prob_red:
+			grp_type = 1 # RED
+		elif roll < wild_rat_prob_red + wild_rat_prob_green:
+			grp_type = 2 # GREEN
+			
 		for j in range(amount):
 			var rat = rat_manager.rat_scene.instantiate()
 			rat.player = player
+			if rat.has_method("set_rat_type"):
+				rat.set_rat_type(grp_type)
 			rat_manager.add_child(rat)
 			rat.global_position = m.global_position + Vector3(randf_range(-1.5, 1.5), 0.2, randf_range(-1.5, 1.5))
 			if rat.has_method("set_wild"):
