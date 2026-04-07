@@ -130,8 +130,8 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var carrier_drag_speed_curve: float = 2.2
 @export var carrier_pick_radius: float = 6.0
 @export var object_rotation_step: float = 22.5
-@export var combat_circle_radius: float = 2.5
-@export var combat_circle_rotation_speed: float = 7.0
+@export var combat_circle_radius: float = 1.8
+@export var combat_circle_rotation_speed: float = 12.0
 
 @export var rats_collide_with_walls: bool = true:
 	set(value):
@@ -496,11 +496,57 @@ func _process(delta: float) -> void:
 	_update_cursor_preview()
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
+	_process_damage(delta)
 
 	# Reset game if all rats die
 	if get_total_rat_count() <= 0 and _player != null:
 		if _player.has_method("die"):
 			_player.die()
+
+
+func _process_damage(delta: float) -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	enemies += get_tree().get_nodes_in_group("bosses")
+	if enemies.is_empty() or rats.is_empty():
+		return
+
+	# Use the grid from _assign_neighbors if possible, but that's throttled.
+	# For better responsiveness, we can do a simpler spatial check or just use the throttled one.
+	# Let's build a quick grid here for this frame, or just iterate enemies if they are few.
+	# Usually enemies < 50, rats > 100. Iterating enemies and checking nearby rats is faster.
+	
+	var cell_size: float = 1.5
+	var grid := {}
+	for rat in rats:
+		if not is_instance_valid(rat) or rat.is_fallen: continue
+		var pos := rat.global_position
+		var key := Vector2i(int(floor(pos.x / cell_size)), int(floor(pos.z / cell_size)))
+		if not grid.has(key): grid[key] = []
+		grid[key].append(rat)
+		
+	var dmg_mult = 1.0
+	var dmg_color = Color.WHITE
+	if buff_red_timer > 0.0:
+		dmg_mult = 2.0
+		dmg_color = Color(0.9, 0.1, 0.1)
+
+	for enemy: Node3D in enemies:
+		if not is_instance_valid(enemy): continue
+		var e_pos := enemy.global_position
+		var ex := int(floor(e_pos.x / cell_size))
+		var ez := int(floor(e_pos.z / cell_size))
+		
+		# Check 3x3 cells around enemy
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var key := Vector2i(ex + dx, ez + dz)
+				if grid.has(key):
+					for rat in grid[key]:
+						var dist_sq = e_pos.distance_squared_to(rat.global_position)
+						if dist_sq < rat.hit_range * rat.hit_range:
+							if rat.attack_cooldown <= 0.0:
+								enemy.take_damage(rat.damage_per_hit * dmg_mult, rat.get_instance_id(), rat.global_position, dmg_color)
+								rat.attack_cooldown = 0.5 # Passive damage cooldown per rat per enemy (effectively)
 
 
 func _update_edge_avoidance() -> void:
@@ -1150,16 +1196,26 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-		# ── LMB: combat attack (circle around cursor) ──
+		# ── LMB: combat attack (Swarm Strike) ──
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			combat_rmb_down = mb.pressed
 			if combat_rmb_down:
 				var mouse_world := _mouse_to_world()
 				if mouse_world != Vector3.ZERO:
 					_capture_combat_offsets(mouse_world)
+				# Buff rats for swarming
+				for rat in rats:
+					if is_instance_valid(rat):
+						rat.max_speed = 35.0
+						rat.spring_stiffness = 60.0
 			else:
 				_combat_offsets_ready = false
 				_combat_offsets.clear()
+				# Reset rat stats
+				for rat in rats:
+					if is_instance_valid(rat):
+						rat.max_speed = 26.0
+						rat.spring_stiffness = 30.0
 			get_viewport().set_input_as_handled()
 			return
 

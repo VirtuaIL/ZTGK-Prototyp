@@ -124,8 +124,8 @@ func _physics_process(delta: float) -> void:
 			_mgr = get_tree().get_first_node_in_group("rat_manager")
 			_mgr_refresh_timer = mgr_refresh_interval
 	var mgr = _mgr
-	if mgr != null and "buff_purple_timer" in mgr:
-		if mgr.buff_purple_timer > 0.0:
+	if mgr != null:
+		if "buff_purple_timer" in mgr and mgr.buff_purple_timer > 0.0:
 			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
 			if mgr.has_method("get_current_buff_material"):
 				var mat = mgr.get_current_buff_material()
@@ -143,7 +143,7 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 			
-		if mgr.buff_green_timer > 0.0:
+		if "buff_green_timer" in mgr and mgr.buff_green_timer > 0.0:
 			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
 			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
@@ -158,6 +158,14 @@ func _physics_process(delta: float) -> void:
 						var g = GasCloudScene.instantiate()
 						p.add_child(g)
 						g.global_position = global_position
+		
+		# Material override optimization
+		if mgr.has_method("get_current_buff_material"):
+			var mat = mgr.get_current_buff_material()
+			if $Body.material_override != mat:
+				$Body.material_override = mat
+				$Tail.material_override = mat
+				$Head.material_override = mat
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -216,13 +224,10 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.FOLLOW:
 			_process_follow_spring(delta)
-			_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
-			_check_damage()
 		State.WAVE:
 			_process_wave(delta)
-			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:

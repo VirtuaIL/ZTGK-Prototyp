@@ -24,6 +24,7 @@ var indicator_layer: CanvasLayer
 var indicator_root: Control
 var indicator_pool: Array[Label] = []
 var _indicator_blink_time: float = 0.0
+var fps_label: Label
 
 # ── Wave Spawner ──────────────────────────────────────────────────────────────
 @export_group("Wave Spawner")
@@ -32,6 +33,7 @@ var _indicator_blink_time: float = 0.0
 @export var wave_spawn_interval: float = 1.0
 
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
+var _wave_flamethrower_scene: PackedScene = preload("res://scenes/flamethrower_enemy.tscn")
 var _wave_spawned: int = 0
 var _wave_active: int = 0
 var _wave_killed: int = 0
@@ -88,6 +90,7 @@ func _init_game() -> void:
 	_setup_rat_count_ui()
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
+	_setup_fps_ui()
 	
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
@@ -369,6 +372,21 @@ func _setup_offscreen_indicators_ui() -> void:
 	indicator_layer.add_child(indicator_root)
 	add_child(indicator_layer)
 
+func _setup_fps_ui() -> void:
+	var layer = CanvasLayer.new()
+	var label = Label.new()
+	fps_label = label
+	label.text = "FPS: 0"
+	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	label.offset_left = 20
+	label.offset_top = 20
+	label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.0))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_font_size_override("font_size", 20)
+	layer.add_child(label)
+	add_child(layer)
+
 func _get_indicator(idx: int) -> Label:
 	while indicator_pool.size() <= idx:
 		var lbl = Label.new()
@@ -463,6 +481,9 @@ func _process(delta: float) -> void:
 	_update_rat_count_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
+	
+	if fps_label:
+		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 	
 	# ── Wave Spawner Logic ──
 	if _wave_spawned < wave_total_enemies and _wave_active < wave_max_concurrent:
@@ -639,7 +660,13 @@ func _spawn_wave_enemy() -> void:
 			markers.erase(closest_marker)
 			
 	var marker = markers[randi() % markers.size()] as Node3D
-	var enemy = _wave_enemy_scene.instantiate()
+	
+	var enemy
+	if randf() <= 0.30 and _wave_flamethrower_scene:
+		enemy = _wave_flamethrower_scene.instantiate()
+	else:
+		enemy = _wave_enemy_scene.instantiate()
+		
 	add_child(enemy)
 	if enemy is Node3D:
 		enemy.global_position = marker.global_position

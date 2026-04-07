@@ -77,9 +77,27 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Bard cannot walk on his own. Reset horizontal velocity from physics.
-	velocity.x = 0.0
-	velocity.z = 0.0
+	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var direction = Vector3.ZERO
+	var cam = get_viewport().get_camera_3d()
+	
+	if cam:
+		direction = (cam.global_transform.basis * Vector3(input_dir.x, 0, input_dir.y))
+		direction.y = 0
+		direction = direction.normalized()
+	else:
+		direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
+
+	if direction.length_squared() > 0.01:
+		velocity.x = direction.x * speed
+		velocity.z = direction.z * speed
+		
+		# Rotate player towards movement direction
+		var target_angle = atan2(direction.x, direction.z)
+		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0, speed)
+		velocity.z = move_toward(velocity.z, 0, speed)
 
 	# Gravity — accumulated independently of horizontal movement
 	if not is_on_floor():
