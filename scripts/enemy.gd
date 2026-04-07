@@ -1,36 +1,33 @@
 extends CharacterBody3D
 
-enum AIState {WANDER, SUSPICIOUS, CHASE, CATCH, PASSIVE}
+const CheeseScene := preload("res://scenes/cheese.tscn")
+const DamageTextScene := preload("res://scenes/damage_text.tscn")
+
+signal enemy_died
+
+enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
+
+# ── Health ──
+@export var max_health: float = 120.0
+@export var respawn_time: float = 3.0
+var health: float = max_health
 
 # ── Movement ──
 @export var move_speed: float = 1.4
-@export var chase_speed: float = 3.2
+@export var chase_speed: float = 2.6
 @export var rotation_speed: float = 8.0
 
-# ── Detection (FOV cone) ──
-@export var fov_angle: float = 60.0          # Half-angle of the vision cone (degrees)
-@export var view_range: float = 14.0         # How far the enemy can see
-@export var catch_range: float = 1.8         # Distance to instantly catch the player
-@export var lose_range: float = 20.0         # Distance at which the enemy gives up chasing
-@export var suspicion_time: float = 1.5      # Seconds of continuous sight before CATCH
-@export var alert_decay_rate: float = 1.0    # Suspicion lost per second when player not visible
+# ── Detection & combat ──
+@export var detection_range: float = 16.0
+@export var lose_range: float = 22.0
+@export var attack_range: float = 3.0
+@export var attack_damage: float = 15.0
+@export var attack_cooldown: float = 1.0
 
-# ── Wander / patrol ──
-@export var patrol_path: NodePath
-var _patrol_points: Array[Vector3] = []
-var _current_patrol_index: int = 0
-
+# ── Wander ──
 @export var wander_radius: float = 5.0
 @export var wander_pause_min: float = 1.0
 @export var wander_pause_max: float = 3.0
-
-# ── Health ──
-@export var max_hp: float = 100.0
-var current_hp: float = 100.0
-
-var _hp_viewport: SubViewport
-var _hp_bar: ProgressBar
-var _hp_sprite: Sprite3D
 
 # ── Internal state ──
 var ai_state: AIState = AIState.WANDER
@@ -43,59 +40,58 @@ var _wander_target: Vector3 = Vector3.ZERO
 var _wander_pause_timer: float = 0.0
 var _has_wander_target: bool = false
 
-var _suspicion_level: float = 0.0  # 0 → suspicion_time = fully alerted
+var _attack_timer: float = 0.0
 var _player_ref: CharacterBody3D = null
-var _last_known_player_pos: Vector3 = Vector3.ZERO
 
-# ── Detection indicator ──
-var _indicator: Label3D
+enum AttackType { NONE, SLASH, STEP }
+var current_attack: AttackType = AttackType.NONE
+var attack_prepare_timer: float = 0.0
+@export var attack_delay: float = 0.5
+var attack_marker: MeshInstance3D = null
 
-# ── Visual FOV cone ──
-var _fov_mesh: MeshInstance3D
-var _fov_material: StandardMaterial3D
-const FOV_SEGMENTS: int = 24
-const FOV_Y_OFFSET: float = 0.05  # Slightly above floor to avoid z-fighting
+var damage_cooldowns: Dictionary = {}
+var _knockback: Vector3 = Vector3.ZERO
+
+# ── HP bar visuals ──
+var hp_bar_bg: MeshInstance3D
+var hp_bar_fill: MeshInstance3D
+var hp_bar_fill_mat: StandardMaterial3D
+var hp_label: Label3D
 
 var is_stuck_in_blob: bool = false
 var blob_center: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
+	for child in find_children("*", "VisualInstance3D"):
+		child.layers = 2
 	add_to_group("enemies")
+	# Decouple from parent's non-uniform transform so move_and_slide works
 	top_level = true
-	collision_mask = collision_mask | (1 << 8)
+	collision_mask = collision_mask | (1 << 8) # Include RatStructures (9)
 	_spawn_transform = global_transform
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
-	
-	current_hp = max_hp
+	health = max_health
 
-	_create_indicator()
-	# _create_fov_cone() # Vision system disabled
 	_create_hp_bar()
+	_create_hp_label()
+	_update_hp_bar()
 
-	if patrol_path != NodePath():
-		var path_node = get_node_or_null(patrol_path)
-		if path_node:
-			for child in path_node.get_children():
-				if child is Node3D:
-					_patrol_points.append(child.global_position)
-		_resume_patrol()
-
+	# Start with a small random pause so not all enemies move at once
 	_wander_pause_timer = randf_range(0.0, wander_pause_max)
-
+	
+	# Connect to player death to respawn
 	var players = get_tree().get_nodes_in_group("player")
 	if players.size() > 0:
 		var p = players[0]
 		if p.has_signal("player_died"):
-			p.player_died.connect(_on_player_died)
+			pass #p.player_died.connect(_respawn)
 
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
-<<<<<<< Updated upstream
-=======
 		
 	if is_stuck_in_blob:
 		var target := blob_center
@@ -107,7 +103,6 @@ func _physics_process(delta: float) -> void:
 		if attack_marker != null:
 			attack_marker.visible = false
 		return
->>>>>>> Stashed changes
 
 	# ── Gravity ──
 	if not is_on_floor():
@@ -115,28 +110,42 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = 0.0
 
-	# ── Map bounds ──
-	if global_position.y < -15.0:
+	# ── Map bounds check ──
+	# If the enemy falls off the map, it dies
+	if global_position.y < -15.0 and not _is_dead:
 		_die()
 		return
+
+	# ── Tick damage cooldowns ──
+	var to_remove: Array = []
+	for key in damage_cooldowns:
+		damage_cooldowns[key] -= delta
+		if damage_cooldowns[key] <= 0.0:
+			to_remove.append(key)
+	for key in to_remove:
+		damage_cooldowns.erase(key)
 
 	# ── AI state machine ──
 	match ai_state:
 		AIState.PASSIVE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-		AIState.WANDER:
-			_process_wander(delta)
-		AIState.SUSPICIOUS:
-			_process_suspicious(delta)
-		AIState.CHASE:
-			_process_chase(delta)
-		AIState.CATCH:
+			return
+		AIState.DEAD:
 			velocity.x = 0.0
 			velocity.z = 0.0
+			return
+		AIState.WANDER:
+			_process_wander(delta)
+		AIState.CHASE:
+			_process_chase(delta)
+		AIState.ATTACK:
+			_process_attack(delta)
 
-	_update_indicator()
-	_update_fov_cone()
+	# Apply and decay knockback
+	_knockback = _knockback.lerp(Vector3.ZERO, 10.0 * delta)
+	velocity += _knockback
+
 	move_and_slide()
 
 
@@ -144,20 +153,12 @@ func _physics_process(delta: float) -> void:
 #  WANDER — idle patrol around spawn
 # ═══════════════════════════════════════════════
 func _process_wander(delta: float) -> void:
-	_find_player()
-
-	# Check FOV
-	if _can_see_player():
-		_suspicion_level += delta
-		if _suspicion_level >= suspicion_time:
-			ai_state = AIState.CHASE
-			_has_wander_target = false
-			return
-		ai_state = AIState.SUSPICIOUS
+	# Check if player/rat is near
+	_find_target()
+	if _player_ref and _distance_to_player() < detection_range:
+		ai_state = AIState.CHASE
 		_has_wander_target = false
 		return
-	else:
-		_suspicion_level = maxf(0.0, _suspicion_level - alert_decay_rate * delta)
 
 	# Pause between wander movements
 	if not _has_wander_target:
@@ -168,11 +169,13 @@ func _process_wander(delta: float) -> void:
 			_pick_wander_target()
 		return
 
+	# Move toward wander target
 	var to_target := _wander_target - global_position
 	to_target.y = 0.0
 	var dist := to_target.length()
 
 	if dist < 0.5:
+		# Reached target, start pause
 		_has_wander_target = false
 		_wander_pause_timer = randf_range(wander_pause_min, wander_pause_max)
 		velocity.x = 0.0
@@ -183,189 +186,209 @@ func _process_wander(delta: float) -> void:
 	velocity.x = dir.x * move_speed
 	velocity.z = dir.z * move_speed
 
+	# Face movement direction
 	var target_angle := atan2(dir.x, dir.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 
 
-func _resume_patrol() -> void:
-	if _patrol_points.size() > 0:
-		var closest_idx := 0
-		var min_dist := INF
-		for i in range(_patrol_points.size()):
-			var d := global_position.distance_squared_to(_patrol_points[i])
-			if d < min_dist:
-				min_dist = d
-				closest_idx = i
-		_current_patrol_index = closest_idx
-
 func _pick_wander_target() -> void:
-	if _patrol_points.size() > 0:
-		var target: Vector3 = _patrol_points[_current_patrol_index]
-		_wander_target = target
-		_wander_target.y = global_position.y
-		_has_wander_target = true
-		_current_patrol_index = (_current_patrol_index + 1) % _patrol_points.size()
-	else:
-		var spawn_pos := _spawn_transform.origin
-		var angle := randf() * TAU
-		var radius := randf_range(1.0, wander_radius)
-		_wander_target = spawn_pos + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
-		_wander_target.y = global_position.y
-		_has_wander_target = true
+	var spawn_pos := _spawn_transform.origin
+	var angle := randf() * TAU
+	var radius := randf_range(1.0, wander_radius)
+	_wander_target = spawn_pos + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+	_wander_target.y = global_position.y
+	_has_wander_target = true
 
 
 # ═══════════════════════════════════════════════
-#  SUSPICIOUS — player spotted, building suspicion
-# ═══════════════════════════════════════════════
-func _process_suspicious(delta: float) -> void:
-	if _can_see_player():
-		_suspicion_level += delta
-		_last_known_player_pos = _player_ref.global_position
-
-		# Face player
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
-		if to_player.length() > 0.01:
-			var target_angle := atan2(to_player.x, to_player.z)
-			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-
-		if _suspicion_level >= suspicion_time:
-			# Suspicion bar full — catch immediately, no chase phase
-			_catch_player()
-			return
-	else:
-		_suspicion_level -= alert_decay_rate * delta
-		if _suspicion_level <= 0.0:
-			_suspicion_level = 0.0
-			ai_state = AIState.WANDER
-			_resume_patrol()
-			return
-
-	# Slow approach while suspicious
-	velocity.x = move_toward(velocity.x, 0.0, move_speed * delta * 3.0)
-	velocity.z = move_toward(velocity.z, 0.0, move_speed * delta * 3.0)
-
-
-# ═══════════════════════════════════════════════
-#  CHASE — pursue the player
+#  CHASE — move toward player
 # ═══════════════════════════════════════════════
 func _process_chase(delta: float) -> void:
+	_find_target()
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
-		_suspicion_level = 0.0
-		_resume_patrol()
 		return
-
-	# Update last known position if we can still see them
-	if _can_see_player():
-		_last_known_player_pos = _player_ref.global_position
 
 	var dist := _distance_to_player()
-
-	# Reached the player → catch!
-	if dist < catch_range:
-		_catch_player()
-		return
 
 	# Lost player
 	if dist > lose_range:
 		ai_state = AIState.WANDER
-		_suspicion_level = 0.0
-		_resume_patrol()
 		return
 
-	# Move toward player (or last known position)
-	var chase_target := _player_ref.global_position if _can_see_player() else _last_known_player_pos
-	var to_target := chase_target - global_position
-	to_target.y = 0.0
-	var dir := to_target.normalized()
+	# Close enough to attack
+	if dist < attack_range:
+		ai_state = AIState.ATTACK
+		_attack_timer = 0.0  # Attack immediately on first contact
+		return
+
+	# Move toward player
+	var to_player := _player_ref.global_position - global_position
+	to_player.y = 0.0
+	var dir := to_player.normalized()
 	velocity.x = dir.x * chase_speed
 	velocity.z = dir.z * chase_speed
 
 	var target_angle := atan2(dir.x, dir.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 
-	# If chasing last known pos and arrived, give up
-	if not _can_see_player():
-		var flat_dist := Vector2(global_position.x - _last_known_player_pos.x, global_position.z - _last_known_player_pos.z).length()
-		if flat_dist < 1.5:
-			ai_state = AIState.WANDER
-			_suspicion_level = 0.0
-			_resume_patrol()
-
 
 # ═══════════════════════════════════════════════
-#  CATCH — player is caught, instant reset
+#  ATTACK — hit player on cooldown
 # ═══════════════════════════════════════════════
-func _catch_player() -> void:
-	ai_state = AIState.CATCH
-	if _player_ref and _player_ref.has_method("die"):
-		_player_ref.die()
-	# After catch, return to wander after a moment
-	await get_tree().create_timer(1.0).timeout
-	ai_state = AIState.WANDER
-	_suspicion_level = 0.0
-	global_transform = _spawn_transform
-	velocity = Vector3.ZERO
-	_resume_patrol()
-
-
-# ═══════════════════════════════════════════════
-#  FOV DETECTION
-# ═══════════════════════════════════════════════
-func _can_see_player() -> bool:
-	return false # Vision disabled
-	
+func _process_attack(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
-		_find_player()
-		if _player_ref == null:
-			return false
+		ai_state = AIState.WANDER
+		return
 
-	var to_player := _player_ref.global_position - global_position
-	to_player.y = 0.0
-	var dist := to_player.length()
+	var dist := _distance_to_player()
 
-	# Range check
-	if dist > view_range:
-		return false
+	# Slow down while attacking
+	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 5.0)
+	velocity.z = move_toward(velocity.z, 0.0, chase_speed * delta * 5.0)
 
-	# Angle check (FOV cone)
-	var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
-	var angle_to_player := rad_to_deg(forward.angle_to(to_player.normalized()))
-	if angle_to_player > fov_angle:
-		return false
+	if current_attack != AttackType.NONE:
+		# We are winding up an attack
+		attack_prepare_timer -= delta
+		if attack_prepare_timer <= 0.0:
+			_execute_attack()
+			current_attack = AttackType.NONE
+			_attack_timer = attack_cooldown
+		return
 
-	# Line-of-sight raycast
-	var space_state := get_world_3d().direct_space_state
-	var origin := global_position + Vector3.UP * 1.0
-	var target := _player_ref.global_position + Vector3.UP * 0.5
-	var query := PhysicsRayQueryParameters3D.create(origin, target)
-	query.collision_mask = 1 | 2 | 8 | (1 << 8)  # Floor + Player + Walls + RatStructures
-	query.exclude = [self.get_rid()]
-	var hit := space_state.intersect_ray(query)
+	# Attack timer
+	_attack_timer -= delta
+	if _attack_timer <= 0.0:
+		if dist > attack_range * 1.5:
+			ai_state = AIState.CHASE
+			return
+		_pick_and_start_attack()
+	else:
+		# Face target while waiting
+		var to_player := _player_ref.global_position - global_position
+		to_player.y = 0.0
+		if to_player.length() > 0.01:
+			var target_angle := atan2(to_player.x, to_player.z)
+			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 
-	if hit and hit.collider == _player_ref:
-		return true
+func _pick_and_start_attack() -> void:
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	var rat_count = 0
+	if mgr != null and "rats" in mgr:
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
+			for rat in mgr.rats:
+				if is_instance_valid(rat) and rat.global_position.distance_squared_to(global_position) < attack_range * attack_range:
+					rat_count += 1
+				
+	if rat_count > 3:
+		current_attack = AttackType.STEP
+	else:
+		current_attack = AttackType.SLASH
+		
+	attack_prepare_timer = attack_delay
+	# Flash yellow to indicate windup
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body and body.material_override:
+		body.material_override.albedo_color = Color(1.0, 1.0, 0.0)
+		
+	if attack_marker == null:
+		attack_marker = MeshInstance3D.new()
+		attack_marker.layers = 2
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.2, 0.0, 0.4)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		attack_marker.material_override = mat
+		add_child(attack_marker)
+		
+	attack_marker.visible = true
+	var immediate = ImmediateMesh.new()
+	attack_marker.mesh = immediate
+	immediate.clear_surfaces()
+	immediate.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	
+	var r = attack_range
+	if current_attack == AttackType.STEP:
+		var segments = 32
+		for i in range(segments):
+			var a1 = (float(i) / segments) * TAU
+			var a2 = (float(i + 1) / segments) * TAU
+			immediate.surface_add_vertex(Vector3(0, 0.1, 0))
+			immediate.surface_add_vertex(Vector3(sin(a1)*r, 0.1, cos(a1)*r))
+			immediate.surface_add_vertex(Vector3(sin(a2)*r, 0.1, cos(a2)*r))
+	else:
+		var segments = 16
+		for i in range(segments):
+			var a1 = -PI/4 + (float(i)/segments) * (PI/2)
+			var a2 = -PI/4 + (float(i+1)/segments) * (PI/2)
+			immediate.surface_add_vertex(Vector3(0, 0.1, 0))
+			immediate.surface_add_vertex(Vector3(-sin(a1)*r, 0.1, cos(a1)*r)) # local forward in godot is +z normally? We used -sin, 0, cos for forward.
+			immediate.surface_add_vertex(Vector3(-sin(a2)*r, 0.1, cos(a2)*r))
+	immediate.surface_end()
 
-	return false
+func _execute_attack() -> void:
+	if attack_marker != null:
+		attack_marker.visible = false
+	_flash_attack()
+	
+	var targets = []
+	var players = get_tree().get_nodes_in_group("player")
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	targets.append_array(players)
+	if mgr != null and "rats" in mgr:
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
+			for r in mgr.rats:
+				if is_instance_valid(r):
+					targets.append(r)
+		
+	var r_radius = attack_range
+	var slash_angle = deg_to_rad(45.0) # 45 each side = 90 deg total
+	var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y))
+	
+	for t in targets:
+		if not is_instance_valid(t) or not t.is_inside_tree():
+			continue
+		var to_t = t.global_position - global_position
+		to_t.y = 0.0
+		var d = to_t.length()
+		
+		if current_attack == AttackType.STEP:
+			if d <= r_radius:
+				_damage_target(t)
+		elif current_attack == AttackType.SLASH:
+			if d <= r_radius:
+				var dir = to_t.normalized()
+				var angle_diff = acos(clampf(my_forward.dot(dir), -1.0, 1.0))
+				if angle_diff <= slash_angle:
+					_damage_target(t)
+
+func _damage_target(t: Node3D) -> void:
+	if t.is_in_group("player") and t.has_method("take_damage"):
+		t.take_damage(attack_damage)
+	elif t is Rat and t.has_method("die"):
+		t.die()
 
 
 # ═══════════════════════════════════════════════
-#  F2 PASSIVE TOGGLE (preserved)
+#  F2 PASSIVE TOGGLE
 # ═══════════════════════════════════════════════
 func toggle_passive() -> void:
 	if ai_state == AIState.PASSIVE:
+		# Resume normal AI
 		ai_state = AIState.WANDER
 		_has_wander_target = false
 		_wander_pause_timer = randf_range(0.0, wander_pause_max)
-		_suspicion_level = 0.0
-		_resume_patrol()
 	else:
+		# Go passive: reset to spawn (also revives dead enemies)
 		if _is_dead:
 			_respawn()
 		ai_state = AIState.PASSIVE
 		_has_wander_target = false
-		_suspicion_level = 0.0
 		global_transform = _spawn_transform
 		velocity = Vector3.ZERO
 
@@ -375,21 +398,44 @@ func is_passive() -> bool:
 
 
 # ═══════════════════════════════════════════════
-#  DEATH / RESPAWN (preserved for compatibility)
+#  DAMAGE & DEATH (preserved from original)
 # ═══════════════════════════════════════════════
-func take_damage(amount: float, _source_id: int = -1, _hit_pos: Vector3 = Vector3.ZERO) -> void:
-	if _is_dead:
+func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO, text_color: Color = Color.WHITE) -> void:
+	
+	if _is_dead or ai_state == AIState.PASSIVE:
 		return
-	# Aggro to player immediately on taking damage
-	if ai_state == AIState.WANDER or ai_state == AIState.PASSIVE:
-		ai_state = AIState.CHASE
-		_suspicion_level = suspicion_time
-	
-	current_hp -= amount
-	if _hp_bar:
-		_hp_bar.value = current_hp
-	
-	if current_hp <= 0:
+	if source_id >= 0:
+		if damage_cooldowns.has(source_id):
+			return
+		damage_cooldowns[source_id] = 0.3
+
+	health -= amount
+	health = maxf(health, 0.0)
+	_update_hp_bar()
+	_flash_hit()
+
+	if DamageTextScene:
+		var dt = DamageTextScene.instantiate()
+		get_parent().add_child(dt)
+		dt.global_position = global_position + Vector3(0, 1.5, 0)
+		if hit_pos != Vector3.ZERO:
+			dt.global_position = hit_pos + Vector3(0, 0.5, 0)
+		dt.set_damage(int(ceil(amount)), text_color)
+
+	if hit_pos != Vector3.ZERO:
+		var dir := (global_position - hit_pos)
+		dir.y = 0.0
+		if dir.length() > 0.01:
+			_knockback += dir.normalized() * 1.0
+			if _knockback.length() > 5.0:
+				_knockback = _knockback.normalized() * 5.0
+
+	if ai_state == AIState.WANDER:
+		_find_target()
+		if _player_ref:
+			ai_state = AIState.CHASE
+
+	if health <= 0.0:
 		_die()
 
 
@@ -398,7 +444,36 @@ func _die() -> void:
 		return
 	_is_dead = true
 	set_physics_process(false)
-	visible = false
+	ai_state = AIState.DEAD
+	damage_cooldowns.clear()
+	collision_layer = 0
+	collision_mask = 0
+
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	var tween := create_tween()
+	if body:
+		tween.tween_property(body, "scale", Vector3(0, 0, 0), 0.3).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func() -> void:
+		visible = false
+		enemy_died.emit()
+		
+		if randf() <= 0.5:
+			if CheeseScene:
+				var c = CheeseScene.instantiate()
+				get_parent().add_child(c)
+				# Losowe wyrzucenie przedmiotu – nie centralnie pod wrogiem
+				var throw_angle := randf() * TAU
+				var throw_dist := randf_range(1.2, 2.5)
+				c.global_position = global_position + Vector3(
+					cos(throw_angle) * throw_dist,
+					0.0,
+					sin(throw_angle) * throw_dist
+				)
+				if c.has_method("set_type"):
+					c.set_type(randi() % 4)
+	)
+
+	# Stay dead — no auto-respawn. F2 toggle revives all enemies.
 
 
 func _respawn() -> void:
@@ -410,34 +485,49 @@ func _respawn() -> void:
 	if body:
 		body.scale = Vector3.ONE
 	global_transform = _spawn_transform
+	health = max_health
+	_update_hp_bar()
 	collision_layer = _collision_layer_saved
 	collision_mask = _collision_mask_saved
-	
-	current_hp = max_hp
-	if _hp_bar:
-		_hp_bar.value = current_hp
-		
 	ai_state = AIState.WANDER
 	_has_wander_target = false
-	_suspicion_level = 0.0
 	_wander_pause_timer = randf_range(wander_pause_min, wander_pause_max)
 	velocity = Vector3.ZERO
-	_resume_patrol()
-
-
-func _on_player_died() -> void:
-	_respawn()
 
 
 # ═══════════════════════════════════════════════
 #  HELPERS
 # ═══════════════════════════════════════════════
-func _find_player() -> void:
-	if _player_ref != null and is_instance_valid(_player_ref):
-		return
+func _find_target() -> void:
+	var targets: Array[Node3D] = []
 	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		_player_ref = players[0] as CharacterBody3D
+	targets.append_array(players)
+	
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and "rats" in mgr:
+		# Exclude rats from targeting entirely if they are hidden
+		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
+		if are_visible and not purple_active:
+			for rat in mgr.rats:
+				if is_instance_valid(rat):
+					targets.append(rat as Node3D)
+				
+	var best_d := INF
+	var best_t: Node3D = null
+	
+	for t in targets:
+		if is_instance_valid(t) and t.is_inside_tree():
+			var curr_d = global_position.distance_squared_to(t.global_position)
+			# Reduce effective distance to player so enemies heavily prioritize Bard over Rats at similar distances
+			if t.is_in_group("player"):
+				curr_d -= 3.0
+				
+			if curr_d < best_d:
+				best_d = curr_d
+				best_t = t
+				
+	_player_ref = best_t as CharacterBody3D
 
 
 func _distance_to_player() -> float:
@@ -448,164 +538,87 @@ func _distance_to_player() -> float:
 	return sqrt(dx * dx + dz * dz)
 
 
-# ═══════════════════════════════════════════════
-#  DETECTION INDICATOR (replaces HP bar)
-# ═══════════════════════════════════════════════
-func _create_indicator() -> void:
-	_indicator = Label3D.new()
-	_indicator.text = ""
-	_indicator.position.y = 2.2
-	_indicator.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_indicator.pixel_size = 0.01
-	_indicator.font_size = 48
-	_indicator.outline_size = 8
-	_indicator.outline_modulate = Color(0, 0, 0, 0.9)
-	add_child(_indicator)
+func _flash_attack() -> void:
+	# Brief red pulse on attack
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body and body.material_override:
+		var original_color: Color = Color(0.8, 0.15, 0.15)
+		body.material_override.albedo_color = Color(1.0, 0.4, 0.0)  # Orange flash
+		var tween := create_tween()
+		tween.tween_property(body.material_override, "albedo_color", original_color, 0.2)
 
 
-func _update_indicator() -> void:
-	if _indicator == null:
-		return
+func _flash_hit() -> void:
+	var body: MeshInstance3D = get_child(0) as MeshInstance3D
+	if body and body.material_override:
+		var original_color: Color = Color(0.8, 0.15, 0.15)
+		body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
+		var tween := create_tween()
+		tween.tween_property(body.material_override, "albedo_color", original_color, 0.15)
 
-	match ai_state:
-		AIState.WANDER, AIState.PASSIVE:
-			if _suspicion_level > 0.0:
-				_indicator.text = "?"
-				_indicator.modulate = Color(1.0, 0.9, 0.2)
-			else:
-				_indicator.text = ""
-		AIState.SUSPICIOUS:
-			var pct := _suspicion_level / suspicion_time
-			_indicator.text = "?"
-			_indicator.modulate = Color(1.0, 0.6 * (1.0 - pct), 0.0)
-			_indicator.font_size = int(lerpf(48.0, 72.0, pct))
-		AIState.CHASE, AIState.CATCH:
-			_indicator.text = "!"
-			_indicator.modulate = Color(1.0, 0.1, 0.1)
-			_indicator.font_size = 72
 
 # ═══════════════════════════════════════════════
-#  HEALTH BAR INDICATOR
+#  HP BAR (unchanged from original)
 # ═══════════════════════════════════════════════
 func _create_hp_bar() -> void:
-	_hp_viewport = SubViewport.new()
-	_hp_viewport.transparent_bg = true
-	_hp_viewport.size = Vector2i(256, 32)
-	_hp_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	
-	_hp_bar = ProgressBar.new()
-	_hp_bar.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_hp_bar.min_value = 0
-	_hp_bar.max_value = max_hp
-	_hp_bar.value = current_hp
-	_hp_bar.show_percentage = false
-	
-	var sb_bg := StyleBoxFlat.new()
-	sb_bg.bg_color = Color(0.2, 0.2, 0.2, 0.8)
-	sb_bg.border_width_bottom = 2
-	sb_bg.border_width_top = 2
-	sb_bg.border_width_left = 2
-	sb_bg.border_width_right = 2
-	sb_bg.border_color = Color.BLACK
-	_hp_bar.add_theme_stylebox_override("background", sb_bg)
+	var bar_width: float = 1.0
+	var bar_height: float = 0.08
 
-	var sb_fill := StyleBoxFlat.new()
-	sb_fill.bg_color = Color(0.8, 0.2, 0.2, 1.0)
-	sb_fill.border_width_bottom = 2
-	sb_fill.border_width_top = 2
-	sb_fill.border_width_left = 2
-	sb_fill.border_width_right = 2
-	sb_fill.border_color = Color.TRANSPARENT
-	_hp_bar.add_theme_stylebox_override("fill", sb_fill)
+	hp_bar_bg = MeshInstance3D.new()
+	hp_bar_bg.layers = 2
+	var bg_mesh := QuadMesh.new()
+	bg_mesh.size = Vector2(bar_width, bar_height)
+	hp_bar_bg.mesh = bg_mesh
+	var bg_mat := StandardMaterial3D.new()
+	bg_mat.albedo_color = Color(0.15, 0.15, 0.15, 0.9)
+	bg_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	bg_mat.no_depth_test = true
+	bg_mat.render_priority = 1
+	hp_bar_bg.material_override = bg_mat
+	hp_bar_bg.position.y = 2.2
+	add_child(hp_bar_bg)
 
-	_hp_viewport.add_child(_hp_bar)
-	add_child(_hp_viewport)
-
-	_hp_sprite = Sprite3D.new()
-	_hp_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_hp_sprite.position.y = 2.8 # Place above the detection indicator
-	_hp_sprite.pixel_size = 0.005
-	_hp_sprite.texture = _hp_viewport.get_texture()
-	add_child(_hp_sprite)
+	hp_bar_fill = MeshInstance3D.new()
+	hp_bar_fill.layers = 2
+	var fill_mesh := QuadMesh.new()
+	fill_mesh.size = Vector2(bar_width, bar_height)
+	hp_bar_fill.mesh = fill_mesh
+	hp_bar_fill_mat = StandardMaterial3D.new()
+	hp_bar_fill_mat.albedo_color = Color(0.2, 0.9, 0.3)
+	hp_bar_fill_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hp_bar_fill_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	hp_bar_fill_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	hp_bar_fill_mat.no_depth_test = true
+	hp_bar_fill_mat.render_priority = 2
+	hp_bar_fill.material_override = hp_bar_fill_mat
+	hp_bar_fill.position.y = 2.2
+	add_child(hp_bar_fill)
 
 
-# ═══════════════════════════════════════════════
-#  VISUAL FOV CONE
-# ═══════════════════════════════════════════════
-func _create_fov_cone() -> void:
-	_fov_mesh = MeshInstance3D.new()
-	_fov_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-	_fov_material = StandardMaterial3D.new()
-	_fov_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_fov_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_fov_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_fov_material.no_depth_test = false
-	_fov_material.albedo_color = Color(0.2, 0.8, 0.3, 0.18)
-	_fov_mesh.material_override = _fov_material
-
-	var im := ImmediateMesh.new()
-	_fov_mesh.mesh = im
-	_rebuild_fov_geometry(im)
-
-	add_child(_fov_mesh)
+func _create_hp_label() -> void:
+	hp_label = Label3D.new()
+	hp_label.text = str(int(health))
+	hp_label.position.y = 2.4
+	hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	hp_label.pixel_size = 0.01
+	hp_label.outline_size = 6
+	hp_label.outline_modulate = Color(0, 0, 0, 0.9)
+	add_child(hp_label)
 
 
-func _rebuild_fov_geometry(im: ImmediateMesh) -> void:
-	im.clear_surfaces()
-	im.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+func _update_hp_bar() -> void:
+	var ratio: float = health / max_health
+	hp_bar_fill.scale.x = ratio
+	hp_bar_fill.position.x = - (1.0 - ratio) * 0.5
 
-	var half_angle_rad := deg_to_rad(fov_angle)
-	var origin := Vector3(0.0, FOV_Y_OFFSET, 0.0)
+	if ratio > 0.5:
+		hp_bar_fill_mat.albedo_color = Color(0.2, 0.9, 0.3)
+	elif ratio > 0.25:
+		hp_bar_fill_mat.albedo_color = Color(0.9, 0.8, 0.2)
+	else:
+		hp_bar_fill_mat.albedo_color = Color(0.9, 0.2, 0.15)
 
-	for i in range(FOV_SEGMENTS):
-		var t0 := float(i) / float(FOV_SEGMENTS)
-		var t1 := float(i + 1) / float(FOV_SEGMENTS)
-		var angle0 := lerpf(-half_angle_rad, half_angle_rad, t0)
-		var angle1 := lerpf(-half_angle_rad, half_angle_rad, t1)
-
-		var p0 := Vector3(sin(angle0) * view_range, FOV_Y_OFFSET, cos(angle0) * view_range)
-		var p1 := Vector3(sin(angle1) * view_range, FOV_Y_OFFSET, cos(angle1) * view_range)
-
-		var alpha0: float = 0.22 * (1.0 - abs(t0 - 0.5) * 2.0)
-		var alpha1: float = 0.22 * (1.0 - abs(t1 - 0.5) * 2.0)
-
-		im.surface_set_color(Color(1, 1, 1, 0.3))
-		im.surface_add_vertex(origin)
-		im.surface_set_color(Color(1, 1, 1, alpha0))
-		im.surface_add_vertex(p0)
-		im.surface_set_color(Color(1, 1, 1, alpha1))
-		im.surface_add_vertex(p1)
-
-	im.surface_end()
-
-
-func _update_fov_cone() -> void:
-	if _fov_mesh == null or _fov_material == null:
-		return
-
-	if ai_state == AIState.PASSIVE or ai_state == AIState.CATCH or _is_dead:
-		_fov_mesh.visible = false
-		return
-	_fov_mesh.visible = true
-
-	var cone_color: Color
-	match ai_state:
-		AIState.WANDER:
-			if _suspicion_level > 0.0:
-				var pct := _suspicion_level / suspicion_time
-				cone_color = Color(0.2, 0.8, 0.3, 0.18).lerp(Color(1.0, 0.8, 0.1, 0.28), pct)
-			else:
-				cone_color = Color(0.2, 0.8, 0.3, 0.18)
-		AIState.SUSPICIOUS:
-			var pct := _suspicion_level / suspicion_time
-			cone_color = Color(1.0, 0.7, 0.1, 0.28).lerp(Color(1.0, 0.2, 0.1, 0.4), pct)
-		AIState.CHASE:
-			cone_color = Color(1.0, 0.15, 0.1, 0.35)
-		_:
-			cone_color = Color(0.2, 0.8, 0.3, 0.18)
-
-	_fov_material.albedo_color = cone_color
-
-	_fov_mesh.position = Vector3.ZERO
-	_fov_mesh.rotation = Vector3.ZERO
+	if hp_label:
+		hp_label.text = str(int(ceil(health)))

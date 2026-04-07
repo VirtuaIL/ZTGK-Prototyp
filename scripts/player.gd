@@ -3,6 +3,7 @@ class_name player
 
 signal stratagem_activated(stratagem_id: String)
 signal player_died
+signal object_reset
 
 @export var speed: float = 7.0
 @export var rotation_speed: float = 10.0
@@ -12,28 +13,23 @@ signal player_died
 @export var max_hp: float = 100.0
 @export var hp_regen_rate: float = 20.0
 @export var regen_delay: float = 2.0
-@export var carried_by_rats: bool = true
-@export var required_available_rats_for_movement: int = 1
-var is_being_carried: bool = false
+@export var carriers_required: int = 1
 
-signal object_reset
+var current_hp: float = 100.0
+var time_since_last_damage: float = 0.0
 
 var is_surrounded: bool = false
 var carrier_rats: Array[CharacterBody3D] = []
 var carrier_available_max: int = 0
 var carrier_brush_desired: int = 0
 
-var current_hp: float = 100.0
-var time_since_last_damage: float = 0.0
-
 @onready var damage_overlay: ColorRect = $PlayerHUD/DamageOverlay
 @onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
 
 var is_stratagem_mode: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
-var carried_target_pos: Vector3 = Vector3.ZERO
-var has_carried_target: bool = false
-var _rat_manager: Node = null
+
+@onready var minimap_camera: Camera3D = $PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport/MinimapCamera
 
 func _ready() -> void:
 	add_to_group("player")
@@ -42,7 +38,12 @@ func _ready() -> void:
 	_spawn_position = global_position
 	current_hp = max_hp
 	_update_health_bar()
-	_cache_rat_manager()
+
+	if minimap_camera:
+		minimap_camera.top_level = true
+		minimap_camera.global_position = Vector3(0, 50.0, 0)
+		minimap_camera.size = 65.0
+		minimap_camera.cull_mask = 1048575 - 2
 
 
 func _physics_process(delta: float) -> void:
@@ -51,6 +52,8 @@ func _physics_process(delta: float) -> void:
 	if time_since_last_damage >= regen_delay and current_hp < max_hp:
 		current_hp = min(current_hp + hp_regen_rate * delta, max_hp)
 		_update_health_bar()
+
+
 		
 	# Update Damage Vignette Overlay
 	if damage_overlay and damage_overlay.material:
@@ -69,44 +72,14 @@ func _physics_process(delta: float) -> void:
 		die()
 		return
 
-	if carried_by_rats:
-		velocity.x = 0.0
-		velocity.z = 0.0
-		if is_being_carried and has_carried_target:
-			var motion := carried_target_pos - global_position
-			move_and_collide(motion)
-			return
-		# Allow falling even when idle
-		if not is_on_floor():
-			velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 5
-		else:
-			velocity.y = 0.0
-		move_and_slide()
-		return
-
 	if is_stratagem_mode:
 		velocity = Vector3.ZERO
 		move_and_slide()
 		return
 
-	var can_move := _has_required_rats_for_manual_movement()
-	var input_dir := Vector3.ZERO
-	if can_move:
-		input_dir.x = Input.get_axis("move_left", "move_right")
-		input_dir.z = Input.get_axis("move_forward", "move_back")
-	# Rotate input to match isometric camera (45° around Y)
-	input_dir = input_dir.rotated(Vector3.UP, deg_to_rad(45.0))
-
-	if input_dir.length() > 0.0:
-		input_dir = input_dir.normalized()
-		velocity.x = input_dir.x * speed
-		velocity.z = input_dir.z * speed
-
-		var target_angle := atan2(input_dir.x, input_dir.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, speed * delta * 5.0)
-		velocity.z = move_toward(velocity.z, 0.0, speed * delta * 5.0)
+	# Bard cannot walk on his own. Reset horizontal velocity from physics.
+	velocity.x = 0.0
+	velocity.z = 0.0
 
 	# Gravity — accumulated independently of horizontal movement
 	if not is_on_floor():
@@ -116,11 +89,15 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	
+
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount
 	time_since_last_damage = 0.0
 	_update_health_bar()
+
+
 	
 	if current_hp <= 0:
 		die()
@@ -139,22 +116,16 @@ func die() -> void:
 	velocity = Vector3.ZERO
 	current_hp = max_hp
 	time_since_last_damage = 0.0
-	is_stratagem_mode = false
 	_update_health_bar()
+
+
+	object_reset.emit()
 	player_died.emit()
 
 
 func set_stratagem_mode(active: bool) -> void:
 	is_stratagem_mode = active
-
-
-func set_rat_manager(rat_manager: Node) -> void:
-	_rat_manager = rat_manager
-
-
-func get_required_available_rats_for_movement() -> int:
-	return max(0, required_available_rats_for_movement)
-
+	
 
 func _update_health_bar() -> void:
 	if not health_bar:
@@ -162,35 +133,22 @@ func _update_health_bar() -> void:
 	health_bar.max_value = max_hp
 	health_bar.value = clampf(current_hp, 0.0, max_hp)
 
-
-func _cache_rat_manager() -> void:
-	if _rat_manager == null:
-		_rat_manager = get_tree().get_first_node_in_group("rat_manager")
-
-
-func _has_required_rats_for_manual_movement() -> bool:
-	var required := get_required_available_rats_for_movement()
-	if required <= 0:
-		return true
-	_cache_rat_manager()
-	if _rat_manager == null or not _rat_manager.has_method("get_available_rat_count"):
-		return true
-	return _rat_manager.get_available_rat_count() >= required
-
 func set_highlight(enabled: bool) -> void:
-	var mesh_instance: MeshInstance3D = get_node_or_null("MeshInstance3D")
-	if not mesh_instance:
-		return
-	if enabled:
-		if mesh_instance.material_overlay:
-			return
-		var highlight_mat := StandardMaterial3D.new()
-		highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		highlight_mat.albedo_color = Color.YELLOW
-		highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
-		highlight_mat.no_depth_test = true
-		highlight_mat.grow = true
-		highlight_mat.grow_amount = 0.03
-		mesh_instance.material_overlay = highlight_mat
-	else:
-		mesh_instance.material_overlay = null
+	_set_highlight_recursive(self, enabled)
+
+func _set_highlight_recursive(node: Node, enabled: bool) -> void:
+	if node is MeshInstance3D:
+		if enabled:
+			if not node.material_overlay:
+				var highlight_mat = StandardMaterial3D.new()
+				highlight_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				highlight_mat.albedo_color = Color.YELLOW
+				highlight_mat.cull_mode = BaseMaterial3D.CULL_FRONT
+				highlight_mat.no_depth_test = true
+				highlight_mat.grow = true
+				highlight_mat.grow_amount = 0.05
+				node.material_overlay = highlight_mat
+		else:
+			node.material_overlay = null
+	for child in node.get_children():
+		_set_highlight_recursive(child, enabled)

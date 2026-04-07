@@ -62,32 +62,14 @@ func _set_active(active: bool) -> void:
 	var targets := _get_target_doors()
 	for target in targets:
 		if active:
-			if target.has_method("press"):
-				target.press(self)
-			else:
-				target.open()
+			target.open()
 		else:
-			if target.has_method("release"):
-				target.release(self)
-			else:
-				target.close()
+			target.close()
 
 
 func _get_target_doors() -> Array[door]:
 	var result: Array[door] = []
-	var level_root := _get_level_root()
 	for d in get_tree().get_nodes_in_group("doors"):
-		if level_root and not level_root.is_ancestor_of(d):
-			continue
 		if d is door and d.doorId == doorId:
 			result.append(d)
 	return result
-
-func _get_level_root() -> Node:
-	var n: Node = self
-	while n and n.get_parent():
-		var p := n.get_parent()
-		if p and p.name == "levels":
-			return n
-		n = p
-	return null

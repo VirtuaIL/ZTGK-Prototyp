@@ -30,35 +30,12 @@ func _on_body_entered(body: Node3D) -> void:
 			else:
 				body.take_damage(body.max_hp * 0.5)
 		queue_free()
-	elif body.is_in_group("enemies"):
-		if body.has_method("take_damage"):
-			if deal_damage_instead_of_kill:
-				body.take_damage(damage)
-			else:
-				body.take_damage(50.0)
-		queue_free()
 	elif not (body is turret or body is hitscan_turret or body is bossTurret):
-		if body.is_in_group("rat_structures"):
-			var space_state = PhysicsServer3D.space_get_direct_state(get_world_3d().space)
-			if space_state:
-				var move_dist = velocity.length() * get_physics_process_delta_time()
-				if move_dist < 0.1:
-					move_dist = 0.5
-				else:
-					move_dist = move_dist * 2.0
-				var dir = velocity.normalized()
-				var query = PhysicsRayQueryParameters3D.create(global_position - dir * move_dist, global_position + dir * move_dist, collision_mask, [self.get_rid()])
-				query.collide_with_areas = false
-				query.collide_with_bodies = true
-				var result = space_state.intersect_ray(query)
-				if result:
-					velocity = velocity.bounce(result.normal)
-					return
-				else:
-					velocity = -velocity
-					return
-		else:
-			# Hit regular wall, box, floor, or wall button
-			if body.has_method("on_projectile_hit"):
-				body.on_projectile_hit()
-			queue_free()
+		# Hit wall, box, floor, or wall button
+		if body.has_method("on_projectile_hit"):
+			body.on_projectile_hit()
+		elif body.is_in_group("rat_structures"):
+			var manager = body.get_parent()
+			if manager and manager.has_method("on_projectile_hit"):
+				manager.on_projectile_hit()
+		queue_free()

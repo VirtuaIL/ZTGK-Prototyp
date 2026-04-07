@@ -10,7 +10,7 @@ class_name turret_solid
 signal object_reset
 
 var _spawn_position: Vector3 = Vector3.ZERO
-var projectile_scene: PackedScene = preload("res://scenes/projectiles/projectile.tscn")
+var projectile_scene: PackedScene = preload("res://scenes/projectile.tscn")
 var fire_timer: float = 0.0
 
 @onready var fire_point: Vector3 = Vector3(0, 0.7, 0) # Adjust based on the turret mesh

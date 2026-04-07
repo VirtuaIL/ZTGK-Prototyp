@@ -17,7 +17,7 @@ var carrier_available_max: int = 0
 var carrier_brush_desired: int = 0
 var _spawn_position: Vector3 = Vector3.ZERO
 
-var projectile_scene: PackedScene = preload("res://scenes/projectiles/projectile.tscn")
+var projectile_scene: PackedScene = preload("res://scenes/projectile.tscn")
 var player_node: player = null
 var fire_timer: float = 0.0
 
