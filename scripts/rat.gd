@@ -152,29 +152,17 @@ func _physics_process(delta: float) -> void:
 		_is_showing_blob = should_be_blob
 		show_visuals()
 		
-	if mgr != null and "buff_purple_timer" in mgr:
-		if mgr.buff_purple_timer > 0.0:
-			# Ustaw fioletowy kolor szczurów (wczesny return blokuje blok materiału poniżej)
-			if mgr.has_method("get_current_buff_material"):
-				var mat = mgr.get_current_buff_material()
-				if mat != _current_buff_material:
-					_current_buff_material = mat
-					$Body.material_override = mat
-					$Tail.material_override = mat
-					$Head.material_override = mat
-			if not is_on_floor():
-				velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
-			else:
-				velocity.y = 0.0
-			velocity.x = 0.0
-			velocity.z = 0.0
-			move_and_slide()
-			return
-			
-		if mgr.buff_green_timer > 0.0:
+	# ── Purple poison: slow down instead of freezing ──
+	_speed_mult = 1.0
+	if mgr != null and "buff_purple_timer" in mgr and mgr.buff_purple_timer > 0.0:
+		_speed_mult = 0.15
+
+	# ── Green gas: from buff OR from permanent green rat type ──
+	if mgr != null:
+		var has_green = (rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
+		if has_green:
 			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
-			# Gęstszy ślad: co 0.07s gdy szczur się porusza → ciągła smuga
 			if _gas_timer <= 0.0 and speed_sq > 0.05:
 				_gas_timer = 0.07
 				var can_emit := true
