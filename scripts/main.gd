@@ -39,6 +39,11 @@ var _indicator_blink_time: float = 0.0
 var fps_label: Label
 var current_level_id: int = 1
 var _current_level_cleared: bool = false
+var combat_mode_label: RichTextLabel
+var _last_attack_mode: int = -1
+var combat_key_rects: Array[ColorRect] = []
+var buff_panel: Panel
+var buff_labels: Array[Label] = []
 
 # ── Wave Spawner ──────────────────────────────────────────────────────────────
 @export_group("Wave Spawner")
@@ -105,6 +110,7 @@ func _init_game() -> void:
 	_setup_cheatsheet_ui()
 	_setup_goal_ui()
 	_setup_rat_count_ui()
+	_setup_buff_ui()
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
 	_setup_fps_ui()
@@ -169,7 +175,7 @@ func _setup_mode_ui() -> void:
 
 	var main_vbox = VBoxContainer.new()
 	main_vbox.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	main_vbox.position = Vector2(-480, -140)
+	main_vbox.position = Vector2(-760, -200)
 	main_vbox.add_theme_constant_override("separation", 15)
 
 	# Action buttons (LPM, SCROLL, PPM)
@@ -202,7 +208,61 @@ func _setup_mode_ui() -> void:
 	actions_hbox.add_child(ppm_box)
 
 	main_vbox.add_child(space_hbox)
-	main_vbox.add_child(actions_hbox)
+	var bottom_hbox = HBoxContainer.new()
+	bottom_hbox.add_theme_constant_override("separation", 12)
+	bottom_hbox.alignment = BoxContainer.ALIGNMENT_END
+
+	var combat_panel = Panel.new()
+	combat_panel.custom_minimum_size = Vector2(320, 70)
+	var combat_style := StyleBoxFlat.new()
+	combat_style.bg_color = UI_BG
+	combat_style.border_color = UI_BORDER
+	combat_style.border_width_left = 2
+	combat_style.border_width_right = 2
+	combat_style.border_width_top = 2
+	combat_style.border_width_bottom = 2
+	combat_style.corner_radius_top_left = 6
+	combat_style.corner_radius_top_right = 6
+	combat_style.corner_radius_bottom_left = 6
+	combat_style.corner_radius_bottom_right = 6
+	combat_panel.add_theme_stylebox_override("panel", combat_style)
+
+	var combat_margin = MarginContainer.new()
+	combat_margin.add_theme_constant_override("margin_left", 10)
+	combat_margin.add_theme_constant_override("margin_right", 10)
+	combat_margin.add_theme_constant_override("margin_top", 8)
+	combat_margin.add_theme_constant_override("margin_bottom", 8)
+	combat_panel.add_child(combat_margin)
+
+	var combat_vbox = VBoxContainer.new()
+	combat_vbox.add_theme_constant_override("separation", 4)
+	combat_margin.add_child(combat_vbox)
+
+	var combat_title = Label.new()
+	combat_title.text = "COMBAT"
+	combat_title.add_theme_color_override("font_color", UI_TEXT)
+	combat_title.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	combat_title.add_theme_constant_override("outline_size", 2)
+	combat_title.add_theme_font_size_override("font_size", 12)
+	combat_vbox.add_child(combat_title)
+
+	var combat_hbox = HBoxContainer.new()
+	combat_hbox.add_theme_constant_override("separation", 8)
+	combat_vbox.add_child(combat_hbox)
+
+	combat_key_rects.clear()
+	for i in range(3):
+		var key_box = _create_action_box(str(i + 1))
+		var key_rect = key_box.get_child(1) as ColorRect
+		var key_label = key_rect.get_child(0) as Label
+		key_label.text = ["rotacja", "blob", "szarza"][i]
+		key_rect.custom_minimum_size = Vector2(90, 32)
+		combat_key_rects.append(key_rect)
+		combat_hbox.add_child(key_box)
+
+	bottom_hbox.add_child(combat_panel)
+	bottom_hbox.add_child(actions_hbox)
+	main_vbox.add_child(bottom_hbox)
 
 	mode_hud.add_child(main_vbox)
 	add_child(mode_hud)
@@ -269,8 +329,12 @@ func _setup_cheatsheet_ui() -> void:
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
 		"LPM (przytrzymaj) — atak (okrąg wokół kursora)\n" + \
-		"PPM (ciągnij) — rysuj strukturę lub przenieś obiekt\n" + \
-		"Scroll — rozmiar pędzla (obrót przy przenoszeniu)\n" + \
+		"PPM — akcja kontekstowa\n" + \
+		"Scroll — rozmiar pędzla\n" + \
+		"\n[b]Combat[/b]\n" + \
+		"1 — rotacja\n" + \
+		"2 — blob\n" + \
+		"3 — szarża ścieżką\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
 		"F2 — tryb pasywny wrogów"
@@ -372,6 +436,63 @@ func _setup_rat_count_ui() -> void:
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	label.add_theme_constant_override("outline_size", 4)
 	layer.add_child(label)
+	add_child(layer)
+
+
+func _setup_buff_ui() -> void:
+	var layer = CanvasLayer.new()
+	var panel = Panel.new()
+	buff_panel = panel
+	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	panel.position = Vector2(330, -130)
+	panel.custom_minimum_size = Vector2(240, 120)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = UI_BG
+	style.border_color = UI_BORDER
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	panel.add_theme_stylebox_override("panel", style)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	panel.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	margin.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "MODIFIERY"
+	title.add_theme_color_override("font_color", UI_TEXT)
+	title.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	title.add_theme_constant_override("outline_size", 2)
+	title.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(title)
+
+	buff_labels.clear()
+	var names := ["CZERWONY", "ZIELONY", "ZOLTY", "FIOLETOWY"]
+	for i in range(names.size()):
+		var lbl = Label.new()
+		lbl.text = "%s: -" % names[i]
+		lbl.add_theme_color_override("font_color", UI_TEXT)
+		lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+		lbl.add_theme_constant_override("outline_size", 2)
+		lbl.add_theme_font_size_override("font_size", 12)
+		buff_labels.append(lbl)
+		vbox.add_child(lbl)
+
+	layer.add_child(panel)
 	add_child(layer)
 
 func _setup_recall_indicator_ui() -> void:
@@ -491,14 +612,39 @@ func _update_rat_count_ui() -> void:
 	rat_count_label.text = "Szczury: " + str(current_count)
 
 
+func _update_buff_ui() -> void:
+	if buff_labels.is_empty():
+		return
+	var timers := [0.0, 0.0, 0.0, 0.0]
+	if rat_manager:
+		timers[0] = rat_manager.buff_red_timer
+		timers[1] = rat_manager.buff_green_timer
+		timers[2] = rat_manager.buff_yellow_timer
+		timers[3] = rat_manager.buff_purple_timer
+	var colors := [Color(0.95, 0.2, 0.2), Color(0.2, 0.95, 0.2), Color(0.95, 0.9, 0.2), Color(0.7, 0.2, 0.95)]
+	for i in range(min(buff_labels.size(), timers.size())):
+		var t := maxf(0.0, timers[i])
+		var lbl := buff_labels[i]
+		var active := t > 0.05
+		lbl.text = "%s: %s" % [lbl.text.split(":")[0], "%.1fs" % t if active else "-"]
+		var alpha := 1.0 if active else 0.4
+		lbl.modulate = Color(colors[i].r, colors[i].g, colors[i].b, alpha)
+
+
 func _update_mode_ui() -> void:
 	if lpm_label_val: lpm_label_val.text = "atak"
-	if spm_label_val: spm_label_val.text = "rozmiar / obrót"
-	if ppm_label_val: ppm_label_val.text = "buduj / przenieś"
+	if spm_label_val: spm_label_val.text = "rozmiar pędzla"
+	if ppm_label_val: ppm_label_val.text = "akcja"
+	var current := -1
+	if rat_manager:
+		current = int(rat_manager.current_attack_mode)
+	_last_attack_mode = current
 
 
 func _process(delta: float) -> void:
+	_update_mode_ui()
 	_update_rat_count_ui()
+	_update_buff_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
 	var level_cleared := is_current_level_cleared()
@@ -536,6 +682,16 @@ func _process(delta: float) -> void:
 		if spm_rect_val: spm_rect_val.color = highlight_color
 	else:
 		if spm_rect_val: spm_rect_val.color = normal_color
+
+	# ── Combat mode highlight (1/2/3) ──
+	if combat_key_rects.size() >= 3:
+		var current := -1
+		if rat_manager:
+			current = int(rat_manager.current_attack_mode)
+		for i in range(3):
+			var rect := combat_key_rects[i]
+			if rect:
+				rect.color = highlight_color if i == current else normal_color
 		
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
