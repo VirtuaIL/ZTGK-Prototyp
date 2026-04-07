@@ -7,6 +7,7 @@ const GasCloudScene := preload("res://scenes/gas_cloud.tscn")
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
 enum RatType { NORMAL, RED, GREEN }
 @export var rat_type: RatType = RatType.NORMAL
+var default_rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
 var _speed_mult: float = 1.0
 
@@ -129,6 +130,8 @@ func _ready() -> void:
 	_blob_mesh.material_override = mat
 	_blob_mesh.visible = false
 	add_child(_blob_mesh)
+	default_rat_type = rat_type
+	set_rat_type(int(rat_type))
 
 
 func _physics_process(delta: float) -> void:
@@ -159,7 +162,7 @@ func _physics_process(delta: float) -> void:
 
 	# ── Green gas: from buff OR from permanent green rat type ──
 	if mgr != null:
-		var has_green = (rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
+		var has_green = (default_rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
 		if has_green:
 			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
@@ -174,14 +177,6 @@ func _physics_process(delta: float) -> void:
 						var g = GasCloudScene.instantiate()
 						p.add_child(g)
 						g.global_position = global_position
-		
-		# Material override optimization
-		if mgr.has_method("get_current_buff_material"):
-			var mat = mgr.get_current_buff_material()
-			if $Body.material_override != mat:
-				$Body.material_override = mat
-				$Tail.material_override = mat
-				$Head.material_override = mat
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -472,7 +467,7 @@ func _check_damage() -> void:
 	var dmg_color = Color.WHITE
 	
 	var mgr_has_red = ("buff_red_timer" in mgr and mgr.buff_red_timer > 0.0)
-	var is_red_rat = (rat_type == RatType.RED)
+	var is_red_rat = (default_rat_type == RatType.RED)
 	
 	if mgr_has_red or is_red_rat:
 		final_dmg *= 2.0
@@ -782,16 +777,28 @@ func die() -> void:
 			mgr.rats.remove_at(idx)
 	queue_free()
 
+func _make_type_material(r_type: RatType, wild_variant: bool = false) -> Material:
+	match r_type:
+		RatType.RED:
+			var red := StandardMaterial3D.new()
+			red.albedo_color = Color(0.5, 0.05, 0.05) if wild_variant else Color(0.9, 0.1, 0.1)
+			return red
+		RatType.GREEN:
+			var green := StandardMaterial3D.new()
+			green.albedo_color = Color(0.05, 0.5, 0.05) if wild_variant else Color(0.1, 0.9, 0.1)
+			return green
+		_:
+			if wild_variant:
+				var normal_wild := StandardMaterial3D.new()
+				normal_wild.albedo_color = Color.BLACK
+				return normal_wild
+			return null
+
+
 func set_rat_type(r_type: int) -> void:
 	rat_type = r_type as RatType
-	if rat_type == RatType.RED:
-		_base_material = StandardMaterial3D.new()
-		_base_material.albedo_color = Color(0.9, 0.1, 0.1)
-	elif rat_type == RatType.GREEN:
-		_base_material = StandardMaterial3D.new()
-		_base_material.albedo_color = Color(0.1, 0.9, 0.1)
-	else:
-		_base_material = null
+	default_rat_type = rat_type
+	_base_material = _make_type_material(default_rat_type, false)
 		
 	if not is_wild:
 		if _current_buff_material != _base_material:
@@ -806,13 +813,7 @@ func set_wild(wild: bool) -> void:
 		add_to_group("wild_rats")
 		_wild_timer = wild_lifespan
 		state = State.STATIC
-		var mat = StandardMaterial3D.new()
-		if rat_type == RatType.RED:
-			mat.albedo_color = Color(0.5, 0.05, 0.05)
-		elif rat_type == RatType.GREEN:
-			mat.albedo_color = Color(0.05, 0.5, 0.05)
-		else:
-			mat.albedo_color = Color.BLACK
+		var mat := _make_type_material(default_rat_type, true)
 			
 		if mat != _current_buff_material:
 			_current_buff_material = mat
@@ -823,6 +824,7 @@ func set_wild(wild: bool) -> void:
 		if is_in_group("wild_rats"):
 			remove_from_group("wild_rats")
 		state = State.FOLLOW
+		_base_material = _make_type_material(default_rat_type, false)
 		if _current_buff_material != _base_material:
 			_current_buff_material = _base_material
 			$Body.material_override = _base_material
