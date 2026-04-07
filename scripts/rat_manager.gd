@@ -705,15 +705,50 @@ func build_blob_offsets() -> void:
 
 func _assign_neighbors() -> void:
 	var count := rats.size()
+	var grid := {}
+	var cell_size: float = NEIGHBOR_RADIUS
+	var radius_sq := NEIGHBOR_RADIUS * NEIGHBOR_RADIUS
+
+	# Bucket rats into spatial grid
 	for i in range(count):
+		var rat = rats[i]
+		if not is_instance_valid(rat):
+			continue
+		var pos: Vector3 = rat.global_position
+		var key := Vector2i(int(floor(pos.x / cell_size)), int(floor(pos.z / cell_size)))
+		if grid.has(key):
+			grid[key].append(rat)
+		else:
+			grid[key] = [rat]
+
+	# Query grid for neighbors
+	for i in range(count):
+		var rat = rats[i]
+		if not is_instance_valid(rat):
+			continue
+			
+		# Minor optimization: skip for rats not in FOLLOW state
+		if "state" in rat and rat.state != rat.State.FOLLOW:
+			if rat.has_method("set_neighbors"):
+				rat.set_neighbors([])
+			continue
+
+		var pos: Vector3 = rat.global_position
 		var nb: Array = []
-		var pos_i := rats[i].global_position
-		for j in range(count):
-			if i == j:
-				continue
-			if pos_i.distance_to(rats[j].global_position) < NEIGHBOR_RADIUS:
-				nb.append(rats[j])
-		rats[i].set_neighbors(nb)
+		var cx := int(floor(pos.x / cell_size))
+		var cz := int(floor(pos.z / cell_size))
+
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				var ck := Vector2i(cx + dx, cz + dz)
+				if grid.has(ck):
+					for other in grid[ck]:
+						if other != rat and is_instance_valid(other):
+							if pos.distance_squared_to(other.global_position) < radius_sq:
+								nb.append(other)
+								
+		if rat.has_method("set_neighbors"):
+			rat.set_neighbors(nb)
 
 
 func _has_build_in_progress() -> bool:

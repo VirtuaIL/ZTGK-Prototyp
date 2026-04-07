@@ -17,8 +17,8 @@ var health: float = max_health
 # ── Detection & combat ──
 @export var detection_range: float = 16.0
 @export var lose_range: float = 22.0
-@export var attack_range: float = 1.8
-@export var attack_damage: float = 8.0
+@export var attack_range: float = 3.0
+@export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0
 
 # ── Wander ──
@@ -260,7 +260,7 @@ func _pick_and_start_attack() -> void:
 		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
 		if are_visible:
 			for rat in mgr.rats:
-				if is_instance_valid(rat) and rat.global_position.distance_squared_to(global_position) < 2.5*2.5:
+				if is_instance_valid(rat) and rat.global_position.distance_squared_to(global_position) < attack_range * attack_range:
 					rat_count += 1
 				
 	if rat_count > 3:
@@ -291,7 +291,7 @@ func _pick_and_start_attack() -> void:
 	immediate.clear_surfaces()
 	immediate.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	
-	var r = 2.5
+	var r = attack_range
 	if current_attack == AttackType.STEP:
 		var segments = 32
 		for i in range(segments):
@@ -326,7 +326,7 @@ func _execute_attack() -> void:
 				if is_instance_valid(r):
 					targets.append(r)
 		
-	var attack_radius = 2.5
+	var r_radius = attack_range
 	var slash_angle = deg_to_rad(45.0) # 45 each side = 90 deg total
 	var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y))
 	
@@ -338,10 +338,10 @@ func _execute_attack() -> void:
 		var d = to_t.length()
 		
 		if current_attack == AttackType.STEP:
-			if d <= attack_radius:
+			if d <= r_radius:
 				_damage_target(t)
 		elif current_attack == AttackType.SLASH:
-			if d <= attack_radius:
+			if d <= r_radius:
 				var dir = to_t.normalized()
 				var angle_diff = acos(clampf(my_forward.dot(dir), -1.0, 1.0))
 				if angle_diff <= slash_angle:

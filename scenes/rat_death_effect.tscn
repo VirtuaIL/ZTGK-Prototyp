@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c6bxrqwaabcde"]
+
+[ext_resource type="Script" path="res://scripts/rat_death_effect.gd" id="1_1"]
+
+[node name="RatDeathEffect" type="Node3D"]
+script = ExtResource("1_1")

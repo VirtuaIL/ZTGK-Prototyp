@@ -1,6 +1,8 @@
 extends CharacterBody3D
 class_name Rat
 
+const DeathEffect := preload("res://scenes/rat_death_effect.tscn")
+
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC}
 
 @export var follow_speed: float = 6.0
@@ -561,6 +563,11 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	return hit.position.y >= global_position.y - max_drop
 
 func die() -> void:
+	if DeathEffect:
+		var eff = DeathEffect.instantiate()
+		get_parent().add_child(eff)
+		eff.global_position = global_position
+		
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "rats" in mgr:
 		var idx = mgr.rats.find(self)
