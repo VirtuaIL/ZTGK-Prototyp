@@ -30,6 +30,7 @@ var _player: CharacterBody3D = null
 var _empty_respawn_triggered: bool = false
 var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
+var respawn_count: int = 60
 
 var mode: int = 1 # Always BUILD-like unified mode
 
@@ -254,6 +255,11 @@ func setup_player(player: CharacterBody3D) -> void:
 		_player.player_died.connect(_on_player_died)
 		
 	_spawn_rats_near_player(60)
+	respawn_count = max(respawn_count, rats.size())
+
+
+func set_respawn_count(count: int) -> void:
+	respawn_count = max(0, count)
 
 func are_rats_hidden() -> bool:
 	if combat_rmb_down:
@@ -276,7 +282,7 @@ func _on_player_died() -> void:
 		if is_instance_valid(r) and r.has_method("die"):
 			r.die()
 	rats.clear()
-	_spawn_rats_near_player(60)
+	_spawn_rats_near_player(respawn_count)
 
 
 func _clamp_caps() -> void:

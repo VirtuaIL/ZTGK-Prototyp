@@ -969,6 +969,9 @@ func transition_to_level(level_id: int, target_position: Vector3) -> void:
 
 	set_current_level(level_id)
 
+	if rat_manager != null and rat_manager.has_method("set_respawn_count"):
+		rat_manager.set_respawn_count(rat_manager.rats.size())
+
 	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
 		rat_manager.hard_recall_all_rats()
 
