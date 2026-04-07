@@ -97,6 +97,10 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
+var _pity_timer: float = 5.0
+var _pity_canvas: CanvasLayer = null
+var _pity_label: Label = null
+
 var _last_build_pos: Vector3 = Vector3.ZERO
 var _has_last_build_pos: bool = false
 
@@ -245,6 +249,27 @@ func _ready() -> void:
 	line_mesh_instance.material_override = line_material
 	
 	add_child(line_mesh_instance)
+
+	_pity_canvas = CanvasLayer.new()
+	_pity_canvas.layer = 100
+	var control := Control.new()
+	control.set_anchors_preset(Control.PRESET_FULL_RECT)
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pity_canvas.add_child(control)
+	
+	_pity_label = Label.new()
+	_pity_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pity_label.text = "5.0"
+	_pity_label.add_theme_font_size_override("font_size", 64)
+	_pity_label.add_theme_color_override("font_color", Color.RED)
+	_pity_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_pity_label.add_theme_constant_override("outline_size", 8)
+	_pity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_pity_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_pity_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pity_label.visible = false
+	control.add_child(_pity_label)
+	add_child(_pity_canvas)
 
 func setup_player(player: CharacterBody3D) -> void:
 	_player = player
@@ -532,10 +557,19 @@ func _process(delta: float) -> void:
 	_check_rat_spawn_bonus()
 	_process_damage(delta)
 
-	# Reset game if all rats die
+	# Reset game if all rats die (with pity timer)
 	if get_total_rat_count() <= 0 and _player != null:
-		if _player.has_method("die"):
-			_player.die()
+		_pity_timer -= delta
+		if _pity_label:
+			_pity_label.visible = true
+			_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
+		if _pity_timer <= 0.0:
+			if _player.has_method("die"):
+				_player.die()
+	else:
+		_pity_timer = 5.0
+		if _pity_label:
+			_pity_label.visible = false
 
 
 func _process_damage(delta: float) -> void:
@@ -727,26 +761,27 @@ func _update_combat_attack_circle(delta: float) -> void:
 			t.y = mouse_world.y
 			active[i].set_target(t)
 			
-			var enemies: Array = []
-			var current_scene := get_tree().current_scene
-			if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
-				enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
-				enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
-			else:
-				enemies = get_tree().get_nodes_in_group("enemies")
-				enemies += get_tree().get_nodes_in_group("bosses")
-			if count > 0:
-				for enemy in enemies:
-					if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
-						var dist = enemy.global_position.distance_to(actual_blob_center)
-						var is_already_stuck = _stuck_enemies.has(enemy)
-						if is_already_stuck or dist <= blob_radius:
-							if not is_already_stuck:
-								_stuck_enemies.append(enemy)
-							enemy.set("is_stuck_in_blob", true)
-							enemy.set("blob_center", actual_blob_center)
-							if tick_damage:
-								enemy.take_damage(blob_damage_per_tick)
+		var enemies: Array = []
+		var current_scene := get_tree().current_scene
+		if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+			enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+			enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+		else:
+			enemies = get_tree().get_nodes_in_group("enemies")
+			enemies += get_tree().get_nodes_in_group("bosses")
+		
+		# We already know count > 0 from the start
+		for enemy in enemies:
+			if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
+				var dist = enemy.global_position.distance_to(actual_blob_center)
+				var is_already_stuck = _stuck_enemies.has(enemy)
+				if is_already_stuck or dist <= blob_radius:
+					if not is_already_stuck:
+						_stuck_enemies.append(enemy)
+					enemy.set("is_stuck_in_blob", true)
+					enemy.set("blob_center", actual_blob_center)
+					if tick_damage:
+						enemy.take_damage(blob_damage_per_tick)
 		return
 
 	_combat_circle_angle += combat_circle_rotation_speed * delta

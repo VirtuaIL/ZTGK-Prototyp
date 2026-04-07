@@ -431,8 +431,8 @@ func _process_path_dash(delta: float) -> void:
 			return
 			
 	var dir := (target - global_position).normalized()
-	velocity.x = dir.x * dash_speed
-	velocity.z = dir.z * dash_speed
+	velocity.x = dir.x * dash_speed * _speed_mult
+	velocity.z = dir.z * dash_speed * _speed_mult
 	
 	if _should_block_edge(Vector2(velocity.x, velocity.z)):
 		velocity.x = 0.0

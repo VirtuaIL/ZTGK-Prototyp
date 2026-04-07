@@ -72,6 +72,16 @@ func _process_attack(delta: float) -> void:
 
 	if attack_prepare_timer > 0.0:
 		attack_prepare_timer -= delta
+		
+		var body: MeshInstance3D = get_child(0) as MeshInstance3D
+		if body and body.material_override:
+			var flash_rate = 24.0
+			var is_flash_frame = int(attack_prepare_timer * flash_rate) % 2 == 0
+			if is_flash_frame:
+				body.material_override.albedo_color = Color(1.0, 0.9, 0.2) # Bright flash
+			else:
+				body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # Windup orange
+
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0
 		if to_player.length() > 0.01:
@@ -83,7 +93,6 @@ func _process_attack(delta: float) -> void:
 			flame_timer = flame_duration
 			fire_tick_timer = 0.0
 			recent_hits.clear()
-			var body: MeshInstance3D = get_child(0) as MeshInstance3D
 			if body and body.material_override:
 				body.material_override.albedo_color = Color(0.8, 0.1, 0.1) # red
 		return

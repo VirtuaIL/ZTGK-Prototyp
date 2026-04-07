@@ -953,6 +953,9 @@ func set_current_level(level_id: int) -> void:
 	_refresh_level_visibility()
 	_update_level_doors()
 	_log_level_debug_state("level_changed")
+	
+	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
+		rat_manager.hard_recall_all_rats()
 
 
 func transition_to_level(level_id: int, target_position: Vector3) -> void:
