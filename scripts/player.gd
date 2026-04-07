@@ -15,6 +15,14 @@ signal object_reset
 @export var regen_delay: float = 2.0
 @export var carriers_required: int = 1
 
+@export_group("Minimap")
+@export var minimap_camera_height: float = 38.0
+@export var minimap_camera_size: float = 30.0
+@export var minimap_follow_smooth: float = 10.0
+@export var minimap_camera_margin: float = 1.2
+@export var minimap_cursor_focus_factor: float = 0.16666667
+@export var minimap_look_ahead_fallback: float = 4.0
+
 var current_hp: float = 100.0
 var time_since_last_damage: float = 0.0
 
@@ -35,15 +43,13 @@ func _ready() -> void:
 	add_to_group("player")
 	collision_layer = 2 # Layer 2: Player
 	collision_mask = 13 | (1 << 8) # Floor (1) + Movable (4) + Walls (8) + RatStructures (9)
+	_ensure_move_actions()
+	_configure_minimap_visuals()
 	_spawn_position = global_position
 	current_hp = max_hp
 	_update_health_bar()
 
-	if minimap_camera:
-		minimap_camera.top_level = true
-		minimap_camera.global_position = Vector3(0, 50.0, 0)
-		minimap_camera.size = 65.0
-		minimap_camera.cull_mask = 1048575 - 2
+	_setup_minimap_camera()
 
 
 func _physics_process(delta: float) -> void:
@@ -75,29 +81,10 @@ func _physics_process(delta: float) -> void:
 	if is_stratagem_mode:
 		velocity = Vector3.ZERO
 		move_and_slide()
+		_update_minimap_camera(delta)
 		return
 
-	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	var direction = Vector3.ZERO
-	var cam = get_viewport().get_camera_3d()
-	
-	if cam:
-		direction = (cam.global_transform.basis * Vector3(input_dir.x, 0, input_dir.y))
-		direction.y = 0
-		direction = direction.normalized()
-	else:
-		direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
-
-	if direction.length_squared() > 0.01:
-		velocity.x = direction.x * speed
-		velocity.z = direction.z * speed
-		
-		# Rotate player towards movement direction
-		var target_angle = atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-	else:
-		velocity.x = move_toward(velocity.x, 0, speed)
-		velocity.z = move_toward(velocity.z, 0, speed)
+	_apply_movement(delta)
 
 	# Gravity — accumulated independently of horizontal movement
 	if not is_on_floor():
@@ -106,6 +93,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	move_and_slide()
+	_update_minimap_camera(delta)
+
+	
 
 	
 
@@ -125,6 +115,174 @@ func set_spawn_position(pos: Vector3) -> void:
 	_spawn_position = pos
 
 
+func _ensure_move_actions() -> void:
+	_ensure_action("move_forward", KEY_W)
+	_ensure_action("move_back", KEY_S)
+	_ensure_action("move_left", KEY_A)
+	_ensure_action("move_right", KEY_D)
+
+
+func _ensure_action(action_name: String, key: Key) -> void:
+	if InputMap.has_action(action_name):
+		return
+
+	InputMap.add_action(action_name)
+	var event := InputEventKey.new()
+	event.keycode = key
+	InputMap.action_add_event(action_name, event)
+
+
+func _apply_movement(delta: float) -> void:
+	var input_vector := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if input_vector.is_zero_approx():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
+
+	var move_direction := _get_move_direction(input_vector)
+	velocity.x = move_direction.x * speed
+	velocity.z = move_direction.z * speed
+
+	var target_rotation := atan2(move_direction.x, move_direction.z)
+	rotation.y = lerp_angle(rotation.y, target_rotation, clampf(rotation_speed * delta, 0.0, 1.0))
+
+
+func _get_move_direction(input_vector: Vector2) -> Vector3:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return Vector3(input_vector.x, 0.0, input_vector.y).normalized()
+
+	var forward := -cam.global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+
+	var right := cam.global_transform.basis.x
+	right.y = 0.0
+	right = right.normalized()
+
+	var move_direction := (right * input_vector.x) - (forward * input_vector.y)
+	move_direction.y = 0.0
+	return move_direction.normalized()
+
+
+func _configure_minimap_visuals() -> void:
+	for child in find_children("*", "VisualInstance3D"):
+		child.layers = 2
+
+
+func _setup_minimap_camera() -> void:
+	if minimap_camera == null:
+		return
+
+	minimap_camera.top_level = true
+	minimap_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	minimap_camera.cull_mask = 1048575 - 2
+	_snap_minimap_camera()
+
+
+func _snap_minimap_camera() -> void:
+	if minimap_camera == null:
+		return
+
+	minimap_camera.global_position = global_position + Vector3.UP * minimap_camera_height
+	minimap_camera.global_transform = Transform3D(_get_minimap_basis(), minimap_camera.global_position)
+	minimap_camera.size = _get_minimap_size()
+
+
+func _update_minimap_camera(delta: float) -> void:
+	if minimap_camera == null:
+		return
+
+	var target_position := global_position + Vector3.UP * minimap_camera_height
+	var weight := 1.0 - exp(-minimap_follow_smooth * delta)
+	minimap_camera.global_position = minimap_camera.global_position.lerp(target_position, weight)
+	minimap_camera.global_transform = Transform3D(_get_minimap_basis(), minimap_camera.global_position)
+	minimap_camera.size = _get_minimap_size()
+
+
+func _get_minimap_basis() -> Basis:
+	var screen_up := Vector3.FORWARD
+	var main_camera := get_viewport().get_camera_3d()
+	if main_camera != null and main_camera != minimap_camera:
+		screen_up = -main_camera.global_transform.basis.z
+		screen_up.y = 0.0
+		if screen_up.length_squared() > 0.0001:
+			screen_up = screen_up.normalized()
+		else:
+			screen_up = Vector3.FORWARD
+
+	return Basis.looking_at(Vector3.DOWN, screen_up)
+
+
+func _get_minimap_size() -> float:
+	var main_camera := get_viewport().get_camera_3d()
+	if main_camera == null or main_camera == minimap_camera:
+		return minimap_camera_size
+
+	var visible_rect := get_viewport().get_visible_rect()
+	if visible_rect.size.x <= 0.0 or visible_rect.size.y <= 0.0:
+		return minimap_camera_size
+
+	var plane_y := global_position.y
+	var center_projection: Dictionary = _project_main_camera_to_plane(main_camera, visible_rect.size * 0.5, plane_y)
+	if not center_projection.get("valid", false):
+		return minimap_camera_size
+
+	var camera_center: Vector3 = center_projection["point"]
+	var screen_points := [
+		Vector2.ZERO,
+		Vector2(visible_rect.size.x, 0.0),
+		Vector2(0.0, visible_rect.size.y),
+		visible_rect.size,
+	]
+
+	var camera_half_extent := minimap_camera_size * 0.5
+	for screen_point in screen_points:
+		var projection: Dictionary = _project_main_camera_to_plane(main_camera, screen_point, plane_y)
+		if not projection.get("valid", false):
+			continue
+
+		var world_point: Vector3 = projection["point"]
+		var delta := world_point - camera_center
+		delta.y = 0.0
+		camera_half_extent = maxf(camera_half_extent, maxf(absf(delta.x), absf(delta.z)))
+
+	var look_ahead_max := _get_main_camera_look_ahead_max()
+	var player_offset_max := 0.0
+	if minimap_cursor_focus_factor < 0.999:
+		player_offset_max = (minimap_cursor_focus_factor * camera_half_extent + look_ahead_max) / (1.0 - minimap_cursor_focus_factor)
+
+	var minimap_half_extent := camera_half_extent + player_offset_max
+	return maxf(minimap_camera_size, minimap_half_extent * 2.0 * minimap_camera_margin)
+
+
+func _get_main_camera_look_ahead_max() -> float:
+	var current_scene := get_tree().current_scene
+	if current_scene != null:
+		var value: Variant = current_scene.get("cam_look_ahead_max")
+		if value is float:
+			return value
+		if value is int:
+			return float(value)
+	return minimap_look_ahead_fallback
+
+
+func _project_main_camera_to_plane(camera: Camera3D, screen_point: Vector2, plane_y: float) -> Dictionary:
+	var ray_origin := camera.project_ray_origin(screen_point)
+	var ray_direction := camera.project_ray_normal(screen_point)
+	if absf(ray_direction.y) <= 0.0001:
+		return {"valid": false}
+
+	var distance := (plane_y - ray_origin.y) / ray_direction.y
+	if distance < 0.0:
+		return {"valid": false}
+
+	return {
+		"valid": true,
+		"point": ray_origin + ray_direction * distance,
+	}
+
+
 func die() -> void:
 	for box in get_tree().get_nodes_in_group("boxes"):
 		if box.has_method("_activate_reset_to_spawn"):
@@ -132,6 +290,7 @@ func die() -> void:
 			
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
+	_snap_minimap_camera()
 	current_hp = max_hp
 	time_since_last_damage = 0.0
 	_update_health_bar()
