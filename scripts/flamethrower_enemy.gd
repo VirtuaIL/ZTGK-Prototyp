@@ -139,13 +139,17 @@ func _shoot_fire() -> void:
 	var players = get_tree().get_nodes_in_group("player")
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	targets.append_array(players)
-	if mgr != null and "rats" in mgr:
-		var are_visible = not mgr.has_method("are_rats_hidden") or not mgr.are_rats_hidden()
+	if mgr != null:
 		var purple_active = mgr.get("buff_purple_timer") != null and mgr.buff_purple_timer > 0.0
-		if are_visible and not purple_active:
-			for r in mgr.rats:
-				if is_instance_valid(r):
-					targets.append(r)
+		if not purple_active:
+			if "rats" in mgr:
+				for r in mgr.rats:
+					if is_instance_valid(r):
+						targets.append(r)
+			if "wild_rats" in mgr:
+				for wr in mgr.wild_rats:
+					if is_instance_valid(wr):
+						targets.append(wr)
 					
 	var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y))
 	
