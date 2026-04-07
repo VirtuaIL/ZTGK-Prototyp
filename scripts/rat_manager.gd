@@ -1182,7 +1182,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret or obj.is_in_group("player"):
+					if obj is box or obj is turret or obj is hitscan_turret:
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:
@@ -1459,7 +1459,7 @@ func _process_hover() -> void:
 	
 	if hit:
 		var obj = hit.collider
-		if obj.has_method("set_highlight"):
+		if obj.has_method("set_highlight") and not obj.is_in_group("player"):
 			new_hover = obj
 			
 	if new_hover != _hovered_object:

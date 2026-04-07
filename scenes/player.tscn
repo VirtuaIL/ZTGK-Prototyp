@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player.gd" id="1_script"]
 [ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
+[ext_resource type="Script" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -31,6 +32,20 @@ corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MinimapPanel"]
+bg_color = Color(0.0156863, 0.0470588, 0.0588235, 0.78)
+border_color = Color(0.462745, 0.968627, 0.898039, 0.7)
+border_width_left = 2
+border_width_right = 2
+border_width_top = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_left = 10
+corner_radius_bottom_right = 10
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 6
 
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
@@ -115,30 +130,41 @@ theme_override_font_sizes/font_size = 11
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 220.0
+offset_left = -252.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = 252.0
 grow_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
+theme_override_styles/panel = SubResource("StyleBoxFlat_MinimapPanel")
 
 [node name="Margin" type="MarginContainer" parent="PlayerHUD/MinimapPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="PlayerHUD/MinimapPanel/Margin"]
 layout_mode = 2
 stretch = true
+mouse_filter = 2
 
 [node name="SubViewport" type="SubViewport" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer"]
 handle_input_locally = false
-size = Vector2i(192, 192)
+size = Vector2i(220, 220)
 render_target_update_mode = 4
 
 [node name="MinimapCamera" type="Camera3D" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 40, 0)
 projection = 1
 size = 40.0
+
+[node name="MinimapOverlay" type="Control" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer"]
+layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_minimap_overlay")
