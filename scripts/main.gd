@@ -34,6 +34,7 @@ var fps_label: Label
 
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
 var _wave_flamethrower_scene: PackedScene = preload("res://scenes/flamethrower_enemy.tscn")
+var _wave_sniper_scene: PackedScene = preload("res://scenes/sniper_enemy.tscn")
 var _wave_spawned: int = 0
 var _wave_active: int = 0
 var _wave_killed: int = 0
@@ -665,7 +666,10 @@ func _spawn_wave_enemy() -> void:
 	var marker = markers[randi() % markers.size()] as Node3D
 	
 	var enemy
-	if randf() <= 0.30 and _wave_flamethrower_scene:
+	var r = randf()
+	if r <= 0.15 and _wave_sniper_scene:
+		enemy = _wave_sniper_scene.instantiate()
+	elif r <= 0.40 and _wave_flamethrower_scene:
 		enemy = _wave_flamethrower_scene.instantiate()
 	else:
 		enemy = _wave_enemy_scene.instantiate()
