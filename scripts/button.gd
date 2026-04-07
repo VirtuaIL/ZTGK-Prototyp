@@ -2,7 +2,7 @@ extends Node
 class_name button
 
 # The ID of the door this button controls
-@export var doorId: int = 0
+@export var doorId: int = -1
 
 # How far the button sinks when pressed (in local Y units)
 @export var press_depth: float = 0.1
@@ -32,6 +32,8 @@ func _ready() -> void:
 #changed from Array[Door] to array[Node] to accomodate different entity types being triggered
 func _get_target_doors() -> Array[Node]:
 	var result: Array[Node] = []
+	if doorId <= 0:
+		return result
 	var objects := get_tree().get_nodes_in_group("doors") + get_tree().get_nodes_in_group("bosses")
 	print(objects)
 	for d in (objects):

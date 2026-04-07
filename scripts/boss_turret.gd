@@ -4,7 +4,7 @@ class_name bossTurret
 const DamageTextScene := preload("res://scenes/damage_text.tscn")
 
 # The ID used by buttons to target this entity
-@export var doorId: int = 0
+@export var doorId: int = -1
 
 enum State { IDLE, LASER_SWEEP, PROJECTILE_BARRAGE, ENEMY_DEPLOY, RETREAT_HEAL, DEAD }
 

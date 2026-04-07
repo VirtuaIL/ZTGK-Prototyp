@@ -2,7 +2,7 @@ extends StaticBody3D
 class_name Capstan
 
 ## The door ID this capstan controls (must match a door's doorId)
-@export var doorId: int = 0
+@export var doorId: int = -1
 
 ## Radius around the capstan in which rats count as "pushing"
 @export var detection_radius: float = 2.5
@@ -231,6 +231,8 @@ func _trigger_completed() -> void:
 
 
 func _apply_to_doors() -> void:
+	if doorId <= 0:
+		return
 	var doors := get_tree().get_nodes_in_group("doors")
 	for d in doors:
 		if d is door and d.doorId == doorId:

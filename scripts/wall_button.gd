@@ -2,7 +2,7 @@ extends StaticBody3D
 class_name wall_button
 
 # The ID of the door this button controls
-@export var doorId: int = 0
+@export var doorId: int = -1
 
 # Visual feedback settings
 @export var active_color: Color = Color.GREEN
@@ -46,6 +46,8 @@ func on_projectile_hit() -> void:
 
 func _get_target_doors() -> Array[door]:
 	var result: Array[door] = []
+	if doorId <= 0:
+		return result
 	for d in get_tree().get_nodes_in_group("doors"):
 		if d is door and d.doorId == doorId:
 			result.append(d)

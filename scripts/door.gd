@@ -2,7 +2,7 @@ extends CharacterBody3D
 class_name door
 
 # The ID used by buttons to target this door
-@export var doorId: int = 0
+@export var doorId: int = -1
 
 # Optional level gate controlled by Main.
 # When set, the door stays closed until the assigned level is cleared.

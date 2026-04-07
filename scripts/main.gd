@@ -17,6 +17,7 @@ const LEVEL_CLAMP_BOUNDS := {
 const GLOBAL_VISIBILITY_ROOTS := {
 	"Player": true,
 	"Skydome": true,
+	"DirectionalLight3D": true,
 }
 
 var lpm_label_val: Label
@@ -46,6 +47,7 @@ var _indicator_blink_time: float = 0.0
 var fps_label: Label
 var current_level_id: int = 1
 var _current_level_cleared: bool = false
+var _debug_last_level_state: String = ""
 var combat_mode_label: RichTextLabel
 var _last_attack_mode: int = -1
 var combat_key_rects: Array[ColorRect] = []
@@ -60,9 +62,7 @@ var buff_labels: Array[Label] = []
 
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemy.tscn")
 var _wave_flamethrower_scene: PackedScene = preload("res://scenes/flamethrower_enemy.tscn")
-var _wave_spawned: int = 0
-var _wave_active: int = 0
-var _wave_killed: int = 0
+var _wave_state_by_level: Dictionary = {}
 var _wave_timer: float = 0.0
 
 @export_group("Wild Rat Spawner")
@@ -122,6 +122,7 @@ func _init_game() -> void:
 	_setup_offscreen_indicators_ui()
 	_setup_fps_ui()
 	set_current_level(current_level_id)
+	_log_level_debug_state("init")
 	
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
@@ -658,12 +659,14 @@ func _process(delta: float) -> void:
 	if level_cleared != _current_level_cleared:
 		_current_level_cleared = level_cleared
 		_update_level_doors()
+	_log_level_debug_state()
 	
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 	
 	# ── Wave Spawner Logic ──
-	if _wave_spawned < wave_total_enemies and _wave_active < wave_max_concurrent:
+	var current_wave_state := _get_wave_state(current_level_id)
+	if not _is_level_wave_complete(current_level_id) and int(current_wave_state.get("spawned", 0)) < wave_total_enemies and int(current_wave_state.get("active", 0)) < wave_max_concurrent:
 		_wave_timer -= delta
 		if _wave_timer <= 0.0:
 			_spawn_wave_enemy()
@@ -829,7 +832,8 @@ func _toggle_all_enemies_passive() -> void:
 
 # ── Wave Spawner Methods ──────────────────────────────────────────────────────
 func _spawn_wave_enemy() -> void:
-	var markers: Array = get_current_level_spawn_markers()
+	var spawn_level_id := current_level_id
+	var markers: Array = get_level_spawn_markers(spawn_level_id)
 	if markers.is_empty():
 		return
 		
@@ -856,37 +860,40 @@ func _spawn_wave_enemy() -> void:
 		
 	add_child(enemy)
 	if enemy is Node3D:
+		_assign_level_tag(enemy, spawn_level_id)
 		enemy.global_position = marker.global_position
 	if enemy.has_signal("enemy_died"):
-		enemy.enemy_died.connect(_on_wave_enemy_died.bind(enemy))
-	_wave_spawned += 1
-	_wave_active += 1
+		enemy.enemy_died.connect(_on_wave_enemy_died.bind(enemy, spawn_level_id))
 
-func _on_wave_enemy_died(enemy: Node) -> void:
-	_wave_active -= 1
-	_wave_killed += 1
+	var wave_state := _get_wave_state(spawn_level_id)
+	wave_state["spawned"] = int(wave_state.get("spawned", 0)) + 1
+	wave_state["active"] = int(wave_state.get("active", 0)) + 1
+
+func _on_wave_enemy_died(enemy: Node, level_id: int) -> void:
+	var wave_state := _get_wave_state(level_id)
+	wave_state["active"] = max(0, int(wave_state.get("active", 0)) - 1)
+	wave_state["killed"] = int(wave_state.get("killed", 0)) + 1
 	if is_instance_valid(enemy):
 		enemy.queue_free()
-	_current_level_cleared = is_current_level_cleared()
-	_update_level_doors()
-	if _wave_killed >= wave_total_enemies:
-		print("Fala zakończona!")
+	if level_id == current_level_id:
+		_current_level_cleared = is_current_level_cleared()
+		_update_level_doors()
+	if _is_level_wave_complete(level_id):
+		print("Fala zakonczona dla poziomu %d!" % level_id)
 
 func _on_player_died() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
-			
-	_wave_spawned = 0
-	_wave_active = 0
-	_wave_killed = 0
+	_wave_state_by_level.clear()
 	_wave_timer = wave_spawn_interval
 
 func _spawn_wild_rat_groups() -> void:
-	var markers: Array = get_current_level_rat_spawns()
+	var spawn_level_id := current_level_id
+	var markers: Array = get_level_rat_spawns(spawn_level_id)
 	if markers.is_empty():
-		markers = get_current_level_spawn_markers()
+		markers = get_level_spawn_markers(spawn_level_id)
 	if markers.is_empty():
 		return
 	var group_count = randi_range(wild_rat_group_count_min, wild_rat_group_count_max)
@@ -908,6 +915,7 @@ func _spawn_wild_rat_groups() -> void:
 			if rat.has_method("set_rat_type"):
 				rat.set_rat_type(grp_type)
 			rat_manager.add_child(rat)
+			_assign_level_tag(rat, spawn_level_id)
 			rat.global_position = m.global_position + Vector3(randf_range(-1.5, 1.5), 0.2, randf_range(-1.5, 1.5))
 			if rat.has_method("set_wild"):
 				rat.set_wild(true)
@@ -919,17 +927,25 @@ func can_activate_level(level_id: int) -> bool:
 	if level_id <= current_level_id:
 		return true
 	if level_id == current_level_id + 1:
-		return is_current_level_cleared()
+		return is_level_cleared(current_level_id)
 	return false
 
 
 func set_current_level(level_id: int) -> void:
 	if level_id <= 0:
 		return
+	if level_id == current_level_id:
+		_current_level_cleared = is_current_level_cleared()
+		_refresh_level_visibility()
+		_update_level_doors()
+		_log_level_debug_state("refresh")
+		return
 	current_level_id = level_id
 	_current_level_cleared = is_current_level_cleared()
+	_wave_timer = wave_spawn_interval
 	_refresh_level_visibility()
 	_update_level_doors()
+	_log_level_debug_state("level_changed")
 
 
 func transition_to_level(level_id: int, target_position: Vector3) -> void:
@@ -966,26 +982,42 @@ func clamp_position_to_level(level_id: int, pos: Vector3) -> Vector3:
 	)
 
 
+func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
+	return _filter_nodes_by_level(get_tree().get_nodes_in_group(group_name), level_id)
+
+
 func get_nodes_in_current_level(group_name: String) -> Array[Node3D]:
-	return _filter_nodes_by_level(get_tree().get_nodes_in_group(group_name), current_level_id)
+	return get_nodes_in_level(group_name, current_level_id)
 
 
 func get_current_level_spawn_markers() -> Array[Node3D]:
-	return get_nodes_in_current_level("spawn_markers")
+	return get_level_spawn_markers(current_level_id)
+
+
+func get_level_spawn_markers(level_id: int) -> Array[Node3D]:
+	return get_nodes_in_level("spawn_markers", level_id)
 
 
 func get_current_level_rat_spawns() -> Array[Node3D]:
-	var rat_spawns := get_nodes_in_current_level("rat_spawn")
+	return get_level_rat_spawns(current_level_id)
+
+
+func get_level_rat_spawns(level_id: int) -> Array[Node3D]:
+	var rat_spawns := get_nodes_in_level("rat_spawn", level_id)
 	if not rat_spawns.is_empty():
 		return rat_spawns
-	return get_current_level_spawn_markers()
+	return get_level_spawn_markers(level_id)
 
 
 func get_current_level_enemies() -> Array[Node3D]:
+	return get_level_enemies(current_level_id)
+
+
+func get_level_enemies(level_id: int) -> Array[Node3D]:
 	var enemies: Array[Node3D] = []
-	enemies.append_array(get_nodes_in_current_level("enemies"))
-	enemies.append_array(get_nodes_in_current_level("turrets"))
-	enemies.append_array(get_nodes_in_current_level("bosses"))
+	enemies.append_array(get_nodes_in_level("enemies", level_id))
+	enemies.append_array(get_nodes_in_level("turrets", level_id))
+	enemies.append_array(get_nodes_in_level("bosses", level_id))
 	var alive: Array[Node3D] = []
 	for enemy in enemies:
 		if enemy == null or not is_instance_valid(enemy):
@@ -999,7 +1031,13 @@ func get_current_level_enemies() -> Array[Node3D]:
 
 
 func is_current_level_cleared() -> bool:
-	return get_current_level_enemies().is_empty()
+	return is_level_cleared(current_level_id)
+
+
+func is_level_cleared(level_id: int) -> bool:
+	if not get_level_enemies(level_id).is_empty():
+		return false
+	return _is_level_wave_complete(level_id)
 
 
 func is_node_in_current_level(node: Node) -> bool:
@@ -1025,6 +1063,10 @@ func _filter_nodes_by_level(nodes: Array, level_id: int) -> Array[Node3D]:
 func _get_level_id_for_node(node: Node) -> int:
 	var current: Node = node
 	while current != null:
+		if current.has_meta("level_id"):
+			var meta_level = current.get_meta("level_id")
+			if typeof(meta_level) == TYPE_INT and int(meta_level) > 0:
+				return int(meta_level)
 		var tagged_level = current.get("level_id")
 		if typeof(tagged_level) == TYPE_INT and int(tagged_level) > 0:
 			return int(tagged_level)
@@ -1081,3 +1123,51 @@ func _update_level_doors() -> void:
 			gate.open()
 		else:
 			gate.close()
+
+
+func _assign_level_tag(node: Node, level_id: int) -> void:
+	if node == null or level_id <= 0:
+		return
+	node.set_meta("level_id", level_id)
+
+
+func _get_wave_state(level_id: int) -> Dictionary:
+	if not _wave_state_by_level.has(level_id):
+		_wave_state_by_level[level_id] = {
+			"spawned": 0,
+			"active": 0,
+			"killed": 0,
+		}
+	return _wave_state_by_level[level_id]
+
+
+func _is_level_wave_complete(level_id: int) -> bool:
+	if wave_total_enemies <= 0:
+		return true
+	if get_level_spawn_markers(level_id).is_empty():
+		return true
+	var wave_state := _get_wave_state(level_id)
+	return int(wave_state.get("spawned", 0)) >= wave_total_enemies and int(wave_state.get("active", 0)) <= 0
+
+
+func _log_level_debug_state(reason: String = "") -> void:
+	var alive_enemies := get_level_enemies(current_level_id).size()
+	var wave_state := _get_wave_state(current_level_id)
+	var pending_wave_spawns := 0
+	if not get_level_spawn_markers(current_level_id).is_empty() and wave_total_enemies > 0:
+		pending_wave_spawns = max(0, wave_total_enemies - int(wave_state.get("spawned", 0)))
+	var remaining_to_clear := alive_enemies + pending_wave_spawns
+	var debug_state := "level=%d|cleared=%s|alive=%d|pending_wave=%d|remaining=%d" % [
+		current_level_id,
+		str(_current_level_cleared),
+		alive_enemies,
+		pending_wave_spawns,
+		remaining_to_clear,
+	]
+	if debug_state == _debug_last_level_state and reason.is_empty():
+		return
+	_debug_last_level_state = debug_state
+	if reason.is_empty():
+		print("[LEVEL DEBUG] %s" % debug_state)
+	else:
+		print("[LEVEL DEBUG] %s reason=%s" % [debug_state, reason])
