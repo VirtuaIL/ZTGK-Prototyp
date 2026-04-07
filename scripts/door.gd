@@ -4,6 +4,10 @@ class_name door
 # The ID used by buttons to target this door
 @export var doorId: int = 0
 
+# Optional level gate controlled by Main.
+# When set, the door stays closed until the assigned level is cleared.
+@export var controlled_level_id: int = 0
+
 # How far (in local X units) the door slides when opened
 @export var slide_distance: float = 9.0
 

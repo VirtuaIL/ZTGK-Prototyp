@@ -459,9 +459,14 @@ func _check_damage() -> void:
 	if mgr.get("current_attack_mode") == 1: # BLOB mode
 		return
 		
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	enemies += (get_tree().get_nodes_in_group("bosses"))
-	#print(global_position.distance_to(get_tree().get_nodes_in_group("bosses")[0].global_position))
+	var enemies: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+	else:
+		enemies = get_tree().get_nodes_in_group("enemies")
+		enemies += get_tree().get_nodes_in_group("bosses")
 	
 	var final_dmg = damage_per_hit
 	var dmg_color = Color.WHITE
@@ -642,7 +647,12 @@ func hard_recall_to_player() -> void:
 
 
 func _get_nearest_spawn(pos: Vector3) -> Node3D:
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var spawns: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_current_level_rat_spawns"):
+		spawns = current_scene.get_current_level_rat_spawns()
+	else:
+		spawns = get_tree().get_nodes_in_group("rat_spawn")
 	var best: Node3D = null
 	var best_dist := INF
 	for s in spawns:

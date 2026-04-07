@@ -319,8 +319,13 @@ func _spawn_rats(count: int) -> void:
 	var base_pos := global_position
 	if _player:
 		base_pos = _player.global_position
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
 	var spawn_nodes: Array[Node3D] = []
+	var current_scene := get_tree().current_scene
+	var spawns: Array = []
+	if current_scene != null and current_scene.has_method("get_current_level_rat_spawns"):
+		spawns = current_scene.get_current_level_rat_spawns()
+	else:
+		spawns = get_tree().get_nodes_in_group("rat_spawn")
 	for s in spawns:
 		var n := s as Node3D
 		if n != null:
@@ -353,7 +358,12 @@ func _get_nearest_spawn_pos() -> Vector3:
 	var base_pos := global_position
 	if _player:
 		base_pos = _player.global_position
-	var spawns := get_tree().get_nodes_in_group("rat_spawn")
+	var spawns: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_current_level_rat_spawns"):
+		spawns = current_scene.get_current_level_rat_spawns()
+	else:
+		spawns = get_tree().get_nodes_in_group("rat_spawn")
 	var nearest: Node3D = null
 	var best_dist := INF
 	for s in spawns:
@@ -521,8 +531,14 @@ func _process(delta: float) -> void:
 
 
 func _process_damage(delta: float) -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	enemies += get_tree().get_nodes_in_group("bosses")
+	var enemies: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+	else:
+		enemies = get_tree().get_nodes_in_group("enemies")
+		enemies += get_tree().get_nodes_in_group("bosses")
 	if enemies.is_empty() or rats.is_empty():
 		return
 
@@ -696,19 +712,26 @@ func _update_combat_attack_circle(delta: float) -> void:
 			t.y = mouse_world.y
 			active[i].set_target(t)
 			
-		var enemies = get_tree().get_nodes_in_group("enemies")
-		if count > 0:
-			for enemy in enemies:
-				if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
-					var dist = enemy.global_position.distance_to(actual_blob_center)
-					var is_already_stuck = _stuck_enemies.has(enemy)
-					if is_already_stuck or dist <= blob_radius:
-						if not is_already_stuck:
-							_stuck_enemies.append(enemy)
-						enemy.set("is_stuck_in_blob", true)
-						enemy.set("blob_center", actual_blob_center)
-						if tick_damage:
-							enemy.take_damage(blob_damage_per_tick)
+			var enemies: Array = []
+			var current_scene := get_tree().current_scene
+			if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+				enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+				enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+			else:
+				enemies = get_tree().get_nodes_in_group("enemies")
+				enemies += get_tree().get_nodes_in_group("bosses")
+			if count > 0:
+				for enemy in enemies:
+					if is_instance_valid(enemy) and enemy.has_method("take_damage") and not enemy.get("_is_dead"):
+						var dist = enemy.global_position.distance_to(actual_blob_center)
+						var is_already_stuck = _stuck_enemies.has(enemy)
+						if is_already_stuck or dist <= blob_radius:
+							if not is_already_stuck:
+								_stuck_enemies.append(enemy)
+							enemy.set("is_stuck_in_blob", true)
+							enemy.set("blob_center", actual_blob_center)
+							if tick_damage:
+								enemy.take_damage(blob_damage_per_tick)
 		return
 
 	_combat_circle_angle += combat_circle_rotation_speed * delta

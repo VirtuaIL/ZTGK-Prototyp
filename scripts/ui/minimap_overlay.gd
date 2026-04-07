@@ -141,12 +141,17 @@ func _draw_markers(group_name: String, color: Color, marker_kind: String, marker
 	if _minimap_camera == null or _subviewport == null:
 		return
 
+	var current_scene := get_tree().current_scene
+
 	for node in get_tree().get_nodes_in_group(group_name):
 		var target := node as Node3D
 		if target == null or not is_instance_valid(target):
 			continue
 		if target == _player:
 			continue
+		if current_scene != null and current_scene.has_method("is_node_in_current_level"):
+			if not current_scene.is_node_in_current_level(target):
+				continue
 		if _minimap_camera.is_position_behind(target.global_position):
 			continue
 

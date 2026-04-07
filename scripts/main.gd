@@ -1,5 +1,17 @@
 extends Node3D
 
+const LEVEL_BOUNDS := {
+	1: {"min_z": -140.0, "max_z": 48.0},
+	2: {"min_z": 48.0, "max_z": 126.0},
+	3: {"min_z": 126.0, "max_z": 220.0},
+	4: {"min_z": -240.0, "max_z": -140.0},
+}
+
+const GLOBAL_VISIBILITY_ROOTS := {
+	"Player": true,
+	"Skydome": true,
+}
+
 var lpm_label_val: Label
 var spm_label_val: Label
 var ppm_label_val: Label
@@ -25,6 +37,8 @@ var indicator_root: Control
 var indicator_pool: Array[Label] = []
 var _indicator_blink_time: float = 0.0
 var fps_label: Label
+var current_level_id: int = 1
+var _current_level_cleared: bool = false
 
 # ── Wave Spawner ──────────────────────────────────────────────────────────────
 @export_group("Wave Spawner")
@@ -94,6 +108,7 @@ func _init_game() -> void:
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
 	_setup_fps_ui()
+	set_current_level(current_level_id)
 	
 	rat_manager.setup_player(player)
 	rat_manager.ensure_min_cap()
@@ -430,6 +445,8 @@ func _update_offscreen_indicators() -> void:
 		var node := t as Node3D
 		if node == null:
 			continue
+		if not is_node_in_current_level(node):
+			continue
 		var dist: float = ppos.distance_to(node.global_position)
 		if dist < indicator_min_distance or dist > indicator_max_distance:
 			continue
@@ -484,6 +501,10 @@ func _process(delta: float) -> void:
 	_update_rat_count_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
+	var level_cleared := is_current_level_cleared()
+	if level_cleared != _current_level_cleared:
+		_current_level_cleared = level_cleared
+		_update_level_doors()
 	
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
@@ -637,7 +658,7 @@ func _on_stratagem_failed() -> void:
 
 
 func _toggle_all_enemies_passive() -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
+	var enemies := get_nodes_in_current_level("enemies")
 	for enemy in enemies:
 		if enemy.has_method("toggle_passive"):
 			enemy.toggle_passive()
@@ -645,7 +666,7 @@ func _toggle_all_enemies_passive() -> void:
 
 # ── Wave Spawner Methods ──────────────────────────────────────────────────────
 func _spawn_wave_enemy() -> void:
-	var markers = get_tree().get_nodes_in_group("spawn_markers")
+	var markers: Array = get_current_level_spawn_markers()
 	if markers.is_empty():
 		return
 		
@@ -683,6 +704,8 @@ func _on_wave_enemy_died(enemy: Node) -> void:
 	_wave_killed += 1
 	if is_instance_valid(enemy):
 		enemy.queue_free()
+	_current_level_cleared = is_current_level_cleared()
+	_update_level_doors()
 	if _wave_killed >= wave_total_enemies:
 		print("Fala zakończona!")
 
@@ -698,7 +721,9 @@ func _on_player_died() -> void:
 	_wave_timer = wave_spawn_interval
 
 func _spawn_wild_rat_groups() -> void:
-	var markers = get_tree().get_nodes_in_group("spawn_markers")
+	var markers: Array = get_current_level_rat_spawns()
+	if markers.is_empty():
+		markers = get_current_level_spawn_markers()
 	if markers.is_empty():
 		return
 	var group_count = randi_range(wild_rat_group_count_min, wild_rat_group_count_max)
@@ -723,3 +748,139 @@ func _spawn_wild_rat_groups() -> void:
 			rat.global_position = m.global_position + Vector3(randf_range(-1.5, 1.5), 0.2, randf_range(-1.5, 1.5))
 			if rat.has_method("set_wild"):
 				rat.set_wild(true)
+
+
+func can_activate_level(level_id: int) -> bool:
+	if level_id <= 0:
+		return false
+	if level_id <= current_level_id:
+		return true
+	if level_id == current_level_id + 1:
+		return is_current_level_cleared()
+	return false
+
+
+func set_current_level(level_id: int) -> void:
+	if level_id <= 0:
+		return
+	current_level_id = level_id
+	_current_level_cleared = is_current_level_cleared()
+	_refresh_level_visibility()
+	_update_level_doors()
+
+
+func get_nodes_in_current_level(group_name: String) -> Array[Node3D]:
+	return _filter_nodes_by_level(get_tree().get_nodes_in_group(group_name), current_level_id)
+
+
+func get_current_level_spawn_markers() -> Array[Node3D]:
+	return get_nodes_in_current_level("spawn_markers")
+
+
+func get_current_level_rat_spawns() -> Array[Node3D]:
+	var rat_spawns := get_nodes_in_current_level("rat_spawn")
+	if not rat_spawns.is_empty():
+		return rat_spawns
+	return get_current_level_spawn_markers()
+
+
+func get_current_level_enemies() -> Array[Node3D]:
+	var enemies: Array[Node3D] = []
+	enemies.append_array(get_nodes_in_current_level("enemies"))
+	enemies.append_array(get_nodes_in_current_level("turrets"))
+	enemies.append_array(get_nodes_in_current_level("bosses"))
+	var alive: Array[Node3D] = []
+	for enemy in enemies:
+		if enemy == null or not is_instance_valid(enemy):
+			continue
+		if enemy.has_method("is_dead") and enemy.is_dead():
+			continue
+		if not enemy.visible:
+			continue
+		alive.append(enemy)
+	return alive
+
+
+func is_current_level_cleared() -> bool:
+	return get_current_level_enemies().is_empty()
+
+
+func is_node_in_current_level(node: Node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	var level_id := _get_level_id_for_node(node)
+	if level_id <= 0:
+		return true
+	return level_id == current_level_id
+
+
+func _filter_nodes_by_level(nodes: Array, level_id: int) -> Array[Node3D]:
+	var filtered: Array[Node3D] = []
+	for candidate in nodes:
+		var node := candidate as Node3D
+		if node == null or not is_instance_valid(node):
+			continue
+		if _get_level_id_for_node(node) == level_id:
+			filtered.append(node)
+	return filtered
+
+
+func _get_level_id_for_node(node: Node) -> int:
+	var current: Node = node
+	while current != null:
+		var tagged_level = current.get("level_id")
+		if typeof(tagged_level) == TYPE_INT and int(tagged_level) > 0:
+			return int(tagged_level)
+		var controlled_level = current.get("controlled_level_id")
+		if typeof(controlled_level) == TYPE_INT and int(controlled_level) > 0:
+			return int(controlled_level)
+		if String(current.name) == "boss_arena":
+			return 4
+		current = current.get_parent()
+
+	var node3d := node as Node3D
+	if node3d == null:
+		return 0
+
+	var z := node3d.global_position.z
+	for level_id in LEVEL_BOUNDS.keys():
+		var bounds: Dictionary = LEVEL_BOUNDS[level_id]
+		if z >= float(bounds["min_z"]) and z < float(bounds["max_z"]):
+			return level_id
+	return 0
+
+
+func _refresh_level_visibility() -> void:
+	for visual in find_children("*", "VisualInstance3D"):
+		var visual_node := visual as VisualInstance3D
+		if visual_node == null:
+			continue
+		if _is_global_visibility_node(visual_node):
+			continue
+		var level_id := _get_level_id_for_node(visual_node)
+		if level_id <= 0:
+			visual_node.visible = true
+		else:
+			visual_node.visible = level_id == current_level_id
+
+
+func _is_global_visibility_node(node: Node) -> bool:
+	var current: Node = node
+	while current != null:
+		if GLOBAL_VISIBILITY_ROOTS.has(String(current.name)):
+			return true
+		current = current.get_parent()
+	return false
+
+
+func _update_level_doors() -> void:
+	for node in get_tree().get_nodes_in_group("doors"):
+		var gate := node as door
+		if gate == null:
+			continue
+		if gate.controlled_level_id != current_level_id:
+			continue
+		if _current_level_cleared:
+			gate.open()
+		else:
+			gate.close()
