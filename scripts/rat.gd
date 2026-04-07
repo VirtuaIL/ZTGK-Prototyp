@@ -175,6 +175,14 @@ func _physics_process(delta: float) -> void:
 						p.add_child(g)
 						g.global_position = global_position
 		
+		# Material override optimization
+		if mgr.has_method("get_current_buff_material"):
+			var mat = mgr.get_current_buff_material()
+			if $Body.material_override != mat:
+				$Body.material_override = mat
+				$Tail.material_override = mat
+				$Head.material_override = mat
+		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
 
@@ -239,13 +247,10 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.FOLLOW:
 			_process_follow_spring(delta)
-			_check_damage()
 		State.ORBIT:
 			_process_orbit(delta)
-			_check_damage()
 		State.WAVE:
 			_process_wave(delta)
-			_check_damage()
 		State.TRAVEL_TO_BUILD:
 			_process_travel_to_build(delta)
 		State.WAITING_FOR_FORMATION:

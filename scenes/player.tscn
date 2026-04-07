@@ -23,15 +23,15 @@ shader_parameter/intensity = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_HealthPanel"]
 bg_color = Color(0, 0, 0, 0.65)
-border_color = Color(0.9, 0.9, 0.9, 0.6)
 border_width_left = 2
-border_width_right = 2
 border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.9, 0.9, 0.9, 0.6)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
-corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MinimapPanel"]
 bg_color = Color(0.0156863, 0.0470588, 0.0588235, 0.78)
@@ -59,9 +59,9 @@ mesh = SubResource("CapsuleMesh_1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="PlayerHUD" type="CanvasLayer" parent="."]
+[node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=1756583863]
 
-[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD"]
+[node name="DamageOverlay" type="ColorRect" parent="PlayerHUD" unique_id=705330607]
 material = SubResource("ShaderMaterial_Vignette")
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,7 +70,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HealthBar" type="Panel" parent="PlayerHUD"]
+[node name="HealthBar" type="Panel" parent="PlayerHUD" unique_id=1416469297]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 20.0
@@ -80,53 +81,49 @@ offset_bottom = -30.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
 
-[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar"]
-anchors_preset = 15
+[node name="Margin" type="MarginContainer" parent="PlayerHUD/HealthBar" unique_id=1388188016]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
 theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="PlayerHUD/HealthBar/Margin" unique_id=370931974]
+layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=39119267]
+layout_mode = 2
 text = "ZDROWIE"
-mouse_filter = 2
 
-[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox"]
+[node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=228333768]
 custom_minimum_size = Vector2(0, 18)
-max_value = 100.0
+layout_mode = 2
+mouse_filter = 2
 value = 100.0
 show_percentage = false
-mouse_filter = 2
 
-[node name="HelpHint" type="Label" parent="PlayerHUD"]
+[node name="HelpHint" type="Label" parent="PlayerHUD" unique_id=1932421216]
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = -26.0
 offset_right = 220.0
 offset_bottom = -8.0
-text = "H — pomoc"
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.72, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 11
+text = "H — pomoc"
 
-[node name="MinimapPanel" type="PanelContainer" parent="PlayerHUD"]
+[node name="MinimapPanel" type="PanelContainer" parent="PlayerHUD" unique_id=1568284218]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -137,24 +134,24 @@ offset_bottom = 252.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_MinimapPanel")
 
-[node name="Margin" type="MarginContainer" parent="PlayerHUD/MinimapPanel"]
+[node name="Margin" type="MarginContainer" parent="PlayerHUD/MinimapPanel" unique_id=1514198590]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="PlayerHUD/MinimapPanel/Margin"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="PlayerHUD/MinimapPanel/Margin" unique_id=55494990]
 layout_mode = 2
 stretch = true
 mouse_filter = 2
 
-[node name="SubViewport" type="SubViewport" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer" unique_id=607198590]
 handle_input_locally = false
 size = Vector2i(220, 220)
 render_target_update_mode = 4
 
-[node name="MinimapCamera" type="Camera3D" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport"]
+[node name="MinimapCamera" type="Camera3D" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport" unique_id=1409008809]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 40, 0)
 projection = 1
 size = 40.0
