@@ -66,6 +66,7 @@ var buff_labels: Array[Label] = []
 
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
 var _wave_flamethrower_scene: PackedScene = preload("res://scenes/enemies/flamethrower_enemy.tscn")
+var _wave_bomber_scene: PackedScene = preload("res://scenes/enemies/bomber_enemy.tscn")
 var _wave_state_by_level: Dictionary = {}
 var _wave_sniper_scene: PackedScene = preload("res://scenes/enemies/sniper_enemy.tscn")
 var _wave_spawned: int = 0
@@ -877,7 +878,9 @@ func _spawn_wave_enemy() -> void:
 	var r = randf()
 	if r <= 0.15 and _wave_sniper_scene:
 		enemy = _wave_sniper_scene.instantiate()
-	elif r <= 0.40 and _wave_flamethrower_scene:
+	elif r <= 0.30 and _wave_bomber_scene:
+		enemy = _wave_bomber_scene.instantiate()
+	elif r <= 0.55 and _wave_flamethrower_scene:
 		enemy = _wave_flamethrower_scene.instantiate()
 	else:
 		enemy = _wave_enemy_scene.instantiate()

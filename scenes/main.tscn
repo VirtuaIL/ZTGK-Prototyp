@@ -36,7 +36,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
-wave_total_enemies = 1
+wave_total_enemies = 10
 wave_max_concurrent = 7
 wild_rat_spawn_interval = 5.0
 wild_rat_group_count_max = 7
