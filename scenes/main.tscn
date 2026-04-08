@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
 [ext_resource type="PackedScene" uid="uid://duy445sug03q8" path="res://scenes/levels/level_tutorial_3.tscn" id="10_ya4ey"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
+[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="21_main_spawner"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -43,6 +44,7 @@ wild_rat_spawn_interval = 5.0
 wild_rat_group_count_max = 7
 wild_rat_count_per_group_min = 1
 wild_rat_count_per_group_max = 7
+use_legacy_wild_rat_spawner = false
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
@@ -73,6 +75,84 @@ use_wide_brush = true
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
+
+[node name="Spawners" type="Node3D" parent="." unique_id=141205001]
+
+[node name="SpawnerWildLevel1" parent="Spawners" unique_id=1732210011 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+label = "Level1 Wild Rats"
+start_delay = 4.0
+count_min = 4
+count_max = 7
+spawn_radius = 1.8
+
+[node name="SpawnerEnemyPressureLevel2" parent="Spawners" unique_id=1732210012 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.999103, 0, 0)
+label = "Level2 Enemy Pressure"
+level_id = 2
+start_delay = 6.0
+repeat = true
+repeat_interval = 10.0
+max_triggers = 3
+spawn_kind = 1
+count_min = 2
+spawn_radius = 1.0
+position_mode = 3
+avoid_closest_to_player = true
+
+[node name="SpawnerBomberLevel2A" parent="Spawners" unique_id=1732210013 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -58)
+label = "Level2 Bomber Ambush A"
+level_id = 2
+start_delay = 14.0
+spawn_kind = 3
+count_max = 1
+spawn_radius = 0.8
+choose_random_point = false
+
+[node name="SpawnerBomberLevel2B" parent="Spawners" unique_id=1732210014 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -58)
+label = "Level2 Bomber Ambush B"
+level_id = 2
+start_delay = 14.0
+spawn_kind = 3
+count_max = 1
+spawn_radius = 0.8
+choose_random_point = false
+
+[node name="SpawnerFlameLevel3Left" parent="Spawners" unique_id=1732210015 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -92)
+label = "Level3 Flame Push Left"
+level_id = 3
+start_delay = 7.0
+repeat = true
+repeat_interval = 18.0
+max_triggers = 2
+spawn_kind = 2
+count_max = 1
+spawn_radius = 1.2
+
+[node name="SpawnerFlameLevel3Right" parent="Spawners" unique_id=1732210016 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -92)
+label = "Level3 Flame Push Right"
+level_id = 3
+start_delay = 7.0
+repeat = true
+repeat_interval = 18.0
+max_triggers = 2
+spawn_kind = 2
+count_max = 1
+spawn_radius = 1.2
+
+[node name="SpawnerMortarLevel3" parent="Spawners" unique_id=1732210017 instance=ExtResource("21_main_spawner")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -112)
+label = "Level3 Mortar Backline"
+level_id = 3
+start_delay = 11.0
+spawn_kind = 5
+count_max = 1
+spawn_radius = 0.0
+choose_random_point = false
 
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
