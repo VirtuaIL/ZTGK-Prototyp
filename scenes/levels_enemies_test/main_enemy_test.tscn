@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://bytyxow3m4vwy"]
+
+[ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/systems/main.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
+[ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
+[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
+[ext_resource type="PackedScene" uid="uid://pcp7mpc4qjy" path="res://scenes/levels_enemies_test/level_enemy.tscn" id="8_enemy_test"]
+[ext_resource type="PackedScene" uid="uid://cwced8hmc4xt6" path="res://scenes/levels_enemies_test/level_flame_enemy.tscn" id="8_yclxx"]
+[ext_resource type="PackedScene" uid="uid://b3yvmnotoo6uh" path="res://scenes/levels_enemies_test/level_sniper_enemy.tscn" id="9_1m3ql"]
+[ext_resource type="PackedScene" uid="uid://882mxm2nkwdx" path="res://scenes/levels_enemies_test/level_bomber_enemy.tscn" id="10_fjkha"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
+panorama = ExtResource("2_0ld40")
+
+[sub_resource type="Sky" id="Sky_0ld40"]
+sky_material = SubResource("PanoramaSkyMaterial_dp3eg")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+background_color = Color(0.7083283, 0.11449968, 0.5420097, 1)
+sky = SubResource("Sky_0ld40")
+ambient_light_source = 2
+ambient_light_color = Color(0.3, 0.28, 0.35, 1)
+ambient_light_energy = 0.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
+cull_mode = 2
+shading_mode = 0
+albedo_texture = ExtResource("2_0ld40")
+
+[sub_resource type="SphereMesh" id="SphereMesh_skydome"]
+material = SubResource("StandardMaterial3D_skydome")
+
+[node name="Main" type="Node3D" unique_id=709470400]
+script = ExtResource("1_script")
+wave_total_enemies = 10
+wave_max_concurrent = 7
+wild_rat_spawn_interval = 5.0
+wild_rat_group_count_max = 7
+wild_rat_count_per_group_min = 1
+wild_rat_count_per_group_max = 7
+cam_look_ahead_max = 4.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
+environment = SubResource("Environment_1")
+
+[node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.120464325, 0.12258148, -0.03937912)
+visible = false
+cast_shadow = 0
+mesh = SubResource("SphereMesh_skydome")
+script = ExtResource("7_skydome")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 5, 10, 5)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=759215990]
+transform = Transform3D(0.25881913, -0.9330128, 0.25000006, 0, 0.2588191, 0.96592593, -0.96592605, -0.25000006, 0.06698732, 10, 50, 10)
+projection = 1
+fov = 45.0
+size = 22.0
+
+[node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -180.38527, 0, 0)
+
+[node name="RatManager" type="Node3D" parent="." unique_id=169060230]
+script = ExtResource("4_rat_man")
+use_wide_brush = true
+
+[node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
+script = ExtResource("7_ability_hud")
+
+[node name="levels" type="Node3D" parent="." unique_id=1117700867]
+
+[node name="LevelEnemy" parent="levels" unique_id=1397753813 instance=ExtResource("8_enemy_test")]
+
+[node name="LevelEnemy2" parent="levels" unique_id=1669517161 instance=ExtResource("8_yclxx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -57.15449, 0, 0)
+
+[node name="LevelEnemy3" parent="levels" unique_id=750944921 instance=ExtResource("9_1m3ql")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -116.21875, 0, 0)
+
+[node name="LevelEnemy4" parent="levels" unique_id=450381390 instance=ExtResource("10_fjkha")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -179.55515, 0, 0)

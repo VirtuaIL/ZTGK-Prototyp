@@ -298,7 +298,7 @@ func _pick_and_start_attack() -> void:
 		attack_marker = MeshInstance3D.new()
 		attack_marker.layers = 2
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.2, 0.0, 0.4)
+		mat.albedo_color = Color(1.0, 0.2, 0.0, 0.2)
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED

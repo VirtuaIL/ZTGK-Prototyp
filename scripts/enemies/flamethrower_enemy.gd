@@ -11,6 +11,7 @@ var flame_spray_angle = deg_to_rad(30.0)
 
 var recent_hits: Dictionary = {}
 var flame_visual: MeshInstance3D
+var flame_particles: GPUParticles3D
 
 func _ready() -> void:
 	super._ready()
@@ -21,8 +22,8 @@ func _ready() -> void:
 	detection_range = 20.0
 	lose_range = 25.0
 	attack_damage = 20.0 
-	attack_cooldown = 4.0
-	attack_delay = 1.0
+	attack_cooldown = 5.0
+	attack_delay = 2.0
 
 	flame_visual = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
@@ -42,6 +43,47 @@ func _ready() -> void:
 	flame_visual.rotation_degrees = Vector3(90, 0, 0)
 	flame_visual.visible = false
 	add_child(flame_visual)
+
+	flame_particles = GPUParticles3D.new()
+	flame_particles.name = "FlameParticles"
+	flame_particles.amount = 120
+	flame_particles.lifetime = 0.35
+	flame_particles.one_shot = false
+	flame_particles.emitting = false
+	flame_particles.visible = false
+	flame_particles.randomness = 0.8
+	flame_particles.fixed_fps = 30
+	flame_particles.draw_order = GPUParticles3D.DRAW_ORDER_LIFETIME
+	flame_particles.position = Vector3(0, 1.0, 0.6)
+	flame_particles.rotation_degrees = Vector3(0, 0, 0)
+
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.25, 0.12)
+	flame_particles.draw_pass_1 = quad
+
+	var pmat := StandardMaterial3D.new()
+	pmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	pmat.albedo_color = Color(1.0, 0.55, 0.15, 0.9)
+	pmat.emission_enabled = true
+	pmat.emission = Color(1.0, 0.25, 0.05, 1.0)
+	pmat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	quad.material = pmat
+
+	var proc := ParticleProcessMaterial.new()
+	proc.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	proc.emission_box_extents = Vector3(0.2, 0.15, 0.2)
+	proc.direction = Vector3(0, 0.05, 1)
+	proc.spread = 18.0
+	proc.initial_velocity_min = 6.0
+	proc.initial_velocity_max = 10.0
+	proc.scale_min = 0.5
+	proc.scale_max = 1.1
+	proc.gravity = Vector3(0, 0.6, 0)
+	proc.damping_min = 0.4
+	proc.damping_max = 0.7
+	flame_particles.process_material = proc
+	add_child(flame_particles)
 
 func _process_attack(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
@@ -105,6 +147,9 @@ func _process_attack(delta: float) -> void:
 			flame_visual.visible = true
 			var jiggle = randf_range(0.9, 1.1)
 			flame_visual.scale = Vector3(jiggle, randf_range(0.95, 1.05), jiggle)
+		if flame_particles:
+			flame_particles.visible = true
+			flame_particles.emitting = true
 		
 		# Slowly track player while firing
 		var to_player := _player_ref.global_position - global_position
@@ -125,6 +170,9 @@ func _process_attack(delta: float) -> void:
 				body.material_override.albedo_color = Color(0.7, 0.3, 0.1)
 			if flame_visual:
 				flame_visual.visible = false
+			if flame_particles:
+				flame_particles.emitting = false
+				flame_particles.visible = false
 		return
 
 	_attack_timer -= delta
@@ -136,6 +184,9 @@ func _process_attack(delta: float) -> void:
 		var body: MeshInstance3D = get_child(0) as MeshInstance3D
 		if body and body.material_override:
 			body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # windup
+		if flame_particles:
+			flame_particles.emitting = false
+			flame_particles.visible = false
 	else:
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0

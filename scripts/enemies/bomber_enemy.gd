@@ -27,21 +27,30 @@ func _process_attack(delta: float) -> void:
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr == null or mgr.rats.is_empty():
 		_clear_telegraph()
-		super._process_attack(delta)
+		current_attack = AttackType.NONE
+		if attack_marker:
+			attack_marker.visible = false
+		ai_state = AIState.WANDER
 		return
 
 	var target_rat = _pick_target_rat(mgr)
 	if target_rat == null:
 		_clear_telegraph()
-		super._process_attack(delta)
+		current_attack = AttackType.NONE
+		if attack_marker:
+			attack_marker.visible = false
+		ai_state = AIState.WANDER
 		return
 
 	var target_pos := _get_ground_target(target_rat.global_position)
 	var dist := global_position.distance_to(target_pos)
 	if dist < bomb_min_range:
 		_clear_telegraph()
-		# Too close, back off via default movement
-		super._process_attack(delta)
+		current_attack = AttackType.NONE
+		if attack_marker:
+			attack_marker.visible = false
+		# Too close: keep chasing to maintain distance
+		ai_state = AIState.CHASE
 		return
 
 	_bomb_timer -= delta
@@ -79,7 +88,7 @@ func _create_telegraph(pos: Vector3, duration: float) -> void:
 	mesh.height = 0.05
 	_telegraph_marker.mesh = mesh
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.35)
+	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.22)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
