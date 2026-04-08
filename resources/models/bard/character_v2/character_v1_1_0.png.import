@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://4vkj0val0mu4"
-path.s3tc="res://.godot/imported/character_v1_0.png-e3931e9fe10abf64488880c1ab9aa4a0.s3tc.ctex"
+uid="uid://bjyxjq5lhk0ql"
+path.s3tc="res://.godot/imported/character_v1_1_0.png-35943fa04e7af43f4a3f9fb6465f48e1.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -14,8 +14,8 @@ generator_parameters={
 
 [deps]
 
-source_file="res://resources/models/bard/character_v1_0.png"
-dest_files=["res://.godot/imported/character_v1_0.png-e3931e9fe10abf64488880c1ab9aa4a0.s3tc.ctex"]
+source_file="res://resources/models/bard/character_v2/character_v1_1_0.png"
+dest_files=["res://.godot/imported/character_v1_1_0.png-35943fa04e7af43f4a3f9fb6465f48e1.s3tc.ctex"]
 
 [params]
 

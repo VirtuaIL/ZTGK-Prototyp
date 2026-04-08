@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player/player.gd" id="1_script"]
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
-[ext_resource type="PackedScene" uid="uid://bwu20hik6dpuh" path="res://resources/models/bard/character_v1.fbx" id="4_dqkch"]
+[ext_resource type="PackedScene" uid="uid://8qy0rmy6j6hs" path="res://resources/models/bard/character_v2/character_v1_1.fbx" id="4_dqkch"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -163,4 +163,4 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_minimap_overlay")
 
-[node name="character_v1" parent="." unique_id=1388833923 instance=ExtResource("4_dqkch")]
+[node name="character_v1_1" parent="." unique_id=587752233 instance=ExtResource("4_dqkch")]
