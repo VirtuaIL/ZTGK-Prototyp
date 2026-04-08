@@ -16,13 +16,18 @@ size = Vector2(80, 80)
 [sub_resource type="BoxShape3D" id="BoxShape3D_6iamk"]
 size = Vector3(80.037964, 0.001, 81.347046)
 
-[node name="Level1" type="Node3D" unique_id=1397753813]
+[node name="Level2" type="Node3D" unique_id=1397753813]
+script = ExtResource("1_qpwj6")
+level_id = 2
+
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=1199320032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1812254389]
 
-[node name="RatSpawnLevel1" type="Marker3D" parent="RatSpawns" unique_id=61998251]
+[node name="RatSpawnLevel2" type="Marker3D" parent="RatSpawns" unique_id=61998251]
 script = ExtResource("1_qpwj6")
-level_id = 1
+level_id = 2
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=116290845]
 
@@ -54,7 +59,7 @@ transform = Transform3D(-7.430936e-07, 0, 1, 0, 1, 0, -17, 0, -4.371139e-08, 39,
 
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=1775609513]
 script = ExtResource("1_qpwj6")
-level_id = 1
+level_id = 2
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=607697336 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8315115, 0, 26.622547)

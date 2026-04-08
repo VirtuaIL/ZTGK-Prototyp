@@ -94,7 +94,15 @@ func _on_transition_body_entered(body: Node3D) -> void:
 		return
 
 	var current_scene := get_tree().current_scene
-	if current_scene == null or not current_scene.has_method("transition_to_level"):
+	if current_scene == null:
+		return
+	if current_scene.has_method("set_current_level"):
+		_transition_locked = true
+		current_scene.set_current_level(target_level_id)
+		await get_tree().create_timer(0.35).timeout
+		_transition_locked = false
+		return
+	if not current_scene.has_method("transition_to_level"):
 		return
 
 	var target_position := _get_target_position()

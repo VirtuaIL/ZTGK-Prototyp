@@ -2,17 +2,20 @@ extends Node3D
 
 const LEVEL_BOUNDS := {
 	1: {"min_z": -140.0, "max_z": 48.0},
-	2: {"min_z": 48.0, "max_z": 126.0},
+	2: {"min_z": -137.5, "max_z": -55.5},
 	3: {"min_z": 126.0, "max_z": 220.0},
 	4: {"min_z": -240.0, "max_z": -140.0},
 }
 
 const LEVEL_CLAMP_BOUNDS := {
 	1: {"min_x": -82.0, "max_x": 42.0, "min_z": -138.0, "max_z": 46.0},
-	2: {"min_x": -28.0, "max_x": 56.0, "min_z": 46.0, "max_z": 124.0},
+	2: {"min_x": -40.0, "max_x": 40.0, "min_z": -137.5, "max_z": -55.5},
 	3: {"min_x": -55.0, "max_x": 29.0, "min_z": 124.0, "max_z": 206.0},
 	4: {"min_x": -62.0, "max_x": -6.0, "min_z": -210.0, "max_z": -166.0},
 }
+
+var _level_bounds_dynamic: Dictionary = {}
+var _level_clamp_bounds_dynamic: Dictionary = {}
 
 const GLOBAL_VISIBILITY_ROOTS := {
 	"Player": true,
@@ -35,6 +38,7 @@ var cheatsheet_title: Label
 var cheatsheet_hint: Label
 var goal_label: Label
 var rat_count_label: RichTextLabel
+var enemy_count_label: RichTextLabel
 var recall_indicator: Control
 var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
@@ -119,10 +123,12 @@ func _init_game() -> void:
 	_setup_cheatsheet_ui()
 	_setup_goal_ui()
 	_setup_rat_count_ui()
+	_setup_enemy_count_ui()
 	_setup_buff_ui()
 	_setup_recall_indicator_ui()
 	_setup_offscreen_indicators_ui()
 	_setup_fps_ui()
+	_rebuild_level_bounds()
 	set_current_level(current_level_id)
 	_log_level_debug_state("init")
 	
@@ -277,7 +283,7 @@ func _setup_cheatsheet_ui() -> void:
 	var layer = CanvasLayer.new()
 	var panel = Panel.new()
 	cheatsheet_panel = panel
-	panel.visible = true
+	panel.visible = false
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.position = Vector2(20, 95)
 	panel.custom_minimum_size = Vector2(380, 300)
@@ -442,14 +448,38 @@ func _setup_rat_count_ui() -> void:
 	layer.add_child(label)
 	add_child(layer)
 
+func _setup_enemy_count_ui() -> void:
+	var layer = CanvasLayer.new()
+	var label = RichTextLabel.new()
+	enemy_count_label = label
+	label.bbcode_enabled = true
+	label.fit_content = true
+	label.scroll_active = false
+	label.scroll_following = false
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	label.custom_minimum_size = Vector2(10, 20)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.text = "Wrogowie: 0"
+	label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	label.offset_left = 20
+	label.offset_top = 84
+	label.add_theme_color_override("font_color", Color(0.95, 0.95, 0.95))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("outline_size", 4)
+	layer.add_child(label)
+	add_child(layer)
+
 
 func _setup_buff_ui() -> void:
 	var layer = CanvasLayer.new()
 	var panel = Panel.new()
 	buff_panel = panel
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	panel.position = Vector2(330, -130)
-	panel.custom_minimum_size = Vector2(240, 120)
+	# Place modifiers above the health bar (HealthBar top is at -130).
+	panel.position = Vector2(20, -280)
+	panel.custom_minimum_size = Vector2(260, 140)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var style := StyleBoxFlat.new()
@@ -473,15 +503,15 @@ func _setup_buff_ui() -> void:
 	panel.add_child(margin)
 
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
 
 	var title = Label.new()
 	title.text = "MODIFIERY"
 	title.add_theme_color_override("font_color", UI_TEXT)
 	title.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
-	title.add_theme_constant_override("outline_size", 2)
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_constant_override("outline_size", 3)
+	title.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(title)
 
 	buff_labels.clear()
@@ -491,8 +521,8 @@ func _setup_buff_ui() -> void:
 		lbl.text = "%s: -" % names[i]
 		lbl.add_theme_color_override("font_color", UI_TEXT)
 		lbl.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
-		lbl.add_theme_constant_override("outline_size", 2)
-		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_constant_override("outline_size", 3)
+		lbl.add_theme_font_size_override("font_size", 14)
 		buff_labels.append(lbl)
 		vbox.add_child(lbl)
 
@@ -615,6 +645,19 @@ func _update_rat_count_ui() -> void:
 	var current_count: int = rat_manager.rats.size()
 	rat_count_label.text = "Szczury: " + str(current_count)
 
+func _update_enemy_count_ui() -> void:
+	if not enemy_count_label:
+		return
+	var alive := 0
+	var pending := 0
+	if has_method("get_level_enemies"):
+		alive = get_level_enemies(current_level_id).size()
+	if wave_total_enemies > 0:
+		var wave_state := _get_wave_state(current_level_id)
+		pending = max(0, wave_total_enemies - int(wave_state.get("spawned", 0)))
+	var remaining := alive + pending
+	enemy_count_label.text = "Wrogowie: " + str(remaining)
+
 
 func _update_buff_ui() -> void:
 	if buff_labels.is_empty():
@@ -648,6 +691,7 @@ func _update_mode_ui() -> void:
 func _process(delta: float) -> void:
 	_update_mode_ui()
 	_update_rat_count_ui()
+	_update_enemy_count_ui()
 	_update_buff_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
@@ -916,14 +960,18 @@ func set_current_level(level_id: int) -> void:
 		return
 	if level_id == current_level_id:
 		_current_level_cleared = is_current_level_cleared()
+		_rebuild_level_bounds()
 		_refresh_level_visibility()
+		_refresh_level_activity()
 		_update_level_doors()
 		_log_level_debug_state("refresh")
 		return
 	current_level_id = level_id
 	_current_level_cleared = is_current_level_cleared()
 	_wave_timer = wave_spawn_interval
+	_rebuild_level_bounds()
 	_refresh_level_visibility()
+	_refresh_level_activity()
 	_update_level_doors()
 	_log_level_debug_state("level_changed")
 	
@@ -957,6 +1005,13 @@ func clamp_position_to_current_level(pos: Vector3) -> Vector3:
 
 
 func clamp_position_to_level(level_id: int, pos: Vector3) -> Vector3:
+	if _level_clamp_bounds_dynamic.has(level_id):
+		var bounds: Dictionary = _level_clamp_bounds_dynamic[level_id]
+		return Vector3(
+			clampf(pos.x, float(bounds["min_x"]), float(bounds["max_x"])),
+			pos.y,
+			clampf(pos.z, float(bounds["min_z"]), float(bounds["max_z"]))
+		)
 	if not LEVEL_CLAMP_BOUNDS.has(level_id):
 		return pos
 
@@ -1068,11 +1123,79 @@ func _get_level_id_for_node(node: Node) -> int:
 		return 0
 
 	var z := node3d.global_position.z
-	for level_id in LEVEL_BOUNDS.keys():
-		var bounds: Dictionary = LEVEL_BOUNDS[level_id]
+	var bounds_source := _level_bounds_dynamic if not _level_bounds_dynamic.is_empty() else LEVEL_BOUNDS
+	for level_id in bounds_source.keys():
+		var bounds: Dictionary = bounds_source[level_id]
 		if z >= float(bounds["min_z"]) and z < float(bounds["max_z"]):
 			return level_id
 	return 0
+
+func _rebuild_level_bounds() -> void:
+	_level_bounds_dynamic.clear()
+	_level_clamp_bounds_dynamic.clear()
+	var levels_root := get_node_or_null("levels") as Node
+	if levels_root == null:
+		return
+
+	for level_node in levels_root.get_children():
+		var level3d := level_node as Node3D
+		if level3d == null:
+			continue
+		var level_id := _get_level_id_for_node(level3d)
+		if level_id <= 0:
+			continue
+
+		var visuals := level3d.find_children("*", "VisualInstance3D")
+		if visuals.is_empty():
+			continue
+
+		var min_x := INF
+		var min_y := INF
+		var min_z := INF
+		var max_x := -INF
+		var max_y := -INF
+		var max_z := -INF
+
+		for v in visuals:
+			var vi := v as VisualInstance3D
+			if vi == null:
+				continue
+			if _is_global_visibility_node(vi):
+				continue
+			var aabb := vi.get_aabb()
+			if aabb.size == Vector3.ZERO:
+				continue
+			var corners := [
+				aabb.position,
+				aabb.position + Vector3(aabb.size.x, 0, 0),
+				aabb.position + Vector3(0, aabb.size.y, 0),
+				aabb.position + Vector3(0, 0, aabb.size.z),
+				aabb.position + Vector3(aabb.size.x, aabb.size.y, 0),
+				aabb.position + Vector3(aabb.size.x, 0, aabb.size.z),
+				aabb.position + Vector3(0, aabb.size.y, aabb.size.z),
+				aabb.position + aabb.size,
+			]
+			for c in corners:
+				var g: Vector3 = vi.global_transform * c
+				min_x = min(min_x, g.x)
+				min_y = min(min_y, g.y)
+				min_z = min(min_z, g.z)
+				max_x = max(max_x, g.x)
+				max_y = max(max_y, g.y)
+				max_z = max(max_z, g.z)
+
+		if min_x == INF:
+			continue
+
+		# Small padding to avoid edge-clamping jitter at boundaries.
+		var pad := 1.0
+		_level_bounds_dynamic[level_id] = {"min_z": min_z - pad, "max_z": max_z + pad}
+		_level_clamp_bounds_dynamic[level_id] = {
+			"min_x": min_x - pad,
+			"max_x": max_x + pad,
+			"min_z": min_z - pad,
+			"max_z": max_z + pad,
+		}
 
 
 func _refresh_level_visibility() -> void:
@@ -1082,11 +1205,8 @@ func _refresh_level_visibility() -> void:
 			continue
 		if _is_global_visibility_node(visual_node):
 			continue
-		var level_id := _get_level_id_for_node(visual_node)
-		if level_id <= 0:
-			visual_node.visible = true
-		else:
-			visual_node.visible = level_id == current_level_id
+		# Keep all level visuals visible; activity is handled separately.
+		visual_node.visible = true
 
 
 func _is_global_visibility_node(node: Node) -> bool:
@@ -1109,6 +1229,52 @@ func _update_level_doors() -> void:
 			gate.open()
 		else:
 			gate.close()
+
+func _set_node_active(node: Node, active: bool, hide_visual: bool) -> void:
+	if node == null:
+		return
+	node.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
+	var node3d := node as Node3D
+	if hide_visual and node3d != null:
+		node3d.visible = active
+	var coll_nodes: Array = []
+	var root_coll := node as CollisionObject3D
+	if root_coll != null:
+		coll_nodes.append(root_coll)
+	coll_nodes.append_array(node.find_children("*", "CollisionObject3D"))
+	for c in coll_nodes:
+		var coll := c as CollisionObject3D
+		if coll == null:
+			continue
+		if active:
+			if coll.has_meta("_saved_collision_layer"):
+				coll.collision_layer = int(coll.get_meta("_saved_collision_layer"))
+				coll.collision_mask = int(coll.get_meta("_saved_collision_mask"))
+		else:
+			if not coll.has_meta("_saved_collision_layer"):
+				coll.set_meta("_saved_collision_layer", coll.collision_layer)
+				coll.set_meta("_saved_collision_mask", coll.collision_mask)
+			coll.collision_layer = 0
+			coll.collision_mask = 0
+
+func _refresh_level_activity() -> void:
+	var active_level := current_level_id
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var lvl := _get_level_id_for_node(node)
+		_set_node_active(node, lvl <= 0 or lvl == active_level, true)
+	for node in get_tree().get_nodes_in_group("turrets"):
+		var lvl := _get_level_id_for_node(node)
+		_set_node_active(node, lvl <= 0 or lvl == active_level, true)
+	for node in get_tree().get_nodes_in_group("bosses"):
+		var lvl := _get_level_id_for_node(node)
+		_set_node_active(node, lvl <= 0 or lvl == active_level, true)
+	# Spawn markers and rat spawns should be inactive when not current.
+	for node in get_tree().get_nodes_in_group("spawn_markers"):
+		var lvl := _get_level_id_for_node(node)
+		_set_node_active(node, lvl <= 0 or lvl == active_level, false)
+	for node in get_tree().get_nodes_in_group("rat_spawn"):
+		var lvl := _get_level_id_for_node(node)
+		_set_node_active(node, lvl <= 0 or lvl == active_level, false)
 
 
 func _assign_level_tag(node: Node, level_id: int) -> void:

@@ -38,6 +38,10 @@ transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 1, -134.17656, 0.016834497, 17.0
 
 [node name="door" parent="doors" unique_id=1981168902 instance=ExtResource("2_x42e6")]
 transform = Transform3D(0.16666667, 0, 0, 0, 1, 0, 0, 0, 1, 25.637197, -0.016834497, -57.393135)
+controlled_level_id = 1
+target_level_id = 2
+transition_requires_open = true
+target_spawn_path = NodePath("/root/Main/levels/Level2/PlayerSpawn")
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
