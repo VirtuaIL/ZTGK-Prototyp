@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://cwced8hmc4xt6" path="res://scenes/levels_enemies_test/level_flame_enemy.tscn" id="8_yclxx"]
 [ext_resource type="PackedScene" uid="uid://b3yvmnotoo6uh" path="res://scenes/levels_enemies_test/level_sniper_enemy.tscn" id="9_1m3ql"]
 [ext_resource type="PackedScene" uid="uid://882mxm2nkwdx" path="res://scenes/levels_enemies_test/level_bomber_enemy.tscn" id="10_fjkha"]
+[ext_resource type="PackedScene" uid="uid://bvp4o76jxrm8l" path="res://scenes/levels_enemies_test/level_mortar_enemy.tscn" id="11_fjkha"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -64,7 +65,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -180.38527, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -240.38527, 0, 0)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -85,3 +86,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -116.21875, 0, 0)
 
 [node name="LevelEnemy4" parent="levels" unique_id=450381390 instance=ExtResource("10_fjkha")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -179.55515, 0, 0)
+
+[node name="LevelEnemy5" parent="levels" unique_id=1675734939 instance=ExtResource("11_fjkha")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -240.77664, 0, 0)
