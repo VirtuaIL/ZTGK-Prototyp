@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/damage_text.gd" id="1_dmg"]
+
+[node name="DamageText" type="Node3D"]
+script = ExtResource("1_dmg")
+
+[node name="Label3D" type="Label3D" parent="."]
+pixel_size = 0.015
+billboard = 1
+no_depth_test = true
+outline_size = 4
+outline_modulate = Color(0, 0, 0, 1)
+text = "10"

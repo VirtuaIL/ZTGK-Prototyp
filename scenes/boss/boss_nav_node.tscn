@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://craq2km8g200o"]
+
+[ext_resource type="Script" uid="uid://dtfpwva2cikv8" path="res://scripts/boss/boss_nav_node.gd" id="1_50wj2"]
+
+[node name="boss_nav_node" type="Node3D" unique_id=1230759990]
+transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, 0, 0, 0)
+script = ExtResource("1_50wj2")

@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://divan6b1wixm4"]
+
+[ext_resource type="Script" uid="uid://djoql6eq17820" path="res://scripts/objects/box.gd" id="1_3inec"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0, 0.52544534, 0.35513508, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3inec"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8, 1.4, 0.8)
+
+[node name="box" type="CharacterBody3D" unique_id=1981168902]
+script = ExtResource("1_3inec")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=333239315]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("BoxMesh_3inec")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=499049586]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("BoxShape3D_1")

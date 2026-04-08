@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://djm6b1wixm4x"]
+
+[ext_resource type="Script" path="res://scripts/turrets/redirection_box.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_main"]
+albedo_color = Color(0, 0.6, 0.8, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_main"]
+material = SubResource("StandardMaterial3D_main")
+size = Vector3(0.8, 1.4, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_front"]
+albedo_color = Color(1, 1, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.8, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_front"]
+material = SubResource("StandardMaterial3D_front")
+size = Vector3(0.5, 0.5, 0.05)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_laser"]
+transparency = 1
+albedo_color = Color(0, 0.8, 1, 0.6)
+emission_enabled = true
+emission = Color(0, 1, 1, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_laser"]
+material = SubResource("StandardMaterial3D_laser")
+top_radius = 0.05
+bottom_radius = 0.05
+height = 2.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_main"]
+size = Vector3(0.8, 1.4, 0.8)
+
+[node name="RedirectionBox" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_script")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("BoxMesh_main")
+
+[node name="FrontFace" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.4)
+mesh = SubResource("BoxMesh_front")
+
+[node name="LaserMesh" type="MeshInstance3D" parent="."]
+top_level = true
+mesh = SubResource("CylinderMesh_laser")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+shape = SubResource("BoxShape3D_main")

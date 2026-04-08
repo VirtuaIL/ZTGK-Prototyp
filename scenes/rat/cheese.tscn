@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/rat/cheese.gd" id="1_cheese"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ch"]
+size = Vector3(1.2, 1.2, 1.2)
+
+[sub_resource type="PrismMesh" id="PrismMesh_ch"]
+size = Vector3(0.6, 0.4, 0.6)
+
+[node name="Cheese" type="Area3D"]
+script = ExtResource("1_cheese")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_ch")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("PrismMesh_ch")

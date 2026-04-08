@@ -1,7 +1,0 @@
-[gd_scene format=3 uid="uid://dso6u17p0n75n"]
-
-[ext_resource type="Script" uid="uid://b0tc4ehuku1cf" path="res://scripts/boss_turret_deploy_point.gd" id="1_q336i"]
-
-[node name="boss_turret_deploy_point" type="Node3D" unique_id=1230759990]
-transform = Transform3D(-21.599995, 0, -3.1407135e-06, 0, 1, 0, 3.2615087e-06, 0, -20.800005, 0, 0, 0)
-script = ExtResource("1_q336i")
