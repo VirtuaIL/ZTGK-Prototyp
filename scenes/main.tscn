@@ -4,11 +4,13 @@
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://j83tckwqxndx" path="res://scenes/levels/level_tutorial_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
 [ext_resource type="PackedScene" uid="uid://duy445sug03q8" path="res://scenes/levels/level_tutorial_3.tscn" id="10_ya4ey"]
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="11_ya4ey"]
+[ext_resource type="PackedScene" uid="uid://cibqu26fys05v" path="res://scenes/levels/level_4.tscn" id="12_eb6dy"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -65,7 +67,8 @@ projection = 1
 fov = 45.0
 size = 22.0
 
-[node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 0.76146317)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -86,12 +89,39 @@ level_id = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
+[node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=560227551]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -15.18032, 1.855777, -62.578304)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=485264786]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -19.045742, 1.855777, -102.25009)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=975876499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
 
 [node name="Level2" parent="levels" unique_id=1930721437 instance=ExtResource("9_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.162966, 0, -39.901146)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.150558, -0.031589508, -39.87281)
 
-[node name="Level3" parent="levels" unique_id=974917402 instance=ExtResource("10_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -99.67701)
+[node name="Level3" parent="levels" unique_id=1453813207 instance=ExtResource("10_ya4ey")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -17.889133, 0, -79.17771)
+script = ExtResource("11_ya4ey")
+level_id = 3
+
+[node name="Level4" parent="levels" unique_id=1780072053 instance=ExtResource("12_eb6dy")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -19.105888, 0, -131.0668)
+script = ExtResource("11_ya4ey")
+level_id = 4
