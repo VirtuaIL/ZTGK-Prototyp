@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://cjbfnmekya58t" path="res://scenes/levels/level_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://tilyplb56vtw" path="res://scenes/levels/level_2.tscn" id="9_85g3d"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/mortar_enemy.tscn" id="10_choun"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -91,3 +92,6 @@ shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Level2" parent="levels" unique_id=154194761 instance=ExtResource("9_85g3d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -80.0627)
+
+[node name="MortarEnemy" parent="." unique_id=460160779 instance=ExtResource("10_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.009862, 0.00049996376, -4.4055157)
