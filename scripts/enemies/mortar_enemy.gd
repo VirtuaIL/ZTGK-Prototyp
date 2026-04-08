@@ -129,8 +129,8 @@ func _shoot() -> void:
 		# Give it 1.5s to reach the target pos
 		var t = 1.5
 		var proj_gravity = ProjectSettings.get_setting("physics/3d/default_gravity") * 2.0
-		if p.get("gravity") != null:
-			proj_gravity = p.gravity
+		if p.get("fall_gravity") != null:
+			proj_gravity = p.fall_gravity
 			
 		var d_pos = aim_target_pos - p.global_position
 		var v_y = (d_pos.y + 0.5 * proj_gravity * t * t) / t

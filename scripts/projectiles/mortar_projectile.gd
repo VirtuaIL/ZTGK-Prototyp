@@ -5,7 +5,7 @@ class_name MortarProjectile
 @export var explosion_radius: float = 3.0
 
 var velocity: Vector3 = Vector3.ZERO
-var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") * 2.0
+var fall_gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") * 2.0
 var _lifetime: float = 0.0
 var max_lifetime: float = 10.0
 var is_exploded: bool = false
@@ -19,7 +19,7 @@ func _physics_process(delta: float) -> void:
 	if is_exploded:
 		return
 		
-	velocity.y -= gravity * delta
+	velocity.y -= fall_gravity * delta
 	global_position += velocity * delta
 	
 	_lifetime += delta
