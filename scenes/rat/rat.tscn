@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cfwsb5x5uoql8"]
 
 [ext_resource type="Script" uid="uid://b5uopn2fd73k6" path="res://scripts/rat/rat.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dhcy1av6hw0o7" path="res://resources/models/rat/schoor.fbx" id="2_lwnn2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.45, 0.3, 0.18, 1)
@@ -35,16 +36,22 @@ wild_lifespan = 7.0
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=532997029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+visible = false
 mesh = SubResource("BoxMesh_1")
 
 [node name="Tail" type="MeshInstance3D" parent="." unique_id=911675360]
 transform = Transform3D(1, 0, 0, 0, 0.34202, -0.939693, 0, 0.939693, 0.34202, 0, 0.06, -0.3)
+visible = false
 mesh = SubResource("CylinderMesh_1")
 
 [node name="Head" type="MeshInstance3D" parent="." unique_id=724342941]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.2)
+visible = false
 mesh = SubResource("SphereMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=574055437]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
 shape = SubResource("BoxShape3D_rat")
+
+[node name="schoor" parent="." unique_id=277951172 instance=ExtResource("2_lwnn2")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)

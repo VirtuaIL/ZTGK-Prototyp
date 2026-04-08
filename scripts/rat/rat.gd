@@ -99,6 +99,14 @@ var _edge_blocked_cached: bool = false
 var _current_buff_material: Material = null
 var _blob_mesh: MeshInstance3D = null
 var _is_showing_blob: bool = false
+var _visual_meshes: Array[MeshInstance3D] = []
+var _visual_base_transforms: Dictionary = {}
+var _visual_phase: Dictionary = {}
+var _blob_wobble_time: float = 0.0
+var _blob_wobble_speed: float = 6.5
+var _blob_wobble_amp: float = 0.08
+var _blob_wobble_rot: float = 0.25
+var _blob_wobble_bob: float = 0.03
 
 func _ready() -> void:
 	for child in find_children("*", "VisualInstance3D"):
@@ -130,6 +138,7 @@ func _ready() -> void:
 	_blob_mesh.material_override = mat
 	_blob_mesh.visible = false
 	add_child(_blob_mesh)
+	_cache_visual_meshes()
 	default_rat_type = rat_type
 	set_rat_type(int(rat_type))
 
@@ -154,6 +163,10 @@ func _physics_process(delta: float) -> void:
 	if should_be_blob != _is_showing_blob:
 		_is_showing_blob = should_be_blob
 		show_visuals()
+		if not _is_showing_blob:
+			_reset_blob_visuals()
+	if _is_showing_blob:
+		_update_blob_visuals(delta)
 		
 	# ── Purple poison: slow down instead of freezing ──
 	_speed_mult = 1.0
@@ -235,9 +248,7 @@ func _physics_process(delta: float) -> void:
 
 	if target_mat != _current_buff_material:
 		_current_buff_material = target_mat
-		$Body.material_override = target_mat
-		$Tail.material_override = target_mat
-		$Head.material_override = target_mat
+		_apply_material_override(target_mat)
 
 	match state:
 		State.FOLLOW:
@@ -691,27 +702,20 @@ func _reset_to_follow() -> void:
 
 
 func hide_visuals() -> void:
-	$Body.hide()
-	$Tail.hide()
-	$Head.hide()
+	for m in _visual_meshes:
+		if m:
+			m.hide()
 	_is_showing_blob = false
 	if _blob_mesh:
 		_blob_mesh.hide()
 
 
 func show_visuals() -> void:
-	if _is_showing_blob:
-		$Body.hide()
-		$Tail.hide()
-		$Head.hide()
-		if _blob_mesh:
-			_blob_mesh.show()
-	else:
-		$Body.show()
-		$Tail.show()
-		$Head.show()
-		if _blob_mesh:
-			_blob_mesh.hide()
+	for m in _visual_meshes:
+		if m:
+			m.show()
+	if _blob_mesh:
+		_blob_mesh.hide()
 
 
 func set_wall_collision(enabled: bool) -> void:
@@ -803,9 +807,7 @@ func set_rat_type(r_type: int) -> void:
 	if not is_wild:
 		if _current_buff_material != _base_material:
 			_current_buff_material = _base_material
-			$Body.material_override = _base_material
-			$Tail.material_override = _base_material
-			$Head.material_override = _base_material
+			_apply_material_override(_base_material)
 
 func set_wild(wild: bool) -> void:
 	is_wild = wild
@@ -817,9 +819,7 @@ func set_wild(wild: bool) -> void:
 			
 		if mat != _current_buff_material:
 			_current_buff_material = mat
-			$Body.material_override = mat
-			$Tail.material_override = mat
-			$Head.material_override = mat
+			_apply_material_override(mat)
 	else:
 		if is_in_group("wild_rats"):
 			remove_from_group("wild_rats")
@@ -827,9 +827,54 @@ func set_wild(wild: bool) -> void:
 		_base_material = _make_type_material(default_rat_type, false)
 		if _current_buff_material != _base_material:
 			_current_buff_material = _base_material
-			$Body.material_override = _base_material
-			$Tail.material_override = _base_material
-			$Head.material_override = _base_material
+			_apply_material_override(_base_material)
+
+func _cache_visual_meshes() -> void:
+	_visual_meshes.clear()
+	_visual_base_transforms.clear()
+	_visual_phase.clear()
+	var meshes: Array = find_children("*", "MeshInstance3D")
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		if mi == null:
+			continue
+		if mi == _blob_mesh:
+			continue
+		if mi.name in ["Body", "Tail", "Head"]:
+			continue
+		_visual_meshes.append(mi)
+		_visual_base_transforms[mi] = mi.transform
+		_visual_phase[mi] = randf() * TAU
+
+func _apply_material_override(mat: Material) -> void:
+	for m in _visual_meshes:
+		if m:
+			m.material_override = mat
+
+
+func _update_blob_visuals(delta: float) -> void:
+	_blob_wobble_time += delta
+	for m in _visual_meshes:
+		if m == null:
+			continue
+		var base_t: Transform3D = _visual_base_transforms.get(m, m.transform)
+		var phase: float = _visual_phase.get(m, 0.0)
+		var t := _blob_wobble_time * _blob_wobble_speed + phase
+		var s := 1.0 + sin(t) * _blob_wobble_amp
+		var yaw := sin(t * 0.7) * _blob_wobble_rot
+		var bob := sin(t * 1.3) * _blob_wobble_bob
+		var basis := base_t.basis
+		basis = basis.rotated(Vector3.UP, yaw)
+		basis = basis.scaled(Vector3(s, s, s))
+		var origin := base_t.origin + Vector3(0, bob, 0)
+		m.transform = Transform3D(basis, origin)
+
+func _reset_blob_visuals() -> void:
+	for m in _visual_meshes:
+		if m == null:
+			continue
+		if _visual_base_transforms.has(m):
+			m.transform = _visual_base_transforms[m]
 
 func _process_wild(delta: float) -> void:
 	_wild_timer -= delta
