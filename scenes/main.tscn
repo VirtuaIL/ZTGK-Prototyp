@@ -36,7 +36,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
-wave_total_enemies = 14
+wave_total_enemies = 1
 wave_max_concurrent = 7
 wild_rat_spawn_interval = 5.0
 wild_rat_group_count_max = 7
@@ -49,6 +49,7 @@ environment = SubResource("Environment_1")
 
 [node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
 transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.120464325, 0.12258148, -0.03937912)
+visible = false
 cast_shadow = 0
 mesh = SubResource("SphereMesh_skydome")
 script = ExtResource("7_skydome")
@@ -75,7 +76,7 @@ script = ExtResource("7_ability_hud")
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 21.448513, 1.855777, 42.26465)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 19.635252, 1.855777, -42.58597)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 2
@@ -84,19 +85,9 @@ level_id = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
-[node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=382927888]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 2.9580193, 1.855777, 121.85188)
-collision_mask = 3
-script = ExtResource("20_gqmmt")
-level_id = 3
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=901618589]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
-shape = SubResource("BoxShape3D_yq6so")
-
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
 
 [node name="Level2" parent="levels" unique_id=154194761 instance=ExtResource("9_85g3d")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -80.44975)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -80.0627)
