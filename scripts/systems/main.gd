@@ -1047,10 +1047,7 @@ func get_current_level_rat_spawns() -> Array[Node3D]:
 
 
 func get_level_rat_spawns(level_id: int) -> Array[Node3D]:
-	var rat_spawns := get_nodes_in_level("rat_spawn", level_id)
-	if not rat_spawns.is_empty():
-		return rat_spawns
-	return get_level_spawn_markers(level_id)
+	return get_nodes_in_level("rat_spawn", level_id)
 
 
 func get_current_level_enemies() -> Array[Node3D]:

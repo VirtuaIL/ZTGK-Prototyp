@@ -40,8 +40,8 @@ transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 1, -134.17656, 0.016834497, 17.0
 transform = Transform3D(0.16666667, 0, 0, 0, 1, 0, 0, 0, 1, 25.637197, -0.016834497, -57.393135)
 controlled_level_id = 1
 target_level_id = 2
-transition_requires_open = true
 target_spawn_path = NodePath("/root/Main/levels/Level2/PlayerSpawn")
+transition_requires_open = true
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
@@ -243,6 +243,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.920216, 0, -28.889374)
 
 [node name="Marker3D60" type="Marker3D" parent="enemies_spawnpoints" unique_id=771973058 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9202156, 0, -28.889374)
+
+[node name="rat_spawnpoints" type="Node3D" parent="." unique_id=1721242980]
+script = ExtResource("1_6iamk")
+level_id = 1
+
+[node name="RatSpawn1" type="Marker3D" parent="rat_spawnpoints" unique_id=269640822 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
 
 [node name="obstacles" type="Node3D" parent="." unique_id=28996351]
 
