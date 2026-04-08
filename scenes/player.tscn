@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://cc6a8vpeg25d1"]
 
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player/player.gd" id="1_script"]
-[ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
-[ext_resource type="Script" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
+[ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
+[ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
+[ext_resource type="PackedScene" uid="uid://8qy0rmy6j6hs" path="res://resources/models/bard/character_v2/character_v1_1.fbx" id="4_dqkch"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -13,8 +14,8 @@ radius = 0.4
 height = 1.6
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.4
-height = 1.6
+radius = 0.9345703
+height = 2.9261475
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
@@ -35,28 +36,28 @@ corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MinimapPanel"]
 bg_color = Color(0.0156863, 0.0470588, 0.0588235, 0.78)
-border_color = Color(0.462745, 0.968627, 0.898039, 0.7)
 border_width_left = 2
-border_width_right = 2
 border_width_top = 2
+border_width_right = 2
 border_width_bottom = 2
+border_color = Color(0.462745, 0.968627, 0.898039, 0.7)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
-corner_radius_bottom_left = 10
 corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 shadow_color = Color(0, 0, 0, 0.35)
 shadow_size = 6
-
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2005916585]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+visible = false
 mesh = SubResource("CapsuleMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1970706798]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8863647, 0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=1756583863]
@@ -100,8 +101,8 @@ theme_override_constants/separation = 4
 
 [node name="Label" type="Label" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=39119267]
 layout_mode = 2
-text = "ZDROWIE"
 theme_override_font_sizes/font_size = 16
+text = "ZDROWIE"
 
 [node name="HealthProgress" type="ProgressBar" parent="PlayerHUD/HealthBar/Margin/VBox" unique_id=228333768]
 custom_minimum_size = Vector2(0, 26)
@@ -144,12 +145,12 @@ theme_override_constants/margin_bottom = 6
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="PlayerHUD/MinimapPanel/Margin" unique_id=55494990]
 layout_mode = 2
-stretch = true
 mouse_filter = 2
+stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer" unique_id=607198590]
 handle_input_locally = false
-size = Vector2i(220, 220)
+size = Vector2i(218, 218)
 render_target_update_mode = 4
 
 [node name="MinimapCamera" type="Camera3D" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport" unique_id=1409008809]
@@ -157,12 +158,9 @@ transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 40,
 projection = 1
 size = 40.0
 
-[node name="MinimapOverlay" type="Control" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer"]
+[node name="MinimapOverlay" type="Control" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer" unique_id=487388877]
 layout_mode = 2
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_minimap_overlay")
+
+[node name="character_v1_1" parent="." unique_id=587752233 instance=ExtResource("4_dqkch")]
