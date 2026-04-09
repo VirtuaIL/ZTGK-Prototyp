@@ -12,8 +12,6 @@
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://cibqu26fys05v" path="res://scenes/levels/level_4.tscn" id="12_eb6dy"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
-[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="21_main_spawner"]
-[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="22_spike_cyl"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -71,7 +69,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 0.76146317)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 5.760985)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -80,88 +78,10 @@ use_wide_brush = true
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
 
-[node name="Spawners" type="Node3D" parent="." unique_id=141205001]
-
-[node name="SpawnerWildLevel1" parent="Spawners" unique_id=1732210011 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
-label = "Level1 Wild Rats"
-start_delay = 4.0
-count_min = 4
-count_max = 7
-spawn_radius = 1.8
-
-[node name="SpawnerEnemyPressureLevel2" parent="Spawners" unique_id=1732210012 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.999103, 0, 0)
-label = "Level2 Enemy Pressure"
-level_id = 2
-start_delay = 6.0
-repeat = true
-repeat_interval = 10.0
-max_triggers = 3
-spawn_kind = 1
-count_min = 2
-spawn_radius = 1.0
-position_mode = 3
-avoid_closest_to_player = true
-
-[node name="SpawnerBomberLevel2A" parent="Spawners" unique_id=1732210013 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -58)
-label = "Level2 Bomber Ambush A"
-level_id = 2
-start_delay = 14.0
-spawn_kind = 3
-count_max = 1
-spawn_radius = 0.8
-choose_random_point = false
-
-[node name="SpawnerBomberLevel2B" parent="Spawners" unique_id=1732210014 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -58)
-label = "Level2 Bomber Ambush B"
-level_id = 2
-start_delay = 14.0
-spawn_kind = 4
-count_max = 1
-spawn_radius = 0.8
-choose_random_point = false
-
-[node name="SpawnerFlameLevel3Left" parent="Spawners" unique_id=1732210015 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -92)
-label = "Level3 Flame Push Left"
-level_id = 3
-start_delay = 7.0
-repeat = true
-repeat_interval = 18.0
-max_triggers = 2
-spawn_kind = 2
-count_max = 1
-spawn_radius = 1.2
-
-[node name="SpawnerFlameLevel3Right" parent="Spawners" unique_id=1732210016 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -92)
-label = "Level3 Flame Push Right"
-level_id = 3
-start_delay = 7.0
-repeat = true
-repeat_interval = 18.0
-max_triggers = 2
-spawn_kind = 2
-count_max = 1
-spawn_radius = 1.2
-
-[node name="SpawnerMortarLevel3" parent="Spawners" unique_id=1732210017 instance=ExtResource("21_main_spawner")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -112)
-label = "Level3 Mortar Backline"
-level_id = 3
-start_delay = 11.0
-spawn_kind = 5
-count_max = 1
-spawn_radius = 0.0
-choose_random_point = false
-
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.9071488, 1.855777, -21.455437)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.9071488, 1.855777, -22.119576)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 2
@@ -171,7 +91,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=560227551]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -15.18032, 1.855777, -62.578304)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.6784296, 1.855777, -62.00374)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 3
@@ -181,7 +101,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -19.045742, 1.855777, -102.25009)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.6139984, 1.855777, -102.325195)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 4
@@ -194,21 +114,15 @@ shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
 
-[node name="Level2" parent="levels" unique_id=1930721437 instance=ExtResource("9_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.150558, -0.031589508, -39.87281)
+[node name="Level2" parent="levels" unique_id=488622088 instance=ExtResource("9_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -39.93393)
 
-[node name="Level3" parent="levels" unique_id=974917402 instance=ExtResource("10_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -99.67701)
+[node name="Level3" parent="levels" unique_id=521719276 instance=ExtResource("10_ya4ey")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.10553932, 0, -79.756905)
+script = ExtResource("11_ya4ey")
+level_id = 3
 
-[node name="levels_Level2_obstacles#SpikeCylinderCenter1" parent="." unique_id=1542201101 instance=ExtResource("22_spike_cyl")]
-transform = Transform3D(2.605, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 0)
-
-[node name="levels_Level2_obstacles#SpikeCylinderCenter2" parent="." unique_id=1542201102 instance=ExtResource("22_spike_cyl")]
-
-[node name="MeshInstance3D" parent="levels_Level2_obstacles#SpikeCylinderCenter2" index="0"]
-transform = Transform3D(0.981, 0, 0, 0, 0.981, 0, 0, 0, 0.981, 0, 1, 0)
-
-[node name="levels_Level2_obstacles#SpikeCylinderCenter3" parent="." unique_id=1542201103 instance=ExtResource("22_spike_cyl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
-
-[editable path="levels_Level2_obstacles#SpikeCylinderCenter2"]
+[node name="Level4" parent="levels" unique_id=1101675866 instance=ExtResource("12_eb6dy")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -131.64557)
+script = ExtResource("11_ya4ey")
+level_id = 4

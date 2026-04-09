@@ -29,12 +29,6 @@ shape = SubResource("BoxShape3D_6iamk")
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
-[node name="wall1" parent="walls" unique_id=1767367743 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, 9.852751, 0, -19.517975)
-
-[node name="wall3" parent="walls" unique_id=1981168902 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.710026, 0, -19.517975)
-
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_f8eeo")]
 transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, -20, 0, 1)
 

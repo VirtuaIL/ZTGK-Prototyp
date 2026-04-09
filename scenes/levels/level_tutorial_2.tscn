@@ -18,12 +18,6 @@ size = Vector3(40, 0.001, 40)
 script = ExtResource("1_pprso")
 level_id = 2
 
-[node name="RatSpawns" type="Node3D" parent="." unique_id=1812254389]
-
-[node name="RatSpawnLevel1" type="Marker3D" parent="RatSpawns" unique_id=61998251]
-script = ExtResource("1_pprso")
-level_id = 2
-
 [node name="Floor" type="StaticBody3D" parent="." unique_id=116290845]
 
 [node name="floor1" type="MeshInstance3D" parent="Floor" unique_id=1323013028]
@@ -41,9 +35,6 @@ transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, 9.852751, 0, -19.517975)
 
 [node name="wall3" parent="walls" unique_id=1981168902 instance=ExtResource("2_68s37")]
 transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.710026, 0, -19.517975)
-
-[node name="wall2" parent="walls" unique_id=592629127 instance=ExtResource("2_68s37")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.299365, 0, 20.482025)
 
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_68s37")]
 transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, -20, 0, 1)
