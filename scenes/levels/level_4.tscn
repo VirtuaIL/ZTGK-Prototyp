@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://cibqu26fys05v"]
 
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_anwe6"]
@@ -91,9 +92,9 @@ transition_requires_open = true
 
 [node name="Spawners" type="Node3D" parent="." unique_id=547921744]
 
-[node name="SpawnerEnemyPressureLevel2" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
+[node name="EnemyPressure" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
-label = "Level2 Enemy Pressure"
+label = "Enemy Pressure"
 level_id = 4
 start_delay = 0.0
 repeat_interval = 10.0
@@ -101,7 +102,68 @@ reset_on_level_enter = false
 spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0
-choose_random_point = false
+position_mode = 3
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
+
+[node name="EnemyFlame" parent="Spawners" unique_id=813881927 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+label = "FlameThrowerEnemy"
+level_id = 4
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 2
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="EnemySniper" parent="Spawners" unique_id=1432928027 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+label = "EnemySniper"
+level_id = 4
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 4
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="EnemyMortar" parent="Spawners" unique_id=166046177 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+label = "Level2 Enemy Pressure"
+level_id = 4
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 5
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=232841391]
+script = ExtResource("1_vmkp1")
+level_id = 1
+
+[node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=248477231 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046244, 0, -16.530195)
+
+[node name="Marker3D3" type="Marker3D" parent="enemies_spawnpoints" unique_id=1761529560 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.046245, 0, -16.530193)
+
+[node name="Marker3D5" type="Marker3D" parent="enemies_spawnpoints" unique_id=1947791076 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9537559, 0, -16.530195)
+
+[node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=1224072389 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.953756, 0, -16.530193)
