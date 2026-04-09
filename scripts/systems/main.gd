@@ -1125,8 +1125,11 @@ func transition_to_level(level_id: int, target_position: Vector3) -> void:
 
 	set_current_level(level_id)
 
-	if rat_manager != null and rat_manager.has_method("set_respawn_count"):
-		rat_manager.set_respawn_count(rat_manager.rats.size())
+	if rat_manager != null:
+		if rat_manager.has_method("save_rat_composition"):
+			rat_manager.save_rat_composition()
+		elif rat_manager.has_method("set_respawn_count"):
+			rat_manager.set_respawn_count(rat_manager.rats.size())
 
 	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
 		rat_manager.hard_recall_all_rats()
@@ -1381,11 +1384,17 @@ func _is_global_visibility_node(node: Node) -> bool:
 func _update_level_doors() -> void:
 	for node in get_tree().get_nodes_in_group("doors"):
 		var gate := node as door
-		if gate == null:
+		if gate == null or gate.controlled_level_id <= 0:
 			continue
-		if gate.controlled_level_id != current_level_id:
-			continue
-		if _current_level_cleared:
+			
+		var should_open = is_level_cleared(gate.controlled_level_id)
+		
+		# If the CURRENT level is not cleared, doors behind and ahead stay closed
+		if not _current_level_cleared:
+			if gate.controlled_level_id == current_level_id or gate.controlled_level_id == current_level_id - 1:
+				should_open = false
+				
+		if should_open:
 			gate.open()
 		else:
 			gate.close()

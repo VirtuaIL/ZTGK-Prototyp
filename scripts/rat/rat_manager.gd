@@ -31,6 +31,14 @@ var _empty_respawn_triggered: bool = false
 var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
 var respawn_count: int = 60
+var saved_rat_composition: Array[int] = []
+
+func save_rat_composition() -> void:
+	saved_rat_composition.clear()
+	for rat in rats:
+		if is_instance_valid(rat):
+			saved_rat_composition.append(int(rat.get("rat_type")))
+	respawn_count = saved_rat_composition.size()
 
 var mode: int = 1 # Always BUILD-like unified mode
 
@@ -378,6 +386,12 @@ func _spawn_rats(count: int) -> void:
 			spawn_center = spawn_nodes[idx].global_position
 		rat.position = spawn_center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		rat.player = _player
+		
+		# If this spawn matches our saved respawn state, restore the saved types
+		if count == respawn_count and i < saved_rat_composition.size():
+			if saved_rat_composition[i] > 0 and rat.has_method("set_rat_type"):
+				rat.set_rat_type(saved_rat_composition[i])
+				
 		parent_node.add_child(rat)
 		if _player:
 			rat.add_collision_exception_with(_player)
@@ -429,6 +443,12 @@ func _spawn_rats_at_center(count: int, center: Vector3) -> void:
 		var radius := randf_range(spawn_radius_min, spawn_radius_max)
 		rat.position = center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 		rat.player = _player
+		
+		# If this spawn matches our saved respawn state, restore the saved types
+		if count == respawn_count and i < saved_rat_composition.size():
+			if saved_rat_composition[i] > 0 and rat.has_method("set_rat_type"):
+				rat.set_rat_type(saved_rat_composition[i])
+				
 		parent_node.add_child(rat)
 		if _player:
 			rat.add_collision_exception_with(_player)
