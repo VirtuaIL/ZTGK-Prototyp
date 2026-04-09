@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://duy445sug03q8"]
 
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="2_55m82"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_f8eeo"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_f8eeo"]
@@ -47,6 +48,7 @@ repeat_interval = 10.0
 spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0
+position_mode = 3
 choose_random_point = false
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
@@ -64,3 +66,13 @@ transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.98019236, 0, 19.952682)
 controlled_level_id = 3
 target_level_id = 4
 transition_requires_open = true
+
+[node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=987654321]
+script = ExtResource("1_vmkp1")
+level_id = 3
+
+[node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=987654322 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
+
+[node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=987654323 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -10)
