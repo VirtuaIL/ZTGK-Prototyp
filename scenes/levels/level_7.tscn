@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://byam7v88xl4em"]
 
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="1_07ctq"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="2_bl61q"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_bl61q"]
@@ -62,9 +63,9 @@ transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -32, 0, 12)
 
 [node name="Spawners" type="Node3D" parent="." unique_id=439441642]
 
-[node name="SpawnerEnemyPressureLevel2" parent="Spawners" unique_id=360313630 instance=ExtResource("3_bl61q")]
+[node name="EnemyBasic" parent="Spawners" unique_id=360313630 instance=ExtResource("3_bl61q")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
-label = "Level2 Enemy Pressure"
+label = "EnemyBasic"
 level_id = 7
 start_delay = 0.0
 repeat_interval = 10.0
@@ -72,7 +73,56 @@ reset_on_level_enter = false
 spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0
-choose_random_point = false
+position_mode = 3
+choose_random_point = true
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
+
+[node name="EnemyFlame" parent="Spawners" unique_id=360313631 instance=ExtResource("3_bl61q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+label = "EnemyFlame"
+level_id = 7
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 2
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+choose_random_point = true
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="EnemySniper" parent="Spawners" unique_id=360313632 instance=ExtResource("3_bl61q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+label = "EnemySniper"
+level_id = 7
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 4
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+choose_random_point = true
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=987657001]
+script = ExtResource("1_vmkp1")
+level_id = 7
+
+[node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657002 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
+
+[node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657003 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -10)
+
+[node name="Marker3D3" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657004 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
+
+[node name="Marker3D4" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657005 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
