@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://j83tckwqxndx"]
 
-[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_yunbk"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_aackc"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
@@ -14,12 +13,6 @@ size = Vector2(80, 80)
 size = Vector3(40, 0.001, 40)
 
 [node name="Level1" type="Node3D" unique_id=1397753813]
-
-[node name="RatSpawns" type="Node3D" parent="." unique_id=1812254389]
-
-[node name="RatSpawnLevel1" type="Marker3D" parent="RatSpawns" unique_id=61998251]
-script = ExtResource("1_yunbk")
-level_id = 1
 
 [node name="Floor" type="StaticBody3D" parent="." unique_id=116290845]
 

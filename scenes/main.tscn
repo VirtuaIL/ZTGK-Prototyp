@@ -4,11 +4,14 @@
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
-[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://j83tckwqxndx" path="res://scenes/levels/level_tutorial_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
 [ext_resource type="PackedScene" uid="uid://duy445sug03q8" path="res://scenes/levels/level_tutorial_3.tscn" id="10_ya4ey"]
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="11_ya4ey"]
+[ext_resource type="PackedScene" uid="uid://cibqu26fys05v" path="res://scenes/levels/level_4.tscn" id="12_eb6dy"]
+[ext_resource type="PackedScene" uid="uid://cfwbcuarjjt38" path="res://scenes/levels/level_5.tscn" id="13_trceg"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -43,6 +46,7 @@ wild_rat_spawn_interval = 5.0
 wild_rat_group_count_max = 7
 wild_rat_count_per_group_min = 1
 wild_rat_count_per_group_max = 7
+use_legacy_wild_rat_spawner = false
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
@@ -65,7 +69,8 @@ projection = 1
 fov = 45.0
 size = 22.0
 
-[node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 5.760985)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -77,7 +82,7 @@ script = ExtResource("7_ability_hud")
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.9071488, 1.855777, -21.455437)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.9071488, 1.855777, -22.119576)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 2
@@ -86,12 +91,52 @@ level_id = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
+[node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=560227551]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.6784296, 1.855777, -62.00374)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=485264786]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -0.094797134, 1.855777, -102.325195)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=975876499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D4" type="Area3D" parent="checkpoints" unique_id=1412893186]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -52.707737, 1.855777, -131.91544)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D4" unique_id=838429367]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
 
-[node name="Level2" parent="levels" unique_id=1930721437 instance=ExtResource("9_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.162966, 0, -39.901146)
+[node name="Level2" parent="levels" unique_id=488622088 instance=ExtResource("9_choun")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -39.93393)
 
-[node name="Level3" parent="levels" unique_id=974917402 instance=ExtResource("10_ya4ey")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -99.67701)
+[node name="Level3" parent="levels" unique_id=521719276 instance=ExtResource("10_ya4ey")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.10553932, 0, -79.756905)
+script = ExtResource("11_ya4ey")
+level_id = 3
+
+[node name="Level4" parent="levels" unique_id=1101675866 instance=ExtResource("12_eb6dy")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -131.64557)
+script = ExtResource("11_ya4ey")
+level_id = 4
+
+[node name="Level5" parent="levels" unique_id=1762327437 instance=ExtResource("13_trceg")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -89.815704, 0, -132.0036)
