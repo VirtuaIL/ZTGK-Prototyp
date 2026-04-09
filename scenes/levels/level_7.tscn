@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://byam7v88xl4em"]
+
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="1_07ctq"]
+[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="2_bl61q"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ksju7"]
+material = SubResource("StandardMaterial3D_7u6i3")
+size = Vector2(80, 80)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6iamk"]
+size = Vector3(80.413574, 0.001, 40)
+
+[node name="Level1" type="Node3D" unique_id=1397753813]
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=116290845]
+
+[node name="floor1" type="MeshInstance3D" parent="Floor" unique_id=1323013028]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = SubResource("PlaneMesh_ksju7")
+
+[node name="floor_collision1" type="CollisionShape3D" parent="Floor" unique_id=849582682]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.008117678, 0, -0.020202637)
+shape = SubResource("BoxShape3D_6iamk")
+
+[node name="walls" type="Node3D" parent="." unique_id=1791057824]
+
+[node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("1_07ctq")]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11.079486)
+
+[node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 40.114227, 0, -0.03748684)
+
+[node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-7.430936e-08, 0, 1, 0, 1, 0, -1.7, 0, -4.371139e-08, 0, 0, 9.28314)
+
+[node name="wall7" parent="walls" unique_id=744801338 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-6.119594e-08, 0, 1, 0, 1, 0, -1.4, 0, -4.371139e-08, -25, 0, -8)
+
+[node name="wall9" parent="walls" unique_id=2116112980 instance=ExtResource("1_07ctq")]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.03181855, 0, -20.000002)
+
+[node name="wall10" parent="walls" unique_id=2106827679 instance=ExtResource("1_07ctq")]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.032, 0, 20)
+
+[node name="wall8" parent="walls" unique_id=1697514026 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-6.119594e-08, 0, 1, 0, 1, 0, -1.4, 0, -4.371139e-08, 25, 0, -8)
+
+[node name="wall11" parent="walls" unique_id=924104749 instance=ExtResource("1_07ctq")]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.9746923)
+
+[node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
+
+[node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("2_bl61q")]
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 32, 0, 12)
+
+[node name="SpikeCylinder2" parent="Spikes" unique_id=158563560 instance=ExtResource("2_bl61q")]
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -32, 0, 12)
