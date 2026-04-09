@@ -84,7 +84,7 @@ script = ExtResource("20_gqmmt")
 level_id = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.30412865)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D2" type="Area3D" parent="checkpoints" unique_id=560227551]
@@ -94,7 +94,7 @@ script = ExtResource("20_gqmmt")
 level_id = 3
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D2" unique_id=485264786]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3323164)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
@@ -104,7 +104,7 @@ script = ExtResource("20_gqmmt")
 level_id = 4
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=975876499]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0184021)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D4" type="Area3D" parent="checkpoints" unique_id=1412893186]
@@ -114,7 +114,7 @@ script = ExtResource("20_gqmmt")
 level_id = 5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D4" unique_id=838429367]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37359715, 0, 0.054656982)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D5" type="Area3D" parent="checkpoints" unique_id=1616065381]
@@ -124,7 +124,7 @@ script = ExtResource("20_gqmmt")
 level_id = 6
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D5" unique_id=1200950986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.13879967)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D6" type="Area3D" parent="checkpoints" unique_id=722377995]
@@ -134,7 +134,7 @@ script = ExtResource("20_gqmmt")
 level_id = 7
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D6" unique_id=1509119596]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28521442, 0, 0.054656982)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D7" type="Area3D" parent="checkpoints" unique_id=62945223]
@@ -144,7 +144,7 @@ script = ExtResource("20_gqmmt")
 level_id = 8
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D7" unique_id=1068755813]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.28909683)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
