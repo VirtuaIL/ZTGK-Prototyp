@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_pprso"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_68s37"]
+[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_68s37"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -50,9 +51,40 @@ transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, -2
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("2_68s37")]
 transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, 20, 0, 1)
 
-[node name="rat_spawnpoints" type="Node3D" parent="." unique_id=171991631]
-script = ExtResource("1_pprso")
-level_id = 2
+[node name="Spawners" type="Node3D" parent="." unique_id=1680038435]
 
-[node name="RatSpawn1" type="Marker3D" parent="rat_spawnpoints" unique_id=196120860 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 6)
+[node name="SpawnerWildLevel1" parent="Spawners" unique_id=1520861385 instance=ExtResource("3_68s37")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 2
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel2" parent="Spawners" unique_id=787058961 instance=ExtResource("3_68s37")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 2
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel3" parent="Spawners" unique_id=298318617 instance=ExtResource("3_68s37")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.058026314, 0, 0.11108208)
+label = "Level1 Wild Rats"
+level_id = 2
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 100.0
+wild_rat_prob_green = 0.0
