@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://byam7v88xl4em"]
 
-[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="1_07ctq"]
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="2_bl61q"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_bl61q"]
 
@@ -74,7 +74,6 @@ spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0
 position_mode = 3
-choose_random_point = true
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
@@ -90,7 +89,6 @@ spawn_kind = 2
 count_max = 1
 spawn_radius = 1.0
 position_mode = 3
-choose_random_point = true
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
@@ -106,7 +104,6 @@ spawn_kind = 4
 count_max = 1
 spawn_radius = 1.0
 position_mode = 3
-choose_random_point = true
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
@@ -126,3 +123,42 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
 
 [node name="Marker3D4" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657005 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+
+[node name="Spawners2" type="Node3D" parent="." unique_id=212250728]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.725616, 0, -8.972551)
+
+[node name="SpawnerWildLevel1" parent="Spawners2" unique_id=2014284664 instance=ExtResource("3_bl61q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 7
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel2" parent="Spawners2" unique_id=193127534 instance=ExtResource("3_bl61q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 7
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel3" parent="Spawners2" unique_id=97241442 instance=ExtResource("3_bl61q")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.544346, 0, 11.969747)
+label = "Level1 Wild Rats"
+level_id = 7
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 100.0
+wild_rat_prob_green = 0.0

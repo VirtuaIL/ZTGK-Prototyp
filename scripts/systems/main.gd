@@ -87,6 +87,8 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 @export var cam_look_ahead_deadzone: float = 0.2
 @export var cam_look_ahead_smooth: float = 6.0
 var _cam_look_ahead: Vector3 = Vector3.ZERO
+@export var reset_level_on_death: bool = true
+@export var allow_level_skips: bool = true
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
@@ -847,6 +849,11 @@ func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
 		var rat = rat_manager.rat_scene.instantiate()
 		if rat == null:
 			continue
+		var target_level_id := spawner.get_target_level_id(self)
+		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
+			if override_lifespan >= 0.0:
+				rat.wild_lifespan = override_lifespan
 		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
 		rat.player = player
 		if rat.has_method("set_rat_type"):
@@ -856,7 +863,7 @@ func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
 				spawner.wild_rat_prob_green
 			))
 		rat_manager.add_child(rat)
-		_assign_level_tag(rat, spawner.get_target_level_id(self))
+		_assign_level_tag(rat, target_level_id)
 		rat.global_position = spawn_pos
 		if rat.has_method("set_wild"):
 			rat.set_wild(true)
@@ -948,6 +955,8 @@ func _on_player_died() -> void:
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
+	if reset_level_on_death:
+		_reset_level_runtime(current_level_id)
 
 
 func can_activate_level(level_id: int) -> bool:
@@ -955,9 +964,22 @@ func can_activate_level(level_id: int) -> bool:
 		return false
 	if level_id <= current_level_id:
 		return true
+	if allow_level_skips:
+		return is_level_cleared(current_level_id)
 	if level_id == current_level_id + 1:
 		return is_level_cleared(current_level_id)
 	return false
+
+
+func _reset_level_runtime(level_id: int) -> void:
+	_current_level_active_time = 0.0
+	_current_level_cleared = false
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner := node as MainSpawner
+		if spawner != null and spawner.get_target_level_id(self) == level_id:
+			spawner.reset_runtime()
+	_refresh_level_activity()
+	_update_level_doors()
 
 
 func set_current_level(level_id: int) -> void:

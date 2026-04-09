@@ -813,7 +813,7 @@ func set_wild(wild: bool) -> void:
 	is_wild = wild
 	if is_wild:
 		add_to_group("wild_rats")
-		_wild_timer = wild_lifespan
+		_wild_timer = -1.0 if wild_lifespan <= 0.0 else wild_lifespan
 		state = State.STATIC
 		var mat := _make_type_material(default_rat_type, true)
 			
@@ -877,6 +877,9 @@ func _reset_blob_visuals() -> void:
 			m.transform = _visual_base_transforms[m]
 
 func _process_wild(delta: float) -> void:
+	if _wild_timer < 0.0:
+		# Negative lifespan means "never despawn".
+		return
 	_wild_timer -= delta
 	if _wild_timer <= 0.0:
 		queue_free()
@@ -903,15 +906,16 @@ func _process_wild(delta: float) -> void:
 		return
 		
 	var dist = _flat_distance(global_position, player.global_position)
-	var can_recruit = false
-	if dist <= recruitment_range:
-		can_recruit = true
-	else:
+	var can_recruit = dist <= recruitment_range
+	if not can_recruit and mgr != null and "wild_recruit_by_rats" in mgr and mgr.wild_recruit_by_rats:
+		var chain_range := recruitment_range
+		if "wild_recruit_by_rats_range" in mgr:
+			chain_range = float(mgr.wild_recruit_by_rats_range)
 		if "rats" in mgr:
 			for r in mgr.rats:
 				if not is_instance_valid(r):
 					continue
-				if _flat_distance(global_position, r.global_position) <= recruitment_range:
+				if _flat_distance(global_position, r.global_position) <= chain_range:
 					can_recruit = true
 					break
 					

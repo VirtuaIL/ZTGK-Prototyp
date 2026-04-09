@@ -193,6 +193,44 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
+[node name="Spawners2" type="Node3D" parent="." unique_id=1071793139]
+
+[node name="SpawnerWildLevel1" parent="Spawners2" unique_id=1160088324 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 4
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel2" parent="Spawners2" unique_id=1498827792 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 4
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel3" parent="Spawners2" unique_id=912328686 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.544346, 0, 11.969747)
+label = "Level1 Wild Rats"
+level_id = 4
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 100.0
+wild_rat_prob_green = 0.0
+
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=232841391]
 script = ExtResource("1_vmkp1")
 level_id = 4

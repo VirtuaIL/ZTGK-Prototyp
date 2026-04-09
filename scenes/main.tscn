@@ -98,7 +98,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.78864336, 1.855777, -102.325195)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.78864336, 1.855777, -103.97155)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 4

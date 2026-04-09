@@ -160,6 +160,10 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var carrier_drag_speed_max_mult: float = 0.5
 @export var carrier_drag_speed_curve: float = 2.2
 @export var carrier_pick_radius: float = 6.0
+@export var wild_lifespan_override_default: float = -1.0
+@export var wild_lifespan_overrides: Dictionary = {}
+@export var wild_recruit_by_rats: bool = true
+@export var wild_recruit_by_rats_range: float = 1.5
 @export var object_rotation_step: float = 22.5
 @export var combat_circle_radius: float = 1.8
 @export var combat_circle_rotation_speed: float = 12.0
@@ -328,6 +332,12 @@ func get_total_rat_count() -> int:
 		if rat != null:
 			count += 1
 	return count
+
+
+func get_wild_lifespan_for_level(level_id: int) -> float:
+	if wild_lifespan_overrides.has(level_id):
+		return float(wild_lifespan_overrides[level_id])
+	return wild_lifespan_override_default
 
 
 func get_min_cap() -> int:
