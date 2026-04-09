@@ -154,7 +154,7 @@ wild_rat_prob_green = 0.0
 
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=232841391]
 script = ExtResource("1_vmkp1")
-level_id = 1
+level_id = 4
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=248477231 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046244, 0, -16.530195)
