@@ -44,7 +44,6 @@ label = "Level2 Enemy Pressure"
 level_id = 3
 start_delay = 0.0
 repeat_interval = 10.0
-reset_on_level_enter = false
 spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0

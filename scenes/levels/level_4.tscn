@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_anwe6"]
+[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_ogj6a"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -87,3 +88,20 @@ transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9801967, 0, -79.981964)
 controlled_level_id = 4
 target_level_id = 7
 transition_requires_open = true
+
+[node name="Spawners" type="Node3D" parent="." unique_id=547921744]
+
+[node name="SpawnerEnemyPressureLevel2" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+label = "Level2 Enemy Pressure"
+level_id = 4
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 1
+count_max = 1
+spawn_radius = 1.0
+choose_random_point = false
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
