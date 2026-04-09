@@ -173,6 +173,8 @@ level_id = 4
 
 [node name="Level5" parent="levels" unique_id=1762327437 instance=ExtResource("13_trceg")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -89.815704, 0, -132.0036)
+script = ExtResource("11_ya4ey")
+level_id = 5
 
 [node name="Level6" parent="levels" unique_id=1208256933 instance=ExtResource("14_a8y0u")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -110.01133, 0, -191.90265)
