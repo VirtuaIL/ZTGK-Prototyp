@@ -58,38 +58,7 @@ var combat_key_rects: Array[ColorRect] = []
 var buff_panel: Panel
 var buff_labels: Array[Label] = []
 
-# ── Wave Spawner ──────────────────────────────────────────────────────────────
-@export_group("Wave Spawner")
-@export var wave_total_enemies: int = 20
-@export var wave_max_concurrent: int = 5
-@export var wave_spawn_interval: float = 1.0
 
-var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
-var _wave_flamethrower_scene: PackedScene = preload("res://scenes/enemies/flamethrower_enemy.tscn")
-var _wave_bomber_scene: PackedScene = preload("res://scenes/enemies/bomber_enemy.tscn")
-var _wave_mortar_scene: PackedScene = preload("res://scenes/enemies/mortar_enemy.tscn")
-var _wave_state_by_level: Dictionary = {}
-var _wave_sniper_scene: PackedScene = preload("res://scenes/enemies/sniper_enemy.tscn")
-var _wave_spawned: int = 0
-var _wave_active: int = 0
-var _wave_killed: int = 0
-var _wave_timer: float = 0.0
-
-@export_group("Wild Rat Spawner")
-@export var wild_rat_spawn_interval: float = 15.0
-@export var wild_rat_group_count_min: int = 1
-@export var wild_rat_group_count_max: int = 2
-@export var wild_rat_count_per_group_min: int = 3
-@export var wild_rat_count_per_group_max: int = 6
-@export var wild_rat_prob_normal: float = 80.0
-@export var wild_rat_prob_red: float = 10.0
-@export var wild_rat_prob_green: float = 10.0
-
-var _wild_rat_timer: float = 0.0
-var _wild_rat_spawned_by_level: Dictionary = {}
-
-@export_group("Legacy Wild Rat Spawner")
-@export var use_legacy_wild_rat_spawner: bool = true
 # ── UI Theme ──────────────────────────────────────────────────────────────────
 const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.65)
 const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.75)
@@ -658,9 +627,24 @@ func _update_enemy_count_ui() -> void:
 	var pending := 0
 	if has_method("get_level_enemies"):
 		alive = get_level_enemies(current_level_id).size()
-	if wave_total_enemies > 0:
-		var wave_state := _get_wave_state(current_level_id)
-		pending = max(0, wave_total_enemies - int(wave_state.get("spawned", 0)))
+		
+	# Estimate pending from active spawners
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner = node as MainSpawner
+		if spawner != null and spawner.get_target_level_id(self) == current_level_id and not spawner._completed:
+			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
+				var min_count = spawner.count_min
+				var max_count = spawner.count_max
+				var expected_per_trigger = (min_count + max_count) / 2
+				var remaining_triggers = 1
+				if spawner.repeat and spawner.max_triggers > 0:
+					remaining_triggers = max(0, spawner.max_triggers - spawner._trigger_count)
+				elif spawner.repeat and spawner.max_triggers <= 0:
+					remaining_triggers = 1 # endless
+				else:
+					remaining_triggers = 1 if spawner._trigger_count == 0 else 0
+				pending += remaining_triggers * expected_per_trigger
+				
 	var remaining := alive + pending
 	enemy_count_label.text = "Wrogowie: " + str(remaining)
 
@@ -710,22 +694,7 @@ func _process(delta: float) -> void:
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 	
-	# ── Wave Spawner Logic ──
-	var current_wave_state := _get_wave_state(current_level_id)
-	if not _is_level_wave_complete(current_level_id) and int(current_wave_state.get("spawned", 0)) < wave_total_enemies and int(current_wave_state.get("active", 0)) < wave_max_concurrent:
-		_wave_timer -= delta
-		if _wave_timer <= 0.0:
-			_spawn_wave_enemy()
-			_wave_timer = wave_spawn_interval
-			
-	# ── Wild Rat Spawner Logic ──
-	if use_legacy_wild_rat_spawner:
-		if not _wild_rat_spawned_by_level.get(current_level_id, false):
-			_wild_rat_timer += delta
-			if _wild_rat_timer >= wild_rat_spawn_interval:
-				_wild_rat_timer = 0.0
-				if _spawn_wild_rat_groups():
-					_wild_rat_spawned_by_level[current_level_id] = true
+
 	
 	# ── Update Action Colors (LPM, SCROLL, PPM) ──
 	var highlight_color = Color(0.9, 0.9, 0.9, 1.0)
@@ -859,116 +828,6 @@ func _toggle_all_enemies_passive() -> void:
 			enemy.toggle_passive()
 
 
-func trigger_spawner(spawner: MainSpawner) -> bool:
-	match spawner.spawn_kind:
-		MainSpawner.SpawnKind.WILD_RAT:
-			return _spawn_wild_rats_from_spawner(spawner)
-		_:
-			return _spawn_scene_from_spawner(spawner)
-
-
-func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
-	if rat_manager == null or rat_manager.rat_scene == null:
-		return false
-
-	var points := spawner.get_spawn_points(self)
-	if points.is_empty():
-		return false
-
-	var count := randi_range(min(spawner.count_min, spawner.count_max), max(spawner.count_min, spawner.count_max))
-	if count <= 0:
-		return false
-
-	for i in range(count):
-		var rat = rat_manager.rat_scene.instantiate()
-		if rat == null:
-			continue
-		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
-		rat.player = player
-		if rat.has_method("set_rat_type"):
-			rat.set_rat_type(_roll_wild_rat_type(
-				spawner.wild_rat_prob_normal,
-				spawner.wild_rat_prob_red,
-				spawner.wild_rat_prob_green
-			))
-		rat_manager.add_child(rat)
-		_assign_level_tag(rat, spawner.get_target_level_id(self))
-		rat.global_position = spawn_pos
-		if rat.has_method("set_wild"):
-			rat.set_wild(true)
-	return true
-
-
-func _spawn_scene_from_spawner(spawner: MainSpawner) -> bool:
-	var scene := _get_scene_for_spawner_kind(spawner.spawn_kind, spawner.custom_scene)
-	if scene == null:
-		return false
-
-	var points := spawner.get_spawn_points(self)
-	if points.is_empty():
-		return false
-
-	var count := randi_range(min(spawner.count_min, spawner.count_max), max(spawner.count_min, spawner.count_max))
-	if count <= 0:
-		return false
-
-	for i in range(count):
-		var node := scene.instantiate()
-		if node == null:
-			continue
-		add_child(node)
-		if node is Node3D:
-			var node3d := node as Node3D
-			node3d.global_position = _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.0)
-			_assign_level_tag(node3d, spawner.get_target_level_id(self))
-		if node.has_signal("enemy_died"):
-			node.enemy_died.connect(_on_scripted_enemy_died.bind(node), CONNECT_ONE_SHOT)
-	return true
-
-
-func _get_scene_for_spawner_kind(spawn_kind: int, custom_scene: PackedScene) -> PackedScene:
-	match spawn_kind:
-		MainSpawner.SpawnKind.BASIC_ENEMY:
-			return _wave_enemy_scene
-		MainSpawner.SpawnKind.FLAMETHROWER_ENEMY:
-			return _wave_flamethrower_scene
-		MainSpawner.SpawnKind.BOMBER_ENEMY:
-			return _wave_bomber_scene
-		MainSpawner.SpawnKind.SNIPER_ENEMY:
-			return _wave_sniper_scene
-		MainSpawner.SpawnKind.MORTAR_ENEMY:
-			return _wave_mortar_scene
-		MainSpawner.SpawnKind.CUSTOM_SCENE:
-			return custom_scene
-		_:
-			return null
-
-
-func _pick_spawner_point(points: Array[Vector3], choose_random_point: bool, index: int) -> Vector3:
-	if points.is_empty():
-		return Vector3.ZERO
-	if choose_random_point:
-		return points[randi() % points.size()]
-	return points[index % points.size()]
-
-
-func _random_spawn_offset(radius: float, y_offset: float) -> Vector3:
-	var angle := randf() * TAU
-	var dist := randf_range(0.0, maxf(0.0, radius))
-	return Vector3(cos(angle) * dist, y_offset, sin(angle) * dist)
-
-
-func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float) -> int:
-	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green)
-	if total_prob <= 0.0:
-		return 0
-	var roll := randf_range(0.0, total_prob)
-	if roll < prob_red:
-		return 1
-	if roll < prob_red + prob_green:
-		return 2
-	return 0
-
 
 func _on_scripted_enemy_died(enemy: Node) -> void:
 	var level_id := _get_level_id_for_node(enemy)
@@ -979,101 +838,11 @@ func _on_scripted_enemy_died(enemy: Node) -> void:
 		_update_level_doors()
 
 
-# ── Wave Spawner Methods ──────────────────────────────────────────────────────
-func _spawn_wave_enemy() -> void:
-	var spawn_level_id := current_level_id
-	var markers: Array = get_level_spawn_markers(spawn_level_id)
-	if markers.is_empty():
-		return
-		
-	if markers.size() > 1 and player != null:
-		var closest_marker = null
-		var min_dist_sq = INF
-		var p_pos = player.global_position
-		for m in markers:
-			if m is Node3D:
-				var dist_sq = p_pos.distance_squared_to(m.global_position)
-				if dist_sq < min_dist_sq:
-					min_dist_sq = dist_sq
-					closest_marker = m
-		if closest_marker != null:
-			markers.erase(closest_marker)
-			
-	var marker = markers[randi() % markers.size()] as Node3D
-	
-	var enemy
-	var r = randf()
-	if r <= 0.15 and _wave_sniper_scene:
-		enemy = _wave_sniper_scene.instantiate()
-	elif r <= 0.30 and _wave_bomber_scene:
-		enemy = _wave_bomber_scene.instantiate()
-	elif r <= 0.55 and _wave_flamethrower_scene:
-		enemy = _wave_flamethrower_scene.instantiate()
-	else:
-		enemy = _wave_enemy_scene.instantiate()
-		
-	add_child(enemy)
-	if enemy is Node3D:
-		_assign_level_tag(enemy, spawn_level_id)
-		enemy.global_position = marker.global_position
-	if enemy.has_signal("enemy_died"):
-		enemy.enemy_died.connect(_on_wave_enemy_died.bind(enemy, spawn_level_id))
-
-	var wave_state := _get_wave_state(spawn_level_id)
-	wave_state["spawned"] = int(wave_state.get("spawned", 0)) + 1
-	wave_state["active"] = int(wave_state.get("active", 0)) + 1
-
-func _on_wave_enemy_died(enemy: Node, level_id: int) -> void:
-	var wave_state := _get_wave_state(level_id)
-	wave_state["active"] = max(0, int(wave_state.get("active", 0)) - 1)
-	wave_state["killed"] = int(wave_state.get("killed", 0)) + 1
-	if is_instance_valid(enemy):
-		enemy.queue_free()
-	if level_id == current_level_id:
-		_current_level_cleared = is_current_level_cleared()
-		_update_level_doors()
-	if _is_level_wave_complete(level_id):
-		print("Fala zakonczona dla poziomu %d!" % level_id)
-
 func _on_player_died() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
-	_wave_state_by_level.clear()
-	_wave_timer = wave_spawn_interval
-
-func _spawn_wild_rat_groups() -> bool:
-	var spawn_level_id := current_level_id
-	var markers: Array = get_level_rat_spawns(spawn_level_id)
-	if markers.is_empty():
-		markers = get_level_spawn_markers(spawn_level_id)
-	if markers.is_empty():
-		return false
-	var group_count = randi_range(wild_rat_group_count_min, wild_rat_group_count_max)
-	for i in range(group_count):
-		var m = markers[randi() % markers.size()] as Node3D
-		var amount = randi_range(wild_rat_count_per_group_min, wild_rat_count_per_group_max)
-		
-		var total_prob = wild_rat_prob_normal + wild_rat_prob_red + wild_rat_prob_green
-		var roll = randf_range(0.0, total_prob)
-		var grp_type = 0 # NORMAL
-		if roll < wild_rat_prob_red:
-			grp_type = 1 # RED
-		elif roll < wild_rat_prob_red + wild_rat_prob_green:
-			grp_type = 2 # GREEN
-			
-		for j in range(amount):
-			var rat = rat_manager.rat_scene.instantiate()
-			rat.player = player
-			if rat.has_method("set_rat_type"):
-				rat.set_rat_type(grp_type)
-			rat_manager.add_child(rat)
-			_assign_level_tag(rat, spawn_level_id)
-			rat.global_position = m.global_position + Vector3(randf_range(-1.5, 1.5), 0.2, randf_range(-1.5, 1.5))
-			if rat.has_method("set_wild"):
-				rat.set_wild(true)
-	return true
 
 
 func can_activate_level(level_id: int) -> bool:
@@ -1099,8 +868,6 @@ func set_current_level(level_id: int) -> void:
 		return
 	current_level_id = level_id
 	_current_level_cleared = is_current_level_cleared()
-	_wave_timer = wave_spawn_interval
-	_wild_rat_timer = 0.0
 	_rebuild_level_bounds()
 	_refresh_level_visibility()
 	_refresh_level_activity()
@@ -1473,33 +1240,39 @@ func _assign_level_tag(node: Node, level_id: int) -> void:
 	node.set_meta("level_id", level_id)
 
 
-func _get_wave_state(level_id: int) -> Dictionary:
-	if not _wave_state_by_level.has(level_id):
-		_wave_state_by_level[level_id] = {
-			"spawned": 0,
-			"active": 0,
-			"killed": 0,
-		}
-	return _wave_state_by_level[level_id]
-
-
 func _is_level_wave_complete(level_id: int) -> bool:
-	if wave_total_enemies <= 0:
-		return true
-	if get_level_spawn_markers(level_id).is_empty():
-		return true
-	var wave_state := _get_wave_state(level_id)
-	return int(wave_state.get("spawned", 0)) >= wave_total_enemies and int(wave_state.get("active", 0)) <= 0
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner = node as MainSpawner
+		if spawner != null and spawner.get_target_level_id(self) == level_id:
+			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
+				if not spawner._completed:
+					return false
+	return true
 
 
 func _log_level_debug_state(reason: String = "") -> void:
 	var alive_enemies := get_level_enemies(current_level_id).size()
-	var wave_state := _get_wave_state(current_level_id)
 	var pending_wave_spawns := 0
-	if not get_level_spawn_markers(current_level_id).is_empty() and wave_total_enemies > 0:
-		pending_wave_spawns = max(0, wave_total_enemies - int(wave_state.get("spawned", 0)))
+	
+	# Estimate pending from active spawners
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner = node as MainSpawner
+		if spawner != null and spawner.get_target_level_id(self) == current_level_id and not spawner._completed:
+			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
+				var min_count = spawner.count_min
+				var max_count = spawner.count_max
+				var expected_per_trigger = (min_count + max_count) / 2
+				var remaining_triggers = 1
+				if spawner.repeat and spawner.max_triggers > 0:
+					remaining_triggers = max(0, spawner.max_triggers - spawner._trigger_count)
+				elif spawner.repeat and spawner.max_triggers <= 0:
+					remaining_triggers = 1 # endless
+				else:
+					remaining_triggers = 1 if spawner._trigger_count == 0 else 0
+				pending_wave_spawns += remaining_triggers * expected_per_trigger
+				
 	var remaining_to_clear := alive_enemies + pending_wave_spawns
-	var debug_state := "level=%d|cleared=%s|alive=%d|pending_wave=%d|remaining=%d" % [
+	var debug_state := "level=%d|cleared=%s|alive=%d|pending=%d|total_remaining=%d" % [
 		current_level_id,
 		str(_current_level_cleared),
 		alive_enemies,
