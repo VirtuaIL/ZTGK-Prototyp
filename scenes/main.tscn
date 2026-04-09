@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://duy445sug03q8" path="res://scenes/levels/level_tutorial_3.tscn" id="10_ya4ey"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="21_main_spawner"]
+[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="22_spike_cyl"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
 panorama = ExtResource("2_0ld40")
@@ -115,7 +116,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -58)
 label = "Level2 Bomber Ambush B"
 level_id = 2
 start_delay = 14.0
-spawn_kind = 3
+spawn_kind = 4
 count_max = 1
 spawn_radius = 0.8
 choose_random_point = false
@@ -175,3 +176,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.162966, 0, -39.901146)
 
 [node name="Level3" parent="levels" unique_id=974917402 instance=ExtResource("10_ya4ey")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -99.67701)
+
+[node name="levels_Level2_obstacles#SpikeCylinderCenter1" parent="." unique_id=1542201101 instance=ExtResource("22_spike_cyl")]
+transform = Transform3D(2.605, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 0)
+
+[node name="levels_Level2_obstacles#SpikeCylinderCenter2" parent="." unique_id=1542201102 instance=ExtResource("22_spike_cyl")]
+
+[node name="MeshInstance3D" parent="levels_Level2_obstacles#SpikeCylinderCenter2" index="0"]
+transform = Transform3D(0.981, 0, 0, 0, 0.981, 0, 0, 0, 0.981, 0, 1, 0)
+
+[node name="levels_Level2_obstacles#SpikeCylinderCenter3" parent="." unique_id=1542201103 instance=ExtResource("22_spike_cyl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+
+[editable path="levels_Level2_obstacles#SpikeCylinderCenter2"]
