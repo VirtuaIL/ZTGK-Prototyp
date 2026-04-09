@@ -1136,6 +1136,27 @@ func transition_to_level(level_id: int, target_position: Vector3) -> void:
 
 
 func clamp_position_to_current_level(pos: Vector3) -> Vector3:
+	var valid_levels = [current_level_id]
+	for i in range(1, 10): # Check all possible configured levels
+		if i != current_level_id and is_level_cleared(i):
+			valid_levels.append(i)
+	
+	# If we are inside the bounds of any valid level, don't clamp
+	for lvl in valid_levels:
+		var bounds: Dictionary
+		if _level_clamp_bounds_dynamic.has(lvl):
+			bounds = _level_clamp_bounds_dynamic[lvl]
+		elif LEVEL_CLAMP_BOUNDS.has(lvl):
+			bounds = LEVEL_CLAMP_BOUNDS[lvl]
+		else:
+			continue
+			
+		var margin = 1.0 # Small margin to smooth transitions
+		if pos.x >= float(bounds["min_x"]) - margin and pos.x <= float(bounds["max_x"]) + margin and \
+		   pos.z >= float(bounds["min_z"]) - margin and pos.z <= float(bounds["max_z"]) + margin:
+			return pos
+			
+	# If not inside any valid level bounds, clamp to the current level
 	return clamp_position_to_level(current_level_id, pos)
 
 
