@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
-[ext_resource type="Script" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://j83tckwqxndx" path="res://scenes/levels/level_tutorial_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
@@ -43,13 +43,6 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
-wave_total_enemies = 10
-wave_max_concurrent = 7
-wild_rat_spawn_interval = 5.0
-wild_rat_group_count_max = 7
-wild_rat_count_per_group_min = 1
-wild_rat_count_per_group_max = 7
-use_legacy_wild_rat_spawner = false
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]

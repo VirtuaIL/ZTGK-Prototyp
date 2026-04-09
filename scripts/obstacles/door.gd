@@ -1,3 +1,4 @@
+@tool
 extends CharacterBody3D
 class_name door
 
@@ -22,16 +23,34 @@ class_name door
 # If true, the door starts open and closes when triggered
 @export var is_inverse: bool = false
 
+@export var debug_show_direction: bool = false:
+	set(value):
+		_debug_show_direction = value
+		_update_debug_direction()
+	get:
+		return _debug_show_direction
+
+@export var debug_length_override: float = 0.0:
+	set(value):
+		_debug_length_override = value
+		_update_debug_direction()
+	get:
+		return _debug_length_override
+
 var _closed_position: Vector3
 var _open_position: Vector3
 var _is_open: bool = false
 var _transition_locked: bool = false
+var _debug_mesh: MeshInstance3D
+var _debug_show_direction: bool = false
+var _debug_length_override: float = 0.0
 
 
 func _ready() -> void:
 	add_to_group("doors")
 	_closed_position = position
-	_open_position = position + global_transform.basis.x * slide_distance
+	# Use local basis to keep slide direction consistent with parent rotation.
+	_open_position = position + transform.basis.x * slide_distance
 	
 	if is_inverse:
 		position = _open_position
@@ -42,6 +61,12 @@ func _ready() -> void:
 	var transition_area := get_node_or_null("TransitionArea") as Area3D
 	if transition_area != null and not transition_area.body_entered.is_connected(_on_transition_body_entered):
 		transition_area.body_entered.connect(_on_transition_body_entered)
+	
+	_update_debug_direction()
+
+
+func _enter_tree() -> void:
+	_update_debug_direction()
 
 
 func open() -> void:
@@ -118,3 +143,45 @@ func _get_target_position() -> Vector3:
 		if marker != null:
 			return marker.global_position
 	return global_position + Vector3.UP * 0.5
+
+
+func _update_debug_direction() -> void:
+	if not Engine.is_editor_hint():
+		if is_instance_valid(_debug_mesh):
+			_debug_mesh.queue_free()
+			_debug_mesh = null
+		return
+
+	if not debug_show_direction:
+		if is_instance_valid(_debug_mesh):
+			_debug_mesh.queue_free()
+			_debug_mesh = null
+		return
+
+	if not is_instance_valid(_debug_mesh):
+		_debug_mesh = MeshInstance3D.new()
+		_debug_mesh.name = "DebugDirection_%s" % get_instance_id()
+		_debug_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_debug_mesh.visibility_range_end = 80.0
+		add_child(_debug_mesh)
+		if Engine.is_editor_hint():
+			var owner_node := get_owner()
+			if owner_node == null:
+				owner_node = get_tree().edited_scene_root
+			if owner_node != null:
+				_debug_mesh.owner = owner_node
+
+	var mesh := BoxMesh.new()
+	var length := maxf(debug_length_override, maxf(slide_distance, 0.5))
+	mesh.size = Vector3(length, 0.08, 0.08)
+	_debug_mesh.mesh = mesh
+
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.0, 1.0, 0.6, 1.0)
+	mat.emission_enabled = true
+	mat.emission = Color(0.0, 1.0, 0.6, 1.0)
+	_debug_mesh.material_override = mat
+
+	# Offset so the bar points from the door origin toward +X.
+	_debug_mesh.transform.origin = Vector3(length * 0.5, 0.0, 0.0)
