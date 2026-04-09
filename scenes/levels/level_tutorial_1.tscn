@@ -27,16 +27,16 @@ shape = SubResource("BoxShape3D_6iamk")
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
 [node name="wall1" parent="walls" unique_id=1767367743 instance=ExtResource("3_aackc")]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, 9.852751, 0, -19.517975)
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, 10.344297, 0, -19.517975)
 
 [node name="wall3" parent="walls" unique_id=1981168902 instance=ExtResource("3_aackc")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.710026, 0, -19.517975)
+transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -12.722517, 0, -19.517975)
 
 [node name="wall2" parent="walls" unique_id=592629127 instance=ExtResource("3_aackc")]
-transform = Transform3D(8.5, 0, 0, 0, 1, 0, 0, 0, 1, -0.14724922, 0, 20.482025)
+transform = Transform3D(8.08, 0, 0, 0, 1, 0, 0, 0, 1, -0.008681297, 0, 20.482025)
 
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("3_aackc")]
-transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, -20, 0, 1)
+transform = Transform3D(-3.47287e-07, 0, 1, 0, 1, 0, -7.945, 0, -4.371139e-08, -20, 0, 0.47548485)
 
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("3_aackc")]
-transform = Transform3D(-3.715468e-07, 0, 1, 0, 1, 0, -8.5, 0, -4.371139e-08, 20, 0, 1)
+transform = Transform3D(-3.5690348e-07, 0, 1, 0, 1, 0, -8.165, 0, -4.371139e-08, 20, 0, 0.46080017)
