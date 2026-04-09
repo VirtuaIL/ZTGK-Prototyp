@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="2_55m82"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_f8eeo"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_f8eeo"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="4_cbbu3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -43,7 +44,6 @@ label = "Level2 Enemy Pressure"
 level_id = 3
 start_delay = 0.0
 repeat_interval = 10.0
-reset_on_level_enter = false
 spawn_kind = 1
 count_max = 1
 spawn_radius = 1.0
@@ -56,3 +56,11 @@ wild_rat_prob_green = 0.0
 
 [node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("3_f8eeo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.6237335, 0, 9.040831)
+
+[node name="doors" type="Node3D" parent="." unique_id=341833824]
+
+[node name="door" parent="doors" unique_id=1981168902 instance=ExtResource("4_cbbu3")]
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.98019236, 0, 19.952682)
+controlled_level_id = 3
+target_level_id = 4
+transition_requires_open = true
