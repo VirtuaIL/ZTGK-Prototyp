@@ -2,6 +2,9 @@ extends CharacterBody3D
 
 const CheeseScene := preload("res://scenes/rat/cheese.tscn")
 const DamageTextScene := preload("res://scenes/ui/damage_text.tscn")
+const ShieldScene := preload("res://scenes/enemies/enemy_shield.tscn")
+
+@export var shield_chance: float = 0.3
 
 signal enemy_died
 
@@ -78,6 +81,14 @@ func _ready() -> void:
 	_create_hp_bar()
 	_create_hp_label()
 	_update_hp_bar()
+
+	if randf() <= shield_chance:
+		var shield = ShieldScene.instantiate()
+		# Add as child to properly inherit transforms 
+		# Local Z is forward based on our rotation math (my_forward uses sin, 0, cos -> +Z)
+		# We'll place it slightly forward and elevated
+		shield.position = Vector3(0, 0.7, 0.6)
+		add_child(shield)
 
 	# Start with a small random pause so not all enemies move at once
 	_wander_pause_timer = randf_range(0.0, wander_pause_max)
