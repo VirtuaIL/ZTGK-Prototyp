@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cfwbcuarjjt38"]
 
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="1_dswqx"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_dswqx"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_fi56y"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
@@ -62,3 +63,12 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 12, 0, -12)
 
 [node name="SpikeCylinder4" parent="Spikes" unique_id=1418753542 instance=ExtResource("3_fi56y")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 32, 0, -12)
+
+[node name="doors" type="Node3D" parent="." unique_id=870990220]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.745697, 0, -1.988492e-06)
+
+[node name="door" parent="doors" unique_id=1184451191 instance=ExtResource("3_dswqx")]
+transform = Transform3D(1.15, 0, 0, 0, 1, 0, 0, 0, 1, -0.9888058, 0, 19.952682)
+controlled_level_id = 5
+target_level_id = 6
+transition_requires_open = true
