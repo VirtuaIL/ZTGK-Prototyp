@@ -36,10 +36,10 @@ shape = SubResource("BoxShape3D_6iamk")
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
 [node name="wall2" parent="walls" unique_id=592629127 instance=ExtResource("2_w6h2s")]
-transform = Transform3D(21, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 32.024)
+transform = Transform3D(19.5, 0, 0, 0, 1, 0, 0, 0, 1, 2.3711987, 0, 32.024)
 
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_w6h2s")]
-transform = Transform3D(-5.9010375e-07, 0, 1, 0, 1, 0, -13.5, 0, -4.371139e-08, -50, 0, 1)
+transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50, 0, 18.207043)
 
 [node name="wall5" parent="walls" unique_id=673475615 instance=ExtResource("2_w6h2s")]
 transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, 50, 0, -17.32035)
@@ -52,6 +52,9 @@ transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, -27.591202, 0, -31.999998)
 
 [node name="wall7" parent="walls" unique_id=1152833559 instance=ExtResource("2_w6h2s")]
 transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, 50, 0, 18.080301)
+
+[node name="wall8" parent="walls" unique_id=223788113 instance=ExtResource("2_w6h2s")]
+transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50, 0, -17.184399)
 
 [node name="Spikes" type="Node3D" parent="." unique_id=1224863487]
 

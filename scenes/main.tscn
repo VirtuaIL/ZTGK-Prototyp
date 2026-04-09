@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://duy445sug03q8" path="res://scenes/levels/level_tutorial_3.tscn" id="10_ya4ey"]
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="11_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://cibqu26fys05v" path="res://scenes/levels/level_4.tscn" id="12_eb6dy"]
+[ext_resource type="PackedScene" uid="uid://cfwbcuarjjt38" path="res://scenes/levels/level_5.tscn" id="13_trceg"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
@@ -101,12 +102,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="Area3D3" type="Area3D" parent="checkpoints" unique_id=729520402]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.6139984, 1.855777, -102.325195)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -0.094797134, 1.855777, -102.325195)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 4
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D3" unique_id=975876499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="Area3D4" type="Area3D" parent="checkpoints" unique_id=1412893186]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -52.707737, 1.855777, -131.91544)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D4" unique_id=838429367]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.05465734)
 shape = SubResource("BoxShape3D_yq6so")
 
@@ -126,3 +137,6 @@ level_id = 3
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, -131.64557)
 script = ExtResource("11_ya4ey")
 level_id = 4
+
+[node name="Level5" parent="levels" unique_id=1762327437 instance=ExtResource("13_trceg")]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -89.815704, 0, -132.0036)
