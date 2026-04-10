@@ -104,44 +104,6 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
-[node name="Spawners2" type="Node3D" parent="." unique_id=669625419]
-
-[node name="SpawnerWildLevel1" parent="Spawners2" unique_id=741703041 instance=ExtResource("3_g44gb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
-label = "Level1 Wild Rats"
-level_id = 6
-start_delay = 0.0
-reset_on_level_enter = false
-count_min = 3
-spawn_radius = 1.8
-wild_rat_prob_normal = 100.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-
-[node name="SpawnerWildLevel2" parent="Spawners2" unique_id=734089698 instance=ExtResource("3_g44gb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
-label = "Level1 Wild Rats"
-level_id = 6
-start_delay = 0.0
-reset_on_level_enter = false
-count_min = 3
-spawn_radius = 1.8
-wild_rat_prob_normal = 100.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-
-[node name="SpawnerWildLevel3" parent="Spawners2" unique_id=1745745661 instance=ExtResource("3_g44gb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.544346, 0, 11.969747)
-label = "Level1 Wild Rats"
-level_id = 6
-start_delay = 0.0
-reset_on_level_enter = false
-count_min = 3
-spawn_radius = 1.8
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 100.0
-wild_rat_prob_green = 0.0
-
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=987656001]
 script = ExtResource("1_vmkp1")
 level_id = 6
@@ -157,3 +119,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
 
 [node name="Marker3D4" type="Marker3D" parent="enemies_spawnpoints" unique_id=987656005 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+
+[node name="Spawners3" type="Node3D" parent="." unique_id=733472762]
+
+[node name="SpawnerWildLevel2" parent="Spawners3" unique_id=190253124 instance=ExtResource("3_g44gb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 6
+start_delay = 0.0
+repeat = true
+repeat_interval = 8.0
+max_triggers = 6
+reset_on_level_enter = false
+count_min = 3
+count_max = 6
+spawn_radius = 1.8
+position_mode = 3
+wild_rat_prob_normal = 60.0
+wild_rat_prob_red = 20.0
+wild_rat_prob_green = 20.0

@@ -195,41 +195,22 @@ wild_rat_prob_green = 0.0
 
 [node name="Spawners2" type="Node3D" parent="." unique_id=1071793139]
 
-[node name="SpawnerWildLevel1" parent="Spawners2" unique_id=1160088324 instance=ExtResource("4_ogj6a")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
-label = "Level1 Wild Rats"
-level_id = 4
-start_delay = 0.0
-reset_on_level_enter = false
-count_min = 3
-spawn_radius = 1.8
-wild_rat_prob_normal = 100.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-
 [node name="SpawnerWildLevel2" parent="Spawners2" unique_id=1498827792 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
 label = "Level1 Wild Rats"
 level_id = 4
 start_delay = 0.0
+repeat = true
+repeat_interval = 8.0
+max_triggers = 6
 reset_on_level_enter = false
-count_min = 3
+count_min = 15
+count_max = 25
 spawn_radius = 1.8
-wild_rat_prob_normal = 100.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-
-[node name="SpawnerWildLevel3" parent="Spawners2" unique_id=912328686 instance=ExtResource("4_ogj6a")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.544346, 0, 11.969747)
-label = "Level1 Wild Rats"
-level_id = 4
-start_delay = 0.0
-reset_on_level_enter = false
-count_min = 3
-spawn_radius = 1.8
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 100.0
-wild_rat_prob_green = 0.0
+position_mode = 3
+wild_rat_prob_normal = 60.0
+wild_rat_prob_red = 20.0
+wild_rat_prob_green = 20.0
 
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=232841391]
 script = ExtResource("1_vmkp1")
@@ -246,3 +227,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.605286, 0, -1.7694821)
 
 [node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=1224072389 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361685, 0, -3.3890052)
+
+[node name="Marker3D8" type="Marker3D" parent="enemies_spawnpoints" unique_id=280147267 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705373, 0, -13.909654)
+
+[node name="Marker3D9" type="Marker3D" parent="enemies_spawnpoints" unique_id=1088089241 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5401607, 0, -14.956239)
+
+[node name="Marker3D10" type="Marker3D" parent="enemies_spawnpoints" unique_id=2065731880 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8549657, 0, 15.413524)
+
+[node name="Marker3D11" type="Marker3D" parent="enemies_spawnpoints" unique_id=2009199074 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.7687645, 0, 19.514648)
+
+[node name="Marker3D12" type="Marker3D" parent="enemies_spawnpoints" unique_id=1678636850 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.572922, 0, -23.083181)
+
+[node name="Marker3D13" type="Marker3D" parent="enemies_spawnpoints" unique_id=356079487 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361687, 0, -23.99357)
+
+[node name="Marker3D14" type="Marker3D" parent="enemies_spawnpoints" unique_id=694048794 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.095863, 0, -13.52083)
+
+[node name="Marker3D15" type="Marker3D" parent="enemies_spawnpoints" unique_id=2135343634 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.27117, 0, -17.821932)
+
+[node name="Marker3D16" type="Marker3D" parent="enemies_spawnpoints" unique_id=1580965456 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.260895, 0, 15.370676)
+
+[node name="Marker3D17" type="Marker3D" parent="enemies_spawnpoints" unique_id=773685524 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.605507, 0, 15.97711)
+
+[node name="Marker3D18" type="Marker3D" parent="enemies_spawnpoints" unique_id=2056687673 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1340094, 0, -23.335932)
