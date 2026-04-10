@@ -114,6 +114,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
 [node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=987656003 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -10)
 
+[node name="Marker3D5" type="Marker3D" parent="enemies_spawnpoints" unique_id=1074527903 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -0.7146879)
+
+[node name="Marker3D6" type="Marker3D" parent="enemies_spawnpoints" unique_id=738429487 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.199726, 0, -0.71468705)
+
+[node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=78638469 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.399967, 0, -0.71468925)
+
 [node name="Marker3D3" type="Marker3D" parent="enemies_spawnpoints" unique_id=987656004 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
 

@@ -56,10 +56,10 @@ transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.9746923)
 [node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
 
 [node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("2_bl61q")]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 32, 0, 12)
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 32, 0, 12)
 
 [node name="SpikeCylinder2" parent="Spikes" unique_id=158563560 instance=ExtResource("2_bl61q")]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -32, 0, 12)
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -32, 0, 12)
 
 [node name="Spawners" type="Node3D" parent="." unique_id=439441642]
 
@@ -114,6 +114,18 @@ level_id = 7
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657002 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
+
+[node name="Marker3D5" type="Marker3D" parent="enemies_spawnpoints" unique_id=1559148223 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.141338, 0, 10)
+
+[node name="Marker3D6" type="Marker3D" parent="enemies_spawnpoints" unique_id=615995203 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.76142, 0, -15.799503)
+
+[node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=735837046 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.57405, 0, -4.777237)
+
+[node name="Marker3D8" type="Marker3D" parent="enemies_spawnpoints" unique_id=1456035440 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.41366, 0, -4.777237)
 
 [node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=987657003 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -10)

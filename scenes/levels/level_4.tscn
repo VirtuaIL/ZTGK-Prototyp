@@ -79,16 +79,16 @@ transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 
 [node name="SpikeCylinder2" parent="Spikes" unique_id=1842775088 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, -25, 0, 15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, -25, 0, 15)
 
 [node name="SpikeCylinder3" parent="Spikes" unique_id=836327637 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 25, 0, 15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, 25, 0, 15)
 
 [node name="SpikeCylinder4" parent="Spikes" unique_id=276801485 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 25, 0, -15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, 25, 0, -15)
 
 [node name="SpikeCylinder5" parent="Spikes" unique_id=543696438 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, -25, 0, -15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, -25, 0, -15)
 
 [node name="doors" type="Node3D" parent="." unique_id=2017506733]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 29.99928, 0, -0.5166948)
@@ -260,3 +260,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.605507, 0, 15.97711)
 
 [node name="Marker3D18" type="Marker3D" parent="enemies_spawnpoints" unique_id=2056687673 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1340094, 0, -23.335932)
+
+[node name="Marker3D19" type="Marker3D" parent="enemies_spawnpoints" unique_id=559644201 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2997172, 0, -7.2999096)
+
+[node name="Marker3D20" type="Marker3D" parent="enemies_spawnpoints" unique_id=1426795072 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.950804, 0, 10.010411)
