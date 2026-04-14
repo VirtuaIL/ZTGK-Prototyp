@@ -903,11 +903,12 @@ func _update_cursor_follow(_delta: float) -> void:
 			build_blob_offsets()
 			
 		var blob_scale_local := 1.0
-		if build_draw_mode == DRAW_MODE_CIRCLE:
-			blob_scale_local = maxf(1.0, circle_radius / 0.5)
-		elif build_draw_mode == DRAW_MODE_PATH:
+		var use_path_logic: bool = (build_draw_mode == DRAW_MODE_PATH and use_wide_brush) or (current_attack_mode == AttackMode.PATH_DASH)
+		if use_path_logic:
 			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 			blob_scale_local = float(1 + pairs * 2) / 2.5
+		else:
+			blob_scale_local = maxf(1.0, circle_radius / 0.5)
 			
 		for i in range(count):
 			var t_blob := mouse_world
@@ -926,13 +927,14 @@ func _update_cursor_follow(_delta: float) -> void:
 	# Calculate how much to resemble a blob based on brush size
 	var blob_blend := 0.0
 	var blob_scale := 1.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
-		blob_scale = circle_radius / 0.5
-	elif build_draw_mode == DRAW_MODE_PATH:
+	var use_path_logic_b: bool = (build_draw_mode == DRAW_MODE_PATH and use_wide_brush) or (current_attack_mode == AttackMode.PATH_DASH)
+	if use_path_logic_b:
 		blob_blend = clampf(float(brush_lane_pairs - brush_lane_pairs_min) / maxf(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min)), 0.0, 1.0)
 		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 		blob_scale = float(1 + pairs * 2) / 2.5
+	else:
+		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
+		blob_scale = circle_radius / 0.5
 
 	if _blob_offsets.size() != count:
 		build_blob_offsets()
