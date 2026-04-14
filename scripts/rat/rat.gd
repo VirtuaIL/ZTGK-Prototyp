@@ -646,9 +646,7 @@ func hard_recall_to_player() -> void:
 	_recall_boost_timer = 0.0
 	is_fallen = false
 	set_physics_process(true)
-	global_position = player.global_position + Vector3(
-		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
-	)
+	# Keep current position — let FOLLOW spring physics move rats naturally
 	show_visuals()
 
 

@@ -2004,28 +2004,11 @@ func _update_cursor_preview() -> void:
 	if combat_rmb_down and current_attack_mode == AttackMode.PATH_DASH:
 		return
 
-	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
-	var hit: Dictionary = _get_mouse_ground_hit()
-	var raw_pos: Vector3
-	
-	if hit:
-		raw_pos = hit.position + hit.normal * build_surface_offset
-		if current_build_y <= -500.0:
-			current_build_y = raw_pos.y
-		raw_pos.y = current_build_y
-	elif current_build_y > -500.0:
-		var fallback := _get_mouse_pos_at_y(current_build_y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	elif player_node:
-		var fallback := _get_mouse_pos_at_y(player_node.global_position.y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	else:
+	# Use _mouse_to_world() for preview — it raycasts against ALL collision
+	# layers and falls back to player-Y plane, so it never desyncs like
+	# _get_mouse_ground_hit() (floor-only) + current_build_y did.
+	var raw_pos: Vector3 = _mouse_to_world()
+	if raw_pos == Vector3.ZERO:
 		immediate_mesh.clear_surfaces()
 		return
 
@@ -2040,7 +2023,7 @@ func _update_cursor_preview() -> void:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(hit.is_empty())
+		_update_circle_preview(false)
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:
