@@ -107,6 +107,13 @@ func _update_visuals() -> void:
 			mat.albedo_color = Color(0.6, 0.1, 0.9) # Loss of control, no aggro
 			particles.emitting = true
 
+	# Trutka (PURPLE) ma model kuli, reszta zostaje z pryzma
+	if type == Type.PURPLE:
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.25
+		sphere.height = 0.5
+		mesh_inst.mesh = sphere
+
 	mesh_inst.material_override = mat
 
 func _physics_process(delta: float) -> void:
