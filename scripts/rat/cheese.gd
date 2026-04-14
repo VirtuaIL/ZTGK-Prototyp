@@ -26,15 +26,86 @@ func _update_visuals() -> void:
 	var mat = StandardMaterial3D.new()
 	mat.roughness = 0.8
 	
+	var particles = get_node_or_null("ToxicParticles")
+	if not particles:
+		particles = GPUParticles3D.new()
+		particles.name = "ToxicParticles"
+		particles.amount = 8
+		particles.lifetime = 1.0
+		
+		var pmat = ParticleProcessMaterial.new()
+		pmat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+		pmat.emission_sphere_radius = 0.5
+		pmat.direction = Vector3(0, 1, 0)
+		pmat.spread = 15.0
+		pmat.initial_velocity_min = 0.5
+		pmat.initial_velocity_max = 1.5
+		pmat.gravity = Vector3(0, 0.5, 0)
+		pmat.scale_min = 0.2
+		pmat.scale_max = 0.5
+		
+		var cramp = GradientTexture1D.new()
+		var grad = Gradient.new()
+		grad.set_color(0, Color(0.6, 0.1, 0.9, 0.8)) # Purple
+		grad.add_point(0.5, Color(0.4, 0.8, 0.2, 0.5)) # Sickly green
+		grad.set_color(1, Color(0.2, 0.8, 0.1, 0.0))
+		cramp.gradient = grad
+		pmat.color_ramp = cramp
+		particles.process_material = pmat
+		
+		var img = Image.create(8, 8, false, Image.FORMAT_RGBA8)
+		var c0 = Color(0, 0, 0, 0)
+		var c1 = Color(1, 1, 1, 1)
+		var c2 = Color(0, 0, 0, 1)
+		img.fill(c0)
+		
+		var pixels = [
+			0,0,1,1,1,1,0,0,
+			0,1,1,1,1,1,1,0,
+			1,1,0,1,1,0,1,1,
+			1,1,0,1,1,0,1,1,
+			0,1,1,1,1,1,1,0,
+			0,0,1,0,0,1,0,0,
+			0,0,1,0,0,1,0,0,
+			0,0,0,0,0,0,0,0
+		]
+		for i in range(64):
+			var x = i % 8
+			var y = int(i / 8)
+			if pixels[i] == 1:
+				img.set_pixel(x, y, c1)
+			elif y >= 2 and y <= 3 and (x == 2 or x == 5):
+				img.set_pixel(x, y, c0) # empty eyes
+		
+		var tex = ImageTexture.create_from_image(img)
+		
+		var quad = QuadMesh.new()
+		quad.size = Vector2(0.3, 0.3)
+		var qmat = StandardMaterial3D.new()
+		qmat.albedo_texture = tex
+		qmat.vertex_color_use_as_albedo = true
+		qmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		qmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		qmat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		qmat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		quad.material = qmat
+		particles.draw_pass_1 = quad
+		
+		add_child(particles)
+	
 	match type:
 		Type.RED:
 			mat.albedo_color = Color(0.9, 0.1, 0.1) # Aggression
+			particles.emitting = false
 		Type.GREEN:
 			mat.albedo_color = Color(0.1, 0.9, 0.1) # Gas
+			particles.emitting = false
 		Type.YELLOW:
 			mat.albedo_color = Color(0.9, 0.9, 0.1) # Immortality
+			particles.emitting = false
 		Type.PURPLE:
 			mat.albedo_color = Color(0.6, 0.1, 0.9) # Loss of control, no aggro
+			particles.emitting = true
 
 	mesh_inst.material_override = mat
 

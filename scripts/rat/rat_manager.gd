@@ -59,12 +59,30 @@ func get_current_buff_material():
 	if buff_purple_timer > 0.0: return buff_mat_purple
 	return null
 
+var _cheese_msg_timer: float = 0.0
+var _cheese_buff_label: Label = null
+
+func _show_cheese_msg(msg: String, color: Color) -> void:
+	if _cheese_buff_label:
+		_cheese_buff_label.text = msg
+		_cheese_buff_label.add_theme_color_override("font_color", color)
+		_cheese_buff_label.visible = true
+		_cheese_msg_timer = 3.0
+
 func apply_cheese_buff(type: int) -> void:
 	match type:
-		0: buff_red_timer = 5.0
-		1: buff_green_timer = 5.0
-		2: buff_yellow_timer = 5.0
-		3: buff_purple_timer = 5.0
+		0: 
+			buff_red_timer = 5.0
+			_show_cheese_msg("Agresywne szczury!", Color(0.9, 0.1, 0.1))
+		1: 
+			buff_green_timer = 5.0
+			_show_cheese_msg("Śmierdzące szczury!", Color(0.1, 0.9, 0.1))
+		2: 
+			buff_yellow_timer = 5.0
+			_show_cheese_msg("Nieśmiertelne szczury!", Color(0.9, 0.9, 0.1))
+		3: 
+			buff_purple_timer = 5.0
+			_show_cheese_msg("Dezorientacja szczurów!", Color(0.6, 0.1, 0.9))
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -281,6 +299,18 @@ func _ready() -> void:
 	_pity_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pity_label.visible = false
 	control.add_child(_pity_label)
+	
+	_cheese_buff_label = Label.new()
+	_cheese_buff_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cheese_buff_label.add_theme_font_size_override("font_size", 52)
+	_cheese_buff_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cheese_buff_label.add_theme_constant_override("outline_size", 8)
+	_cheese_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cheese_buff_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_cheese_buff_label.offset_top = 150 # Position it down from the top
+	_cheese_buff_label.visible = false
+	control.add_child(_cheese_buff_label)
+	
 	add_child(_pity_canvas)
 
 func setup_player(player: CharacterBody3D) -> void:
@@ -598,6 +628,11 @@ func _process(delta: float) -> void:
 				_player.die()
 	else:
 		_pity_timer = 5.0
+		
+	if _cheese_msg_timer > 0.0:
+		_cheese_msg_timer -= delta
+		if _cheese_msg_timer <= 0.0 and _cheese_buff_label:
+			_cheese_buff_label.visible = false
 		if _pity_label:
 			_pity_label.visible = false
 
