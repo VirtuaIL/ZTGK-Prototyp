@@ -132,6 +132,8 @@ func _shoot() -> void:
 		# Hand off marker to projectile
 		if p.has_method("set") or "target_marker" in p:
 			p.target_marker = aim_marker
+		# Sync damage radius with the visual aim indicator
+		p.explosion_radius = explosion_radius
 		
 		var spawn_pos = global_position + Vector3(0, 1.5, 0)
 		var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y)).normalized()
