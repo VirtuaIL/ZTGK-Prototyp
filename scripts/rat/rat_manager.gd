@@ -628,6 +628,8 @@ func _process(delta: float) -> void:
 				_player.die()
 	else:
 		_pity_timer = 5.0
+		if _pity_label:
+			_pity_label.visible = false
 		
 	if _cheese_msg_timer > 0.0:
 		_cheese_msg_timer -= delta
