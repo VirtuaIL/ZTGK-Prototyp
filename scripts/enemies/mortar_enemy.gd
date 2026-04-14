@@ -5,7 +5,7 @@ const MortarProjectileScene = preload("res://scenes/projectiles/mortar_projectil
 var is_aiming: bool = false
 var aim_target_pos: Vector3 = Vector3.ZERO
 var aim_marker: MeshInstance3D = null
-var explosion_radius: float = 3.0
+@export var explosion_radius: float = 8.0
 
 func _ready() -> void:
 	super._ready()

@@ -636,13 +636,18 @@ func _update_enemy_count_ui() -> void:
 		alive = get_level_enemies(current_level_id).size()
 	
 	var pending_spawners := 0
+	var wave_info := ""
 	for node in get_tree().get_nodes_in_group("main_spawners"):
 		var spawner := node as MainSpawner
 		if spawner and spawner.get_target_level_id(self) == current_level_id and not spawner.is_completed():
 			pending_spawners += 1
+			if spawner.use_wave_mode and spawner.get_total_wave_count() > 0:
+				var current_wave := spawner.get_current_wave_index() + 1
+				var total_waves := spawner.get_total_wave_count()
+				wave_info = " (Fala %d/%d)" % [current_wave, total_waves]
 			
 	if pending_spawners > 0:
-		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)"
+		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)" + wave_info
 	else:
 		enemy_count_label.text = "Wrogowie: " + str(alive)
 
@@ -831,6 +836,75 @@ func trigger_spawner(spawner: MainSpawner) -> bool:
 			return _spawn_wild_rats_from_spawner(spawner)
 		_:
 			return _spawn_scene_from_spawner(spawner)
+
+
+func spawn_wave_group(spawner: MainSpawner, group: WaveGroup) -> Array:
+	if group.spawn_kind == MainSpawner.SpawnKind.WILD_RAT:
+		_spawn_wild_rats_wave_group(spawner, group)
+		return []  # Wild rats are not tracked for wave clearing
+
+	var scene := _get_scene_for_spawner_kind(group.spawn_kind, group.custom_scene)
+	if scene == null:
+		return []
+
+	var points := spawner.get_spawn_points(self)
+	if points.is_empty():
+		return []
+
+	var count := randi_range(min(group.count_min, group.count_max), max(group.count_min, group.count_max))
+	if count <= 0:
+		return []
+
+	var spawned: Array = []
+	for i in range(count):
+		var node := scene.instantiate()
+		if node == null:
+			continue
+		add_child(node)
+		if node is Node3D:
+			var node3d := node as Node3D
+			node3d.global_position = _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.0)
+			_assign_level_tag(node3d, spawner.get_target_level_id(self))
+		if node.has_signal("enemy_died"):
+			node.enemy_died.connect(_on_scripted_enemy_died.bind(node), CONNECT_ONE_SHOT)
+		spawned.append(node)
+	return spawned
+
+
+func _spawn_wild_rats_wave_group(spawner: MainSpawner, group: WaveGroup) -> void:
+	if rat_manager == null or rat_manager.rat_scene == null:
+		return
+
+	var points := spawner.get_spawn_points(self)
+	if points.is_empty():
+		return
+
+	var count := randi_range(min(group.count_min, group.count_max), max(group.count_min, group.count_max))
+	if count <= 0:
+		return
+
+	for i in range(count):
+		var rat = rat_manager.rat_scene.instantiate()
+		if rat == null:
+			continue
+		var target_level_id := spawner.get_target_level_id(self)
+		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
+			if override_lifespan >= 0.0:
+				rat.wild_lifespan = override_lifespan
+		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
+		rat.player = player
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(_roll_wild_rat_type(
+				spawner.wild_rat_prob_normal,
+				spawner.wild_rat_prob_red,
+				spawner.wild_rat_prob_green
+			))
+		rat_manager.add_child(rat)
+		_assign_level_tag(rat, target_level_id)
+		rat.global_position = spawn_pos
+		if rat.has_method("set_wild"):
+			rat.set_wild(true)
 
 
 func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:

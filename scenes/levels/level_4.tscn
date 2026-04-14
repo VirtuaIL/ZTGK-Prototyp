@@ -135,6 +135,7 @@ mesh = SubResource("BoxMesh_glw47")
 
 [node name="EnemyPressure" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "Enemy Pressure"
 level_id = 4
 start_delay = 0.0
@@ -150,6 +151,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyFlame" parent="Spawners" unique_id=813881927 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "FlameThrowerEnemy"
 level_id = 4
 start_delay = 0.0
@@ -165,6 +167,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemySniper" parent="Spawners" unique_id=1432928027 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "EnemySniper"
 level_id = 4
 start_delay = 0.0
@@ -180,13 +183,16 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyMortar" parent="Spawners" unique_id=166046177 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
-label = "Level2 Enemy Pressure"
+label = "EnemyMortar"
 level_id = 4
 start_delay = 0.0
+repeat = true
 repeat_interval = 10.0
+max_triggers = 4
 reset_on_level_enter = false
 spawn_kind = 5
-count_max = 1
+count_min = 4
+count_max = 4
 spawn_radius = 1.0
 position_mode = 3
 wild_rat_prob_normal = 0.0
