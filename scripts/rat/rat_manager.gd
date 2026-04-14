@@ -1778,6 +1778,26 @@ func hard_recall_all_rats() -> void:
 	for rat in rats:
 		if rat.has_method("hard_recall_to_player"):
 			rat.hard_recall_to_player()
+
+func soft_reset_all_rats() -> void:
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+		_lmb_is_object_drag = false
+
+	active_build_positions.clear()
+	built_positions.clear()
+	carrier_rats.clear()
+	carrier_rat_offsets.clear()
+	
+	for child in unified_shape_combiner.get_children():
+		child.queue_free()
+		
+	for rat in rats:
+		if rat.has_method("soft_reset_state"):
+			rat.soft_reset_state()
 		else:
 			rat.release_rat(true)
 	# Reset drawing state

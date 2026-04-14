@@ -1083,8 +1083,8 @@ func set_current_level(level_id: int) -> void:
 	_update_level_doors()
 	_log_level_debug_state("level_changed")
 	
-	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
-		rat_manager.hard_recall_all_rats()
+	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):
+		rat_manager.soft_reset_all_rats()
 
 
 func transition_to_level(level_id: int, target_position: Vector3) -> void:
@@ -1107,8 +1107,8 @@ func transition_to_level(level_id: int, target_position: Vector3) -> void:
 		elif rat_manager.has_method("set_respawn_count"):
 			rat_manager.set_respawn_count(rat_manager.rats.size())
 
-	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
-		rat_manager.hard_recall_all_rats()
+	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):
+		rat_manager.soft_reset_all_rats()
 
 
 func clamp_position_to_current_level(pos: Vector3) -> Vector3:
