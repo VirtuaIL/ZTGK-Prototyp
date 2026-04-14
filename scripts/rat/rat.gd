@@ -642,6 +642,21 @@ func hard_recall_to_player() -> void:
 	if player == null:
 		return
 	_reset_to_follow()
+	
+	# Teleport close to player unconditionally (for Spacebar recall)
+	var offset = Vector3(randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)).normalized() * randf_range(0.5, 2.0)
+	global_position = player.global_position + offset
+	
+	_travel_timer = 0.0
+	_recall_boost_timer = 0.0
+	is_fallen = false
+	set_physics_process(true)
+	show_visuals()
+
+func soft_reset_state() -> void:
+	if player == null:
+		return
+	_reset_to_follow()
 	_travel_timer = 0.0
 	_recall_boost_timer = 0.0
 	is_fallen = false
