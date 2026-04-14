@@ -639,12 +639,16 @@ func _update_enemy_count_ui() -> void:
 	var wave_info := ""
 	for node in get_tree().get_nodes_in_group("main_spawners"):
 		var spawner := node as MainSpawner
-		if spawner and spawner.get_target_level_id(self) == current_level_id and not spawner.is_completed():
+		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self) == current_level_id and not spawner.is_completed():
 			pending_spawners += 1
-			if spawner.use_wave_mode and spawner.get_total_wave_count() > 0:
-				var current_wave := spawner.get_current_wave_index() + 1
-				var total_waves := spawner.get_total_wave_count()
-				wave_info = " (Fala %d/%d)" % [current_wave, total_waves]
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self) == current_level_id and not ws.is_completed():
+			pending_spawners += 1
+			if ws.get_total_wave_count() > 0:
+				var cw := ws.get_current_wave_index() + 1
+				var tw := ws.get_total_wave_count()
+				wave_info = " (Fala %d/%d)" % [cw, tw]
 			
 	if pending_spawners > 0:
 		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)" + wave_info
@@ -838,7 +842,7 @@ func trigger_spawner(spawner: MainSpawner) -> bool:
 			return _spawn_scene_from_spawner(spawner)
 
 
-func spawn_wave_group(spawner: MainSpawner, group: WaveGroup) -> Array:
+func spawn_wave_group(spawner: WaveSpawner, group: WaveGroup) -> Array:
 	if group.spawn_kind == MainSpawner.SpawnKind.WILD_RAT:
 		_spawn_wild_rats_wave_group(spawner, group)
 		return []  # Wild rats are not tracked for wave clearing
@@ -871,7 +875,7 @@ func spawn_wave_group(spawner: MainSpawner, group: WaveGroup) -> Array:
 	return spawned
 
 
-func _spawn_wild_rats_wave_group(spawner: MainSpawner, group: WaveGroup) -> void:
+func _spawn_wild_rats_wave_group(spawner: WaveSpawner, group: WaveGroup) -> void:
 	if rat_manager == null or rat_manager.rat_scene == null:
 		return
 
@@ -1052,6 +1056,10 @@ func _reset_level_runtime(level_id: int) -> void:
 		var spawner := node as MainSpawner
 		if spawner != null and spawner.get_target_level_id(self) == level_id:
 			spawner.reset_runtime()
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws != null and ws.get_target_level_id(self) == level_id:
+			ws.reset_runtime()
 	_refresh_level_activity()
 	_update_level_doors()
 
@@ -1237,14 +1245,28 @@ func is_level_cleared(level_id: int) -> bool:
 		return false
 		
 	# 2. Then check if any MainSpawner is still active for this level
+	#    (skip WILD_RAT spawners — wild rats are collectibles, not enemies)
 	for node in get_tree().get_nodes_in_group("main_spawners"):
 		var spawner := node as MainSpawner
 		if spawner == null:
 			continue
+		if not spawner.enabled:
+			continue
+		if spawner.spawn_kind == MainSpawner.SpawnKind.WILD_RAT:
+			continue
 		if spawner.get_target_level_id(self) == level_id:
 			if not spawner.is_completed():
 				return false
-				
+
+	# 3. Then check if any WaveSpawner is still active for this level
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws == null or not ws.enabled:
+			continue
+		if ws.get_target_level_id(self) == level_id:
+			if not ws.is_completed():
+				return false
+
 	return true
 
 
@@ -1461,7 +1483,11 @@ func _log_level_debug_state(reason: String = "") -> void:
 	var pending_spawners := 0
 	for node in get_tree().get_nodes_in_group("main_spawners"):
 		var spawner := node as MainSpawner
-		if spawner and spawner.get_target_level_id(self) == current_level_id and not spawner.is_completed():
+		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self) == current_level_id and not spawner.is_completed():
+			pending_spawners += 1
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self) == current_level_id and not ws.is_completed():
 			pending_spawners += 1
 			
 	var debug_state := "level=%d|cleared=%s|alive=%d|pending_spawners=%d" % [
