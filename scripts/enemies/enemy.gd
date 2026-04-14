@@ -21,8 +21,8 @@ var health: float = max_health
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
-@export var detection_range: float = 16.0
-@export var lose_range: float = 22.0
+@export var detection_range: float = 32.0
+@export var lose_range: float = 40.0
 @export var attack_range: float = 3.0
 @export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0

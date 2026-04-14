@@ -13,8 +13,8 @@ func _ready() -> void:
 	health = max_health
 	
 	attack_range = 25.0 
-	detection_range = 30.0
-	lose_range = 35.0
+	detection_range = 45.0
+	lose_range = 50.0
 	chase_speed = 3.0
 	attack_delay = 2.0
 	attack_cooldown = 4.0
