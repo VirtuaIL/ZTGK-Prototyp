@@ -77,10 +77,10 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 # ── Offscreen Indicators ──────────────────────────────────────────────────────
 @export var indicator_max_distance: float = 26.0
 @export var indicator_min_distance: float = 6.0
-@export var indicator_screen_padding: float = 26.0
-@export var indicator_color: Color = Color(1.0, 0.65, 0.25, 1.0)
-@export var indicator_blink_speed: float = 4.0
-@export var indicator_blink_depth: float = 0.35
+@export var indicator_screen_padding: float = 30.0
+@export var indicator_color: Color = Color(1.0, 0.3, 0.1, 1.0)
+@export var indicator_blink_speed: float = 5.0
+@export var indicator_blink_depth: float = 0.25
 
 # ── Camera look-ahead ─────────────────────────────────────────────────────────
 @export var cam_look_ahead_max: float = 2.0
@@ -550,11 +550,13 @@ func _get_indicator(idx: int) -> Label:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lbl.custom_minimum_size = Vector2(48, 48)
-		lbl.size = Vector2(48, 48)
+		lbl.custom_minimum_size = Vector2(64, 64)
+		lbl.size = Vector2(64, 64)
 		lbl.pivot_offset = lbl.size * 0.5
-		lbl.add_theme_font_size_override("font_size", 34)
+		lbl.add_theme_font_size_override("font_size", 52)
 		lbl.add_theme_color_override("font_color", indicator_color)
+		lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+		lbl.add_theme_constant_override("outline_size", 6)
 		lbl.visible = false
 		indicator_root.add_child(lbl)
 		indicator_pool.append(lbl)
@@ -614,7 +616,7 @@ func _update_offscreen_indicators() -> void:
 		ind.rotation = atan2(dir.y, dir.x) + PI * 0.5
 
 		var t_dist: float = clampf((dist - indicator_min_distance) / max(0.001, indicator_max_distance - indicator_min_distance), 0.0, 1.0)
-		var alpha: float = lerpf(1.0, 0.35, t_dist)
+		var alpha: float = lerpf(1.0, 0.55, t_dist)
 		var blink: float = 1.0 - indicator_blink_depth + indicator_blink_depth * (0.5 + 0.5 * sin(_indicator_blink_time * indicator_blink_speed))
 		alpha *= blink
 		ind.modulate = Color(indicator_color.r, indicator_color.g, indicator_color.b, alpha)
