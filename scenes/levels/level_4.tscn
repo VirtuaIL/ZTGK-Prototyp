@@ -42,7 +42,8 @@ size = Vector3(9, 0.08, 0.08)
 
 [sub_resource type="Resource" id="Resource_ts8eg"]
 script = ExtResource("6_ts8eg")
-count_min = 3
+count_min = 8
+count_max = 8
 
 [sub_resource type="Resource" id="Resource_um320"]
 script = ExtResource("5_5vn0v")
@@ -50,8 +51,9 @@ groups = Array[ExtResource("6_ts8eg")]([SubResource("Resource_ts8eg")])
 
 [sub_resource type="Resource" id="Resource_glw47"]
 script = ExtResource("6_ts8eg")
-spawn_kind = 4
-count_min = 3
+spawn_kind = 5
+count_min = 5
+count_max = 5
 
 [sub_resource type="Resource" id="Resource_4wsov"]
 script = ExtResource("5_5vn0v")
