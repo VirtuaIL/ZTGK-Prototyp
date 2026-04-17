@@ -32,6 +32,17 @@ size = Vector3(0.2, 0.15, 0.4)
 
 [node name="Rat" type="CharacterBody3D" unique_id=899719348]
 script = ExtResource("1_script")
+spring_stiffness = 34.0
+separation_force = 15.0
+alignment_force = 2.2
+cohesion_force = 1.2
+boid_max_force = 12.0
+edge_probe_distance = 0.22
+edge_max_drop = 0.45
+wall_avoidance_force = 92.0
+wall_avoidance_probe_distance = 1.45
+wall_avoidance_side_probe_distance = 1.1
+wall_avoidance_tangent_bias = 1.0
 wild_lifespan = 7.0
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=532997029]

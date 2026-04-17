@@ -18,6 +18,10 @@ func _ready() -> void:
 	chase_speed = 2.0
 	attack_delay = 1.5
 	attack_cooldown = 5.0
+	movement_pattern = MovePattern.KITE
+	kite_preferred_range = 14.0
+	strafe_bias = 0.45
+	wall_avoidance_force = 3.2
 	
 	_ensure_aim_marker()
 

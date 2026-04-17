@@ -95,7 +95,7 @@ var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
 enum AttackMode { ROTATION, BLOB, PATH_DASH }
-var current_attack_mode: AttackMode = AttackMode.ROTATION
+var current_attack_mode: AttackMode = AttackMode.PATH_DASH
 var _combat_blob_offsets: Array[Vector3] = []
 var blob_radius: float = 2.5
 var _blob_damage_timer: float = 0.0
@@ -178,6 +178,7 @@ var rmb_press_screen_pos: Vector2 = Vector2.ZERO
 @export var carrier_drag_speed_max_mult: float = 0.5
 @export var carrier_drag_speed_curve: float = 2.2
 @export var carrier_pick_radius: float = 6.0
+@export var allow_player_drag: bool = false
 @export var wild_lifespan_override_default: float = -1.0
 @export var wild_lifespan_overrides: Dictionary = {}
 @export var wild_recruit_by_rats: bool = true
@@ -227,7 +228,8 @@ var _formation_active: bool = false
 
 
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
-const NEIGHBOR_RADIUS: float = 1.1
+@export var neighbor_radius: float = 1.5
+@export var neighbor_max_count: int = 8
 const NEIGHBOR_TICK: int = 3
 var _neighbor_tick: int = 0
 @export var heavy_cursor_follow_threshold: int = 80
@@ -1041,8 +1043,9 @@ func build_blob_offsets() -> void:
 func _assign_neighbors() -> void:
 	var count := rats.size()
 	var grid := {}
-	var cell_size: float = NEIGHBOR_RADIUS
-	var radius_sq := NEIGHBOR_RADIUS * NEIGHBOR_RADIUS
+	var effective_radius := maxf(0.2, neighbor_radius)
+	var cell_size: float = effective_radius
+	var radius_sq := effective_radius * effective_radius
 
 	# Bucket rats into spatial grid
 	for i in range(count):
@@ -1070,6 +1073,7 @@ func _assign_neighbors() -> void:
 
 		var pos: Vector3 = rat.global_position
 		var nb: Array = []
+		var nb_distances: Array[float] = []
 		var cx := int(floor(pos.x / cell_size))
 		var cz := int(floor(pos.z / cell_size))
 
@@ -1079,8 +1083,22 @@ func _assign_neighbors() -> void:
 				if grid.has(ck):
 					for other in grid[ck]:
 						if other != rat and is_instance_valid(other):
-							if pos.distance_squared_to(other.global_position) < radius_sq:
+							var dist_sq := pos.distance_squared_to(other.global_position)
+							if dist_sq < radius_sq:
 								nb.append(other)
+								nb_distances.append(dist_sq)
+
+		if neighbor_max_count > 0 and nb.size() > neighbor_max_count:
+			var indices: Array[int] = []
+			for idx in range(nb.size()):
+				indices.append(idx)
+			indices.sort_custom(func(a: int, b: int) -> bool:
+				return nb_distances[a] < nb_distances[b]
+			)
+			var limited: Array = []
+			for j in range(min(neighbor_max_count, indices.size())):
+				limited.append(nb[indices[j]])
+			nb = limited
 								
 		if rat.has_method("set_neighbors"):
 			rat.set_neighbors(nb)
@@ -1372,16 +1390,7 @@ func _form_unified_mesh() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_1:
-			current_attack_mode = AttackMode.ROTATION
-			_release_all_stuck_enemies()
-			get_viewport().set_input_as_handled()
-			return
-		elif event.keycode == KEY_2:
-			current_attack_mode = AttackMode.BLOB
-			get_viewport().set_input_as_handled()
-			return
-		elif event.keycode == KEY_3:
+		if event.keycode == KEY_1 or event.keycode == KEY_2 or event.keycode == KEY_3:
 			current_attack_mode = AttackMode.PATH_DASH
 			get_viewport().set_input_as_handled()
 			return
@@ -1471,7 +1480,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 				if hit_m:
 					var obj = hit_m.collider
-					if obj is box or obj is turret or obj is hitscan_turret or obj.is_in_group("player"):
+					var is_player_target : bool= obj != null and obj.is_in_group("player")
+					var is_draggable : bool= obj is box or obj is turret or obj is hitscan_turret or is_player_target
+					if is_draggable and (allow_player_drag or not is_player_target):
 						# Start object drag mode
 						_lmb_is_object_drag = true
 						if not obj.is_surrounded:

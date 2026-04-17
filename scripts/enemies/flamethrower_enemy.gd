@@ -24,6 +24,9 @@ func _ready() -> void:
 	attack_damage = 20.0 
 	attack_cooldown = 5.0
 	attack_delay = 2.0
+	movement_pattern = MovePattern.STRAFE
+	strafe_bias = 0.62
+	wall_avoidance_force = 3.4
 
 	flame_visual = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
