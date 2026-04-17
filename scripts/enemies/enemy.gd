@@ -583,9 +583,10 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		var dir := (global_position - hit_pos)
 		dir.y = 0.0
 		if dir.length() > 0.01:
-			_knockback += dir.normalized() * 1.0
-			if _knockback.length() > 5.0:
-				_knockback = _knockback.normalized() * 5.0
+			_knockback += dir.normalized()
+			if _knockback.length() > 2.0:
+				_knockback = _knockback.normalized() * 2.0
+				# _knockback = _knockback.normalized() * 2.0
 
 	if ai_state == AIState.WANDER:
 		_find_target()

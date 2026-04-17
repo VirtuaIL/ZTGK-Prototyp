@@ -77,7 +77,7 @@ var _dash_lateral_offset: float = 0.0
 @export var dash_speed: float = 30.0
 
 # Damage
-var damage_per_hit: float = 10.0
+var damage_per_hit: float = 1.5
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
