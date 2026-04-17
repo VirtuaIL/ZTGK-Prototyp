@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://bwslltmepeaoy"]
+
+[ext_resource type="Texture2D" uid="uid://cwsg4o6osk4wm" path="res://resources/assets/floor_noise.png" id="1_strgv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l6w81"]
+albedo_texture = ExtResource("1_strgv")
+uv1_scale = Vector3(10, 10, 10)
+uv2_scale = Vector3(20, 20, 20)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_roelr"]
+material = SubResource("StandardMaterial3D_l6w81")
+size = Vector2(80, 80)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_phstf"]
+size = Vector3(40, 0.001, 40)
+
+[node name="Floor" type="StaticBody3D" unique_id=1470818878]
+
+[node name="floor1" type="MeshInstance3D" parent="." unique_id=1027943660]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = SubResource("PlaneMesh_roelr")
+
+[node name="floor_collision1" type="CollisionShape3D" parent="." unique_id=621793671]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.018981934, 0, -0.020202637)
+shape = SubResource("BoxShape3D_phstf")
