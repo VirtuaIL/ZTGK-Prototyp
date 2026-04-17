@@ -12,13 +12,13 @@ enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 enum MovePattern { PURSUIT, STRAFE, KITE }
 
 # ── Health ──
-@export var max_health: float = 120.0
+@export var max_health: float = 50.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
 # ── Movement ──
 @export var move_speed: float = 1.4
-@export var chase_speed: float = 2.6
+@export var chase_speed: float = 4.0
 @export var rotation_speed: float = 8.0
 @export var movement_pattern: MovePattern = MovePattern.PURSUIT
 @export var strafe_bias: float = 0.45
@@ -403,12 +403,16 @@ func _process_attack(delta: float) -> void:
 			return
 		_pick_and_start_attack()
 	else:
-		# Face target while waiting
+		# Back away from target while waiting for cooldown
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+			# Retreat slowly
+			var away_dir := -to_player.normalized()
+			velocity.x = away_dir.x * 1.5
+			velocity.z = away_dir.z * 1.5
 
 func _pick_and_start_attack() -> void:
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
