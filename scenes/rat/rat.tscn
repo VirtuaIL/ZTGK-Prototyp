@@ -31,7 +31,6 @@ height = 0.14
 size = Vector3(0.2, 0.15, 0.4)
 
 [sub_resource type="Gradient" id="Gradient_shadow"]
-offsets = PackedFloat32Array(0, 1)
 colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
@@ -77,10 +76,9 @@ shape = SubResource("BoxShape3D_rat")
 [node name="schoor" parent="." unique_id=277951172 instance=ExtResource("2_lwnn2")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
-[node name="BlobShadow" type="Decal" parent="."]
+[node name="BlobShadow" type="Decal" parent="." unique_id=1170763995]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-size = Vector3(0.8, 2.0, 0.8)
+size = Vector3(0.8, 2, 0.8)
 texture_albedo = SubResource("GradientTexture2D_shadow")
-modulate = Color(1, 1, 1, 1)
 distance_fade_enabled = true
 distance_fade_begin = 20.0

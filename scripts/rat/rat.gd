@@ -11,6 +11,15 @@ var default_rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
 var _speed_mult: float = 1.0
 
+@export_group("Blob Shadow")
+@export var shadow_enabled: bool = true
+@export var shadow_size: float = 0.8
+@export var shadow_opacity: float = 1.0
+@export var shadow_offset_y: float = 0.2
+@export_group("")
+
+
+
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
 @export var orbit_speed: float = 4.0
@@ -125,8 +134,17 @@ var _blob_wobble_rot: float = 0.25
 var _blob_wobble_bob: float = 0.03
 
 func _ready() -> void:
+	var shadow: Decal = get_node_or_null("BlobShadow")
+	if shadow:
+		shadow.visible = shadow_enabled
+		shadow.size = Vector3(shadow_size, 2.0, shadow_size)
+		shadow.modulate = Color(1, 1, 1, shadow_opacity)
+		shadow.position.y = shadow_offset_y
+		shadow.cull_mask = 1048575 - 2 # Prevent projection on layer 2 (rats)
+
 	for child in find_children("*", "VisualInstance3D"):
-		child.layers = 2
+		if child != shadow:
+			child.layers = 2
 	follow_offset = Vector3(
 		randf_range(-1.5, 1.5),
 		0.0,
