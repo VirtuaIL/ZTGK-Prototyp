@@ -18,6 +18,10 @@ func _ready() -> void:
 	chase_speed = 3.0
 	attack_delay = 2.0
 	attack_cooldown = 4.0
+	movement_pattern = MovePattern.KITE
+	kite_preferred_range = 16.0
+	strafe_bias = 0.55
+	wall_avoidance_force = 3.0
 	
 	laser_visual = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()

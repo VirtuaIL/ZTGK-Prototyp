@@ -36,12 +36,6 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
-wave_total_enemies = 10
-wave_max_concurrent = 7
-wild_rat_spawn_interval = 5.0
-wild_rat_group_count_max = 7
-wild_rat_count_per_group_min = 1
-wild_rat_count_per_group_max = 7
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
@@ -65,7 +59,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -240.38527, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02072382, 0, -12.192841)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")

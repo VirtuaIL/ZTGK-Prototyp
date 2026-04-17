@@ -1373,13 +1373,31 @@ func _rebuild_level_bounds() -> void:
 			continue
 
 		# Small padding to avoid edge-clamping jitter at boundaries.
+		# Merge bounds when multiple level chunks share the same level_id
+		# (e.g. enemy test maps laid out side-by-side).
 		var pad := 1.0
-		_level_bounds_dynamic[level_id] = {"min_z": min_z - pad, "max_z": max_z + pad}
+		var new_min_x := min_x - pad
+		var new_max_x := max_x + pad
+		var new_min_z := min_z - pad
+		var new_max_z := max_z + pad
+
+		if _level_bounds_dynamic.has(level_id):
+			var prev_bounds: Dictionary = _level_bounds_dynamic[level_id]
+			new_min_z = minf(new_min_z, float(prev_bounds.get("min_z", new_min_z)))
+			new_max_z = maxf(new_max_z, float(prev_bounds.get("max_z", new_max_z)))
+		_level_bounds_dynamic[level_id] = {"min_z": new_min_z, "max_z": new_max_z}
+
+		if _level_clamp_bounds_dynamic.has(level_id):
+			var prev_clamp: Dictionary = _level_clamp_bounds_dynamic[level_id]
+			new_min_x = minf(new_min_x, float(prev_clamp.get("min_x", new_min_x)))
+			new_max_x = maxf(new_max_x, float(prev_clamp.get("max_x", new_max_x)))
+			new_min_z = minf(new_min_z, float(prev_clamp.get("min_z", new_min_z)))
+			new_max_z = maxf(new_max_z, float(prev_clamp.get("max_z", new_max_z)))
 		_level_clamp_bounds_dynamic[level_id] = {
-			"min_x": min_x - pad,
-			"max_x": max_x + pad,
-			"min_z": min_z - pad,
-			"max_z": max_z + pad,
+			"min_x": new_min_x,
+			"max_x": new_max_x,
+			"min_z": new_min_z,
+			"max_z": new_max_z,
 		}
 
 

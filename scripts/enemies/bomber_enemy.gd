@@ -21,6 +21,10 @@ func _ready() -> void:
 	attack_range = bomb_range
 	attack_cooldown = bomb_cooldown
 	attack_delay = bomb_windup
+	movement_pattern = MovePattern.KITE
+	kite_preferred_range = bomb_min_range + 2.0
+	strafe_bias = 0.6
+	wall_avoidance_force = 3.6
 
 func _process_attack(delta: float) -> void:
 	# Override melee logic: bomber keeps distance and throws bombs at rats.

@@ -9,6 +9,7 @@ const ShieldScene := preload("res://scenes/enemies/enemy_shield.tscn")
 signal enemy_died
 
 enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
+enum MovePattern { PURSUIT, STRAFE, KITE }
 
 # ── Health ──
 @export var max_health: float = 120.0
@@ -19,6 +20,20 @@ var health: float = max_health
 @export var move_speed: float = 1.4
 @export var chase_speed: float = 2.6
 @export var rotation_speed: float = 8.0
+@export var movement_pattern: MovePattern = MovePattern.PURSUIT
+@export var strafe_bias: float = 0.45
+@export var kite_preferred_range: float = 8.5
+@export var movement_jitter_interval: float = 1.2
+@export var wall_avoidance_enabled: bool = true
+@export var wall_avoidance_mask: int = 8 | 1
+@export var wall_avoidance_force: float = 2.8
+@export var wall_probe_distance: float = 1.2
+@export var wall_side_probe_distance: float = 0.9
+@export var wall_tangent_bias: float = 0.65
+@export var unstuck_enabled: bool = true
+@export var unstuck_min_move: float = 0.05
+@export var unstuck_time: float = 0.8
+@export var unstuck_duration: float = 0.55
 
 # ── Detection & combat ──
 @export var detection_range: float = 32.0
@@ -26,6 +41,8 @@ var health: float = max_health
 @export var attack_range: float = 3.0
 @export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0
+@export var min_attack_charge_time: float = 0.85
+@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.32)
 
 # ── Wander ──
 @export var wander_radius: float = 5.0
@@ -42,6 +59,11 @@ var _collision_mask_saved: int
 var _wander_target: Vector3 = Vector3.ZERO
 var _wander_pause_timer: float = 0.0
 var _has_wander_target: bool = false
+var _pattern_timer: float = 0.0
+var _strafe_sign: float = 1.0
+var _stuck_timer: float = 0.0
+var _unstuck_timer: float = 0.0
+var _unstuck_dir: Vector3 = Vector3.ZERO
 
 var _attack_timer: float = 0.0
 var _player_ref: CharacterBody3D = null
@@ -78,6 +100,8 @@ func _ready() -> void:
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
 	health = max_health
+	_pattern_timer = randf_range(0.5, maxf(0.6, movement_jitter_interval))
+	_strafe_sign = -1.0 if randf() < 0.5 else 1.0
 
 	_create_hp_bar()
 	_create_hp_label()
@@ -140,6 +164,13 @@ func _physics_process(delta: float) -> void:
 		damage_cooldowns.erase(key)
 
 	# ── AI state machine ──
+	if movement_jitter_interval > 0.0:
+		_pattern_timer -= delta
+		if _pattern_timer <= 0.0:
+			_pattern_timer = randf_range(0.7, maxf(0.8, movement_jitter_interval))
+			_strafe_sign = -_strafe_sign if randf() < 0.55 else _strafe_sign
+	if _unstuck_timer > 0.0:
+		_unstuck_timer = maxf(0.0, _unstuck_timer - delta)
 	match ai_state:
 		AIState.PASSIVE:
 			velocity.x = 0.0
@@ -196,7 +227,7 @@ func _process_wander(delta: float) -> void:
 		velocity.z = 0.0
 		return
 
-	var dir := to_target.normalized()
+	var dir := _compose_move_dir(to_target.normalized(), dist, delta)
 	velocity.x = dir.x * move_speed
 	velocity.z = dir.z * move_speed
 
@@ -239,12 +270,96 @@ func _process_chase(delta: float) -> void:
 	# Move toward player
 	var to_player := _player_ref.global_position - global_position
 	to_player.y = 0.0
-	var dir := to_player.normalized()
+	var dir := _compose_move_dir(to_player.normalized(), dist, delta)
 	velocity.x = dir.x * chase_speed
 	velocity.z = dir.z * chase_speed
 
 	var target_angle := atan2(dir.x, dir.z)
 	rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+
+
+func _compose_move_dir(base_dir: Vector3, target_dist: float, delta: float) -> Vector3:
+	var dir := base_dir
+	dir.y = 0.0
+	if dir.length_squared() < 0.0001:
+		return Vector3.ZERO
+	dir = dir.normalized()
+
+	match movement_pattern:
+		MovePattern.STRAFE:
+			var tangent := dir.cross(Vector3.UP).normalized() * _strafe_sign
+			dir = (dir * (1.0 - strafe_bias) + tangent * strafe_bias).normalized()
+		MovePattern.KITE:
+			if target_dist < kite_preferred_range:
+				var away := -dir
+				var tangent := dir.cross(Vector3.UP).normalized() * _strafe_sign
+				dir = (away * (1.0 - strafe_bias) + tangent * strafe_bias).normalized()
+
+	if wall_avoidance_enabled:
+		dir = _apply_wall_avoidance(dir)
+
+	if unstuck_enabled:
+		_update_unstuck(dir, delta)
+		if _unstuck_timer > 0.0 and _unstuck_dir.length_squared() > 0.0001:
+			dir = (dir * 0.35 + _unstuck_dir * 0.65).normalized()
+
+	return dir
+
+
+func _apply_wall_avoidance(desired_dir: Vector3) -> Vector3:
+	var world := get_world_3d()
+	if world == null:
+		return desired_dir
+	var ss := world.direct_space_state
+	var origin := global_position + Vector3.UP * 0.45
+	var dirs := [
+		desired_dir,
+		desired_dir.rotated(Vector3.UP, deg_to_rad(30.0)),
+		desired_dir.rotated(Vector3.UP, deg_to_rad(-30.0)),
+	]
+	var ranges := [wall_probe_distance, wall_side_probe_distance, wall_side_probe_distance]
+	var steer := Vector3.ZERO
+
+	for i in range(dirs.size()):
+		var probe_dir: Vector3 = dirs[i]
+		var probe_dist: float = maxf(0.2, ranges[i])
+		var q := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
+		q.collision_mask = wall_avoidance_mask
+		q.collide_with_areas = true
+		q.collide_with_bodies = true
+		q.exclude = [self]
+		var hit := ss.intersect_ray(q)
+		if hit.is_empty():
+			continue
+		var n: Vector3 = hit.normal
+		n.y = 0.0
+		if n.length_squared() < 0.0001:
+			continue
+		n = n.normalized()
+		var d := origin.distance_to(hit.position)
+		var proximity := clampf(1.0 - d / probe_dist, 0.0, 1.0)
+		steer += n * (wall_avoidance_force * proximity)
+		var tangent := n.cross(Vector3.UP).normalized()
+		if tangent.dot(desired_dir) < 0.0:
+			tangent = -tangent
+		steer += tangent * (wall_avoidance_force * wall_tangent_bias * proximity)
+
+	if steer.length_squared() < 0.0001:
+		return desired_dir
+	return (desired_dir + steer).normalized()
+
+
+func _update_unstuck(current_dir: Vector3, delta: float) -> void:
+	var hspeed_sq := velocity.x * velocity.x + velocity.z * velocity.z
+	if hspeed_sq <= unstuck_min_move * unstuck_min_move:
+		_stuck_timer += delta
+		if _stuck_timer >= unstuck_time:
+			_stuck_timer = 0.0
+			_unstuck_timer = unstuck_duration
+			_unstuck_dir = current_dir.rotated(Vector3.UP, deg_to_rad(58.0 * _strafe_sign)).normalized()
+			_strafe_sign = -_strafe_sign
+	else:
+		_stuck_timer = 0.0
 
 
 # ═══════════════════════════════════════════════
@@ -301,22 +416,26 @@ func _pick_and_start_attack() -> void:
 	else:
 		current_attack = AttackType.SLASH
 		
-	attack_prepare_timer = attack_delay
-	# Flash yellow to indicate windup
+	attack_prepare_timer = maxf(attack_delay, min_attack_charge_time)
+	# Flash white to indicate windup
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
-		body.material_override.albedo_color = Color(1.0, 1.0, 0.0)
+		body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
 		
 	if attack_marker == null:
 		attack_marker = MeshInstance3D.new()
 		attack_marker.layers = 2
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.2, 0.0, 0.2)
+		mat.albedo_color = attack_charge_color
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		attack_marker.material_override = mat
 		add_child(attack_marker)
+	else:
+		var existing_mat := attack_marker.material_override as StandardMaterial3D
+		if existing_mat != null:
+			existing_mat.albedo_color = attack_charge_color
 		
 	attack_marker.visible = true
 	var immediate = ImmediateMesh.new()
@@ -558,13 +677,13 @@ func _distance_to_player() -> float:
 
 
 func _flash_attack() -> void:
-	# Brief red pulse on attack
+	# Brief strong red pulse on attack (after white charge)
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
 		var original_color: Color = Color(0.8, 0.15, 0.15)
-		body.material_override.albedo_color = Color(1.0, 0.4, 0.0)  # Orange flash
+		body.material_override.albedo_color = Color(1.0, 0.0, 0.0)
 		var tween := create_tween()
-		tween.tween_property(body.material_override, "albedo_color", original_color, 0.2)
+		tween.tween_property(body.material_override, "albedo_color", original_color, 0.22)
 
 
 func _flash_hit() -> void:
