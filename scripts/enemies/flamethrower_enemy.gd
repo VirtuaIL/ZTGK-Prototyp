@@ -12,18 +12,24 @@ var flame_spray_angle = deg_to_rad(30.0)
 var recent_hits: Dictionary = {}
 var flame_visual: MeshInstance3D
 var flame_particles: GPUParticles3D
+var _flame_telegraph: MeshInstance3D = null
+var _flame_telegraph_mat: StandardMaterial3D = null
 
 func _ready() -> void:
 	super._ready()
-	max_health = 130.0 
+	max_health = 250.0
 	health = max_health
 	
-	attack_range = 10.0 
-	detection_range = 20.0
-	lose_range = 25.0
-	attack_damage = 20.0 
+	attack_range = 10.0
+	detection_range = 35.0
+	lose_range = 42.0
+	attack_damage = 20.0
 	attack_cooldown = 5.0
 	attack_delay = 2.0
+	movement_pattern = MovePattern.STRAFE
+	strafe_bias = 0.62
+	wall_avoidance_force = 3.4
+	chase_speed = 1.5
 
 	flame_visual = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
@@ -85,19 +91,49 @@ func _ready() -> void:
 	flame_particles.process_material = proc
 	add_child(flame_particles)
 
+	# ── White ground telegraph for flame attack ──
+	_flame_telegraph = MeshInstance3D.new()
+	_flame_telegraph.layers = 2
+	var tele_mesh := ImmediateMesh.new()
+	_flame_telegraph.mesh = tele_mesh
+	tele_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var tele_segments := 20
+	var tele_r := attack_range
+	var tele_half_angle: float = flame_spray_angle
+	for i in range(tele_segments):
+		var a1 := -tele_half_angle + (float(i) / tele_segments) * (tele_half_angle * 2.0)
+		var a2 := -tele_half_angle + (float(i + 1) / tele_segments) * (tele_half_angle * 2.0)
+		tele_mesh.surface_add_vertex(Vector3(0, 0.08, 0))
+		tele_mesh.surface_add_vertex(Vector3(-sin(a1) * tele_r, 0.08, cos(a1) * tele_r))
+		tele_mesh.surface_add_vertex(Vector3(-sin(a2) * tele_r, 0.08, cos(a2) * tele_r))
+	tele_mesh.surface_end()
+	_flame_telegraph_mat = StandardMaterial3D.new()
+	_flame_telegraph_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.35)
+	_flame_telegraph_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_flame_telegraph_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_flame_telegraph_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_flame_telegraph_mat.no_depth_test = true
+	_flame_telegraph.material_override = _flame_telegraph_mat
+	_flame_telegraph.visible = false
+	add_child(_flame_telegraph)
+
 func _process_attack(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		if is_flamethrowing:
 			is_flamethrowing = false
-			var body: MeshInstance3D = get_child(0) as MeshInstance3D
-			if body and body.material_override:
-				body.material_override.albedo_color = Color(0.7, 0.3, 0.1)
-			if flame_visual:
-				flame_visual.visible = false
+		var body: MeshInstance3D = get_child(0) as MeshInstance3D
+		if body and body.material_override:
+			body.material_override.albedo_color = Color(0.7, 0.3, 0.1)
+		if flame_visual:
+			flame_visual.visible = false
+		if _flame_telegraph:
+			_flame_telegraph.visible = false
 		return
 
 	var dist := _distance_to_player()
+	var to_player := _player_ref.global_position - global_position
+	to_player.y = 0.0
 	
 	# Slow down while attacking
 	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 5.0)
@@ -124,12 +160,19 @@ func _process_attack(delta: float) -> void:
 			else:
 				body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # Windup orange
 
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 			
+		# Show telegraph during windup
+		if _flame_telegraph:
+			_flame_telegraph.visible = true
+			if _flame_telegraph_mat:
+				var pulse := sin(Time.get_ticks_msec() * 0.01) * 0.12
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := 0.35 + progress * 0.3
+				_flame_telegraph_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.1, 0.8))
+
 		if attack_prepare_timer <= 0.0:
 			is_flamethrowing = true
 			flame_timer = flame_duration
@@ -137,6 +180,8 @@ func _process_attack(delta: float) -> void:
 			recent_hits.clear()
 			if body and body.material_override:
 				body.material_override.albedo_color = Color(0.8, 0.1, 0.1) # red
+			if _flame_telegraph:
+				_flame_telegraph.visible = false
 		return
 
 	if is_flamethrowing:
@@ -152,8 +197,6 @@ func _process_attack(delta: float) -> void:
 			flame_particles.emitting = true
 		
 		# Slowly track player while firing
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, (rotation_speed * 0.3) * delta)
@@ -181,18 +224,23 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
+		_play_attack_animation()
 		var body: MeshInstance3D = get_child(0) as MeshInstance3D
 		if body and body.material_override:
 			body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # windup
 		if flame_particles:
 			flame_particles.emitting = false
 			flame_particles.visible = false
+		if _flame_telegraph:
+			_flame_telegraph.visible = false
 	else:
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+			# Strafe sideways while waiting for cooldown
+			var strafe_dir := to_player.normalized().cross(Vector3.UP)
+			velocity.x = strafe_dir.x * chase_speed * 0.6
+			velocity.z = strafe_dir.z * chase_speed * 0.6
 
 func _shoot_fire() -> void:
 	var targets = []
@@ -233,4 +281,4 @@ func _shoot_fire() -> void:
 					recent_hits[t] = 0.5 # Hit max once every 0.5s per attack
 				elif t.has_method("die"):
 					t.die()
-					recent_hits[t] = 0.5 
+					recent_hits[t] = 0.5

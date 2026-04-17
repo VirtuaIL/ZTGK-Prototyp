@@ -1,6 +1,14 @@
 [gd_scene format=3 uid="uid://ccyg167jj26e5"]
 
+[ext_resource type="Texture2D" uid="uid://vmldk1iasmlm" path="res://resources/assets/controls_drag_white.png" id="1_b1yr8"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m2nf2"]
+albedo_texture = ExtResource("1_b1yr8")
+uv1_triplanar = true
+uv1_world_triplanar = true
+
 [sub_resource type="CylinderMesh" id="CylinderMesh_rfhi3"]
+material = SubResource("StandardMaterial3D_m2nf2")
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_rfhi3"]
 

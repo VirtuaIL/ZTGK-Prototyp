@@ -6,30 +6,37 @@ var laser_visual: MeshInstance3D
 var laser_mat: StandardMaterial3D
 var lock_on_time: float = 0.5
 var is_locked: bool = false
+var _ground_target: MeshInstance3D = null
+var _ground_target_mat: StandardMaterial3D = null
+var flee_range: float = 12.0
 
 func _ready() -> void:
 	super._ready()
-	max_health = 60.0 
+	max_health = 40.0
 	health = max_health
 	
-	attack_range = 25.0 
-	detection_range = 30.0
-	lose_range = 35.0
-	chase_speed = 3.0
+	attack_range = 25.0
+	detection_range = 45.0
+	lose_range = 50.0
+	chase_speed = 3.5
 	attack_delay = 2.0
-	attack_cooldown = 4.0
+	movement_pattern = MovePattern.KITE
+	kite_preferred_range = 16.0
+	strafe_bias = 0.55
+	wall_avoidance_force = 3.0
+	attack_cooldown = 3.5
 	
 	laser_visual = MeshInstance3D.new()
 	var cyl = CylinderMesh.new()
 	cyl.top_radius = 0.02
 	cyl.bottom_radius = 0.02
-	cyl.height = 1.0 
+	cyl.height = 1.0
 	laser_visual.mesh = cyl
 	laser_mat = StandardMaterial3D.new()
-	laser_mat.albedo_color = Color(1.0, 0.0, 0.0, 0.6)
+	laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.5)
 	laser_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	laser_mat.emission_enabled = true
-	laser_mat.emission = Color(1.0, 0.0, 0.0)
+	laser_mat.emission = Color(1.0, 1.0, 1.0)
 	laser_mat.emission_energy_multiplier = 2.0
 	laser_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	laser_visual.material_override = laser_mat
@@ -37,6 +44,27 @@ func _ready() -> void:
 	laser_visual.rotation_degrees = Vector3(90, 0, 0)
 	laser_visual.visible = false
 	add_child(laser_visual)
+
+	# Ground target indicator
+	_ground_target = MeshInstance3D.new()
+	_ground_target.layers = 2
+	var gt_mesh := CylinderMesh.new()
+	gt_mesh.top_radius = 0.8
+	gt_mesh.bottom_radius = 0.8
+	gt_mesh.height = 0.04
+	_ground_target.mesh = gt_mesh
+	_ground_target_mat = StandardMaterial3D.new()
+	_ground_target_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.4)
+	_ground_target_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ground_target_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ground_target_mat.no_depth_test = true
+	_ground_target.material_override = _ground_target_mat
+	_ground_target.visible = false
+	get_tree().current_scene.call_deferred("add_child", _ground_target)
+
+func _exit_tree() -> void:
+	if _ground_target and is_instance_valid(_ground_target):
+		_ground_target.queue_free()
 
 func _find_target() -> void:
 	var players = get_tree().get_nodes_in_group("player")
@@ -52,18 +80,67 @@ func _find_target() -> void:
 				
 	_player_ref = best_t as CharacterBody3D
 
+func _process_chase(delta: float) -> void:
+	_find_target()
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		ai_state = AIState.WANDER
+		return
+
+	var dist := _distance_to_player()
+
+	if dist > lose_range:
+		ai_state = AIState.WANDER
+		return
+
+	# Close enough to attack
+	if dist < attack_range:
+		ai_state = AIState.ATTACK
+		_attack_timer = 0.0
+		return
+
+	# If player is too close, run away from them
+	if dist < flee_range:
+		var to_player := _player_ref.global_position - global_position
+		to_player.y = 0.0
+		var away := -to_player.normalized()
+		velocity.x = away.x * chase_speed * 1.3
+		velocity.z = away.z * chase_speed * 1.3
+		var target_angle := atan2(away.x, away.z)
+		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+	else:
+		# Move toward player to get in attack range
+		var to_player := _player_ref.global_position - global_position
+		to_player.y = 0.0
+		var dir := to_player.normalized()
+		velocity.x = dir.x * chase_speed
+		velocity.z = dir.z * chase_speed
+		var target_angle := atan2(dir.x, dir.z)
+		rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+
 func _process_attack(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		laser_visual.visible = false
 		is_locked = false
+		if _ground_target:
+			_ground_target.visible = false
 		return
 
 	var dist := _distance_to_player()
 	
-	# Stop moving while attacking
-	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 15.0)
-	velocity.z = move_toward(velocity.z, 0.0, chase_speed * delta * 15.0)
+	# Aggressively flee from player if too close
+	var to_player := _player_ref.global_position - global_position
+	to_player.y = 0.0
+	if dist < flee_range:
+		var away_dir := -to_player.normalized()
+		velocity.x = away_dir.x * chase_speed * 1.3
+		velocity.z = away_dir.z * chase_speed * 1.3
+		var flee_angle := atan2(away_dir.x, away_dir.z)
+		rotation.y = lerp_angle(rotation.y, flee_angle, rotation_speed * delta)
+	else:
+		# Stop moving when at safe range
+		velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 15.0)
+		velocity.z = move_toward(velocity.z, 0.0, chase_speed * delta * 15.0)
 
 	if attack_prepare_timer > 0.0:
 		attack_prepare_timer -= delta
@@ -76,28 +153,44 @@ func _process_attack(delta: float) -> void:
 			# Locked phase
 			if not is_locked:
 				is_locked = true
-				laser_mat.albedo_color = Color(1.0, 0.5, 0.8, 0.8) 
-				laser_mat.emission = Color(1.0, 0.5, 0.8)
-				laser_mat.emission_energy_multiplier = 4.0
+				laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.85)
+				laser_mat.emission = Color(1.0, 1.0, 1.0)
+				laser_mat.emission_energy_multiplier = 5.0
 		else:
 			# Tracking phase
 			is_locked = false
-			laser_mat.albedo_color = Color(1.0, 0.0, 0.0, 0.6)
-			laser_mat.emission = Color(1.0, 0.0, 0.0)
+			laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.5)
+			laser_mat.emission = Color(1.0, 1.0, 1.0)
 			laser_mat.emission_energy_multiplier = 2.0
 			
-			var to_player := _player_ref.global_position - global_position
-			to_player.y = 0.0
 			if to_player.length() > 0.01:
 				var target_angle := atan2(to_player.x, to_player.z)
 				rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * 1.5 * delta)
 				
 		laser_visual.visible = true
+
+		# Update ground target position
+		if _ground_target and _player_ref:
+			_ground_target.visible = true
+			var my_fwd := Vector3(sin(rotation.y), 0, cos(rotation.y)).normalized()
+			# Raycast forward to find where laser hits ground
+			var laser_origin := global_position + Vector3.UP * 1.0 + my_fwd * 1.0
+			var laser_end := laser_origin + my_fwd * 30.0
+			# Place target at player feet
+			_ground_target.global_position = _player_ref.global_position
+			_ground_target.global_position.y += 0.05
+			if _ground_target_mat:
+				var pulse := sin(Time.get_ticks_msec() * 0.012) * 0.12
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := 0.35 + progress * 0.35
+				_ground_target_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.15, 0.85))
 			
 		if attack_prepare_timer <= 0.0:
 			_shoot()
 			laser_visual.visible = false
 			is_locked = false
+			if _ground_target:
+				_ground_target.visible = false
 			_attack_timer = attack_cooldown
 			
 			var body: MeshInstance3D = get_child(0) as MeshInstance3D
@@ -113,12 +206,15 @@ func _process_attack(delta: float) -> void:
 		attack_prepare_timer = attack_delay
 		is_locked = false
 	else:
-		# slowly track player when lazy around
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
+		# Track player and back away during cooldown
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * 0.5 * delta)
+			# Back away during cooldown
+			if dist < flee_range * 1.5:
+				var away_dir := -to_player.normalized()
+				velocity.x = away_dir.x * chase_speed
+				velocity.z = away_dir.z * chase_speed
 
 func _shoot() -> void:
 	if SniperProjectileScene:
@@ -128,7 +224,7 @@ func _shoot() -> void:
 		if "deal_damage_instead_of_kill" in p:
 			p.deal_damage_instead_of_kill = true
 		if "damage" in p:
-			p.damage = 40.0
+			p.damage = 50.0
 		if "speed" in p:
 			p.speed = 25.0
 		

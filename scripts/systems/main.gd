@@ -1,17 +1,17 @@
 extends Node3D
 
 const LEVEL_BOUNDS := {
-	1: {"min_z": -140.0, "max_z": 48.0},
-	2: {"min_z": -137.5, "max_z": -55.5},
+	1: {"min_z": - 140.0, "max_z": 48.0},
+	2: {"min_z": - 137.5, "max_z": - 55.5},
 	3: {"min_z": 126.0, "max_z": 220.0},
-	4: {"min_z": -240.0, "max_z": -140.0},
+	4: {"min_z": - 240.0, "max_z": - 140.0},
 }
 
 const LEVEL_CLAMP_BOUNDS := {
-	1: {"min_x": -82.0, "max_x": 42.0, "min_z": -138.0, "max_z": 46.0},
-	2: {"min_x": -40.0, "max_x": 40.0, "min_z": -137.5, "max_z": -55.5},
-	3: {"min_x": -55.0, "max_x": 29.0, "min_z": 124.0, "max_z": 206.0},
-	4: {"min_x": -62.0, "max_x": -6.0, "min_z": -210.0, "max_z": -166.0},
+	1: {"min_x": - 82.0, "max_x": 42.0, "min_z": - 138.0, "max_z": 46.0},
+	2: {"min_x": - 40.0, "max_x": 40.0, "min_z": - 137.5, "max_z": - 55.5},
+	3: {"min_x": - 55.0, "max_x": 29.0, "min_z": 124.0, "max_z": 206.0},
+	4: {"min_x": - 62.0, "max_x": - 6.0, "min_z": - 210.0, "max_z": - 166.0},
 }
 
 var _level_bounds_dynamic: Dictionary = {}
@@ -51,6 +51,7 @@ var _indicator_blink_time: float = 0.0
 var fps_label: Label
 var current_level_id: int = 1
 var _current_level_cleared: bool = false
+var _current_level_active_time: float = 0.0
 var _debug_last_level_state: String = ""
 var combat_mode_label: RichTextLabel
 var _last_attack_mode: int = -1
@@ -58,7 +59,12 @@ var combat_key_rects: Array[ColorRect] = []
 var buff_panel: Panel
 var buff_labels: Array[Label] = []
 
-
+# ── Spawner Scenes ────────────────────────────────────────────────────────────
+var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
+var _wave_flamethrower_scene: PackedScene = preload("res://scenes/enemies/flamethrower_enemy.tscn")
+var _wave_bomber_scene: PackedScene = preload("res://scenes/enemies/bomber_enemy.tscn")
+var _wave_mortar_scene: PackedScene = preload("res://scenes/enemies/mortar_enemy.tscn")
+var _wave_sniper_scene: PackedScene = preload("res://scenes/enemies/sniper_enemy.tscn")
 # ── UI Theme ──────────────────────────────────────────────────────────────────
 const UI_BG: Color = Color(0.06, 0.06, 0.07, 0.65)
 const UI_BG_STRONG: Color = Color(0.09, 0.09, 0.1, 0.75)
@@ -71,16 +77,18 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 # ── Offscreen Indicators ──────────────────────────────────────────────────────
 @export var indicator_max_distance: float = 26.0
 @export var indicator_min_distance: float = 6.0
-@export var indicator_screen_padding: float = 26.0
-@export var indicator_color: Color = Color(1.0, 0.65, 0.25, 1.0)
-@export var indicator_blink_speed: float = 4.0
-@export var indicator_blink_depth: float = 0.35
+@export var indicator_screen_padding: float = 30.0
+@export var indicator_color: Color = Color(1.0, 0.3, 0.1, 1.0)
+@export var indicator_blink_speed: float = 5.0
+@export var indicator_blink_depth: float = 0.25
 
 # ── Camera look-ahead ─────────────────────────────────────────────────────────
 @export var cam_look_ahead_max: float = 2.0
 @export var cam_look_ahead_deadzone: float = 0.2
 @export var cam_look_ahead_smooth: float = 6.0
 var _cam_look_ahead: Vector3 = Vector3.ZERO
+@export var reset_level_on_death: bool = true
+@export var allow_level_skips: bool = true
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
@@ -236,14 +244,13 @@ func _setup_mode_ui() -> void:
 	combat_vbox.add_child(combat_hbox)
 
 	combat_key_rects.clear()
-	for i in range(3):
-		var key_box = _create_action_box(str(i + 1))
-		var key_rect = key_box.get_child(1) as ColorRect
-		var key_label = key_rect.get_child(0) as Label
-		key_label.text = ["rotacja", "blob", "szarza"][i]
-		key_rect.custom_minimum_size = Vector2(90, 32)
-		combat_key_rects.append(key_rect)
-		combat_hbox.add_child(key_box)
+	var key_box = _create_action_box("3")
+	var key_rect = key_box.get_child(1) as ColorRect
+	var key_label = key_rect.get_child(0) as Label
+	key_label.text = "szarza"
+	key_rect.custom_minimum_size = Vector2(110, 32)
+	combat_key_rects.append(key_rect)
+	combat_hbox.add_child(key_box)
 
 	bottom_hbox.add_child(combat_panel)
 	bottom_hbox.add_child(actions_hbox)
@@ -313,13 +320,11 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD — ruch\n" + \
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
-		"LPM (przytrzymaj) — atak (okrąg wokół kursora)\n" + \
+		"LPM (przytrzymaj) — rysowanie ścieżki szarży\n" + \
 		"PPM — akcja kontekstowa\n" + \
 		"Scroll — rozmiar pędzla\n" + \
 		"\n[b]Combat[/b]\n" + \
-		"1 — rotacja\n" + \
-		"2 — blob\n" + \
-		"3 — szarża ścieżką\n" + \
+		"3 — szarża ścieżką (jedyny atak)\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
 		"F2 — tryb pasywny wrogów"
@@ -385,7 +390,7 @@ func _setup_goal_ui() -> void:
 	var layer = CanvasLayer.new()
 	var label = Label.new()
 	goal_label = label
-	label.text = "Cel prototypu: wydostań się z labiryntu, pokonując kolejne poziomy i bossa na końcu."
+	label.text = "Cel prototypu: Wydostań się z labiryntu, pokonując kolejne poziomy."
 	label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	label.offset_left = 0
 	label.offset_right = 0
@@ -542,11 +547,13 @@ func _get_indicator(idx: int) -> Label:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lbl.custom_minimum_size = Vector2(48, 48)
-		lbl.size = Vector2(48, 48)
+		lbl.custom_minimum_size = Vector2(64, 64)
+		lbl.size = Vector2(64, 64)
 		lbl.pivot_offset = lbl.size * 0.5
-		lbl.add_theme_font_size_override("font_size", 34)
+		lbl.add_theme_font_size_override("font_size", 52)
 		lbl.add_theme_color_override("font_color", indicator_color)
+		lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+		lbl.add_theme_constant_override("outline_size", 6)
 		lbl.visible = false
 		indicator_root.add_child(lbl)
 		indicator_pool.append(lbl)
@@ -591,7 +598,7 @@ func _update_offscreen_indicators() -> void:
 		if dir.length() < 0.001:
 			continue
 		if behind:
-			dir = -dir
+			dir = - dir
 
 		var half: Vector2 = inner_rect.size * 0.5
 		var scale_x: float = half.x / max(0.001, absf(dir.x))
@@ -606,7 +613,7 @@ func _update_offscreen_indicators() -> void:
 		ind.rotation = atan2(dir.y, dir.x) + PI * 0.5
 
 		var t_dist: float = clampf((dist - indicator_min_distance) / max(0.001, indicator_max_distance - indicator_min_distance), 0.0, 1.0)
-		var alpha: float = lerpf(1.0, 0.35, t_dist)
+		var alpha: float = lerpf(1.0, 0.55, t_dist)
 		var blink: float = 1.0 - indicator_blink_depth + indicator_blink_depth * (0.5 + 0.5 * sin(_indicator_blink_time * indicator_blink_speed))
 		alpha *= blink
 		ind.modulate = Color(indicator_color.r, indicator_color.g, indicator_color.b, alpha)
@@ -624,29 +631,28 @@ func _update_enemy_count_ui() -> void:
 	if not enemy_count_label:
 		return
 	var alive := 0
-	var pending := 0
 	if has_method("get_level_enemies"):
 		alive = get_level_enemies(current_level_id).size()
-		
-	# Estimate pending from active spawners
+	
+	var pending_spawners := 0
+	var wave_info := ""
 	for node in get_tree().get_nodes_in_group("main_spawners"):
-		var spawner = node as MainSpawner
-		if spawner != null and spawner.get_target_level_id(self) == current_level_id and not spawner._completed:
-			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
-				var min_count = spawner.count_min
-				var max_count = spawner.count_max
-				var expected_per_trigger = (min_count + max_count) / 2
-				var remaining_triggers = 1
-				if spawner.repeat and spawner.max_triggers > 0:
-					remaining_triggers = max(0, spawner.max_triggers - spawner._trigger_count)
-				elif spawner.repeat and spawner.max_triggers <= 0:
-					remaining_triggers = 1 # endless
-				else:
-					remaining_triggers = 1 if spawner._trigger_count == 0 else 0
-				pending += remaining_triggers * expected_per_trigger
-				
-	var remaining := alive + pending
-	enemy_count_label.text = "Wrogowie: " + str(remaining)
+		var spawner := node as MainSpawner
+		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self ) == current_level_id and not spawner.is_completed():
+			pending_spawners += 1
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self ) == current_level_id and not ws.is_completed():
+			pending_spawners += 1
+			if ws.get_total_wave_count() > 0:
+				var cw := ws.get_current_wave_index() + 1
+				var tw := ws.get_total_wave_count()
+				wave_info = " (Fala %d/%d)" % [cw, tw]
+			
+	if pending_spawners > 0:
+		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)" + wave_info
+	else:
+		enemy_count_label.text = "Wrogowie: " + str(alive)
 
 
 func _update_buff_ui() -> void:
@@ -679,6 +685,7 @@ func _update_mode_ui() -> void:
 
 
 func _process(delta: float) -> void:
+	_current_level_active_time += delta
 	_update_mode_ui()
 	_update_rat_count_ui()
 	_update_enemy_count_ui()
@@ -694,8 +701,6 @@ func _process(delta: float) -> void:
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 	
-
-	
 	# ── Update Action Colors (LPM, SCROLL, PPM) ──
 	var highlight_color = Color(0.9, 0.9, 0.9, 1.0)
 	var normal_color = Color(0.1, 0.1, 0.1, 0.8)
@@ -710,15 +715,14 @@ func _process(delta: float) -> void:
 	else:
 		if spm_rect_val: spm_rect_val.color = normal_color
 
-	# ── Combat mode highlight (1/2/3) ──
-	if combat_key_rects.size() >= 3:
-		var current := -1
+	# ── Combat mode highlight (only PATH_DASH) ──
+	if combat_key_rects.size() >= 1:
+		var dash_active := false
 		if rat_manager:
-			current = int(rat_manager.current_attack_mode)
-		for i in range(3):
-			var rect := combat_key_rects[i]
-			if rect:
-				rect.color = highlight_color if i == current else normal_color
+			dash_active = int(rat_manager.current_attack_mode) == 2
+		var rect := combat_key_rects[0]
+		if rect:
+			rect.color = highlight_color if dash_active else normal_color
 		
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
@@ -819,14 +823,196 @@ func _add_action_key(action_name: String, key: Key) -> void:
 		InputMap.action_add_event(action_name, event)
 
 
-
-
 func _toggle_all_enemies_passive() -> void:
 	var enemies := get_nodes_in_current_level("enemies")
 	for enemy in enemies:
 		if enemy.has_method("toggle_passive"):
 			enemy.toggle_passive()
 
+
+func trigger_spawner(spawner: MainSpawner) -> bool:
+	match spawner.spawn_kind:
+		MainSpawner.SpawnKind.WILD_RAT:
+			return _spawn_wild_rats_from_spawner(spawner)
+		_:
+			return _spawn_scene_from_spawner(spawner)
+
+
+func spawn_wave_group(spawner: WaveSpawner, group: WaveGroup) -> Array:
+	if group.spawn_kind == MainSpawner.SpawnKind.WILD_RAT:
+		_spawn_wild_rats_wave_group(spawner, group)
+		return [] # Wild rats are not tracked for wave clearing
+
+	var scene := _get_scene_for_spawner_kind(group.spawn_kind, group.custom_scene)
+	if scene == null:
+		return []
+
+	var points := spawner.get_spawn_points(self )
+	if points.is_empty():
+		return []
+
+	var count := randi_range(min(group.count_min, group.count_max), max(group.count_min, group.count_max))
+	if count <= 0:
+		return []
+
+	var spawned: Array = []
+	for i in range(count):
+		var node := scene.instantiate()
+		if node == null:
+			continue
+		add_child(node)
+		if node is Node3D:
+			var node3d := node as Node3D
+			node3d.global_position = _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.0)
+			_assign_level_tag(node3d, spawner.get_target_level_id(self ))
+		if node.has_signal("enemy_died"):
+			node.enemy_died.connect(_on_scripted_enemy_died.bind(node), CONNECT_ONE_SHOT)
+		spawned.append(node)
+	return spawned
+
+
+func _spawn_wild_rats_wave_group(spawner: WaveSpawner, group: WaveGroup) -> void:
+	if rat_manager == null or rat_manager.rat_scene == null:
+		return
+
+	var points := spawner.get_spawn_points(self )
+	if points.is_empty():
+		return
+
+	var count := randi_range(min(group.count_min, group.count_max), max(group.count_min, group.count_max))
+	if count <= 0:
+		return
+
+	for i in range(count):
+		var rat = rat_manager.rat_scene.instantiate()
+		if rat == null:
+			continue
+		var target_level_id := spawner.get_target_level_id(self )
+		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
+			if override_lifespan >= 0.0:
+				rat.wild_lifespan = override_lifespan
+		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
+		rat.player = player
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(_roll_wild_rat_type(
+				spawner.wild_rat_prob_normal,
+				spawner.wild_rat_prob_red,
+				spawner.wild_rat_prob_green
+			))
+		rat_manager.add_child(rat)
+		_assign_level_tag(rat, target_level_id)
+		rat.global_position = spawn_pos
+		if rat.has_method("set_wild"):
+			rat.set_wild(true)
+
+
+func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
+	if rat_manager == null or rat_manager.rat_scene == null:
+		return false
+
+	var points := spawner.get_spawn_points(self )
+	if points.is_empty():
+		return false
+
+	var count := randi_range(min(spawner.count_min, spawner.count_max), max(spawner.count_min, spawner.count_max))
+	if count <= 0:
+		return false
+
+	for i in range(count):
+		var rat = rat_manager.rat_scene.instantiate()
+		if rat == null:
+			continue
+		var target_level_id := spawner.get_target_level_id(self )
+		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
+			if override_lifespan >= 0.0:
+				rat.wild_lifespan = override_lifespan
+		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
+		rat.player = player
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(_roll_wild_rat_type(
+				spawner.wild_rat_prob_normal,
+				spawner.wild_rat_prob_red,
+				spawner.wild_rat_prob_green
+			))
+		rat_manager.add_child(rat)
+		_assign_level_tag(rat, target_level_id)
+		rat.global_position = spawn_pos
+		if rat.has_method("set_wild"):
+			rat.set_wild(true)
+	return true
+
+
+func _spawn_scene_from_spawner(spawner: MainSpawner) -> bool:
+	var scene := _get_scene_for_spawner_kind(spawner.spawn_kind, spawner.custom_scene)
+	if scene == null:
+		return false
+
+	var points := spawner.get_spawn_points(self )
+	if points.is_empty():
+		return false
+
+	var count := randi_range(min(spawner.count_min, spawner.count_max), max(spawner.count_min, spawner.count_max))
+	if count <= 0:
+		return false
+
+	for i in range(count):
+		var node := scene.instantiate()
+		if node == null:
+			continue
+		add_child(node)
+		if node is Node3D:
+			var node3d := node as Node3D
+			node3d.global_position = _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.0)
+			_assign_level_tag(node3d, spawner.get_target_level_id(self ))
+		if node.has_signal("enemy_died"):
+			node.enemy_died.connect(_on_scripted_enemy_died.bind(node), CONNECT_ONE_SHOT)
+	return true
+
+
+func _get_scene_for_spawner_kind(spawn_kind: int, custom_scene: PackedScene) -> PackedScene:
+	match spawn_kind:
+		MainSpawner.SpawnKind.BASIC_ENEMY:
+			return _wave_enemy_scene
+		MainSpawner.SpawnKind.FLAMETHROWER_ENEMY:
+			return _wave_flamethrower_scene
+		MainSpawner.SpawnKind.BOMBER_ENEMY:
+			return _wave_bomber_scene
+		MainSpawner.SpawnKind.SNIPER_ENEMY:
+			return _wave_sniper_scene
+		MainSpawner.SpawnKind.MORTAR_ENEMY:
+			return _wave_mortar_scene
+		MainSpawner.SpawnKind.CUSTOM_SCENE:
+			return custom_scene
+		_:
+			return null
+
+
+func _pick_spawner_point(points: Array[Vector3], choose_random_point: bool, index: int) -> Vector3:
+	if points.is_empty():
+		return Vector3.ZERO
+	if choose_random_point:
+		return points[randi() % points.size()]
+	return points[index % points.size()]
+
+
+func _random_spawn_offset(radius: float, y_offset: float) -> Vector3:
+	var angle := randf() * TAU
+	var dist := randf_range(0.0, maxf(0.0, radius))
+	return Vector3(cos(angle) * dist, y_offset, sin(angle) * dist)
+
+
+func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float) -> int:
+	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green)
+	if total_prob <= 0.0:
+		return 0
+	var roll := randf_range(0.0, total_prob)
+	if roll < prob_red:
+		return 1
+	if roll < prob_red + prob_green:
+		return 2
+	return 0
 
 
 func _on_scripted_enemy_died(enemy: Node) -> void:
@@ -843,6 +1029,12 @@ func _on_player_died() -> void:
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
+	# Clean up lingering rat death effects
+	for eff in get_tree().get_nodes_in_group("rat_death_effects"):
+		if is_instance_valid(eff):
+			eff.queue_free()
+	if reset_level_on_death:
+		_reset_level_runtime(current_level_id)
 
 
 func can_activate_level(level_id: int) -> bool:
@@ -850,9 +1042,26 @@ func can_activate_level(level_id: int) -> bool:
 		return false
 	if level_id <= current_level_id:
 		return true
+	if allow_level_skips:
+		return is_level_cleared(current_level_id)
 	if level_id == current_level_id + 1:
 		return is_level_cleared(current_level_id)
 	return false
+
+
+func _reset_level_runtime(level_id: int) -> void:
+	_current_level_active_time = 0.0
+	_current_level_cleared = false
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner := node as MainSpawner
+		if spawner != null and spawner.get_target_level_id(self ) == level_id:
+			spawner.reset_runtime()
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws != null and ws.get_target_level_id(self ) == level_id:
+			ws.reset_runtime()
+	_refresh_level_activity()
+	_update_level_doors()
 
 
 func set_current_level(level_id: int) -> void:
@@ -874,8 +1083,8 @@ func set_current_level(level_id: int) -> void:
 	_update_level_doors()
 	_log_level_debug_state("level_changed")
 	
-	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
-		rat_manager.hard_recall_all_rats()
+	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):
+		rat_manager.soft_reset_all_rats()
 
 
 func transition_to_level(level_id: int, target_position: Vector3) -> void:
@@ -898,8 +1107,8 @@ func transition_to_level(level_id: int, target_position: Vector3) -> void:
 		elif rat_manager.has_method("set_respawn_count"):
 			rat_manager.set_respawn_count(rat_manager.rats.size())
 
-	if rat_manager != null and rat_manager.has_method("hard_recall_all_rats"):
-		rat_manager.hard_recall_all_rats()
+	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):
+		rat_manager.soft_reset_all_rats()
 
 
 func clamp_position_to_current_level(pos: Vector3) -> Vector3:
@@ -1027,9 +1236,38 @@ func is_current_level_cleared() -> bool:
 
 
 func is_level_cleared(level_id: int) -> bool:
+	# 0. Don't clear immediately after entering level
+	if level_id == current_level_id and _current_level_active_time < 1.0:
+		return false
+
+	# 1. First check if there are any alive enemies in the level
 	if not get_level_enemies(level_id).is_empty():
 		return false
-	return _is_level_wave_complete(level_id)
+		
+	# 2. Then check if any MainSpawner is still active for this level
+	#    (skip WILD_RAT spawners — wild rats are collectibles, not enemies)
+	for node in get_tree().get_nodes_in_group("main_spawners"):
+		var spawner := node as MainSpawner
+		if spawner == null:
+			continue
+		if not spawner.enabled:
+			continue
+		if spawner.spawn_kind == MainSpawner.SpawnKind.WILD_RAT:
+			continue
+		if spawner.get_target_level_id(self ) == level_id:
+			if not spawner.is_completed():
+				return false
+
+	# 3. Then check if any WaveSpawner is still active for this level
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws == null or not ws.enabled:
+			continue
+		if ws.get_target_level_id(self ) == level_id:
+			if not ws.is_completed():
+				return false
+
+	return true
 
 
 func is_node_in_current_level(node: Node) -> bool:
@@ -1139,13 +1377,31 @@ func _rebuild_level_bounds() -> void:
 			continue
 
 		# Small padding to avoid edge-clamping jitter at boundaries.
+		# Merge bounds when multiple level chunks share the same level_id
+		# (e.g. enemy test maps laid out side-by-side).
 		var pad := 1.0
-		_level_bounds_dynamic[level_id] = {"min_z": min_z - pad, "max_z": max_z + pad}
+		var new_min_x := min_x - pad
+		var new_max_x := max_x + pad
+		var new_min_z := min_z - pad
+		var new_max_z := max_z + pad
+
+		if _level_bounds_dynamic.has(level_id):
+			var prev_bounds: Dictionary = _level_bounds_dynamic[level_id]
+			new_min_z = minf(new_min_z, float(prev_bounds.get("min_z", new_min_z)))
+			new_max_z = maxf(new_max_z, float(prev_bounds.get("max_z", new_max_z)))
+		_level_bounds_dynamic[level_id] = {"min_z": new_min_z, "max_z": new_max_z}
+
+		if _level_clamp_bounds_dynamic.has(level_id):
+			var prev_clamp: Dictionary = _level_clamp_bounds_dynamic[level_id]
+			new_min_x = minf(new_min_x, float(prev_clamp.get("min_x", new_min_x)))
+			new_max_x = maxf(new_max_x, float(prev_clamp.get("max_x", new_max_x)))
+			new_min_z = minf(new_min_z, float(prev_clamp.get("min_z", new_min_z)))
+			new_max_z = maxf(new_max_z, float(prev_clamp.get("max_z", new_max_z)))
 		_level_clamp_bounds_dynamic[level_id] = {
-			"min_x": min_x - pad,
-			"max_x": max_x + pad,
-			"min_z": min_z - pad,
-			"max_z": max_z + pad,
+			"min_x": new_min_x,
+			"max_x": new_max_x,
+			"min_z": new_min_z,
+			"max_z": new_max_z,
 		}
 
 
@@ -1177,9 +1433,12 @@ func _update_level_doors() -> void:
 			
 		var should_open = is_level_cleared(gate.controlled_level_id)
 		
-		# If the CURRENT level is not cleared, doors behind and ahead stay closed
+		# If the CURRENT level is not cleared, close doors that lead
+		# out of the current level (both forward and backward)
 		if not _current_level_cleared:
-			if gate.controlled_level_id == current_level_id or gate.controlled_level_id == current_level_id - 1:
+			# Close current level doors and any door whose level_id >= current
+			# (prevents doors ahead from being open when entering a new level)
+			if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
 				should_open = false
 				
 		if should_open:
@@ -1240,44 +1499,23 @@ func _assign_level_tag(node: Node, level_id: int) -> void:
 	node.set_meta("level_id", level_id)
 
 
-func _is_level_wave_complete(level_id: int) -> bool:
-	for node in get_tree().get_nodes_in_group("main_spawners"):
-		var spawner = node as MainSpawner
-		if spawner != null and spawner.get_target_level_id(self) == level_id:
-			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
-				if not spawner._completed:
-					return false
-	return true
-
-
 func _log_level_debug_state(reason: String = "") -> void:
 	var alive_enemies := get_level_enemies(current_level_id).size()
-	var pending_wave_spawns := 0
-	
-	# Estimate pending from active spawners
+	var pending_spawners := 0
 	for node in get_tree().get_nodes_in_group("main_spawners"):
-		var spawner = node as MainSpawner
-		if spawner != null and spawner.get_target_level_id(self) == current_level_id and not spawner._completed:
-			if spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT:
-				var min_count = spawner.count_min
-				var max_count = spawner.count_max
-				var expected_per_trigger = (min_count + max_count) / 2
-				var remaining_triggers = 1
-				if spawner.repeat and spawner.max_triggers > 0:
-					remaining_triggers = max(0, spawner.max_triggers - spawner._trigger_count)
-				elif spawner.repeat and spawner.max_triggers <= 0:
-					remaining_triggers = 1 # endless
-				else:
-					remaining_triggers = 1 if spawner._trigger_count == 0 else 0
-				pending_wave_spawns += remaining_triggers * expected_per_trigger
-				
-	var remaining_to_clear := alive_enemies + pending_wave_spawns
-	var debug_state := "level=%d|cleared=%s|alive=%d|pending=%d|total_remaining=%d" % [
+		var spawner := node as MainSpawner
+		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self ) == current_level_id and not spawner.is_completed():
+			pending_spawners += 1
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self ) == current_level_id and not ws.is_completed():
+			pending_spawners += 1
+			
+	var debug_state := "level=%d|cleared=%s|alive=%d|pending_spawners=%d" % [
 		current_level_id,
 		str(_current_level_cleared),
 		alive_enemies,
-		pending_wave_spawns,
-		remaining_to_clear,
+		pending_spawners,
 	]
 	if debug_state == _debug_last_level_state and reason.is_empty():
 		return

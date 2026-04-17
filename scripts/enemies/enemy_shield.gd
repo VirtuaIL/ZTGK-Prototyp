@@ -21,7 +21,7 @@ func _on_body_entered(body: Node3D) -> void:
 	# Damage player
 	if body.is_in_group("player") and body.has_method("take_damage"):
 		if damage_cooldown <= 0.0:
-			body.take_damage(damage_to_player, -1, global_position)
+			body.take_damage(damage_to_player)
 			damage_cooldown = 0.5 # Give player half a second i-frames against the shield specifically
 
 # Indestructible - ignores damage

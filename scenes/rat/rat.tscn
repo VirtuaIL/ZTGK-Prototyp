@@ -30,8 +30,28 @@ height = 0.14
 [sub_resource type="BoxShape3D" id="BoxShape3D_rat"]
 size = Vector3(0.2, 0.15, 0.4)
 
+[sub_resource type="Gradient" id="Gradient_shadow"]
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
+gradient = SubResource("Gradient_shadow")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
 [node name="Rat" type="CharacterBody3D" unique_id=899719348]
 script = ExtResource("1_script")
+spring_stiffness = 34.0
+separation_force = 15.0
+alignment_force = 2.2
+cohesion_force = 1.2
+boid_max_force = 12.0
+edge_probe_distance = 0.22
+edge_max_drop = 0.45
+wall_avoidance_force = 92.0
+wall_avoidance_probe_distance = 1.45
+wall_avoidance_side_probe_distance = 1.1
+wall_avoidance_tangent_bias = 1.0
 wild_lifespan = 7.0
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=532997029]
@@ -55,3 +75,10 @@ shape = SubResource("BoxShape3D_rat")
 
 [node name="schoor" parent="." unique_id=277951172 instance=ExtResource("2_lwnn2")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="BlobShadow" type="Decal" parent="." unique_id=1170763995]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+size = Vector3(0.8, 2, 0.8)
+texture_albedo = SubResource("GradientTexture2D_shadow")
+distance_fade_enabled = true
+distance_fade_begin = 20.0

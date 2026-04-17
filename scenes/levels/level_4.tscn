@@ -1,33 +1,62 @@
 [gd_scene format=3 uid="uid://cibqu26fys05v"]
 
+[ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="1_um320"]
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_anwe6"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_ogj6a"]
+[ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="5_5vn0v"]
+[ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="6_rej77"]
+[ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="6_ts8eg"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
-albedo_color = Color(0.25, 0.22, 0.2, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anwe6"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ksju7"]
-material = SubResource("StandardMaterial3D_7u6i3")
-size = Vector2(80, 80)
+[sub_resource type="BoxMesh" id="BoxMesh_rej77"]
+size = Vector3(9, 0.08, 0.08)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_6iamk"]
-size = Vector3(100.28052, 0.001, 64.308716)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vn0v"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ts8eg"]
+size = Vector3(9, 0.08, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_um320"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_glw47"]
+size = Vector3(9, 0.08, 0.08)
+
+[sub_resource type="Resource" id="Resource_ts8eg"]
+script = ExtResource("6_ts8eg")
+count_min = 8
+count_max = 8
+
+[sub_resource type="Resource" id="Resource_um320"]
+script = ExtResource("5_5vn0v")
+groups = Array[ExtResource("6_ts8eg")]([SubResource("Resource_ts8eg")])
+
+[sub_resource type="Resource" id="Resource_glw47"]
+script = ExtResource("6_ts8eg")
+spawn_kind = 5
+count_min = 5
+count_max = 5
+
+[sub_resource type="Resource" id="Resource_4wsov"]
+script = ExtResource("5_5vn0v")
+groups = Array[ExtResource("6_ts8eg")]([SubResource("Resource_glw47")])
 
 [node name="Level2" type="Node3D" unique_id=1397753813]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
 
-[node name="Floor" type="StaticBody3D" parent="." unique_id=116290845]
+[node name="Floor" type="Node3D" parent="." unique_id=1918118397]
 
-[node name="floor1" type="MeshInstance3D" parent="Floor" unique_id=1323013028]
-transform = Transform3D(1.25, 0, 0, 0, 0.5, 0, 0, 0, 0.8, 0, 0, 0)
-mesh = SubResource("PlaneMesh_ksju7")
-
-[node name="floor_collision1" type="CollisionShape3D" parent="Floor" unique_id=849582682]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.10308838, 0, -0.024536142)
-shape = SubResource("BoxShape3D_6iamk")
+[node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("1_um320")]
+transform = Transform3D(2.5, 0, 0, 0, 1, 0, 0, 0, 1.7, 0, 0, 0)
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
@@ -58,16 +87,16 @@ transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 
 [node name="SpikeCylinder2" parent="Spikes" unique_id=1842775088 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, -25, 0, 15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, -25, 0, 15)
 
 [node name="SpikeCylinder3" parent="Spikes" unique_id=836327637 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 25, 0, 15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, 25, 0, 15)
 
 [node name="SpikeCylinder4" parent="Spikes" unique_id=276801485 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, 25, 0, -15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, 25, 0, -15)
 
 [node name="SpikeCylinder5" parent="Spikes" unique_id=543696438 instance=ExtResource("4_anwe6")]
-transform = Transform3D(6, 0, 0, 0, 2, 0, 0, 0, 6, -25, 0, -15)
+transform = Transform3D(4, 0, 0, 0, 1.333, 0, 0, 0, 4, -25, 0, -15)
 
 [node name="doors" type="Node3D" parent="." unique_id=2017506733]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 29.99928, 0, -0.5166948)
@@ -76,24 +105,45 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 29.9
 transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.98019236, 0, 19.952682)
 controlled_level_id = 4
 target_level_id = 5
-transition_requires_open = true
+debug_show_direction = true
+
+[node name="DebugDirection" type="MeshInstance3D" parent="doors/door" unique_id=1737636982]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_anwe6")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_rej77")
 
 [node name="door2" parent="doors" unique_id=559140944 instance=ExtResource("3_w6h2s")]
 transform = Transform3D(-4.8082526e-08, 0, 1, 0, 1, 0, -1.1, 0, -4.371139e-08, -32.598064, 0, -77.586235)
 controlled_level_id = 4
 target_level_id = 8
-transition_requires_open = true
+debug_show_direction = true
+
+[node name="DebugDirection" type="MeshInstance3D" parent="doors/door2" unique_id=1153355212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_5vn0v")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_ts8eg")
 
 [node name="door3" parent="doors" unique_id=1873507529 instance=ExtResource("3_w6h2s")]
 transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9801967, 0, -79.981964)
 controlled_level_id = 4
 target_level_id = 7
-transition_requires_open = true
+
+[node name="DebugDirection" type="MeshInstance3D" parent="doors/door3" unique_id=233125728]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_um320")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_glw47")
 
 [node name="Spawners" type="Node3D" parent="." unique_id=547921744]
 
 [node name="EnemyPressure" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "Enemy Pressure"
 level_id = 4
 start_delay = 0.0
@@ -109,6 +159,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyFlame" parent="Spawners" unique_id=813881927 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "FlameThrowerEnemy"
 level_id = 4
 start_delay = 0.0
@@ -124,6 +175,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemySniper" parent="Spawners" unique_id=1432928027 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "EnemySniper"
 level_id = 4
 start_delay = 0.0
@@ -139,31 +191,101 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyMortar" parent="Spawners" unique_id=166046177 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
-label = "Level2 Enemy Pressure"
+enabled = false
+label = "EnemyMortar"
 level_id = 4
 start_delay = 0.0
 repeat_interval = 10.0
 reset_on_level_enter = false
 spawn_kind = 5
-count_max = 1
 spawn_radius = 1.0
 position_mode = 3
 wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
+[node name="Spawners2" type="Node3D" parent="." unique_id=1071793139]
+
+[node name="SpawnerWildLevel2" parent="Spawners2" unique_id=1498827792 instance=ExtResource("4_ogj6a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 4
+start_delay = 0.0
+repeat = true
+repeat_interval = 8.0
+max_triggers = 6
+reset_on_level_enter = false
+count_min = 30
+count_max = 50
+spawn_radius = 1.8
+position_mode = 3
+wild_rat_prob_normal = 60.0
+wild_rat_prob_red = 20.0
+wild_rat_prob_green = 20.0
+
 [node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=232841391]
 script = ExtResource("1_vmkp1")
-level_id = 1
+level_id = 4
 
 [node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=248477231 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046244, 0, -16.530195)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046247, 0, 10.469806)
 
 [node name="Marker3D3" type="Marker3D" parent="enemies_spawnpoints" unique_id=1761529560 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.046245, 0, -16.530193)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.089385, 0, 0.76407355)
 
 [node name="Marker3D5" type="Marker3D" parent="enemies_spawnpoints" unique_id=1947791076 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9537559, 0, -16.530195)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.605286, 0, -1.7694821)
 
 [node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=1224072389 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.953756, 0, -16.530193)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361685, 0, -3.3890052)
+
+[node name="Marker3D8" type="Marker3D" parent="enemies_spawnpoints" unique_id=280147267 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705373, 0, -13.909654)
+
+[node name="Marker3D9" type="Marker3D" parent="enemies_spawnpoints" unique_id=1088089241 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5401607, 0, -14.956239)
+
+[node name="Marker3D10" type="Marker3D" parent="enemies_spawnpoints" unique_id=2065731880 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8549657, 0, 15.413524)
+
+[node name="Marker3D11" type="Marker3D" parent="enemies_spawnpoints" unique_id=2009199074 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.7687645, 0, 19.514648)
+
+[node name="Marker3D12" type="Marker3D" parent="enemies_spawnpoints" unique_id=1678636850 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.572922, 0, -23.083181)
+
+[node name="Marker3D13" type="Marker3D" parent="enemies_spawnpoints" unique_id=356079487 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361687, 0, -23.99357)
+
+[node name="Marker3D14" type="Marker3D" parent="enemies_spawnpoints" unique_id=694048794 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.095863, 0, -13.52083)
+
+[node name="Marker3D15" type="Marker3D" parent="enemies_spawnpoints" unique_id=2135343634 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.27117, 0, -17.821932)
+
+[node name="Marker3D16" type="Marker3D" parent="enemies_spawnpoints" unique_id=1580965456 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41.260895, 0, 15.370676)
+
+[node name="Marker3D17" type="Marker3D" parent="enemies_spawnpoints" unique_id=773685524 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.605507, 0, 15.97711)
+
+[node name="Marker3D18" type="Marker3D" parent="enemies_spawnpoints" unique_id=2056687673 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1340094, 0, -23.335932)
+
+[node name="Marker3D19" type="Marker3D" parent="enemies_spawnpoints" unique_id=559644201 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2997172, 0, -7.2999096)
+
+[node name="Marker3D20" type="Marker3D" parent="enemies_spawnpoints" unique_id=1426795072 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.950804, 0, 10.010411)
+
+[node name="WaveSpawner" type="Node3D" parent="." unique_id=2120708872]
+script = ExtResource("6_rej77")
+level_id = 4
+start_delay = 1.0
+reset_on_level_enter = false
+waves = Array[ExtResource("5_5vn0v")]([SubResource("Resource_um320"), SubResource("Resource_4wsov")])
+delay_between_waves = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0

@@ -5,11 +5,20 @@ const DeathEffect := preload("res://scenes/rat/rat_death_effect.tscn")
 const GasCloudScene := preload("res://scenes/projectiles/gas_cloud.tscn")
 
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
-enum RatType { NORMAL, RED, GREEN }
+enum RatType {NORMAL, RED, GREEN}
 @export var rat_type: RatType = RatType.NORMAL
 var default_rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
 var _speed_mult: float = 1.0
+
+@export_group("Blob Shadow")
+@export var shadow_enabled: bool = true
+@export var shadow_size: float = 0.8
+@export var shadow_opacity: float = 1.0
+@export var shadow_offset_y: float = 0.2
+@export_group("")
+
+
 
 @export var follow_speed: float = 6.0
 @export var orbit_radius: float = 4.0
@@ -19,13 +28,27 @@ var _speed_mult: float = 1.0
 
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 30.0
-@export var damping:          float = 0.8
-@export var separation_dist:  float = 0.5
+@export var damping: float = 0.8
+@export var separation_dist: float = 0.5
 @export var separation_force: float = 12.0
-@export var max_speed:        float = 26.0
+@export var alignment_force: float = 5.0
+@export var cohesion_force: float = 3.0
+@export var boid_max_force: float = 20.0
+@export var max_speed: float = 26.0
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
+@export var wall_avoidance_enabled: bool = true
+@export var wall_avoidance_force: float = 52.0
+@export var wall_avoidance_probe_distance: float = 1.2
+@export var wall_avoidance_side_probe_distance: float = 0.85
+@export var wall_avoidance_tangent_bias: float = 0.75
+@export var stuck_recovery_enabled: bool = true
+@export var stuck_min_speed: float = 0.22
+@export var stuck_target_distance: float = 2.4
+@export var stuck_time_to_trigger: float = 0.7
+@export var stuck_unblock_duration: float = 0.45
+@export var stuck_target_boost: float = 1.9
 @export var release_boost_speed: float = 14.0
 @export var release_boost_up: float = 20.0
 @export var release_boost_time: float = 0.25
@@ -44,8 +67,8 @@ var extra_spin_speed: float = 0.0
 # Spring-damp internal state
 var _spring_velocity: Vector3 = Vector3.ZERO
 var _target_position: Vector3 = Vector3.ZERO
-var _target_ready:    bool    = false
-var _neighbors:       Array   = []
+var _target_ready: bool = false
+var _neighbors: Array = []
 
 # Blob State (Build Mode) — kept for blob_target compat
 var is_following_player: bool = true
@@ -63,7 +86,7 @@ var _dash_lateral_offset: float = 0.0
 @export var dash_speed: float = 30.0
 
 # Damage
-var damage_per_hit: float = 10.0
+var damage_per_hit: float = 1.5
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
@@ -96,6 +119,8 @@ var _mgr_refresh_timer: float = 0.0
 @export var edge_check_interval: float = 0.15
 var _edge_check_timer: float = 0.0
 var _edge_blocked_cached: bool = false
+var _stuck_time: float = 0.0
+var _unstuck_timer: float = 0.0
 var _current_buff_material: Material = null
 var _blob_mesh: MeshInstance3D = null
 var _is_showing_blob: bool = false
@@ -109,8 +134,17 @@ var _blob_wobble_rot: float = 0.25
 var _blob_wobble_bob: float = 0.03
 
 func _ready() -> void:
+	var shadow: Decal = get_node_or_null("BlobShadow")
+	if shadow:
+		shadow.visible = shadow_enabled
+		shadow.size = Vector3(shadow_size, 2.0, shadow_size)
+		shadow.modulate = Color(1, 1, 1, shadow_opacity)
+		shadow.position.y = shadow_offset_y
+		shadow.cull_mask = 1048575 - 2 # Prevent projection on layer 2 (rats)
+
 	for child in find_children("*", "VisualInstance3D"):
-		child.layers = 2
+		if child != shadow:
+			child.layers = 2
 	follow_offset = Vector3(
 		randf_range(-1.5, 1.5),
 		0.0,
@@ -122,14 +156,14 @@ func _ready() -> void:
 	
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
-	collision_mask = 9 | (1 << 8)  # Floor (1) + Walls (8) + RatStructures (9)
+	collision_mask = 9 | (1 << 8) # Floor (1) + Walls (8) + RatStructures (9)
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
 	_mgr = get_tree().get_first_node_in_group("rat_manager")
 	
 	var sphere = SphereMesh.new()
-	sphere.radius = 0.25 
+	sphere.radius = 0.25
 	sphere.height = 0.5
 	_blob_mesh = MeshInstance3D.new()
 	_blob_mesh.mesh = sphere
@@ -196,6 +230,8 @@ func _physics_process(delta: float) -> void:
 
 	if _edge_check_timer > 0.0:
 		_edge_check_timer = max(0.0, _edge_check_timer - delta)
+	if _unstuck_timer > 0.0:
+		_unstuck_timer = max(0.0, _unstuck_timer - delta)
 
 	if _recall_boost_timer > 0.0:
 		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
@@ -243,7 +279,7 @@ func _physics_process(delta: float) -> void:
 		if buff_mat != null:
 			target_mat = buff_mat
 
-	if target_mat == null: 
+	if target_mat == null:
 		target_mat = _base_material
 
 	if target_mat != _current_buff_material:
@@ -277,9 +313,17 @@ func _process_follow_spring(delta: float) -> void:
 
 	var current_stiffness = spring_stiffness
 	var current_separation = separation_force
+	var current_alignment = alignment_force
+	var current_cohesion = cohesion_force
 	if _is_showing_blob:
 		current_stiffness = spring_stiffness * 4.0
 		current_separation = 0.0
+		current_alignment = 0.0
+		current_cohesion = 0.0
+	elif _unstuck_timer > 0.0:
+		current_stiffness *= maxf(1.0, stuck_target_boost)
+		current_cohesion *= 0.5
+		current_alignment *= 0.75
 
 	# Spring toward target — flatten Y so it doesn't bounce vertically
 	var to_target := _target_position - global_position
@@ -287,20 +331,47 @@ func _process_follow_spring(delta: float) -> void:
 	_spring_velocity += to_target * current_stiffness * delta
 
 	var sep_dist_sq := separation_dist * separation_dist
-	# Separation from neighbors
-	if current_separation > 0.0:
+	var separation_vec := Vector3.ZERO
+	var alignment_vec := Vector3.ZERO
+	var cohesion_center := Vector3.ZERO
+	var neighbor_count := 0
+	# Separation + alignment + cohesion from neighbors
+	if current_separation > 0.0 or current_alignment > 0.0 or current_cohesion > 0.0:
 		for neighbor in _neighbors:
 			if not is_instance_valid(neighbor):
 				continue
 			var nb := neighbor as Node3D
 			if nb == null:
 				continue
+			neighbor_count += 1
 			var diff: Vector3 = global_position - nb.global_position
 			diff.y = 0.0
 			var dist_sq: float = diff.length_squared()
 			if dist_sq < sep_dist_sq and dist_sq > 0.000001:
 				var dist: float = sqrt(dist_sq)
-				_spring_velocity += (diff / dist) * (separation_dist - dist) * current_separation * delta
+				separation_vec += (diff / dist) * ((separation_dist - dist) / maxf(0.001, separation_dist))
+			cohesion_center += nb.global_position
+			if "velocity" in nb:
+				var nb_vel: Vector3 = nb.velocity
+				nb_vel.y = 0.0
+				alignment_vec += nb_vel
+
+	var boid_force := Vector3.ZERO
+	if current_separation > 0.0 and separation_vec.length_squared() > 0.000001:
+		boid_force += separation_vec.normalized() * current_separation
+	if neighbor_count > 0:
+		if current_alignment > 0.0 and alignment_vec.length_squared() > 0.000001:
+			boid_force += alignment_vec.normalized() * current_alignment
+		if current_cohesion > 0.0:
+			var avg_center := cohesion_center / float(neighbor_count)
+			var to_center := avg_center - global_position
+			to_center.y = 0.0
+			if to_center.length_squared() > 0.000001:
+				boid_force += to_center.normalized() * current_cohesion
+	if boid_max_force > 0.0 and boid_force.length() > boid_max_force:
+		boid_force = boid_force.normalized() * boid_max_force
+	_spring_velocity += boid_force * delta
+	_spring_velocity += _compute_wall_avoidance(to_target) * delta
 
 	# Framerate-independent damping
 	_spring_velocity *= pow(damping, delta * 60.0)
@@ -325,6 +396,7 @@ func _process_follow_spring(delta: float) -> void:
 	# Sync spring velocity with collision response (horizontal only)
 	_spring_velocity.x = velocity.x
 	_spring_velocity.z = velocity.z
+	_update_stuck_recovery(delta)
 
 	# Face direction of travel (skip if spinning in combat)
 	if extra_spin_speed == 0.0:
@@ -335,11 +407,101 @@ func _process_follow_spring(delta: float) -> void:
 
 func set_target(pos: Vector3) -> void:
 	_target_position = pos
-	_target_ready    = true
+	_target_ready = true
 
 
 func set_neighbors(n: Array) -> void:
 	_neighbors = n
+
+
+func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
+	if not wall_avoidance_enabled:
+		return Vector3.ZERO
+
+	var world := get_world_3d()
+	if world == null:
+		return Vector3.ZERO
+	var ss := world.direct_space_state
+
+	var desired := Vector3(_spring_velocity.x, 0.0, _spring_velocity.z)
+	if desired.length_squared() < 0.0001:
+		desired = Vector3(to_target.x, 0.0, to_target.z)
+	if desired.length_squared() < 0.0001:
+		return Vector3.ZERO
+	desired = desired.normalized()
+
+	var origin := global_position + Vector3.UP * 0.22
+	var dirs := [
+		desired,
+		desired.rotated(Vector3.UP, deg_to_rad(32.0)),
+		desired.rotated(Vector3.UP, deg_to_rad(-32.0)),
+	]
+	var ranges := [
+		wall_avoidance_probe_distance,
+		wall_avoidance_side_probe_distance,
+		wall_avoidance_side_probe_distance,
+	]
+
+	var steer := Vector3.ZERO
+	for i in range(dirs.size()):
+		var probe_dir: Vector3 = dirs[i]
+		var probe_dist: float = maxf(0.05, ranges[i])
+		var query := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
+		query.collision_mask = 8 # Walls
+		query.exclude = [ self ]
+		var hit := ss.intersect_ray(query)
+		if hit.is_empty():
+			continue
+
+		var normal: Vector3 = hit.normal
+		normal.y = 0.0
+		if normal.length_squared() < 0.0001:
+			continue
+		normal = normal.normalized()
+
+		var hit_pos: Vector3 = hit.position
+		var dist := origin.distance_to(hit_pos)
+		var proximity := clampf(1.0 - dist / probe_dist, 0.0, 1.0)
+		if proximity <= 0.0:
+			continue
+
+		# Push away from wall.
+		steer += normal * (wall_avoidance_force * proximity)
+		# Add tangent slide so rats prefer flowing around walls instead of braking.
+		var tangent := normal.cross(Vector3.UP).normalized()
+		if tangent.dot(desired) < 0.0:
+			tangent = - tangent
+		steer += tangent * (wall_avoidance_force * wall_avoidance_tangent_bias * proximity)
+
+	return steer
+
+
+func _update_stuck_recovery(delta: float) -> void:
+	if not stuck_recovery_enabled:
+		_stuck_time = 0.0
+		return
+	if _target_ready == false or state != State.FOLLOW:
+		_stuck_time = 0.0
+		return
+	if is_carrier or is_anchored or _recall_boost_timer > 0.0:
+		_stuck_time = 0.0
+		return
+
+	var to_target := _target_position - global_position
+	to_target.y = 0.0
+	var target_dist := to_target.length()
+	if target_dist < stuck_target_distance:
+		_stuck_time = 0.0
+		return
+
+	var hspeed := Vector2(velocity.x, velocity.z).length()
+	if hspeed <= stuck_min_speed:
+		_stuck_time += delta
+		if _stuck_time >= stuck_time_to_trigger:
+			_unstuck_timer = maxf(_unstuck_timer, stuck_unblock_duration)
+			_stuck_time = 0.0
+	else:
+		_stuck_time = 0.0
 
 
 func _process_orbit(delta: float) -> void:
@@ -642,13 +804,26 @@ func hard_recall_to_player() -> void:
 	if player == null:
 		return
 	_reset_to_follow()
+	
+	# Teleport close to player unconditionally (for Spacebar recall)
+	var offset = Vector3(randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)).normalized() * randf_range(0.5, 2.0)
+	global_position = player.global_position + offset
+	
 	_travel_timer = 0.0
 	_recall_boost_timer = 0.0
 	is_fallen = false
 	set_physics_process(true)
-	global_position = player.global_position + Vector3(
-		randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
-	)
+	show_visuals()
+
+func soft_reset_state() -> void:
+	if player == null:
+		return
+	_reset_to_follow()
+	_travel_timer = 0.0
+	_recall_boost_timer = 0.0
+	is_fallen = false
+	set_physics_process(true)
+	# Keep current position — let FOLLOW spring physics move rats naturally
 	show_visuals()
 
 
@@ -688,7 +863,6 @@ func _finish_respawn() -> void:
 	set_physics_process(true)
 
 
-
 func _reset_to_follow() -> void:
 	is_anchored = false
 	state = State.FOLLOW
@@ -725,6 +899,8 @@ func set_wall_collision(enabled: bool) -> void:
 func _should_block_edge(hvel: Vector2) -> bool:
 	if not edge_avoidance_enabled:
 		return false
+	if _unstuck_timer > 0.0:
+		return false
 	if is_carrier:
 		return false
 	if _recall_boost_timer > 0.0:
@@ -757,7 +933,7 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	var end := pos + Vector3.DOWN * (max_drop + 0.8)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.collision_mask = 1 | (1 << 8) # Floor + RatStructures
-	query.exclude = [self]
+	query.exclude = [ self ]
 	var hit := ss.intersect_ray(query)
 	if not hit:
 		return false
@@ -776,7 +952,7 @@ func die() -> void:
 		eff.global_position = global_position
 		
 	if mgr != null and "rats" in mgr:
-		var idx = mgr.rats.find(self)
+		var idx = mgr.rats.find(self )
 		if idx != -1:
 			mgr.rats.remove_at(idx)
 	queue_free()
@@ -813,7 +989,7 @@ func set_wild(wild: bool) -> void:
 	is_wild = wild
 	if is_wild:
 		add_to_group("wild_rats")
-		_wild_timer = wild_lifespan
+		_wild_timer = -1.0 if wild_lifespan <= 0.0 else wild_lifespan
 		state = State.STATIC
 		var mat := _make_type_material(default_rat_type, true)
 			
@@ -877,6 +1053,9 @@ func _reset_blob_visuals() -> void:
 			m.transform = _visual_base_transforms[m]
 
 func _process_wild(delta: float) -> void:
+	if _wild_timer < 0.0:
+		# Negative lifespan means "never despawn".
+		return
 	_wild_timer -= delta
 	if _wild_timer <= 0.0:
 		queue_free()
@@ -903,23 +1082,24 @@ func _process_wild(delta: float) -> void:
 		return
 		
 	var dist = _flat_distance(global_position, player.global_position)
-	var can_recruit = false
-	if dist <= recruitment_range:
-		can_recruit = true
-	else:
+	var can_recruit = dist <= recruitment_range
+	if not can_recruit and mgr != null and "wild_recruit_by_rats" in mgr and mgr.wild_recruit_by_rats:
+		var chain_range := recruitment_range
+		if "wild_recruit_by_rats_range" in mgr:
+			chain_range = float(mgr.wild_recruit_by_rats_range)
 		if "rats" in mgr:
 			for r in mgr.rats:
 				if not is_instance_valid(r):
 					continue
-				if _flat_distance(global_position, r.global_position) <= recruitment_range:
+				if _flat_distance(global_position, r.global_position) <= chain_range:
 					can_recruit = true
 					break
 					
 	if can_recruit:
 		add_collision_exception_with(player)
-		player.add_collision_exception_with(self)
+		player.add_collision_exception_with(self )
 		set_wild(false)
 		if mgr.has_method("register_rat"):
-			mgr.register_rat(self)
+			mgr.register_rat(self )
 			if mgr.has_method("build_blob_offsets"):
 				mgr.build_blob_offsets()

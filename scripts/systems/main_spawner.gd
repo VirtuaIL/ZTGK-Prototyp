@@ -55,6 +55,10 @@ var _completed: bool = false
 var _was_active_last_frame: bool = false
 
 
+func is_completed() -> bool:
+	return _completed
+
+
 func _ready() -> void:
 	add_to_group("main_spawners")
 	reset_runtime()
