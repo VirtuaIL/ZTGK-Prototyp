@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bqhoh4574vpgq"]
 
 [ext_resource type="Script" uid="uid://c3n4w7iy1hhpt" path="res://scripts/enemies/mortar_enemy.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bdvo7lqxr6sqd" path="res://resources/models/enemies/bomber/bomber.fbx" id="2_sh7ey"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Override"]
 resource_local_to_scene = true
@@ -31,13 +32,18 @@ script = ExtResource("1_script")
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=105796758]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_Override")
 mesh = SubResource("BoxMesh_1")
 
 [node name="Head" type="MeshInstance3D" parent="." unique_id=504773818]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+visible = false
 mesh = SubResource("SphereMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1941074036]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_1")
+
+[node name="bomber" parent="." unique_id=875047842 instance=ExtResource("2_sh7ey")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
