@@ -174,6 +174,7 @@ func _process_attack(delta: float) -> void:
 				_flame_telegraph_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.1, 0.8))
 
 		if attack_prepare_timer <= 0.0:
+			_play_attack_animation()
 			is_flamethrowing = true
 			flame_timer = flame_duration
 			fire_tick_timer = 0.0
@@ -224,7 +225,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
-		_play_attack_animation()
+		_play_windup_animation()
 		var body: MeshInstance3D = get_child(0) as MeshInstance3D
 		if body and body.material_override:
 			body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # windup

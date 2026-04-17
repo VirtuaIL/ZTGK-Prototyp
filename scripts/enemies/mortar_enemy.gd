@@ -112,6 +112,7 @@ func _process_attack(delta: float) -> void:
 				aim_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.15, 0.85))
 			
 		if attack_prepare_timer <= 0.0:
+			_play_attack_animation()
 			_shoot()
 			# aim_marker is now owned by projectile, don't hide it here
 			aim_marker = null
@@ -129,7 +130,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
-		_play_attack_animation()
+		_play_windup_animation()
 		is_aiming = false
 	else:
 		var to_player := _player_ref.global_position - global_position
