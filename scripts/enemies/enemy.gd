@@ -21,8 +21,8 @@ var health: float = max_health
 @export var rotation_speed: float = 8.0
 
 # ── Detection & combat ──
-@export var detection_range: float = 16.0
-@export var lose_range: float = 22.0
+@export var detection_range: float = 32.0
+@export var lose_range: float = 40.0
 @export var attack_range: float = 3.0
 @export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0
@@ -64,6 +64,7 @@ var hp_label: Label3D
 
 var is_stuck_in_blob: bool = false
 var blob_center: Vector3 = Vector3.ZERO
+var _blood_particles: GPUParticles3D
 
 
 func _ready() -> void:
@@ -81,6 +82,7 @@ func _ready() -> void:
 	_create_hp_bar()
 	_create_hp_label()
 	_update_hp_bar()
+	_create_blood_particles()
 
 	if randf() <= shield_chance:
 		var shield = ShieldScene.instantiate()
@@ -429,6 +431,7 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 	health = maxf(health, 0.0)
 	_update_hp_bar()
 	_flash_hit()
+	_spawn_blood_burst(hit_pos)
 
 	if DamageTextScene:
 		var dt = DamageTextScene.instantiate()
@@ -571,6 +574,83 @@ func _flash_hit() -> void:
 		body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
 		var tween := create_tween()
 		tween.tween_property(body.material_override, "albedo_color", original_color, 0.15)
+
+
+func _create_blood_particles() -> void:
+	_blood_particles = GPUParticles3D.new()
+	_blood_particles.emitting = false
+	_blood_particles.one_shot = true
+	_blood_particles.amount = 32
+	_blood_particles.lifetime = 0.75
+	_blood_particles.explosiveness = 0.95
+	_blood_particles.fixed_fps = 0
+	_blood_particles.visibility_aabb = AABB(Vector3(-8, -8, -8), Vector3(16, 16, 16))
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 60.0
+	mat.initial_velocity_min = 4.0
+	mat.initial_velocity_max = 9.0
+	mat.gravity = Vector3(0, -14.0, 0)
+	mat.damping_min = 0.5
+	mat.damping_max = 2.0
+	mat.scale_min = 0.8
+	mat.scale_max = 2.0
+
+	var color_ramp := GradientTexture1D.new()
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1.0, 0.0, 0.0, 1.0))
+	gradient.add_point(0.35, Color(0.9, 0.0, 0.0, 0.95))
+	gradient.add_point(0.7, Color(0.6, 0.0, 0.0, 0.7))
+	gradient.set_color(1, Color(0.35, 0.0, 0.0, 0.0))
+	color_ramp.gradient = gradient
+	mat.color_ramp = color_ramp
+
+	_blood_particles.process_material = mat
+
+	# Use a QuadMesh with billboard material so particles always face the camera
+	var draw_mesh := QuadMesh.new()
+	draw_mesh.size = Vector2(0.3, 0.3)
+	var draw_mat := StandardMaterial3D.new()
+	draw_mat.vertex_color_use_as_albedo = true
+	draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	draw_mat.emission_enabled = true
+	draw_mat.emission = Color(1.0, 0.0, 0.0)
+	draw_mat.emission_energy_multiplier = 4.0
+	draw_mesh.material = draw_mat
+	_blood_particles.draw_pass_1 = draw_mesh
+
+	_blood_particles.position = Vector3(0, 1.0, 0)
+	add_child(_blood_particles)
+
+
+func _spawn_blood_burst(hit_pos: Vector3) -> void:
+	if _blood_particles == null:
+		return
+
+	var pmat := _blood_particles.process_material as ParticleProcessMaterial
+	# Position particles at the hit point (or enemy center if no hit_pos)
+	if hit_pos != Vector3.ZERO:
+		_blood_particles.global_position = hit_pos + Vector3(0, 0.3, 0)
+		# Set emission direction away from the hit source (blood sprays outward)
+		var burst_dir := (global_position - hit_pos)
+		burst_dir.y = 0.0
+		if burst_dir.length() < 0.01:
+			burst_dir = Vector3.UP
+		else:
+			burst_dir = burst_dir.normalized()
+		if pmat:
+			pmat.direction = (burst_dir + Vector3(0, 0.6, 0)).normalized()
+	else:
+		_blood_particles.position = Vector3(0, 1.0, 0)
+		if pmat:
+			pmat.direction = Vector3(0, 1, 0)
+
+	_blood_particles.restart()
+	_blood_particles.emitting = true
+
 
 
 # ═══════════════════════════════════════════════

@@ -59,12 +59,30 @@ func get_current_buff_material():
 	if buff_purple_timer > 0.0: return buff_mat_purple
 	return null
 
+var _cheese_msg_timer: float = 0.0
+var _cheese_buff_label: Label = null
+
+func _show_cheese_msg(msg: String, color: Color) -> void:
+	if _cheese_buff_label:
+		_cheese_buff_label.text = msg
+		_cheese_buff_label.add_theme_color_override("font_color", color)
+		_cheese_buff_label.visible = true
+		_cheese_msg_timer = 3.0
+
 func apply_cheese_buff(type: int) -> void:
 	match type:
-		0: buff_red_timer = 5.0
-		1: buff_green_timer = 5.0
-		2: buff_yellow_timer = 5.0
-		3: buff_purple_timer = 5.0
+		0: 
+			buff_red_timer = 5.0
+			_show_cheese_msg("Agresywne szczury!", Color(0.9, 0.1, 0.1))
+		1: 
+			buff_green_timer = 5.0
+			_show_cheese_msg("Śmierdzące szczury!", Color(0.1, 0.9, 0.1))
+		2: 
+			buff_yellow_timer = 5.0
+			_show_cheese_msg("Nieśmiertelne szczury!", Color(0.9, 0.9, 0.1))
+		3: 
+			buff_purple_timer = 5.0
+			_show_cheese_msg("Dezorientacja szczurów!", Color(0.6, 0.1, 0.9))
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -281,6 +299,18 @@ func _ready() -> void:
 	_pity_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pity_label.visible = false
 	control.add_child(_pity_label)
+	
+	_cheese_buff_label = Label.new()
+	_cheese_buff_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cheese_buff_label.add_theme_font_size_override("font_size", 52)
+	_cheese_buff_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cheese_buff_label.add_theme_constant_override("outline_size", 8)
+	_cheese_buff_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cheese_buff_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_cheese_buff_label.offset_top = 150 # Position it down from the top
+	_cheese_buff_label.visible = false
+	control.add_child(_cheese_buff_label)
+	
 	add_child(_pity_canvas)
 
 func setup_player(player: CharacterBody3D) -> void:
@@ -600,6 +630,13 @@ func _process(delta: float) -> void:
 		_pity_timer = 5.0
 		if _pity_label:
 			_pity_label.visible = false
+		
+	if _cheese_msg_timer > 0.0:
+		_cheese_msg_timer -= delta
+		if _cheese_msg_timer <= 0.0 and _cheese_buff_label:
+			_cheese_buff_label.visible = false
+		if _pity_label:
+			_pity_label.visible = false
 
 
 func _process_damage(_delta: float) -> void:
@@ -868,11 +905,12 @@ func _update_cursor_follow(_delta: float) -> void:
 			build_blob_offsets()
 			
 		var blob_scale_local := 1.0
-		if build_draw_mode == DRAW_MODE_CIRCLE:
-			blob_scale_local = maxf(1.0, circle_radius / 0.5)
-		elif build_draw_mode == DRAW_MODE_PATH:
+		var use_path_logic: bool = (build_draw_mode == DRAW_MODE_PATH and use_wide_brush) or (current_attack_mode == AttackMode.PATH_DASH)
+		if use_path_logic:
 			var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 			blob_scale_local = float(1 + pairs * 2) / 2.5
+		else:
+			blob_scale_local = maxf(1.0, circle_radius / 0.5)
 			
 		for i in range(count):
 			var t_blob := mouse_world
@@ -891,13 +929,14 @@ func _update_cursor_follow(_delta: float) -> void:
 	# Calculate how much to resemble a blob based on brush size
 	var blob_blend := 0.0
 	var blob_scale := 1.0
-	if build_draw_mode == DRAW_MODE_CIRCLE:
-		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
-		blob_scale = circle_radius / 0.5
-	elif build_draw_mode == DRAW_MODE_PATH:
+	var use_path_logic_b: bool = (build_draw_mode == DRAW_MODE_PATH and use_wide_brush) or (current_attack_mode == AttackMode.PATH_DASH)
+	if use_path_logic_b:
 		blob_blend = clampf(float(brush_lane_pairs - brush_lane_pairs_min) / maxf(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min)), 0.0, 1.0)
 		var pairs := clampi(brush_lane_pairs, brush_lane_pairs_min, brush_lane_pairs_max)
 		blob_scale = float(1 + pairs * 2) / 2.5
+	else:
+		blob_blend = clampf((circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min), 0.0, 1.0)
+		blob_scale = circle_radius / 0.5
 
 	if _blob_offsets.size() != count:
 		build_blob_offsets()
@@ -1743,6 +1782,26 @@ func hard_recall_all_rats() -> void:
 	for rat in rats:
 		if rat.has_method("hard_recall_to_player"):
 			rat.hard_recall_to_player()
+
+func soft_reset_all_rats() -> void:
+	if grabbed_object != null:
+		grabbed_object.set_meta("is_being_dragged", false)
+		_release_object_carriers(grabbed_object)
+		grabbed_object = null
+		grabbed_object_last_pos = Vector3.ZERO
+		_lmb_is_object_drag = false
+
+	active_build_positions.clear()
+	built_positions.clear()
+	carrier_rats.clear()
+	carrier_rat_offsets.clear()
+	
+	for child in unified_shape_combiner.get_children():
+		child.queue_free()
+		
+	for rat in rats:
+		if rat.has_method("soft_reset_state"):
+			rat.soft_reset_state()
 		else:
 			rat.release_rat(true)
 	# Reset drawing state
@@ -2004,28 +2063,11 @@ func _update_cursor_preview() -> void:
 	if combat_rmb_down and current_attack_mode == AttackMode.PATH_DASH:
 		return
 
-	var player_node: Node3D = get_tree().get_first_node_in_group("player") as Node3D
-	var hit: Dictionary = _get_mouse_ground_hit()
-	var raw_pos: Vector3
-	
-	if hit:
-		raw_pos = hit.position + hit.normal * build_surface_offset
-		if current_build_y <= -500.0:
-			current_build_y = raw_pos.y
-		raw_pos.y = current_build_y
-	elif current_build_y > -500.0:
-		var fallback := _get_mouse_pos_at_y(current_build_y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	elif player_node:
-		var fallback := _get_mouse_pos_at_y(player_node.global_position.y)
-		if fallback == Vector3.ZERO:
-			immediate_mesh.clear_surfaces()
-			return
-		raw_pos = fallback
-	else:
+	# Use _mouse_to_world() for preview — it raycasts against ALL collision
+	# layers and falls back to player-Y plane, so it never desyncs like
+	# _get_mouse_ground_hit() (floor-only) + current_build_y did.
+	var raw_pos: Vector3 = _mouse_to_world()
+	if raw_pos == Vector3.ZERO:
 		immediate_mesh.clear_surfaces()
 		return
 
@@ -2040,7 +2082,7 @@ func _update_cursor_preview() -> void:
 		current_circle_center = raw_pos
 		var old_path = current_drawn_path.duplicate()
 		current_drawn_path.clear()
-		_update_circle_preview(hit.is_empty())
+		_update_circle_preview(false)
 		current_drawn_path = old_path
 		
 	elif build_draw_mode == DRAW_MODE_PATH:

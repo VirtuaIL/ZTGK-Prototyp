@@ -5,7 +5,7 @@ const MortarProjectileScene = preload("res://scenes/projectiles/mortar_projectil
 var is_aiming: bool = false
 var aim_target_pos: Vector3 = Vector3.ZERO
 var aim_marker: MeshInstance3D = null
-var explosion_radius: float = 3.0
+@export var explosion_radius: float = 8.0
 
 func _ready() -> void:
 	super._ready()
@@ -13,8 +13,8 @@ func _ready() -> void:
 	health = max_health
 	
 	attack_range = 25.0 
-	detection_range = 35.0
-	lose_range = 40.0
+	detection_range = 50.0
+	lose_range = 55.0
 	chase_speed = 2.0
 	attack_delay = 1.5
 	attack_cooldown = 5.0
@@ -132,6 +132,8 @@ func _shoot() -> void:
 		# Hand off marker to projectile
 		if p.has_method("set") or "target_marker" in p:
 			p.target_marker = aim_marker
+		# Sync damage radius with the visual aim indicator
+		p.explosion_radius = explosion_radius
 		
 		var spawn_pos = global_position + Vector3(0, 1.5, 0)
 		var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y)).normalized()

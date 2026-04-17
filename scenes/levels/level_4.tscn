@@ -5,6 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_w6h2s"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_anwe6"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_ogj6a"]
+[ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="5_5vn0v"]
+[ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="6_rej77"]
+[ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="6_ts8eg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7u6i3"]
 albedo_color = Color(0.25, 0.22, 0.2, 1)
@@ -36,6 +39,25 @@ albedo_color = Color(0, 1, 0.6, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_glw47"]
 size = Vector3(9, 0.08, 0.08)
+
+[sub_resource type="Resource" id="Resource_ts8eg"]
+script = ExtResource("6_ts8eg")
+count_min = 8
+count_max = 8
+
+[sub_resource type="Resource" id="Resource_um320"]
+script = ExtResource("5_5vn0v")
+groups = Array[ExtResource("6_ts8eg")]([SubResource("Resource_ts8eg")])
+
+[sub_resource type="Resource" id="Resource_glw47"]
+script = ExtResource("6_ts8eg")
+spawn_kind = 5
+count_min = 5
+count_max = 5
+
+[sub_resource type="Resource" id="Resource_4wsov"]
+script = ExtResource("5_5vn0v")
+groups = Array[ExtResource("6_ts8eg")]([SubResource("Resource_glw47")])
 
 [node name="Level2" type="Node3D" unique_id=1397753813]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
@@ -135,6 +157,7 @@ mesh = SubResource("BoxMesh_glw47")
 
 [node name="EnemyPressure" parent="Spawners" unique_id=1705783563 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "Enemy Pressure"
 level_id = 4
 start_delay = 0.0
@@ -150,6 +173,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyFlame" parent="Spawners" unique_id=813881927 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "FlameThrowerEnemy"
 level_id = 4
 start_delay = 0.0
@@ -165,6 +189,7 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemySniper" parent="Spawners" unique_id=1432928027 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
+enabled = false
 label = "EnemySniper"
 level_id = 4
 start_delay = 0.0
@@ -180,13 +205,13 @@ wild_rat_prob_green = 0.0
 
 [node name="EnemyMortar" parent="Spawners" unique_id=166046177 instance=ExtResource("4_ogj6a")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056044344, 0, -13.581829)
-label = "Level2 Enemy Pressure"
+enabled = false
+label = "EnemyMortar"
 level_id = 4
 start_delay = 0.0
 repeat_interval = 10.0
 reset_on_level_enter = false
 spawn_kind = 5
-count_max = 1
 spawn_radius = 1.0
 position_mode = 3
 wild_rat_prob_normal = 0.0
@@ -204,8 +229,8 @@ repeat = true
 repeat_interval = 8.0
 max_triggers = 6
 reset_on_level_enter = false
-count_min = 15
-count_max = 25
+count_min = 30
+count_max = 50
 spawn_radius = 1.8
 position_mode = 3
 wild_rat_prob_normal = 60.0
@@ -266,3 +291,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2997172, 0, -7.2999096)
 
 [node name="Marker3D20" type="Marker3D" parent="enemies_spawnpoints" unique_id=1426795072 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.950804, 0, 10.010411)
+
+[node name="WaveSpawner" type="Node3D" parent="." unique_id=2120708872]
+script = ExtResource("6_rej77")
+level_id = 4
+start_delay = 1.0
+reset_on_level_enter = false
+waves = Array[ExtResource("5_5vn0v")]([SubResource("Resource_um320"), SubResource("Resource_4wsov")])
+delay_between_waves = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
