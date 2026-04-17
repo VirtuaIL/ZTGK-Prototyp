@@ -129,6 +129,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
+		_play_attack_animation()
 		is_aiming = false
 	else:
 		var to_player := _player_ref.global_position - global_position

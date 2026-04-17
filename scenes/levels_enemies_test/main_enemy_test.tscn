@@ -59,7 +59,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=1407634471 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -59.112663, 0, -12.192841)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -125.22879, 0, -12.192841)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -81,5 +81,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -116.21875, 0, 0)
 [node name="LevelEnemy4" parent="levels" unique_id=450381390 instance=ExtResource("10_fjkha")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -179.55515, 0, 0)
 
-[node name="LevelEnemy5" parent="levels" unique_id=1675734939 instance=ExtResource("11_fjkha")]
+[node name="LevelEnemy5" parent="levels" unique_id=208845748 instance=ExtResource("11_fjkha")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -240.77664, 0, 0)

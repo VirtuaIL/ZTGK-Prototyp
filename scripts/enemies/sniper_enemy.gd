@@ -204,6 +204,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
+		_play_attack_animation()
 		is_locked = false
 	else:
 		# Track player and back away during cooldown
