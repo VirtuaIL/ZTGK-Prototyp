@@ -5,7 +5,7 @@ const DeathEffect := preload("res://scenes/rat/rat_death_effect.tscn")
 const GasCloudScene := preload("res://scenes/projectiles/gas_cloud.tscn")
 
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
-enum RatType { NORMAL, RED, GREEN }
+enum RatType {NORMAL, RED, GREEN}
 @export var rat_type: RatType = RatType.NORMAL
 var default_rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
@@ -19,13 +19,13 @@ var _speed_mult: float = 1.0
 
 # Spring-damp parameters (used in FOLLOW state)
 @export var spring_stiffness: float = 30.0
-@export var damping:          float = 0.8
-@export var separation_dist:  float = 0.5
+@export var damping: float = 0.8
+@export var separation_dist: float = 0.5
 @export var separation_force: float = 12.0
-@export var alignment_force:  float = 5.0
-@export var cohesion_force:   float = 3.0
-@export var boid_max_force:   float = 20.0
-@export var max_speed:        float = 26.0
+@export var alignment_force: float = 5.0
+@export var cohesion_force: float = 3.0
+@export var boid_max_force: float = 20.0
+@export var max_speed: float = 26.0
 @export var edge_avoidance_enabled: bool = true
 @export var edge_probe_distance: float = 0.45
 @export var edge_max_drop: float = 0.6
@@ -58,8 +58,8 @@ var extra_spin_speed: float = 0.0
 # Spring-damp internal state
 var _spring_velocity: Vector3 = Vector3.ZERO
 var _target_position: Vector3 = Vector3.ZERO
-var _target_ready:    bool    = false
-var _neighbors:       Array   = []
+var _target_ready: bool = false
+var _neighbors: Array = []
 
 # Blob State (Build Mode) — kept for blob_target compat
 var is_following_player: bool = true
@@ -138,14 +138,14 @@ func _ready() -> void:
 	
 	# Layer 1 = Floor, Layer 2 = Player, Layer 3 = Movable Objects, Layer 4 = Walls
 	collision_layer = 0 # Rats don't need to be hit by anything except maybe projectiles
-	collision_mask = 9 | (1 << 8)  # Floor (1) + Walls (8) + RatStructures (9)
+	collision_mask = 9 | (1 << 8) # Floor (1) + Walls (8) + RatStructures (9)
 	
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
 	_mgr = get_tree().get_first_node_in_group("rat_manager")
 	
 	var sphere = SphereMesh.new()
-	sphere.radius = 0.25 
+	sphere.radius = 0.25
 	sphere.height = 0.5
 	_blob_mesh = MeshInstance3D.new()
 	_blob_mesh.mesh = sphere
@@ -261,7 +261,7 @@ func _physics_process(delta: float) -> void:
 		if buff_mat != null:
 			target_mat = buff_mat
 
-	if target_mat == null: 
+	if target_mat == null:
 		target_mat = _base_material
 
 	if target_mat != _current_buff_material:
@@ -389,7 +389,7 @@ func _process_follow_spring(delta: float) -> void:
 
 func set_target(pos: Vector3) -> void:
 	_target_position = pos
-	_target_ready    = true
+	_target_ready = true
 
 
 func set_neighbors(n: Array) -> void:
@@ -430,7 +430,7 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 		var probe_dist: float = maxf(0.05, ranges[i])
 		var query := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
 		query.collision_mask = 8 # Walls
-		query.exclude = [self]
+		query.exclude = [ self ]
 		var hit := ss.intersect_ray(query)
 		if hit.is_empty():
 			continue
@@ -452,7 +452,7 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 		# Add tangent slide so rats prefer flowing around walls instead of braking.
 		var tangent := normal.cross(Vector3.UP).normalized()
 		if tangent.dot(desired) < 0.0:
-			tangent = -tangent
+			tangent = - tangent
 		steer += tangent * (wall_avoidance_force * wall_avoidance_tangent_bias * proximity)
 
 	return steer
@@ -845,7 +845,6 @@ func _finish_respawn() -> void:
 	set_physics_process(true)
 
 
-
 func _reset_to_follow() -> void:
 	is_anchored = false
 	state = State.FOLLOW
@@ -916,7 +915,7 @@ func _has_floor_near(pos: Vector3, max_drop: float) -> bool:
 	var end := pos + Vector3.DOWN * (max_drop + 0.8)
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	query.collision_mask = 1 | (1 << 8) # Floor + RatStructures
-	query.exclude = [self]
+	query.exclude = [ self ]
 	var hit := ss.intersect_ray(query)
 	if not hit:
 		return false
@@ -935,7 +934,7 @@ func die() -> void:
 		eff.global_position = global_position
 		
 	if mgr != null and "rats" in mgr:
-		var idx = mgr.rats.find(self)
+		var idx = mgr.rats.find(self )
 		if idx != -1:
 			mgr.rats.remove_at(idx)
 	queue_free()
@@ -1080,9 +1079,9 @@ func _process_wild(delta: float) -> void:
 					
 	if can_recruit:
 		add_collision_exception_with(player)
-		player.add_collision_exception_with(self)
+		player.add_collision_exception_with(self )
 		set_wild(false)
 		if mgr.has_method("register_rat"):
-			mgr.register_rat(self)
+			mgr.register_rat(self )
 			if mgr.has_method("build_blob_offsets"):
 				mgr.build_blob_offsets()
