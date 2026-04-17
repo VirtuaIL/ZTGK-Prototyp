@@ -244,14 +244,13 @@ func _setup_mode_ui() -> void:
 	combat_vbox.add_child(combat_hbox)
 
 	combat_key_rects.clear()
-	for i in range(3):
-		var key_box = _create_action_box(str(i + 1))
-		var key_rect = key_box.get_child(1) as ColorRect
-		var key_label = key_rect.get_child(0) as Label
-		key_label.text = ["rotacja", "blob", "szarza"][i]
-		key_rect.custom_minimum_size = Vector2(90, 32)
-		combat_key_rects.append(key_rect)
-		combat_hbox.add_child(key_box)
+	var key_box = _create_action_box("3")
+	var key_rect = key_box.get_child(1) as ColorRect
+	var key_label = key_rect.get_child(0) as Label
+	key_label.text = "szarza"
+	key_rect.custom_minimum_size = Vector2(110, 32)
+	combat_key_rects.append(key_rect)
+	combat_hbox.add_child(key_box)
 
 	bottom_hbox.add_child(combat_panel)
 	bottom_hbox.add_child(actions_hbox)
@@ -321,13 +320,11 @@ func _setup_cheatsheet_ui() -> void:
 		"WASD — ruch\n" + \
 		"SPACJA (przytrzymaj 0.5s) — hard-recall szczurów (teleport)\n" + \
 		"\n[b]Mysz[/b]\n" + \
-		"LPM (przytrzymaj) — atak (okrąg wokół kursora)\n" + \
+		"LPM (przytrzymaj) — rysowanie ścieżki szarży\n" + \
 		"PPM — akcja kontekstowa\n" + \
 		"Scroll — rozmiar pędzla\n" + \
 		"\n[b]Combat[/b]\n" + \
-		"1 — rotacja\n" + \
-		"2 — blob\n" + \
-		"3 — szarża ścieżką\n" + \
+		"3 — szarża ścieżką (jedyny atak)\n" + \
 		"\n[b]Inne[/b]\n" + \
 		"H — pokaż/ukryj pomoc\n" + \
 		"F2 — tryb pasywny wrogów"
@@ -718,15 +715,14 @@ func _process(delta: float) -> void:
 	else:
 		if spm_rect_val: spm_rect_val.color = normal_color
 
-	# ── Combat mode highlight (1/2/3) ──
-	if combat_key_rects.size() >= 3:
-		var current := -1
+	# ── Combat mode highlight (only PATH_DASH) ──
+	if combat_key_rects.size() >= 1:
+		var dash_active := false
 		if rat_manager:
-			current = int(rat_manager.current_attack_mode)
-		for i in range(3):
-			var rect := combat_key_rects[i]
-			if rect:
-				rect.color = highlight_color if i == current else normal_color
+			dash_active = int(rat_manager.current_attack_mode) == 2
+		var rect := combat_key_rects[0]
+		if rect:
+			rect.color = highlight_color if dash_active else normal_color
 		
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
