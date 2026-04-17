@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ds3b7llghum2t"]
 
 [ext_resource type="Script" uid="uid://ckj287fuq3doe" path="res://scripts/enemies/enemy.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://2ip3duyar0xi" path="res://resources/models/enemies/enemy_1/enemy_1.fbx" id="2_8e3ao"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.8, 0.15, 0.15, 1)
@@ -18,21 +19,28 @@ radius = 0.3
 height = 0.6
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.8, 1.4, 0.8)
+size = Vector3(0.9084961, 2.1272461, 0.91936034)
 
 [node name="Enemy" type="CharacterBody3D" unique_id=561977529]
 collision_layer = 16
 collision_mask = 9
 script = ExtResource("1_script")
+animation_player_path = NodePath("enemy_1")
+attack_animation_name = &"Armature|ArmatureAction"
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=1465376866]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+visible = false
 mesh = SubResource("BoxMesh_1")
 
 [node name="Head" type="MeshInstance3D" parent="." unique_id=1414062448]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+visible = false
 mesh = SubResource("SphereMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1671842010]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.009912133, 1.0636231, 0.03438723)
 shape = SubResource("BoxShape3D_1")
+
+[node name="enemy_1" parent="." unique_id=547252635 instance=ExtResource("2_8e3ao")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
