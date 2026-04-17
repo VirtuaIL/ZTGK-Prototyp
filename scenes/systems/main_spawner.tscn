@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/main_spawner.gd" id="1_main_spawner"]
+
+[node name="MainSpawner" type="Node3D"]
+script = ExtResource("1_main_spawner")

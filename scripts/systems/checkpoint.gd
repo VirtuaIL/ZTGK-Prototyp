@@ -46,6 +46,9 @@ func _try_activate(body: Node3D) -> void:
 
 	if body.has_method("set_spawn_position"):
 		body.set_spawn_position(global_position)
+		var mgr = get_tree().get_first_node_in_group("rat_manager")
+		if mgr and mgr.has_method("save_rat_composition"):
+			mgr.save_rat_composition()
 
 	if level_id > 0 and current_scene != null and current_scene.has_method("set_current_level"):
 		current_scene.set_current_level(level_id)

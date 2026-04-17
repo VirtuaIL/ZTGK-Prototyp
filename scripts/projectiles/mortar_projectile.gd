@@ -10,10 +10,15 @@ var _lifetime: float = 0.0
 var max_lifetime: float = 10.0
 var is_exploded: bool = false
 var explosion_mat_ref: StandardMaterial3D
+var target_marker: Node3D = null
 
 func _ready() -> void:
 	collision_mask = 15 | (1 << 8) # Floor (1) + Player (2) + Movable (4) + Walls (8) + RatStructures (9)
 	body_entered.connect(_on_body_entered)
+
+func _exit_tree() -> void:
+	if target_marker != null and is_instance_valid(target_marker):
+		target_marker.queue_free()
 
 func _physics_process(delta: float) -> void:
 	if is_exploded:
@@ -35,6 +40,9 @@ func _on_body_entered(body: Node3D) -> void:
 
 func _explode() -> void:
 	is_exploded = true
+	
+	if target_marker != null and is_instance_valid(target_marker):
+		target_marker.visible = false
 	
 	# Deal splash damage
 	var targets = []

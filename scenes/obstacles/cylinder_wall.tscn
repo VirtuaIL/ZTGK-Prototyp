@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://ccyg167jj26e5"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rfhi3"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_rfhi3"]
+
+[node name="wall" type="CharacterBody3D" unique_id=1981168902]
+collision_layer = 129
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=333239315]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("CylinderMesh_rfhi3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=499049586]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CylinderShape3D_rfhi3")

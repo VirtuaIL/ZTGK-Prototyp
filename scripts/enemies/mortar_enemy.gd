@@ -5,7 +5,7 @@ const MortarProjectileScene = preload("res://scenes/projectiles/mortar_projectil
 var is_aiming: bool = false
 var aim_target_pos: Vector3 = Vector3.ZERO
 var aim_marker: MeshInstance3D = null
-var explosion_radius: float = 3.0
+@export var explosion_radius: float = 8.0
 
 func _ready() -> void:
 	super._ready()
@@ -13,12 +13,18 @@ func _ready() -> void:
 	health = max_health
 	
 	attack_range = 25.0 
-	detection_range = 35.0
-	lose_range = 40.0
+	detection_range = 50.0
+	lose_range = 55.0
 	chase_speed = 2.0
 	attack_delay = 1.5
 	attack_cooldown = 5.0
 	
+	_ensure_aim_marker()
+
+func _ensure_aim_marker() -> void:
+	if aim_marker != null and is_instance_valid(aim_marker):
+		return
+		
 	aim_marker = MeshInstance3D.new()
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color(1.0, 0.0, 1.0, 0.4)
@@ -77,6 +83,7 @@ func _process_attack(delta: float) -> void:
 			else:
 				aim_target_pos.y = _player_ref.global_position.y
 				
+			_ensure_aim_marker()
 			if aim_marker:
 				aim_marker.global_position = aim_target_pos
 				aim_marker.visible = true
@@ -93,8 +100,8 @@ func _process_attack(delta: float) -> void:
 			
 		if attack_prepare_timer <= 0.0:
 			_shoot()
-			if aim_marker:
-				aim_marker.visible = false
+			# aim_marker is now owned by projectile, don't hide it here
+			aim_marker = null
 			is_aiming = false
 			_attack_timer = attack_cooldown
 			
@@ -121,6 +128,12 @@ func _shoot() -> void:
 	if MortarProjectileScene:
 		var p = MortarProjectileScene.instantiate()
 		get_parent().add_child(p)
+		
+		# Hand off marker to projectile
+		if p.has_method("set") or "target_marker" in p:
+			p.target_marker = aim_marker
+		# Sync damage radius with the visual aim indicator
+		p.explosion_radius = explosion_radius
 		
 		var spawn_pos = global_position + Vector3(0, 1.5, 0)
 		var my_forward = Vector3(sin(rotation.y), 0, cos(rotation.y)).normalized()
