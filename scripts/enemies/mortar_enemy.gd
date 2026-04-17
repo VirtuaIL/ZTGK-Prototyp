@@ -31,7 +31,7 @@ func _ensure_aim_marker() -> void:
 		
 	aim_marker = MeshInstance3D.new()
 	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.0, 1.0, 0.4)
+	mat.albedo_color = Color(1.0, 1.0, 1.0, 0.4)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -94,13 +94,22 @@ func _process_attack(delta: float) -> void:
 				
 			var body: MeshInstance3D = get_child(0) as MeshInstance3D
 			if body and body.material_override:
-				body.material_override.albedo_color = Color(1.0, 0.0, 1.0)
+				body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
 		
 		var to_aim := aim_target_pos - global_position
 		to_aim.y = 0.0
 		if to_aim.length() > 0.01:
 			var target_angle := atan2(to_aim.x, to_aim.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * 1.5 * delta)
+
+		# Pulse the aim marker
+		if aim_marker and is_instance_valid(aim_marker):
+			var aim_mat := aim_marker.material_override as StandardMaterial3D
+			if aim_mat:
+				var pulse := sin(Time.get_ticks_msec() * 0.01) * 0.15
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := 0.4 + progress * 0.3
+				aim_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.15, 0.85))
 			
 		if attack_prepare_timer <= 0.0:
 			_shoot()

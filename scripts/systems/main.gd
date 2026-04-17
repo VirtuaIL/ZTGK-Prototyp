@@ -1029,6 +1029,10 @@ func _on_player_died() -> void:
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
+	# Clean up lingering rat death effects
+	for eff in get_tree().get_nodes_in_group("rat_death_effects"):
+		if is_instance_valid(eff):
+			eff.queue_free()
 	if reset_level_on_death:
 		_reset_level_runtime(current_level_id)
 
@@ -1429,9 +1433,12 @@ func _update_level_doors() -> void:
 			
 		var should_open = is_level_cleared(gate.controlled_level_id)
 		
-		# If the CURRENT level is not cleared, doors behind and ahead stay closed
+		# If the CURRENT level is not cleared, close doors that lead
+		# out of the current level (both forward and backward)
 		if not _current_level_cleared:
-			if gate.controlled_level_id == current_level_id or gate.controlled_level_id == current_level_id - 1:
+			# Close current level doors and any door whose level_id >= current
+			# (prevents doors ahead from being open when entering a new level)
+			if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
 				should_open = false
 				
 		if should_open:

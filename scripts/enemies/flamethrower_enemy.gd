@@ -12,6 +12,8 @@ var flame_spray_angle = deg_to_rad(30.0)
 var recent_hits: Dictionary = {}
 var flame_visual: MeshInstance3D
 var flame_particles: GPUParticles3D
+var _flame_telegraph: MeshInstance3D = null
+var _flame_telegraph_mat: StandardMaterial3D = null
 
 func _ready() -> void:
 	super._ready()
@@ -88,16 +90,44 @@ func _ready() -> void:
 	flame_particles.process_material = proc
 	add_child(flame_particles)
 
+	# ── White ground telegraph for flame attack ──
+	_flame_telegraph = MeshInstance3D.new()
+	_flame_telegraph.layers = 2
+	var tele_mesh := ImmediateMesh.new()
+	_flame_telegraph.mesh = tele_mesh
+	tele_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var tele_segments := 20
+	var tele_r := attack_range
+	var tele_half_angle : float = flame_spray_angle
+	for i in range(tele_segments):
+		var a1 := -tele_half_angle + (float(i) / tele_segments) * (tele_half_angle * 2.0)
+		var a2 := -tele_half_angle + (float(i + 1) / tele_segments) * (tele_half_angle * 2.0)
+		tele_mesh.surface_add_vertex(Vector3(0, 0.08, 0))
+		tele_mesh.surface_add_vertex(Vector3(-sin(a1) * tele_r, 0.08, cos(a1) * tele_r))
+		tele_mesh.surface_add_vertex(Vector3(-sin(a2) * tele_r, 0.08, cos(a2) * tele_r))
+	tele_mesh.surface_end()
+	_flame_telegraph_mat = StandardMaterial3D.new()
+	_flame_telegraph_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.35)
+	_flame_telegraph_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_flame_telegraph_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_flame_telegraph_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_flame_telegraph_mat.no_depth_test = true
+	_flame_telegraph.material_override = _flame_telegraph_mat
+	_flame_telegraph.visible = false
+	add_child(_flame_telegraph)
+
 func _process_attack(delta: float) -> void:
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		if is_flamethrowing:
 			is_flamethrowing = false
-			var body: MeshInstance3D = get_child(0) as MeshInstance3D
-			if body and body.material_override:
-				body.material_override.albedo_color = Color(0.7, 0.3, 0.1)
-			if flame_visual:
-				flame_visual.visible = false
+		var body: MeshInstance3D = get_child(0) as MeshInstance3D
+		if body and body.material_override:
+			body.material_override.albedo_color = Color(0.7, 0.3, 0.1)
+		if flame_visual:
+			flame_visual.visible = false
+		if _flame_telegraph:
+			_flame_telegraph.visible = false
 		return
 
 	var dist := _distance_to_player()
@@ -133,6 +163,15 @@ func _process_attack(delta: float) -> void:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
 			
+		# Show telegraph during windup
+		if _flame_telegraph:
+			_flame_telegraph.visible = true
+			if _flame_telegraph_mat:
+				var pulse := sin(Time.get_ticks_msec() * 0.01) * 0.12
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := 0.35 + progress * 0.3
+				_flame_telegraph_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.1, 0.8))
+
 		if attack_prepare_timer <= 0.0:
 			is_flamethrowing = true
 			flame_timer = flame_duration
@@ -140,6 +179,8 @@ func _process_attack(delta: float) -> void:
 			recent_hits.clear()
 			if body and body.material_override:
 				body.material_override.albedo_color = Color(0.8, 0.1, 0.1) # red
+			if _flame_telegraph:
+				_flame_telegraph.visible = false
 		return
 
 	if is_flamethrowing:
@@ -190,6 +231,8 @@ func _process_attack(delta: float) -> void:
 		if flame_particles:
 			flame_particles.emitting = false
 			flame_particles.visible = false
+		if _flame_telegraph:
+			_flame_telegraph.visible = false
 	else:
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0

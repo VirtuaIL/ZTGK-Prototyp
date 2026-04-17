@@ -42,7 +42,9 @@ var health: float = max_health
 @export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0
 @export var min_attack_charge_time: float = 0.85
-@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.32)
+@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.45)
+@export var telegraph_pulse_speed: float = 10.0
+@export var telegraph_pulse_depth: float = 0.18
 
 # ── Wander ──
 @export var wander_radius: float = 5.0
@@ -379,6 +381,14 @@ func _process_attack(delta: float) -> void:
 	if current_attack != AttackType.NONE:
 		# We are winding up an attack
 		attack_prepare_timer -= delta
+		# Pulse the telegraph marker alpha
+		if attack_marker != null and attack_marker.visible:
+			var mat_pulse := attack_marker.material_override as StandardMaterial3D
+			if mat_pulse:
+				var pulse := sin(Time.get_ticks_msec() * 0.001 * telegraph_pulse_speed) * telegraph_pulse_depth
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := attack_charge_color.a + progress * 0.25
+				mat_pulse.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.1, 0.85))
 		if attack_prepare_timer <= 0.0:
 			_execute_attack()
 			current_attack = AttackType.NONE
@@ -417,10 +427,10 @@ func _pick_and_start_attack() -> void:
 		current_attack = AttackType.SLASH
 		
 	attack_prepare_timer = maxf(attack_delay, min_attack_charge_time)
-	# Flash white to indicate windup
+	# Flash bright red to indicate windup (white telegraph on ground handles area)
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
-		body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
+		body.material_override.albedo_color = Color(1.0, 0.3, 0.3)
 		
 	if attack_marker == null:
 		attack_marker = MeshInstance3D.new()

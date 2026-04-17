@@ -9,6 +9,7 @@ var shockwave: MeshInstance3D
 var smat: StandardMaterial3D
 
 func _ready() -> void:
+	add_to_group("rat_death_effects")
 	var box = BoxMesh.new()
 	box.size = Vector3(0.1, 0.1, 0.1)
 	

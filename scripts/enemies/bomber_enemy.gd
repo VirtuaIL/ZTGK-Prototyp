@@ -92,7 +92,7 @@ func _create_telegraph(pos: Vector3, duration: float) -> void:
 	mesh.height = 0.05
 	_telegraph_marker.mesh = mesh
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 1.0, 0.2, 0.22)
+	mat.albedo_color = Color(1.0, 1.0, 1.0, 0.3)
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
@@ -122,7 +122,7 @@ func _update_telegraph_color(delta: float) -> void:
 		return
 	_telegraph_time_left = max(0.0, _telegraph_time_left - delta)
 	var t := 1.0 - (_telegraph_time_left / _telegraph_time_total) # 0->1
-	var col := Color(0.2, 1.0, 0.2).lerp(Color(1.0, 0.2, 0.1), t)
+	var col := Color(1.0, 1.0, 1.0).lerp(Color(1.0, 0.2, 0.1), t)
 	var pulse := 1.0 + sin(t * TAU * 2.0) * 0.08
 	_telegraph_marker.scale = Vector3(pulse, 1.0, pulse)
 	var mat := _telegraph_marker.material_override as StandardMaterial3D

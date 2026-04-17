@@ -6,6 +6,8 @@ var laser_visual: MeshInstance3D
 var laser_mat: StandardMaterial3D
 var lock_on_time: float = 0.5
 var is_locked: bool = false
+var _ground_target: MeshInstance3D = null
+var _ground_target_mat: StandardMaterial3D = null
 
 func _ready() -> void:
 	super._ready()
@@ -30,10 +32,10 @@ func _ready() -> void:
 	cyl.height = 1.0 
 	laser_visual.mesh = cyl
 	laser_mat = StandardMaterial3D.new()
-	laser_mat.albedo_color = Color(1.0, 0.0, 0.0, 0.6)
+	laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.5)
 	laser_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	laser_mat.emission_enabled = true
-	laser_mat.emission = Color(1.0, 0.0, 0.0)
+	laser_mat.emission = Color(1.0, 1.0, 1.0)
 	laser_mat.emission_energy_multiplier = 2.0
 	laser_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	laser_visual.material_override = laser_mat
@@ -41,6 +43,27 @@ func _ready() -> void:
 	laser_visual.rotation_degrees = Vector3(90, 0, 0)
 	laser_visual.visible = false
 	add_child(laser_visual)
+
+	# Ground target indicator
+	_ground_target = MeshInstance3D.new()
+	_ground_target.layers = 2
+	var gt_mesh := CylinderMesh.new()
+	gt_mesh.top_radius = 0.8
+	gt_mesh.bottom_radius = 0.8
+	gt_mesh.height = 0.04
+	_ground_target.mesh = gt_mesh
+	_ground_target_mat = StandardMaterial3D.new()
+	_ground_target_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.4)
+	_ground_target_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ground_target_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ground_target_mat.no_depth_test = true
+	_ground_target.material_override = _ground_target_mat
+	_ground_target.visible = false
+	get_tree().current_scene.call_deferred("add_child", _ground_target)
+
+func _exit_tree() -> void:
+	if _ground_target and is_instance_valid(_ground_target):
+		_ground_target.queue_free()
 
 func _find_target() -> void:
 	var players = get_tree().get_nodes_in_group("player")
@@ -61,6 +84,8 @@ func _process_attack(delta: float) -> void:
 		ai_state = AIState.WANDER
 		laser_visual.visible = false
 		is_locked = false
+		if _ground_target:
+			_ground_target.visible = false
 		return
 
 	var dist := _distance_to_player()
@@ -80,14 +105,14 @@ func _process_attack(delta: float) -> void:
 			# Locked phase
 			if not is_locked:
 				is_locked = true
-				laser_mat.albedo_color = Color(1.0, 0.5, 0.8, 0.8) 
-				laser_mat.emission = Color(1.0, 0.5, 0.8)
-				laser_mat.emission_energy_multiplier = 4.0
+				laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.85)
+				laser_mat.emission = Color(1.0, 1.0, 1.0)
+				laser_mat.emission_energy_multiplier = 5.0
 		else:
 			# Tracking phase
 			is_locked = false
-			laser_mat.albedo_color = Color(1.0, 0.0, 0.0, 0.6)
-			laser_mat.emission = Color(1.0, 0.0, 0.0)
+			laser_mat.albedo_color = Color(1.0, 1.0, 1.0, 0.5)
+			laser_mat.emission = Color(1.0, 1.0, 1.0)
 			laser_mat.emission_energy_multiplier = 2.0
 			
 			var to_player := _player_ref.global_position - global_position
@@ -97,11 +122,29 @@ func _process_attack(delta: float) -> void:
 				rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * 1.5 * delta)
 				
 		laser_visual.visible = true
+
+		# Update ground target position
+		if _ground_target and _player_ref:
+			_ground_target.visible = true
+			var my_fwd := Vector3(sin(rotation.y), 0, cos(rotation.y)).normalized()
+			# Raycast forward to find where laser hits ground
+			var laser_origin := global_position + Vector3.UP * 1.0 + my_fwd * 1.0
+			var laser_end := laser_origin + my_fwd * 30.0
+			# Place target at player feet
+			_ground_target.global_position = _player_ref.global_position
+			_ground_target.global_position.y += 0.05
+			if _ground_target_mat:
+				var pulse := sin(Time.get_ticks_msec() * 0.012) * 0.12
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := 0.35 + progress * 0.35
+				_ground_target_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.15, 0.85))
 			
 		if attack_prepare_timer <= 0.0:
 			_shoot()
 			laser_visual.visible = false
 			is_locked = false
+			if _ground_target:
+				_ground_target.visible = false
 			_attack_timer = attack_cooldown
 			
 			var body: MeshInstance3D = get_child(0) as MeshInstance3D
