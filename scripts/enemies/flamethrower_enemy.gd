@@ -15,18 +15,19 @@ var flame_particles: GPUParticles3D
 
 func _ready() -> void:
 	super._ready()
-	max_health = 130.0 
+	max_health = 250.0
 	health = max_health
 	
-	attack_range = 10.0 
+	attack_range = 10.0
 	detection_range = 35.0
 	lose_range = 42.0
-	attack_damage = 20.0 
+	attack_damage = 20.0
 	attack_cooldown = 5.0
 	attack_delay = 2.0
 	movement_pattern = MovePattern.STRAFE
 	strafe_bias = 0.62
 	wall_avoidance_force = 3.4
+	chase_speed = 1.5
 
 	flame_visual = MeshInstance3D.new()
 	var cone = CylinderMesh.new()
@@ -101,6 +102,8 @@ func _process_attack(delta: float) -> void:
 		return
 
 	var dist := _distance_to_player()
+	var to_player := _player_ref.global_position - global_position
+	to_player.y = 0.0
 	
 	# Slow down while attacking
 	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 5.0)
@@ -127,8 +130,6 @@ func _process_attack(delta: float) -> void:
 			else:
 				body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # Windup orange
 
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
@@ -155,8 +156,6 @@ func _process_attack(delta: float) -> void:
 			flame_particles.emitting = true
 		
 		# Slowly track player while firing
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, (rotation_speed * 0.3) * delta)
@@ -191,11 +190,13 @@ func _process_attack(delta: float) -> void:
 			flame_particles.emitting = false
 			flame_particles.visible = false
 	else:
-		var to_player := _player_ref.global_position - global_position
-		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+			# Strafe sideways while waiting for cooldown
+			var strafe_dir := to_player.normalized().cross(Vector3.UP)
+			velocity.x = strafe_dir.x * chase_speed * 0.6
+			velocity.z = strafe_dir.z * chase_speed * 0.6
 
 func _shoot_fire() -> void:
 	var targets = []
@@ -236,4 +237,4 @@ func _shoot_fire() -> void:
 					recent_hits[t] = 0.5 # Hit max once every 0.5s per attack
 				elif t.has_method("die"):
 					t.die()
-					recent_hits[t] = 0.5 
+					recent_hits[t] = 0.5

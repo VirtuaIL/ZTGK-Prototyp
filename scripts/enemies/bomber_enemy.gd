@@ -15,9 +15,15 @@ var _pending_bomb_target: Vector3 = Vector3.ZERO
 var _telegraph_marker: MeshInstance3D = null
 var _telegraph_time_total: float = 0.0
 var _telegraph_time_left: float = 0.0
+var _reposition_target: Vector3 = Vector3.ZERO
+var _has_reposition_target: bool = false
 
 func _ready() -> void:
 	super._ready()
+	max_health = 100.0
+	health = max_health
+	move_speed = 2.5
+	chase_speed = 2.5
 	attack_range = bomb_range
 	attack_cooldown = bomb_cooldown
 	attack_delay = bomb_windup
@@ -64,11 +70,33 @@ func _process_attack(delta: float) -> void:
 		_create_telegraph(_pending_bomb_target, bomb_windup + bomb_flight_time)
 		attack_prepare_timer = attack_delay
 		_bomb_timer = bomb_cooldown
+		_has_reposition_target = false
 
 	if attack_prepare_timer > 0.0:
 		attack_prepare_timer -= delta
 		if attack_prepare_timer <= 0.0:
 			_throw_bomb(_pending_bomb_target)
+			# Pick a reposition point to hop to after throwing
+			var angle := randf() * TAU
+			var hop_dist := randf_range(3.0, 7.0)
+			_reposition_target = global_position + Vector3(cos(angle) * hop_dist, 0.0, sin(angle) * hop_dist)
+			_reposition_target.y = global_position.y
+			_has_reposition_target = true
+	else:
+		# Between throws: reposition (hop to a nearby point)
+		if _has_reposition_target:
+			var to_repo := _reposition_target - global_position
+			to_repo.y = 0.0
+			if to_repo.length() > 0.8:
+				var dir := to_repo.normalized()
+				velocity.x = dir.x * chase_speed * 1.2
+				velocity.z = dir.z * chase_speed * 1.2
+				var target_angle := atan2(dir.x, dir.z)
+				rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+			else:
+				_has_reposition_target = false
+				velocity.x = 0.0
+				velocity.z = 0.0
 
 func _throw_bomb(target_pos: Vector3) -> void:
 	if BombScene == null:
