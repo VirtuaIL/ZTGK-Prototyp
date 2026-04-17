@@ -45,7 +45,6 @@ var health: float = max_health
 @export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.45)
 @export var telegraph_pulse_speed: float = 10.0
 @export var telegraph_pulse_depth: float = 0.18
-@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.32)
 @export var animation_player_path: NodePath
 @export var attack_animation_name: StringName = &"Attack"
 
