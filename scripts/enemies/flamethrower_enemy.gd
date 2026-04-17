@@ -99,7 +99,7 @@ func _ready() -> void:
 	tele_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	var tele_segments := 20
 	var tele_r := attack_range
-	var tele_half_angle : float = flame_spray_angle
+	var tele_half_angle: float = flame_spray_angle
 	for i in range(tele_segments):
 		var a1 := -tele_half_angle + (float(i) / tele_segments) * (tele_half_angle * 2.0)
 		var a2 := -tele_half_angle + (float(i + 1) / tele_segments) * (tele_half_angle * 2.0)
@@ -224,6 +224,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
+		_play_attack_animation()
 		var body: MeshInstance3D = get_child(0) as MeshInstance3D
 		if body and body.material_override:
 			body.material_override.albedo_color = Color(1.0, 0.5, 0.0) # windup

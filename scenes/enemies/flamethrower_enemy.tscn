@@ -30,6 +30,8 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0
 collision_layer = 16
 collision_mask = 9
 script = ExtResource("1_script")
+animation_player_path = NodePath("flamethrower")
+attack_animation_name = &"attack"
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=1666726977]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
@@ -47,3 +49,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05629888, 1.0492188, 0.105
 shape = SubResource("BoxShape3D_1")
 
 [node name="flamethrower" parent="." unique_id=1427947890 instance=ExtResource("2_kf07m")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
