@@ -186,6 +186,7 @@ func _process_attack(delta: float) -> void:
 				_ground_target_mat.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.15, 0.85))
 			
 		if attack_prepare_timer <= 0.0:
+			_play_attack_animation()
 			_shoot()
 			laser_visual.visible = false
 			is_locked = false
@@ -204,7 +205,7 @@ func _process_attack(delta: float) -> void:
 			ai_state = AIState.CHASE
 			return
 		attack_prepare_timer = attack_delay
-		_play_attack_animation()
+		_play_windup_animation()
 		is_locked = false
 	else:
 		# Track player and back away during cooldown

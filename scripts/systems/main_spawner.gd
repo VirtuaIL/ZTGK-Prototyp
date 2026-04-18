@@ -9,6 +9,7 @@ enum SpawnKind {
 	SNIPER_ENEMY,
 	MORTAR_ENEMY,
 	CUSTOM_SCENE,
+	RANDOM_MIX,
 }
 
 enum PositionMode {
@@ -69,7 +70,7 @@ func _process(delta: float) -> void:
 		return
 
 	var main := get_tree().current_scene
-	if main == null or not main.has_method("trigger_spawner"):
+	if main == null or not main.is_node_ready():
 		return
 
 	var is_active := _is_active_for_main(main)
@@ -82,16 +83,159 @@ func _process(delta: float) -> void:
 
 	_elapsed += delta
 	while _elapsed >= _next_trigger_at and not _completed:
-		var did_spawn := bool(main.call("trigger_spawner", self))
-		if not did_spawn:
-			_completed = true
-			break
-
+		var _did_spawn := _spawn(main)
+		# Consume the trigger even if it couldn't spawn anything (e.g. invalid setup or temporary shortage)
 		_trigger_count += 1
 		if repeat and (max_triggers <= 0 or _trigger_count < max_triggers):
 			_next_trigger_at += maxf(0.01, repeat_interval)
 		else:
 			_completed = true
+
+
+var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
+var _wave_flamethrower_scene: PackedScene = preload("res://scenes/enemies/flamethrower_enemy.tscn")
+var _wave_bomber_scene: PackedScene = preload("res://scenes/enemies/bomber_enemy.tscn")
+var _wave_mortar_scene: PackedScene = preload("res://scenes/enemies/mortar_enemy.tscn")
+var _wave_sniper_scene: PackedScene = preload("res://scenes/enemies/sniper_enemy.tscn")
+
+func _spawn(main: Node) -> bool:
+	match spawn_kind:
+		SpawnKind.WILD_RAT:
+			return _spawn_wild_rats(main)
+		_:
+			return _spawn_scene(main)
+
+func _spawn_wild_rats(main: Node) -> bool:
+	var rat_manager = main.get("rat_manager")
+	if rat_manager == null or rat_manager.rat_scene == null:
+		return false
+
+	var points := get_spawn_points(main)
+	if points.is_empty():
+		return false
+
+	var count := randi_range(min(count_min, count_max), max(count_min, count_max))
+	if count <= 0:
+		return false
+
+	var player = main.get("player")
+	var target_level = get_target_level_id(main)
+
+	for i in range(count):
+		var rat = rat_manager.rat_scene.instantiate()
+		if rat == null:
+			continue
+		var spawn_pos := _pick_spawner_point(points, choose_random_point, i) + _random_spawn_offset(spawn_radius, 0.2)
+		rat.player = player
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(_roll_wild_rat_type(
+				wild_rat_prob_normal,
+				wild_rat_prob_red,
+				wild_rat_prob_green
+			))
+		rat_manager.add_child(rat)
+		_assign_level_tag(rat, target_level)
+		rat.global_position = spawn_pos
+		if rat.has_method("set_wild"):
+			rat.set_wild(true)
+	return true
+
+
+func _spawn_scene(main: Node) -> bool:
+	var points := get_spawn_points(main)
+	if points.is_empty():
+		return false
+
+	var count := randi_range(min(count_min, count_max), max(count_min, count_max))
+	if count <= 0:
+		return false
+
+	var target_level = get_target_level_id(main)
+
+	for i in range(count):
+		var scene: PackedScene = null
+		if spawn_kind == SpawnKind.RANDOM_MIX:
+			var r := randf()
+			if r <= 0.15 and _wave_sniper_scene:
+				scene = _wave_sniper_scene
+			elif r <= 0.30 and _wave_bomber_scene:
+				scene = _wave_bomber_scene
+			elif r <= 0.55 and _wave_flamethrower_scene:
+				scene = _wave_flamethrower_scene
+			elif r <= 0.65 and _wave_mortar_scene:
+				scene = _wave_mortar_scene
+			else:
+				scene = _wave_enemy_scene
+		else:
+			scene = _get_scene_for_spawner_kind(spawn_kind, custom_scene)
+			
+		if scene == null:
+			continue
+			
+		var node := scene.instantiate()
+		if node == null:
+			continue
+		main.add_child(node)
+		if node is Node3D:
+			var node3d := node as Node3D
+			node3d.global_position = _pick_spawner_point(points, choose_random_point, i) + _random_spawn_offset(spawn_radius, 0.0)
+			_assign_level_tag(node3d, target_level)
+			
+		# Automatically attach death signal if main.gd still manages scripted enemy tracking (it can just queue free and check level completion there)
+		if node.has_signal("enemy_died"):
+			if main.has_method("_on_scripted_enemy_died"):
+				node.enemy_died.connect(Callable(main, "_on_scripted_enemy_died").bind(node), CONNECT_ONE_SHOT)
+	return true
+
+
+func _get_scene_for_spawner_kind(spawn_kind_id: int, custom: PackedScene) -> PackedScene:
+	match spawn_kind_id:
+		SpawnKind.BASIC_ENEMY:
+			return _wave_enemy_scene
+		SpawnKind.FLAMETHROWER_ENEMY:
+			return _wave_flamethrower_scene
+		SpawnKind.BOMBER_ENEMY:
+			return _wave_bomber_scene
+		SpawnKind.SNIPER_ENEMY:
+			return _wave_sniper_scene
+		SpawnKind.MORTAR_ENEMY:
+			return _wave_mortar_scene
+		SpawnKind.CUSTOM_SCENE:
+			return custom
+		_:
+			return null
+
+
+func _pick_spawner_point(points: Array[Vector3], choose_random: bool, index: int) -> Vector3:
+	if points.is_empty():
+		return Vector3.ZERO
+	if choose_random:
+		return points[randi() % points.size()]
+	return points[index % points.size()]
+
+
+func _random_spawn_offset(radius: float, y_offset: float) -> Vector3:
+	var angle := randf() * TAU
+	var dist := randf_range(0.0, maxf(0.0, radius))
+	return Vector3(cos(angle) * dist, y_offset, sin(angle) * dist)
+
+
+func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float) -> int:
+	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green)
+	if total_prob <= 0.0:
+		return 0
+	var roll := randf_range(0.0, total_prob)
+	if roll < prob_red:
+		return 1
+	if roll < prob_red + prob_green:
+		return 2
+	return 0
+
+
+func _assign_level_tag(node: Node, level_id: int) -> void:
+	if node == null or level_id <= 0:
+		return
+	node.set_meta("level_id", level_id)
 
 
 func reset_runtime() -> void:

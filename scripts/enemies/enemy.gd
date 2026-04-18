@@ -46,7 +46,8 @@ var health: float = max_health
 @export var telegraph_pulse_speed: float = 10.0
 @export var telegraph_pulse_depth: float = 0.18
 @export var animation_player_path: NodePath
-@export var attack_animation_name: StringName = &"Attack"
+@export var attack_animation_name: StringName = &"attack"
+@export var windup_animation_name: StringName = &"windup"
 
 # ── Wander ──
 @export var wander_radius: float = 5.0
@@ -435,7 +436,7 @@ func _pick_and_start_attack() -> void:
 		current_attack = AttackType.SLASH
 		
 	attack_prepare_timer = maxf(attack_delay, min_attack_charge_time)
-	_play_attack_animation()
+	_play_windup_animation()
 	# Flash white to indicate windup
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
@@ -484,6 +485,7 @@ func _pick_and_start_attack() -> void:
 func _execute_attack() -> void:
 	if attack_marker != null:
 		attack_marker.visible = false
+	_play_attack_animation()
 	_flash_attack()
 	
 	var targets = []
@@ -717,6 +719,22 @@ func _play_attack_animation() -> void:
 	for anim_name in _animation_player.get_animation_list():
 		var lowered := String(anim_name).to_lower()
 		if lowered.contains("attack") or lowered.contains("atk"):
+			fallback = anim_name
+			break
+	if fallback != StringName():
+		_animation_player.play(fallback)
+
+
+func _play_windup_animation() -> void:
+	if _animation_player == null:
+		return
+	if _animation_player.has_animation(windup_animation_name):
+		_animation_player.play(windup_animation_name)
+		return
+	var fallback := StringName()
+	for anim_name in _animation_player.get_animation_list():
+		var lowered := String(anim_name).to_lower()
+		if lowered.contains("windup") or lowered.contains("charge") or lowered.contains("prepare"):
 			fallback = anim_name
 			break
 	if fallback != StringName():
