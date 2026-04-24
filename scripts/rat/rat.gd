@@ -318,7 +318,8 @@ func _physics_process(delta: float) -> void:
 			return
 		State.PATH_DASH:
 			_process_path_dash(delta)
-			_check_damage()
+
+	_check_damage()
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
@@ -674,10 +675,16 @@ func _check_damage() -> void:
 	var mgr = _mgr
 	if mgr == null or not is_instance_valid(mgr):
 		mgr = get_tree().get_first_node_in_group("rat_manager")
-	if mgr == null or (not mgr.get("combat_rmb_down") and state != State.PATH_DASH):
-		return
 		
-	if mgr.get("current_attack_mode") == 1: # BLOB mode
+	var mgr_has_red = (mgr != null and "buff_red_timer" in mgr and mgr.buff_red_timer > 0.0)
+	var is_red_rat = (default_rat_type == RatType.RED)
+	var is_red = is_red_rat or mgr_has_red
+	
+	if not is_red:
+		if mgr == null or (state != State.PATH_DASH):
+			return
+		
+	if mgr != null and mgr.get("current_attack_mode") == 1: # BLOB mode
 		return
 		
 	var enemies := _get_enemies_cached()
@@ -685,10 +692,7 @@ func _check_damage() -> void:
 	var final_dmg = damage_per_hit
 	var dmg_color = Color.WHITE
 	
-	var mgr_has_red = ("buff_red_timer" in mgr and mgr.buff_red_timer > 0.0)
-	var is_red_rat = (default_rat_type == RatType.RED)
-	
-	if mgr_has_red or is_red_rat:
+	if is_red:
 		final_dmg *= 2.0
 		dmg_color = Color(0.9, 0.1, 0.1)
 	
