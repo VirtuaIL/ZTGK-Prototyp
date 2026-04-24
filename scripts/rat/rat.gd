@@ -1053,13 +1053,11 @@ func _reset_blob_visuals() -> void:
 			m.transform = _visual_base_transforms[m]
 
 func _process_wild(delta: float) -> void:
-	if _wild_timer < 0.0:
-		# Negative lifespan means "never despawn".
-		return
-	_wild_timer -= delta
-	if _wild_timer <= 0.0:
-		queue_free()
-		return
+	if _wild_timer >= 0.0:
+		_wild_timer -= delta
+		if _wild_timer <= 0.0:
+			queue_free()
+			return
 		
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
@@ -1083,6 +1081,10 @@ func _process_wild(delta: float) -> void:
 		
 	var dist = _flat_distance(global_position, player.global_position)
 	var can_recruit = dist <= recruitment_range
+	if not can_recruit and mgr.has_method("_mouse_to_world"):
+		var cursor_world: Vector3 = mgr.call("_mouse_to_world")
+		if cursor_world != Vector3.ZERO:
+			can_recruit = _flat_distance(global_position, cursor_world) <= recruitment_range
 	if not can_recruit and mgr != null and "wild_recruit_by_rats" in mgr and mgr.wild_recruit_by_rats:
 		var chain_range := recruitment_range
 		if "wild_recruit_by_rats_range" in mgr:

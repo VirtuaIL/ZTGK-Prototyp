@@ -126,6 +126,10 @@ func _spawn_wild_rats(main: Node) -> bool:
 		if rat == null:
 			continue
 		var spawn_pos := _pick_spawner_point(points, choose_random_point, i) + _random_spawn_offset(spawn_radius, 0.2)
+		if rat_manager.has_method("get_wild_lifespan_for_level"):
+			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level))
+			if override_lifespan >= 0.0 and rat is Rat:
+				(rat as Rat).wild_lifespan = override_lifespan
 		rat.player = player
 		if rat.has_method("set_rat_type"):
 			rat.set_rat_type(_roll_wild_rat_type(

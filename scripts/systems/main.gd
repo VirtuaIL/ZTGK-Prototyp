@@ -888,10 +888,10 @@ func _spawn_wild_rats_wave_group(spawner: WaveSpawner, group: WaveGroup) -> void
 		if rat == null:
 			continue
 		var target_level_id := spawner.get_target_level_id(self )
-		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+		if rat_manager.has_method("get_wild_lifespan_for_level"):
 			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
-			if override_lifespan >= 0.0:
-				rat.wild_lifespan = override_lifespan
+			if override_lifespan >= 0.0 and rat is Rat:
+				(rat as Rat).wild_lifespan = override_lifespan
 		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
 		rat.player = player
 		if rat.has_method("set_rat_type"):
@@ -924,10 +924,10 @@ func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
 		if rat == null:
 			continue
 		var target_level_id := spawner.get_target_level_id(self )
-		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+		if rat_manager.has_method("get_wild_lifespan_for_level"):
 			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
-			if override_lifespan >= 0.0:
-				rat.wild_lifespan = override_lifespan
+			if override_lifespan >= 0.0 and rat is Rat:
+				(rat as Rat).wild_lifespan = override_lifespan
 		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
 		rat.player = player
 		if rat.has_method("set_rat_type"):

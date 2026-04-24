@@ -66,10 +66,11 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 5.760985)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, -33.86341)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
+rat_count = 0
 use_wide_brush = true
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
@@ -78,10 +79,10 @@ script = ExtResource("7_ability_hud")
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.5124526, 1.855777, -22.119576)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.3713894, 1.855777, -32.24642)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
-level_id = 2
+level_id = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.30412865)
@@ -150,9 +151,11 @@ shape = SubResource("BoxShape3D_yq6so")
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40)
 
 [node name="Level2" parent="levels" unique_id=488622088 instance=ExtResource("9_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -39.93393)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0, -39.93393)
+visible = false
 
 [node name="Level3" parent="levels" unique_id=521719276 instance=ExtResource("10_ya4ey")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.10553932, 0, -79.756905)

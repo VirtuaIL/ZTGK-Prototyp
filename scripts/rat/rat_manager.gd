@@ -16,6 +16,7 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat/rat.tscn")
+@export var rat_count: int = 60
 @export var min_cap: int = 60
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
@@ -123,7 +124,8 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
-var _pity_timer: float = 5.0
+@export var _pity_toggle: bool = false 
+@export var _pity_timer: float = 5.0
 var _pity_canvas: CanvasLayer = null
 var _pity_label: Label = null
 
@@ -323,7 +325,9 @@ func setup_player(player: CharacterBody3D) -> void:
 	if _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 		
-	_spawn_rats_near_player(60)
+	# Spawn initial rats using current-level rat spawn markers when available.
+	# Falls back to player position inside _spawn_rats() when no markers exist.
+	_spawn_rats(rat_count)
 	respawn_count = max(respawn_count, rats.size())
 
 
@@ -621,13 +625,14 @@ func _process(delta: float) -> void:
 
 	# Reset game if all rats die (with pity timer)
 	if get_total_rat_count() <= 0 and _player != null:
-		_pity_timer -= delta
-		if _pity_label:
-			_pity_label.visible = true
-			_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
-		if _pity_timer <= 0.0:
-			if _player.has_method("die"):
-				_player.die()
+		if _pity_toggle == true:
+			_pity_timer -= delta
+			if _pity_label:
+				_pity_label.visible = true
+				_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
+			if _pity_timer <= 0.0:
+				if _player.has_method("die"):
+					_player.die()
 	else:
 		_pity_timer = 5.0
 		if _pity_label:
