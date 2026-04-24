@@ -278,8 +278,18 @@ func _ready() -> void:
 			gdm.name = "GasDamageManager"
 			add_child(gdm)
 
+	# Ensure MusicManager exists for musical note effects
+	if get_tree().get_first_node_in_group("music_manager") == null:
+		var mm_script = load("res://scripts/systems/music_manager.gd")
+		if mm_script:
+			var mm = Node.new()
+			mm.set_script(mm_script)
+			mm.name = "MusicManager"
+			add_child(mm)
+
 	add_to_group("rat_manager")
 	_clamp_caps()
+	_setup_custom_cursor()
 
 	buff_mat_red = StandardMaterial3D.new()
 	buff_mat_red.albedo_color = Color(0.9, 0.1, 0.1)
@@ -1499,6 +1509,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					circle_radius = clampf(circle_radius, circle_radius_min, circle_radius_max)
 					if mouse_is_down_left and not _lmb_is_object_drag:
 						_update_circle_preview()
+				
+				_update_cheese_cursor()
 
 			get_viewport().set_input_as_handled()
 			return
@@ -1778,9 +1790,64 @@ func _draw_path_dash_brush_marker(center: Vector3, lateral: Vector3) -> void:
 	var offset := Vector3(0, 0.1, 0)
 
 	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	if line_material:
+		line_material.albedo_color = Color(1.0, 0.8, 0.1) # Serowy żółty
 	immediate_mesh.surface_add_vertex(center - lateral * half_width + offset)
 	immediate_mesh.surface_add_vertex(center + lateral * half_width + offset)
 	immediate_mesh.surface_end()
+
+
+func _setup_custom_cursor() -> void:
+	_update_cheese_cursor()
+
+
+func _update_cheese_cursor() -> void:
+	var spread_t: float = 0.0
+	if build_draw_mode == DRAW_MODE_CIRCLE:
+		spread_t = (circle_radius - circle_radius_min) / max(0.1, circle_radius_max - circle_radius_min)
+	else:
+		spread_t = float(brush_lane_pairs - brush_lane_pairs_min) / max(1.0, float(brush_lane_pairs_max - brush_lane_pairs_min))
+	
+	var base_size := 64
+	var cheese_size := int(lerpf(24.0, 56.0, spread_t))
+	var img = Image.create(base_size, base_size, false, Image.FORMAT_RGBA8)
+	var yellow = Color(1.0, 0.85, 0.2, 1.0)
+	var orange = Color(0.9, 0.6, 0.1, 1.0)
+	img.fill(Color(0, 0, 0, 0))
+	
+	for y in range(cheese_size):
+		for x in range(cheese_size):
+			if x < y:
+				img.set_pixel(x, y, yellow)
+				if x == 0 or y == cheese_size - 1 or x == y - 1:
+					img.set_pixel(x, y, orange)
+	
+	# Add more and better distributed holes
+	var hole_templates = [
+		Vector2(0.3, 0.6), Vector2(0.5, 0.8), Vector2(0.2, 0.4),
+		Vector2(0.6, 0.9), Vector2(0.4, 0.7), Vector2(0.15, 0.8)
+	]
+	
+	var num_holes := int(3 + spread_t * 3)
+	var hole_r := int(lerpf(2.0, 4.0, spread_t))
+	
+	for i in range(min(num_holes, hole_templates.size())):
+		var h_x := int(cheese_size * hole_templates[i].x)
+		var h_y := int(cheese_size * hole_templates[i].y)
+		
+		# Ensure we are inside the triangle x < y
+		for dy in range(-hole_r, hole_r + 1):
+			for dx in range(-hole_r, hole_r + 1):
+				if dx*dx + dy*dy < hole_r*hole_r:
+					var px = h_x + dx
+					var py = h_y + dy
+					if px >= 0 and px < cheese_size and py >= 0 and py < cheese_size:
+						if px < py - 1: # Safety check to stay inside triangle
+							img.set_pixel(px, py, orange)
+	
+	var cursor_tex = ImageTexture.create_from_image(img)
+	Input.set_custom_mouse_cursor(cursor_tex, Input.CURSOR_ARROW, Vector2(0, 0))
+	Input.set_custom_mouse_cursor(cursor_tex, Input.CURSOR_POINTING_HAND, Vector2(0, 0))
 
 func receive_laser(delta: float) -> void:
 	if not _has_static_rats():
@@ -2186,11 +2253,12 @@ func _update_cursor_preview() -> void:
 		if line_material:
 			line_material.albedo_color = _brush_color(Color.WHITE)
 		
-		var offset := Vector3(0, 0.1, 0)
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-		immediate_mesh.surface_add_vertex(raw_pos - lateral * (width / 2.0) + offset)
-		immediate_mesh.surface_add_vertex(raw_pos + lateral * (width / 2.0) + offset)
-		immediate_mesh.surface_end()
+		# Drawing logic for white bar removed as requested
+		# var offset := Vector3(0, 0.1, 0)
+		# immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+		# immediate_mesh.surface_add_vertex(raw_pos - lateral * (width / 2.0) + offset)
+		# immediate_mesh.surface_add_vertex(raw_pos + lateral * (width / 2.0) + offset)
+		# immediate_mesh.surface_end()
 
 
 func _update_circle_preview(invalid_surface: bool = false) -> void:

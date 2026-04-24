@@ -36,6 +36,12 @@ var health_bar: ProgressBar = null
 var _spawn_position: Vector3 = Vector3.ZERO
 var minimap_camera: Camera3D = null
 
+var _music_particles: GPUParticles3D = null # Legacy ref
+var _music_idle: GPUParticles3D = null
+var _music_attack: GPUParticles3D = null
+var _music_move: GPUParticles3D = null
+var _music_follow: GPUParticles3D = null
+
 func _ready() -> void:
 	add_to_group("player")
 	collision_layer = 2 # Layer 2: Player
@@ -48,9 +54,54 @@ func _ready() -> void:
 	_update_health_bar()
 
 	_setup_minimap_camera()
+	_setup_music_visuals()
 
+func _setup_music_visuals() -> void:
+	var music_mgr = get_tree().get_first_node_in_group("music_manager")
+	if music_mgr == null:
+		return
+	
+	_music_attack = music_mgr.create_notes_particles(Color(1.0, 0.1, 0.1), 24) # Intense attack
+	_music_move = music_mgr.create_notes_particles(Color(0.1, 0.8, 1.0), 4)    # Subtle movement
+	_music_follow = music_mgr.create_notes_particles(Color(0.1, 1.0, 0.1), 3)  # Subtle follow
+	
+	for p in [_music_attack, _music_move, _music_follow]:
+		add_child(p)
+		p.position = Vector3(0, 1.8, 0)
+		p.emitting = false
 
 func _physics_process(delta: float) -> void:
+	# Check if music manager is now available
+	if _music_attack == null:
+		_setup_music_visuals()
+	
+	# Update music note states
+	if _music_attack:
+		var is_moving = Vector2(velocity.x, velocity.z).length() > 0.1
+		var is_attacking = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+		
+		# Detect if mouse is actually being moved by the player
+		var mouse_vel = Input.get_last_mouse_velocity().length()
+		var is_mouse_active = mouse_vel > 20.0 # Threshold to avoid micro-jitters
+		
+		# Strictly exclusive logic
+		if is_attacking:
+			_music_attack.emitting = true
+			_music_move.emitting = false
+			_music_follow.emitting = false
+		elif is_moving:
+			_music_attack.emitting = false
+			_music_move.emitting = true
+			_music_follow.emitting = false
+		elif is_mouse_active:
+			_music_attack.emitting = false
+			_music_move.emitting = false
+			_music_follow.emitting = true
+		else:
+			_music_attack.emitting = false
+			_music_move.emitting = false
+			_music_follow.emitting = false
+
 	# HP Regeneration
 	time_since_last_damage += delta
 	if time_since_last_damage >= regen_delay and current_hp < max_hp:
@@ -85,6 +136,17 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	move_and_slide()
+	
+	# Control music notes visuals
+	if _music_particles:
+		var horizontal_velocity := Vector2(velocity.x, velocity.z)
+		if horizontal_velocity.length() > 0.1:
+			if not _music_particles.emitting:
+				_music_particles.emitting = true
+		else:
+			if _music_particles.emitting:
+				_music_particles.emitting = false
+
 	_clamp_to_current_level()
 	_update_minimap_camera(delta)
 
