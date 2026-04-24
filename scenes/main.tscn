@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dgmvqaclgu06b" path="res://resources/sky_83_2k.png" id="3_muem4"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
-[ext_resource type="PackedScene" path="res://scenes/ui/game_hud.tscn" id="7_game_hud"]
+[ext_resource type="PackedScene" uid="uid://br4x1lc2bwye8" path="res://scenes/ui/game_hud.tscn" id="7_game_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://j83tckwqxndx" path="res://scenes/levels/level_tutorial_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
