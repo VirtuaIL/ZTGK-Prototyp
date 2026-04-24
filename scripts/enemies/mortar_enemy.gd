@@ -52,13 +52,18 @@ func _ensure_aim_marker() -> void:
 		immediate.surface_add_vertex(Vector3(sin(a2)*r, 0.1, cos(a2)*r))
 	immediate.surface_end()
 	
-	get_tree().current_scene.call_deferred("add_child", aim_marker)
+	var current_scene := get_tree().current_scene
+	if current_scene != null:
+		current_scene.add_child(aim_marker)
 
 func _exit_tree() -> void:
 	if aim_marker != null and is_instance_valid(aim_marker):
 		aim_marker.queue_free()
 
 func _process_attack(delta: float) -> void:
+	if not is_inside_tree():
+		return
+
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		ai_state = AIState.WANDER
 		if aim_marker:
@@ -89,7 +94,7 @@ func _process_attack(delta: float) -> void:
 				aim_target_pos.y = _player_ref.global_position.y
 				
 			_ensure_aim_marker()
-			if aim_marker:
+			if aim_marker and aim_marker.is_inside_tree():
 				aim_marker.global_position = aim_target_pos
 				aim_marker.visible = true
 				

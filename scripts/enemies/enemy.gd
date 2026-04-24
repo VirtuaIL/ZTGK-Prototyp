@@ -141,6 +141,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
+
+	if not is_inside_tree():
+		return
 		
 	if is_stuck_in_blob:
 		var target := blob_center

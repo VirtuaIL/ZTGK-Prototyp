@@ -167,7 +167,9 @@ func _update_debug_direction() -> void:
 		if Engine.is_editor_hint():
 			var owner_node := get_owner()
 			if owner_node == null:
-				owner_node = get_tree().edited_scene_root
+				var tree := get_tree()
+				if tree != null:
+					owner_node = tree.edited_scene_root
 			if owner_node != null:
 				_debug_mesh.owner = owner_node
 

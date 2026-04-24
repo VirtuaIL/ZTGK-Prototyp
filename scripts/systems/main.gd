@@ -1268,16 +1268,16 @@ func get_current_level_spawn_markers() -> Array[Node3D]:
 func get_level_spawn_markers(level_id: int) -> Array[Node3D]:
 	return get_nodes_in_level("spawn_markers", level_id)
 
-func get_current_level_rat_spawns() -> Array[Node3D]:
-	return get_level_rat_spawns(current_level_id)
+func get_current_level_rat_spawns(spawn_tag: StringName = &"") -> Array[Node3D]:
+	return get_level_rat_spawns(current_level_id, spawn_tag)
 
-func get_level_rat_spawns(level_id: int) -> Array[Node3D]:
+func get_level_rat_spawns(level_id: int, spawn_tag: StringName = &"") -> Array[Node3D]:
 	var grouped_spawns := get_nodes_in_level("rat_spawn", level_id)
 	if not grouped_spawns.is_empty():
-		return grouped_spawns
-	return _get_fallback_level_rat_spawns(level_id)
+		return _filter_rat_spawn_points_by_tag(grouped_spawns, spawn_tag)
+	return _get_fallback_level_rat_spawns(level_id, spawn_tag)
 
-func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
+func _get_fallback_level_rat_spawns(level_id: int, spawn_tag: StringName = &"") -> Array[Node3D]:
 	var fallback_spawns: Array[Node3D] = []
 	if level_id <= 0:
 		return fallback_spawns
@@ -1300,9 +1300,30 @@ func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
 				continue
 			if _get_level_id_for_node(marker) != level_id:
 				continue
+			if not _matches_spawn_tag(marker, spawn_tag):
+				continue
 			fallback_spawns.append(marker)
 
 	return fallback_spawns
+
+func _filter_rat_spawn_points_by_tag(spawn_points: Array[Node3D], spawn_tag: StringName) -> Array[Node3D]:
+	if spawn_tag.is_empty():
+		return spawn_points
+
+	var filtered: Array[Node3D] = []
+	for marker in spawn_points:
+		if _matches_spawn_tag(marker, spawn_tag):
+			filtered.append(marker)
+	return filtered
+
+func _matches_spawn_tag(node: Node, spawn_tag: StringName) -> bool:
+	if spawn_tag.is_empty():
+		return true
+	if node == null or not is_instance_valid(node):
+		return false
+	if node is LevelTag:
+		return (node as LevelTag).spawn_tag == spawn_tag
+	return false
 
 func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
 	var group_nodes := get_tree().get_nodes_in_group(group_name)
@@ -1775,4 +1796,3 @@ func _on_upgrade_selected(rat_type: int, amount: int) -> void:
 	get_tree().paused = false
 	if rat_manager and rat_manager.has_method("add_rats_to_horde"):
 		rat_manager.add_rats_to_horde(rat_type, amount)
-

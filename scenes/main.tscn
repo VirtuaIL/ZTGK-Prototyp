@@ -68,7 +68,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.14675903, 0, -15.010208)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.3951931, 0, -15.119148)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")

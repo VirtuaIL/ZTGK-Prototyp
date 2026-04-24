@@ -34,11 +34,13 @@ enum PositionMode {
 @export var count_min: int = 1
 @export var count_max: int = 2
 @export var spawn_radius: float = 1.5
+@export var repeat_only_when_spawn_points_free: bool = false
 
 @export_group("Positions")
 @export var position_mode: PositionMode = PositionMode.SELF_POSITION
 @export var choose_random_point: bool = true
 @export var avoid_closest_to_player: bool = false
+@export var rat_spawn_tag: StringName = &""
 
 @export_group("Wild Rat")
 @export var wild_rat_prob_normal: float = 80.0
@@ -85,12 +87,14 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	while _elapsed >= _next_trigger_at and not _completed:
 		var _did_spawn := _spawn(main)
-		# Consume the trigger even if it couldn't spawn anything (e.g. invalid setup or temporary shortage)
-		_trigger_count += 1
-		if repeat and (max_triggers <= 0 or _trigger_count < max_triggers):
-			_next_trigger_at += maxf(0.01, repeat_interval)
+		if _did_spawn:
+			_trigger_count += 1
+			if repeat and (max_triggers <= 0 or _trigger_count < max_triggers):
+				_next_trigger_at += maxf(0.01, repeat_interval)
+			else:
+				_completed = true
 		else:
-			_completed = true
+			_next_trigger_at += maxf(0.25, repeat_interval)
 
 
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
@@ -111,8 +115,20 @@ func _spawn_wild_rats(main: Node) -> bool:
 	if rat_manager == null or rat_manager.rat_scene == null:
 		return false
 
-	var points := get_spawn_points(main)
-	if points.is_empty():
+	var point_nodes := get_spawn_point_nodes(main)
+	if point_nodes.is_empty():
+		return false
+	if repeat_only_when_spawn_points_free:
+		var free_point_nodes: Array[Node3D] = []
+		for point_node in point_nodes:
+			if not _is_spawn_point_occupied(rat_manager, point_node):
+				free_point_nodes.append(point_node)
+		point_nodes = free_point_nodes
+		if point_nodes.is_empty():
+			return false
+
+	var anchor_point := _pick_spawn_point_node(point_nodes, choose_random_point, _trigger_count)
+	if anchor_point == null:
 		return false
 
 	var count := randi_range(min(count_min, count_max), max(count_min, count_max))
@@ -126,11 +142,12 @@ func _spawn_wild_rats(main: Node) -> bool:
 		var rat = rat_manager.rat_scene.instantiate()
 		if rat == null:
 			continue
-		var spawn_pos := _pick_spawner_point(points, choose_random_point, i) + _random_spawn_offset(spawn_radius, 0.2)
+		var spawn_pos := anchor_point.global_position + _random_spawn_offset(spawn_radius, 0.2)
 		if rat_manager.has_method("get_wild_lifespan_for_level"):
 			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level))
 			if override_lifespan >= 0.0 and rat is Rat:
 				(rat as Rat).wild_lifespan = override_lifespan
+		rat.set_meta("spawn_marker_id", anchor_point.get_instance_id())
 		rat.player = player
 		if rat.has_method("set_rat_type"):
 			rat.set_rat_type(_roll_wild_rat_type(
@@ -261,46 +278,73 @@ func get_target_level_id(main: Node) -> int:
 
 func get_spawn_points(main: Node) -> Array[Vector3]:
 	var points: Array[Vector3] = []
+	for node3d in get_spawn_point_nodes(main):
+		points.append(node3d.global_position)
+	return points
+
+
+func get_spawn_point_nodes(main: Node) -> Array[Node3D]:
+	var points: Array[Node3D] = []
 	var resolved_level_id := get_target_level_id(main)
 
 	match position_mode:
 		PositionMode.SELF_POSITION:
-			points.append(global_position)
+			points.append(self)
 		PositionMode.CHILD_POINTS:
 			for child in get_children():
 				var node3d := child as Node3D
 				if node3d != null:
-					points.append(node3d.global_position)
+					points.append(node3d)
 			if points.is_empty():
-				points.append(global_position)
+				points.append(self)
 		PositionMode.LEVEL_RAT_SPAWNS:
 			if main.has_method("get_level_rat_spawns"):
-				var rat_markers: Array = main.call("get_level_rat_spawns", resolved_level_id)
+				var rat_markers: Array = main.call("get_level_rat_spawns", resolved_level_id, rat_spawn_tag)
 				for marker in rat_markers:
 					var node3d := marker as Node3D
 					if node3d != null:
-						points.append(node3d.global_position)
+						points.append(node3d)
 		PositionMode.LEVEL_ENEMY_MARKERS:
 			if main.has_method("get_level_spawn_markers"):
 				var enemy_markers: Array = main.call("get_level_spawn_markers", resolved_level_id)
 				for marker in enemy_markers:
 					var node3d := marker as Node3D
 					if node3d != null:
-						points.append(node3d.global_position)
+						points.append(node3d)
 
 	var player_node = main.get("player") as Node3D
 	if avoid_closest_to_player and player_node != null and points.size() > 1:
 		var closest_idx := 0
 		var closest_dist := INF
 		for i in range(points.size()):
-			var point: Vector3 = points[i]
-			var dist: float = player_node.global_position.distance_squared_to(point)
+			var point_node: Node3D = points[i]
+			var dist: float = player_node.global_position.distance_squared_to(point_node.global_position)
 			if dist < closest_dist:
 				closest_dist = dist
 				closest_idx = i
 		points.remove_at(closest_idx)
 
 	return points
+
+
+func _pick_spawn_point_node(points: Array[Node3D], choose_random: bool, index: int) -> Node3D:
+	if points.is_empty():
+		return null
+	if choose_random:
+		return points[randi() % points.size()]
+	return points[index % points.size()]
+
+
+func _is_spawn_point_occupied(rat_manager: Node, point_node: Node3D) -> bool:
+	if rat_manager == null or point_node == null or not ("rats" in rat_manager):
+		return false
+	var anchor_id := point_node.get_instance_id()
+	for rat in rat_manager.rats:
+		if not is_instance_valid(rat):
+			continue
+		if rat.has_method("get") and rat.get("is_wild") == true and int(rat.get_meta("spawn_marker_id", 0)) == anchor_id:
+			return true
+	return false
 
 
 func _is_active_for_main(main: Node) -> bool:

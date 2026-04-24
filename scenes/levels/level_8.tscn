@@ -78,8 +78,20 @@ count_max = 2
 script = ExtResource("7_w2i51")
 groups = Array[ExtResource("8_xsrpe")]([SubResource("Resource_kk2ik"), SubResource("Resource_6to6e"), SubResource("Resource_40qa3"), SubResource("Resource_e7lui"), SubResource("Resource_acgl5")])
 
-[node name="Level2" type="Node3D" unique_id=1397753813]
+[node name="Level8" type="Node3D" unique_id=1397753813]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="WaveSpawner" type="Node3D" parent="." unique_id=1066640476]
+script = ExtResource("6_h6r4t")
+level_id = 8
+start_delay = 1.0
+reset_on_level_enter = false
+waves = Array[ExtResource("7_w2i51")]([SubResource("Resource_0kxia"), SubResource("Resource_vsqe1"), SubResource("Resource_61loj")])
+delay_between_waves = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
 
 [node name="Floor" type="Node3D" parent="." unique_id=1484885965]
 
@@ -126,12 +138,117 @@ transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, 0, 0, 20)
 [node name="SpikeCylinder4" parent="Spikes" unique_id=846680801 instance=ExtResource("3_u61dc")]
 transform = Transform3D(2, 0, 0, 0, 6, 0, 0, 0, 2, 0, 0, -20)
 
-[node name="Spawners" type="Node3D" parent="." unique_id=1478111283]
+[node name="RatParams" type="Node3D" parent="." unique_id=1447767387]
 
-[node name="EnemyBasic" parent="Spawners" unique_id=1031434697 instance=ExtResource("4_ki8mi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+[node name="NormalRatParams" parent="RatParams" unique_id=2038144089 instance=ExtResource("4_ki8mi")]
+label = "Level1 Wild Rats"
+level_id = 8
+start_delay = 0.0
+repeat = true
+repeat_interval = 16.0
+max_triggers = 3
+reset_on_level_enter = false
+count_min = 8
+count_max = 8
+spawn_radius = 1.8
+repeat_only_when_spawn_points_free = true
+position_mode = 2
+rat_spawn_tag = &"normal"
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="RedRatParams" parent="RatParams" unique_id=1086014474 instance=ExtResource("4_ki8mi")]
+label = "Level1 Wild Rats"
+level_id = 8
+start_delay = 15.0
+repeat = true
+repeat_interval = 15.0
+reset_on_level_enter = false
+count_min = 5
+count_max = 5
+spawn_radius = 1.8
+repeat_only_when_spawn_points_free = true
+position_mode = 2
+rat_spawn_tag = &"red"
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 100.0
+wild_rat_prob_green = 0.0
+
+[node name="GreenRatParams" parent="RatParams" unique_id=386486111 instance=ExtResource("4_ki8mi")]
+label = "Level1 Wild Rats"
+level_id = 8
+start_delay = 15.0
+repeat = true
+repeat_interval = 15.0
+max_triggers = 2
+reset_on_level_enter = false
+count_min = 3
+count_max = 3
+spawn_radius = 1.8
+repeat_only_when_spawn_points_free = true
+position_mode = 2
+rat_spawn_tag = &"green"
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 100.0
+
+[node name="BlueRatParams" parent="RatParams" unique_id=27530434 instance=ExtResource("4_ki8mi")]
+label = "Level1 Wild Rats"
+level_id = 8
+start_delay = 5.0
+repeat = true
+repeat_interval = 16.0
+max_triggers = 2
+reset_on_level_enter = false
+count_min = 5
+count_max = 5
+spawn_radius = 1.8
+repeat_only_when_spawn_points_free = true
+position_mode = 2
+rat_spawn_tag = &"electric"
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+wild_rat_prob_electric = 100.0
+
+[node name="RatSpawns" type="Node3D" parent="." unique_id=1715066317]
+
+[node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=113238676 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046247, 0, 6.76655)
+script = ExtResource("1_vmkp1")
+level_id = 8
+spawn_tag = &"normal"
+
+[node name="RatSpawnPointNormal2" type="Marker3D" parent="RatSpawns" unique_id=693166115 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5401607, 0, -14.956239)
+script = ExtResource("1_vmkp1")
+level_id = 8
+spawn_tag = &"normal"
+
+[node name="RatSpawnPointRed1" type="Marker3D" parent="RatSpawns" unique_id=1651731655 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.605286, 0, -1.7694821)
+script = ExtResource("1_vmkp1")
+level_id = 8
+spawn_tag = &"red"
+
+[node name="RatSpawnPointGreen1" type="Marker3D" parent="RatSpawns" unique_id=1745397873 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705373, 0, -13.909654)
+script = ExtResource("1_vmkp1")
+level_id = 8
+spawn_tag = &"green"
+
+[node name="RatSpawnPointElectric1" type="Marker3D" parent="RatSpawns" unique_id=1355349034 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.463909, 0, 5.2889376)
+script = ExtResource("1_vmkp1")
+level_id = 8
+spawn_tag = &"electric"
+
+[node name="EnemiesParams" type="Node3D" parent="." unique_id=1786609051]
+
+[node name="EnemyPressure" parent="EnemiesParams" unique_id=1417109110 instance=ExtResource("4_ki8mi")]
 enabled = false
-label = "EnemyBasic"
+label = "Enemy Pressure"
 level_id = 8
 start_delay = 0.0
 repeat_interval = 10.0
@@ -144,10 +261,9 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
-[node name="EnemyFlame" parent="Spawners" unique_id=1031434698 instance=ExtResource("4_ki8mi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+[node name="EnemyFlame" parent="EnemiesParams" unique_id=724159891 instance=ExtResource("4_ki8mi")]
 enabled = false
-label = "EnemyFlame"
+label = "FlameThrowerEnemy"
 level_id = 8
 start_delay = 0.0
 repeat_interval = 10.0
@@ -160,8 +276,7 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
-[node name="EnemySniper" parent="Spawners" unique_id=1031434699 instance=ExtResource("4_ki8mi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+[node name="EnemySniper" parent="EnemiesParams" unique_id=1895787048 instance=ExtResource("4_ki8mi")]
 enabled = false
 label = "EnemySniper"
 level_id = 8
@@ -176,67 +291,21 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
-[node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=987658001]
+[node name="EnemySpawns" type="Node3D" parent="." unique_id=361424571]
 script = ExtResource("1_vmkp1")
 level_id = 8
 
-[node name="Marker3D" type="Marker3D" parent="enemies_spawnpoints" unique_id=987658002 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 10)
+[node name="Marker3D" type="Marker3D" parent="EnemySpawns" unique_id=1336320180 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.046247, 0, 10.469806)
 
-[node name="Marker3D5" type="Marker3D" parent="enemies_spawnpoints" unique_id=1106856703 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2666006, 0, -0.3378638)
+[node name="Marker3D3" type="Marker3D" parent="EnemySpawns" unique_id=929591448 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.089385, 0, 0.76407355)
 
-[node name="Marker3D6" type="Marker3D" parent="enemies_spawnpoints" unique_id=89498371 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.18014, 0, 25.38545)
+[node name="Marker3D5" type="Marker3D" parent="EnemySpawns" unique_id=1688810945 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.605286, 0, -1.7694821)
 
-[node name="Marker3D7" type="Marker3D" parent="enemies_spawnpoints" unique_id=1065560817 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.992666, 0, 25.385447)
+[node name="Marker3D7" type="Marker3D" parent="EnemySpawns" unique_id=80427077 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361685, 0, -3.3890052)
 
-[node name="Marker3D8" type="Marker3D" parent="enemies_spawnpoints" unique_id=1806690595 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.992662, 0, -20.7465)
-
-[node name="Marker3D9" type="Marker3D" parent="enemies_spawnpoints" unique_id=2023417916 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.435183, 0, -20.746496)
-
-[node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=987658003 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -10)
-
-[node name="Marker3D3" type="Marker3D" parent="enemies_spawnpoints" unique_id=987658004 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -10)
-
-[node name="Marker3D4" type="Marker3D" parent="enemies_spawnpoints" unique_id=987658005 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
-
-[node name="Marker3D10" type="Marker3D" parent="enemies_spawnpoints" unique_id=61591898 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.644056, 0, -30.314829)
-
-[node name="Spawners3" type="Node3D" parent="." unique_id=837598480]
-
-[node name="SpawnerWildLevel2" parent="Spawners3" unique_id=409770610 instance=ExtResource("4_ki8mi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
-label = "Level1 Wild Rats"
-level_id = 8
-start_delay = 0.0
-repeat = true
-repeat_interval = 8.0
-max_triggers = 6
-reset_on_level_enter = false
-count_min = 24
-count_max = 48
-spawn_radius = 1.8
-position_mode = 3
-wild_rat_prob_normal = 60.0
-wild_rat_prob_red = 20.0
-wild_rat_prob_green = 20.0
-
-[node name="WaveSpawner" type="Node3D" parent="." unique_id=1066640476]
-script = ExtResource("6_h6r4t")
-level_id = 8
-start_delay = 1.0
-reset_on_level_enter = false
-waves = Array[ExtResource("7_w2i51")]([SubResource("Resource_0kxia"), SubResource("Resource_vsqe1"), SubResource("Resource_61loj")])
-delay_between_waves = 1.0
-position_mode = 3
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
+[node name="Marker3D8" type="Marker3D" parent="EnemySpawns" unique_id=1495264773 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705373, 0, -13.909654)
