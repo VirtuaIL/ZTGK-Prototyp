@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://dj3tyfijf7dbc"]
+
+[ext_resource type="PackedScene" uid="uid://dyc8g7fuc8pds" path="res://resources/models/external/fantast/3d/props/SM_PROP_platform_grid_dungeon.fbx" id="1_ichyi"]
+
+[node name="SM_PROP_platform_grid_dungeon" unique_id=1848286961 instance=ExtResource("1_ichyi")]

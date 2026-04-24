@@ -117,8 +117,11 @@ var _mgr: Node = null
 var _mgr_refresh_timer: float = 0.0
 @export var mgr_refresh_interval: float = 1.0
 @export var edge_check_interval: float = 0.15
+@export var wall_check_interval: float = 0.1
 var _edge_check_timer: float = 0.0
+var _wall_check_timer: float = 0.0
 var _edge_blocked_cached: bool = false
+var _wall_steer_cached: Vector3 = Vector3.ZERO
 var _stuck_time: float = 0.0
 var _unstuck_timer: float = 0.0
 var _current_buff_material: Material = null
@@ -132,6 +135,22 @@ var _blob_wobble_speed: float = 6.5
 var _blob_wobble_amp: float = 0.08
 var _blob_wobble_rot: float = 0.25
 var _blob_wobble_bob: float = 0.03
+
+# Throttling rekrutacji
+var _recruit_timer: float = 0.0
+@export var recruit_interval: float = 0.15
+
+# Shared materials to allow batching
+static var _shared_mats: Dictionary = {}
+
+func _get_shared_material(r_type: RatType, wild_variant: bool) -> Material:
+	var key := str(int(r_type)) + "_" + str(wild_variant)
+	if _shared_mats.has(key):
+		return _shared_mats[key]
+	
+	var mat := _make_type_material(r_type, wild_variant)
+	_shared_mats[key] = mat
+	return mat
 
 func _ready() -> void:
 	var shadow: Decal = get_node_or_null("BlobShadow")
@@ -161,6 +180,8 @@ func _ready() -> void:
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(45.0)
 	_mgr = get_tree().get_first_node_in_group("rat_manager")
+	_wall_check_timer = randf_range(0.0, wall_check_interval)
+	_edge_check_timer = randf_range(0.0, edge_check_interval)
 	
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.25
@@ -177,9 +198,27 @@ func _ready() -> void:
 	set_rat_type(int(rat_type))
 
 
+func _process(delta: float) -> void:
+	if _mgr != null:
+		var mgr = _mgr
+		var should_be_blob = mgr.get("combat_rmb_down") and mgr.get("current_attack_mode") == 1 and state == State.FOLLOW and not is_carrier and not is_wild and not is_fallen
+		if should_be_blob != _is_showing_blob:
+			_is_showing_blob = should_be_blob
+			show_visuals()
+			if not _is_showing_blob:
+				_reset_blob_visuals()
+	
+	if _is_showing_blob:
+		_update_blob_visuals(delta)
+	
+	if _wild_timer > 0.0 and is_wild:
+		_wild_timer -= delta
+		if _wild_timer <= 0.0:
+			queue_free()
+
 func _physics_process(delta: float) -> void:
 	if is_wild:
-		_process_wild(delta)
+		_process_wild_physics(delta)
 		return
 
 	if player == null:
@@ -193,21 +232,12 @@ func _physics_process(delta: float) -> void:
 			_mgr_refresh_timer = mgr_refresh_interval
 	var mgr = _mgr
 	
-	var should_be_blob = mgr != null and mgr.get("combat_rmb_down") and mgr.get("current_attack_mode") == 1 and state == State.FOLLOW and not is_carrier and not is_wild and not is_fallen
-	if should_be_blob != _is_showing_blob:
-		_is_showing_blob = should_be_blob
-		show_visuals()
-		if not _is_showing_blob:
-			_reset_blob_visuals()
-	if _is_showing_blob:
-		_update_blob_visuals(delta)
-		
 	# ── Purple poison: slow down instead of freezing ──
 	_speed_mult = 1.0
 	if mgr != null and "buff_purple_timer" in mgr and mgr.buff_purple_timer > 0.0:
 		_speed_mult = 0.15
 
-	# ── Green gas: from buff OR from permanent green rat type ──
+	# ── Green gas ──
 	if mgr != null:
 		var has_green = (default_rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
 		if has_green:
@@ -237,7 +267,7 @@ func _physics_process(delta: float) -> void:
 		_recall_boost_timer = max(0.0, _recall_boost_timer - delta)
 		var to_player := player.global_position - global_position
 		to_player.y = 0.0
-		if to_player.length() > 0.001:
+		if to_player.length_squared() > 0.000001:
 			var dir := to_player.normalized()
 			velocity.x = dir.x * release_boost_speed * _speed_mult
 			velocity.z = dir.z * release_boost_speed * _speed_mult
@@ -248,30 +278,17 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	# Fall recovery first so distance check doesn't pull rats to player mid-fall.
 	if not is_anchored and global_position.y < fall_death_y:
 		_start_respawn()
 		return
 
-	# Distance recovery — temporarily disabled to prevent rats from teleporting back when far away
-	#if state == State.FOLLOW and not is_carrier and not is_anchored and not is_fallen and is_on_floor():
-	#	var dist_sq: float = _flat_distance_squared(global_position, player.global_position)
-	#	if dist_sq > max_follow_distance * max_follow_distance:
-	#		_teleport_to_player()
-	#		return
-
-	# Gravity and fall-recovery are skipped for anchored rats (near build target)
-	# so they can float as bridge pieces
 	if is_anchored or state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION:
 		velocity.y = 0.0
 	else:
-		# Gravity — applied every frame, preserved across all states
 		if not is_on_floor():
 			velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 		else:
 			velocity.y = 0.0
-
-		# Fall recovery is handled above before distance checks.
 		
 	var target_mat = null
 	if mgr != null and mgr.has_method("get_current_buff_material"):
@@ -305,6 +322,15 @@ func _physics_process(delta: float) -> void:
 
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
+
+	# Push rigid bodies — skip if nearly still
+	if velocity.length_squared() > 0.1:
+		for i in get_slide_collision_count():
+			var col := get_slide_collision(i)
+			var collider := col.get_collider()
+			if collider is RigidBody3D:
+				var push_force := 0.2 * _speed_mult
+				collider.apply_impulse(-col.get_normal() * push_force, col.get_position() - collider.global_position)
 
 
 func _process_follow_spring(delta: float) -> void:
@@ -348,8 +374,7 @@ func _process_follow_spring(delta: float) -> void:
 			diff.y = 0.0
 			var dist_sq: float = diff.length_squared()
 			if dist_sq < sep_dist_sq and dist_sq > 0.000001:
-				var dist: float = sqrt(dist_sq)
-				separation_vec += (diff / dist) * ((separation_dist - dist) / maxf(0.001, separation_dist))
+				separation_vec += (diff / sqrt(dist_sq)) * ((separation_dist - sqrt(dist_sq)) / maxf(0.001, separation_dist))
 			cohesion_center += nb.global_position
 			if "velocity" in nb:
 				var nb_vel: Vector3 = nb.velocity
@@ -368,7 +393,7 @@ func _process_follow_spring(delta: float) -> void:
 			to_center.y = 0.0
 			if to_center.length_squared() > 0.000001:
 				boid_force += to_center.normalized() * current_cohesion
-	if boid_max_force > 0.0 and boid_force.length() > boid_max_force:
+	if boid_max_force > 0.0 and boid_force.length_squared() > boid_max_force * boid_max_force:
 		boid_force = boid_force.normalized() * boid_max_force
 	_spring_velocity += boid_force * delta
 	_spring_velocity += _compute_wall_avoidance(to_target) * delta
@@ -377,10 +402,10 @@ func _process_follow_spring(delta: float) -> void:
 	_spring_velocity *= pow(damping, delta * 60.0)
 
 	# Clamp horizontal speed
-	var hvel := Vector2(_spring_velocity.x, _spring_velocity.z)
-	var eff_max = max_speed * _speed_mult
-	if hvel.length() > eff_max:
-		hvel = hvel.normalized() * eff_max
+	var hvel_sq := _spring_velocity.x * _spring_velocity.x + _spring_velocity.z * _spring_velocity.z
+	var eff_max := max_speed * _speed_mult
+	if hvel_sq > eff_max * eff_max:
+		var hvel: Vector2 = Vector2(_spring_velocity.x, _spring_velocity.z).normalized() * eff_max
 		_spring_velocity.x = hvel.x
 		_spring_velocity.z = hvel.y
 
@@ -400,9 +425,9 @@ func _process_follow_spring(delta: float) -> void:
 
 	# Face direction of travel (skip if spinning in combat)
 	if extra_spin_speed == 0.0:
-		var move_dir := Vector3(velocity.x, 0.0, velocity.z)
-		if move_dir.length() > 0.4:
-			rotation.y = lerp_angle(rotation.y, atan2(move_dir.x, move_dir.z), 14.0 * delta)
+		var move_dir_sq := velocity.x * velocity.x + velocity.z * velocity.z
+		if move_dir_sq > 0.16: # 0.4 * 0.4
+			rotation.y = lerp_angle(rotation.y, atan2(velocity.x, velocity.z), 14.0 * delta)
 
 
 func set_target(pos: Vector3) -> void:
@@ -417,6 +442,11 @@ func set_neighbors(n: Array) -> void:
 func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 	if not wall_avoidance_enabled:
 		return Vector3.ZERO
+		
+	var delta := get_physics_process_delta_time()
+	_wall_check_timer -= delta
+	if wall_check_interval > 0.0 and _wall_check_timer > 0.0:
+		return _wall_steer_cached
 
 	var world := get_world_3d()
 	if world == null:
@@ -460,8 +490,8 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 		normal = normal.normalized()
 
 		var hit_pos: Vector3 = hit.position
-		var dist := origin.distance_to(hit_pos)
-		var proximity := clampf(1.0 - dist / probe_dist, 0.0, 1.0)
+		var dist_sq := origin.distance_squared_to(hit_pos)
+		var proximity := clampf(1.0 - sqrt(dist_sq) / probe_dist, 0.0, 1.0)
 		if proximity <= 0.0:
 			continue
 
@@ -473,6 +503,8 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 			tangent = - tangent
 		steer += tangent * (wall_avoidance_force * wall_avoidance_tangent_bias * proximity)
 
+	_wall_steer_cached = steer
+	_wall_check_timer = wall_check_interval
 	return steer
 
 
@@ -489,13 +521,13 @@ func _update_stuck_recovery(delta: float) -> void:
 
 	var to_target := _target_position - global_position
 	to_target.y = 0.0
-	var target_dist := to_target.length()
-	if target_dist < stuck_target_distance:
+	var target_dist_sq := to_target.length_squared()
+	if target_dist_sq < stuck_target_distance * stuck_target_distance:
 		_stuck_time = 0.0
 		return
 
-	var hspeed := Vector2(velocity.x, velocity.z).length()
-	if hspeed <= stuck_min_speed:
+	var hspeed_sq := velocity.x * velocity.x + velocity.z * velocity.z
+	if hspeed_sq <= stuck_min_speed * stuck_min_speed:
 		_stuck_time += delta
 		if _stuck_time >= stuck_time_to_trigger:
 			_unstuck_timer = maxf(_unstuck_timer, stuck_unblock_duration)
@@ -589,21 +621,22 @@ func _process_path_dash(delta: float) -> void:
 			dir_forward = (p0 - _dash_path[_dash_index - 1]).normalized()
 			
 	dir_forward.y = 0.0
-	if dir_forward.length() < 0.001:
+	if dir_forward.length_squared() < 0.000001:
 		dir_forward = Vector3.FORWARD
 		
 	var lateral_dir := dir_forward.cross(Vector3.UP).normalized()
 	var target = p0 + lateral_dir * _dash_lateral_offset
 	target.y = global_position.y
 	
-	var dist = global_position.distance_to(target)
-	if dist < 0.8:
+	var dist_sq = global_position.distance_squared_to(target)
+	if dist_sq < 0.64: # 0.8 * 0.8
 		_dash_index += 1
 		if _dash_index >= _dash_path.size():
 			set_follow()
 			return
 			
-	var dir := (target - global_position).normalized()
+	var to_target = target - global_position
+	var dir := to_target.normalized()
 	velocity.x = dir.x * dash_speed * _speed_mult
 	velocity.z = dir.z * dash_speed * _speed_mult
 	
@@ -612,29 +645,42 @@ func _process_path_dash(delta: float) -> void:
 		velocity.z = 0.0
 		
 	move_and_slide()
-	if Vector2(velocity.x, velocity.z).length() > 0.1:
+	if velocity.x * velocity.x + velocity.z * velocity.z > 0.01:
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), lerp_speed * delta)
 
+
+# Static cache for enemies to avoid multiple get_nodes_in_group calls per frame
+static var _cached_enemies: Array = []
+static var _cached_frame: int = -1
+
+func _get_enemies_cached() -> Array:
+	var f := Engine.get_frames_drawn()
+	if _cached_frame != f:
+		_cached_frame = f
+		_cached_enemies = []
+		var current_scene := get_tree().current_scene
+		if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+			_cached_enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+			_cached_enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+		else:
+			_cached_enemies = get_tree().get_nodes_in_group("enemies")
+			_cached_enemies += get_tree().get_nodes_in_group("bosses")
+	return _cached_enemies
 
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
 		
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	var mgr = _mgr
+	if mgr == null or not is_instance_valid(mgr):
+		mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr == null or (not mgr.get("combat_rmb_down") and state != State.PATH_DASH):
 		return
 		
 	if mgr.get("current_attack_mode") == 1: # BLOB mode
 		return
 		
-	var enemies: Array = []
-	var current_scene := get_tree().current_scene
-	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
-		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
-		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
-	else:
-		enemies = get_tree().get_nodes_in_group("enemies")
-		enemies += get_tree().get_nodes_in_group("bosses")
+	var enemies := _get_enemies_cached()
 	
 	var final_dmg = damage_per_hit
 	var dmg_color = Color.WHITE
@@ -646,9 +692,10 @@ func _check_damage() -> void:
 		final_dmg *= 2.0
 		dmg_color = Color(0.9, 0.1, 0.1)
 	
+	var hit_range_sq = hit_range * hit_range
 	for enemy in enemies:
-		var dist: float = global_position.distance_to(enemy.global_position)
-		if dist < hit_range:
+		var dist_sq: float = global_position.distance_squared_to(enemy.global_position)
+		if dist_sq < hit_range_sq:
 			enemy.take_damage(final_dmg, get_instance_id(), global_position, dmg_color)
 			attack_cooldown = 1.0
 			break
@@ -656,9 +703,9 @@ func _check_damage() -> void:
 
 func _process_travel_to_build(delta: float) -> void:
 	# Use XZ-only distance so gravity doesn't prevent arrival
-	var flat_self := Vector2(global_position.x, global_position.z)
-	var flat_target := Vector2(build_target.x, build_target.z)
-	var dist := flat_self.distance_to(flat_target)
+	var dx := build_target.x - global_position.x
+	var dz := build_target.z - global_position.z
+	var dist_sq := dx * dx + dz * dz
 	_travel_timer += delta
 	if travel_timeout > 0.0 and _travel_timer >= travel_timeout:
 		state = State.WAITING_FOR_FORMATION
@@ -668,20 +715,22 @@ func _process_travel_to_build(delta: float) -> void:
 		set_collision_mask_value(1, true)
 		return
 
-	if dist <= anchor_radius:
+	if dist_sq <= anchor_radius * anchor_radius:
 		is_anchored = true
 
 	# Disable floor collision while traveling so rats glide over platform edges
 	# instead of clipping into them
 	set_collision_mask_value(1, false)
 
-	if dist > 0.1:
-		var dir := Vector2(flat_target - flat_self).normalized()
-		velocity.x = dir.x * follow_speed * 2.0 * _speed_mult
-		velocity.z = dir.y * follow_speed * 2.0 * _speed_mult
+	if dist_sq > 0.01:
+		var dist := sqrt(dist_sq)
+		var dir_x := dx / dist
+		var dir_z := dz / dist
+		velocity.x = dir_x * follow_speed * 2.0 * _speed_mult
+		velocity.z = dir_z * follow_speed * 2.0 * _speed_mult
 		# Smoothly lerp Y toward build target instead of instant snap
 		global_position.y = lerpf(global_position.y, build_target.y, 5.0 * delta)
-		var target_angle := atan2(dir.x, dir.y)
+		var target_angle := atan2(dir_x, dir_z)
 		rotation.y = lerp_angle(rotation.y, target_angle, lerp_speed * delta)
 		move_and_slide()
 	else:
@@ -696,6 +745,7 @@ func activate_physics() -> void:
 	if state == State.WAITING_FOR_FORMATION:
 		state = State.STATIC
 		set_collision_layer_value(1, true)
+		set_physics_process(false)
 
 
 func build_at(pos: Vector3) -> void:
@@ -714,10 +764,11 @@ func release_rat(with_boost: bool = false) -> void:
 		is_anchored = false
 		is_carrier = false
 		_spring_velocity = Vector3.ZERO
+		set_physics_process(true)
 		if with_boost and player != null:
 			var to_player := player.global_position - global_position
 			to_player.y = 0.0
-			if to_player.length() > 0.001:
+			if to_player.length_squared() > 0.000001:
 				var dir := to_player.normalized()
 				_spring_velocity.x = dir.x * release_boost_speed * _speed_mult
 				_spring_velocity.z = dir.z * release_boost_speed * _speed_mult
@@ -774,8 +825,8 @@ func _respawn_at_spawn_point() -> void:
 
 func _wait_for_player_near_spawn(spawn: Node3D) -> void:
 	while player != null and spawn != null:
-		var player_dist := _flat_distance(player.global_position, spawn.global_position)
-		if player_dist <= spawn_player_distance:
+		var player_dist_sq := _flat_distance_squared(player.global_position, spawn.global_position)
+		if player_dist_sq <= spawn_player_distance * spawn_player_distance:
 			global_position = player.global_position + Vector3(
 				randf_range(-1.0, 1.0), 0.5, randf_range(-1.0, 1.0)
 			)
@@ -909,7 +960,7 @@ func _should_block_edge(hvel: Vector2) -> bool:
 		return false
 	if state == State.TRAVEL_TO_BUILD or state == State.WAITING_FOR_FORMATION or state == State.STATIC:
 		return false
-	if hvel.length() < 0.01:
+	if hvel.length_squared() < 0.0001:
 		return false
 
 	if edge_check_interval > 0.0 and _edge_check_timer > 0.0:
@@ -978,7 +1029,7 @@ func _make_type_material(r_type: RatType, wild_variant: bool = false) -> Materia
 func set_rat_type(r_type: int) -> void:
 	rat_type = r_type as RatType
 	default_rat_type = rat_type
-	_base_material = _make_type_material(default_rat_type, false)
+	_base_material = _get_shared_material(default_rat_type, false)
 		
 	if not is_wild:
 		if _current_buff_material != _base_material:
@@ -991,7 +1042,7 @@ func set_wild(wild: bool) -> void:
 		add_to_group("wild_rats")
 		_wild_timer = -1.0 if wild_lifespan <= 0.0 else wild_lifespan
 		state = State.STATIC
-		var mat := _make_type_material(default_rat_type, true)
+		var mat := _get_shared_material(default_rat_type, true)
 			
 		if mat != _current_buff_material:
 			_current_buff_material = mat
@@ -1000,7 +1051,7 @@ func set_wild(wild: bool) -> void:
 		if is_in_group("wild_rats"):
 			remove_from_group("wild_rats")
 		state = State.FOLLOW
-		_base_material = _make_type_material(default_rat_type, false)
+		_base_material = _get_shared_material(default_rat_type, false)
 		if _current_buff_material != _base_material:
 			_current_buff_material = _base_material
 			_apply_material_override(_base_material)
@@ -1052,15 +1103,7 @@ func _reset_blob_visuals() -> void:
 		if _visual_base_transforms.has(m):
 			m.transform = _visual_base_transforms[m]
 
-func _process_wild(delta: float) -> void:
-	if _wild_timer < 0.0:
-		# Negative lifespan means "never despawn".
-		return
-	_wild_timer -= delta
-	if _wild_timer <= 0.0:
-		queue_free()
-		return
-		
+func _process_wild_physics(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
 	else:
@@ -1071,27 +1114,39 @@ func _process_wild(delta: float) -> void:
 
 	rotation.y += 0.5 * delta
 	
+	_recruit_timer -= delta
+	if _recruit_timer > 0.0:
+		return
+	_recruit_timer = recruit_interval
+
 	if player == null:
 		return
 		
-	var mgr = get_tree().get_first_node_in_group("rat_manager")
-	if mgr == null:
+	var mgr = _mgr
+	if mgr == null or not is_instance_valid(mgr):
+		mgr = get_tree().get_first_node_in_group("rat_manager")
+	
+	if mgr == null or mgr.get("combat_rmb_down") == true:
 		return
 		
-	if mgr.get("combat_rmb_down") == true:
-		return
-		
-	var dist = _flat_distance(global_position, player.global_position)
-	var can_recruit = dist <= recruitment_range
+	var dist_sq = _flat_distance_squared(global_position, player.global_position)
+	var can_recruit = dist_sq <= recruitment_range * recruitment_range
+	
+	if not can_recruit and mgr.has_method("get_mouse_world"):
+		var cursor_world: Vector3 = mgr.call("get_mouse_world")
+		if cursor_world != Vector3.ZERO:
+			can_recruit = _flat_distance_squared(global_position, cursor_world) <= recruitment_range * recruitment_range
+			
 	if not can_recruit and mgr != null and "wild_recruit_by_rats" in mgr and mgr.wild_recruit_by_rats:
 		var chain_range := recruitment_range
 		if "wild_recruit_by_rats_range" in mgr:
 			chain_range = float(mgr.wild_recruit_by_rats_range)
 		if "rats" in mgr:
+			var chain_range_sq = chain_range * chain_range
 			for r in mgr.rats:
 				if not is_instance_valid(r):
 					continue
-				if _flat_distance(global_position, r.global_position) <= chain_range:
+				if _flat_distance_squared(global_position, r.global_position) <= chain_range_sq:
 					can_recruit = true
 					break
 					
@@ -1103,3 +1158,7 @@ func _process_wild(delta: float) -> void:
 			mgr.register_rat(self )
 			if mgr.has_method("build_blob_offsets"):
 				mgr.build_blob_offsets()
+
+func _process_wild(delta: float) -> void:
+	# This function is now mostly handled by _process and _process_wild_physics
+	pass

@@ -1,5 +1,7 @@
 extends Node3D
 
+const SoundWaveScene := preload("res://scenes/effects/sound_wave.tscn")
+
 signal orbit_started()
 signal orbit_ended()
 signal wave_started()
@@ -16,7 +18,8 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat/rat.tscn")
-@export var min_cap: int = 60
+@export var rat_count: int = 42
+@export var min_cap: int = 42
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -94,6 +97,16 @@ var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
+var cached_mouse_world: Vector3 = Vector3.ZERO
+var _mouse_cached_frame: int = -1
+
+func get_mouse_world() -> Vector3:
+	var f := Engine.get_frames_drawn()
+	if _mouse_cached_frame != f:
+		_mouse_cached_frame = f
+		cached_mouse_world = _mouse_to_world()
+	return cached_mouse_world
+
 enum AttackMode { ROTATION, BLOB, PATH_DASH }
 var current_attack_mode: AttackMode = AttackMode.PATH_DASH
 var _combat_blob_offsets: Array[Vector3] = []
@@ -123,7 +136,8 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
-var _pity_timer: float = 5.0
+@export var _pity_toggle: bool = false 
+@export var _pity_timer: float = 5.0
 var _pity_canvas: CanvasLayer = null
 var _pity_label: Label = null
 
@@ -227,6 +241,9 @@ var _formation_active: bool = false
 
 
 
+# ── Sound Wave Effect ─────────────────────────────────────────────────────────
+var _sound_wave: Node3D = null
+
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
 @export var neighbor_radius: float = 1.5
 @export var neighbor_max_count: int = 8
@@ -315,6 +332,11 @@ func _ready() -> void:
 	
 	add_child(_pity_canvas)
 
+	# ── Sound Wave ──
+	if SoundWaveScene:
+		_sound_wave = SoundWaveScene.instantiate()
+		add_child(_sound_wave)
+
 func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
@@ -323,7 +345,9 @@ func setup_player(player: CharacterBody3D) -> void:
 	if _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 		
-	_spawn_rats_near_player(60)
+	# Spawn initial rats using current-level rat spawn markers when available.
+	# Falls back to player position inside _spawn_rats() when no markers exist.
+	_spawn_rats(rat_count)
 	respawn_count = max(respawn_count, rats.size())
 
 
@@ -599,6 +623,7 @@ func _process(delta: float) -> void:
 	_check_travel_anchoring()
 	_update_carrier_rat_targets()
 	_update_free_rats_follow_cursor(delta)
+	_update_sound_wave()
 	_process_hover()
 	if structure_lifetime > 0.0 and _has_static_rats():
 		_structure_timer += delta
@@ -621,13 +646,14 @@ func _process(delta: float) -> void:
 
 	# Reset game if all rats die (with pity timer)
 	if get_total_rat_count() <= 0 and _player != null:
-		_pity_timer -= delta
-		if _pity_label:
-			_pity_label.visible = true
-			_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
-		if _pity_timer <= 0.0:
-			if _player.has_method("die"):
-				_player.die()
+		if _pity_toggle == true:
+			_pity_timer -= delta
+			if _pity_label:
+				_pity_label.visible = true
+				_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
+			if _pity_timer <= 0.0:
+				if _player.has_method("die"):
+					_player.die()
 	else:
 		_pity_timer = 5.0
 		if _pity_label:
@@ -923,9 +949,11 @@ func _update_cursor_follow(_delta: float) -> void:
 		return
 
 	# Arc-length parameterization of the trail
-	var arc: Array[float] = [0.0]
+	var arc := PackedFloat32Array()
+	arc.resize(_mouse_trail.size())
+	arc[0] = 0.0
 	for i in range(1, _mouse_trail.size()):
-		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
+		arc[i] = arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1])
 	var total: float = arc[-1]
 
 	# Calculate how much to resemble a blob based on brush size
@@ -958,16 +986,17 @@ func _update_cursor_follow(_delta: float) -> void:
 				dir.y = 0.0
 				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
 		else:
-			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-
-			var lo := 0
-			var hi := arc.size() - 1
-			while lo < hi - 1:
-				var mid := (lo + hi) / 2
-				if arc[mid] <= arc_pos:
-					lo = mid
-				else:
-					hi = mid
+			# Optimized: search once
+			var lo := arc.bsearch(arc_pos) - 1
+			lo = clampi(lo, 0, arc.size() - 2)
+			var hi := lo + 1
+			
+			var seg: float = arc[hi] - arc[lo]
+			if seg < 0.0001:
+				t_stream = _mouse_trail[lo]
+			else:
+				var t: float = (arc_pos - arc[lo]) / seg
+				t_stream = (_mouse_trail[lo] as Vector3).lerp(_mouse_trail[hi] as Vector3, t)
 
 			var dir := _mouse_trail[hi] - _mouse_trail[lo]
 			dir.y = 0.0
@@ -1012,6 +1041,38 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 	else:
 		_cursor_follow_timer = 0.0
 	_update_cursor_follow(delta)
+
+
+func _update_sound_wave() -> void:
+	if _sound_wave == null or not is_instance_valid(_sound_wave):
+		return
+	if _player == null:
+		return
+	if not _sound_wave.has_method("update_wave"):
+		return
+
+	# Compute centroid of active follow rats
+	var centroid := Vector3.ZERO
+	var count := 0
+	for rat in rats:
+		if not is_instance_valid(rat):
+			continue
+		if rat.is_fallen:
+			continue
+		if "state" in rat and rat.state != rat.State.FOLLOW:
+			continue
+		centroid += rat.global_position
+		count += 1
+
+	if count == 0:
+		_sound_wave.visible = false
+		return
+
+	centroid /= float(count)
+
+	var start_pos := _player.global_position + Vector3(0.0, 0.4, 0.0)
+	_sound_wave.update_wave(start_pos, centroid)
+
 
 
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
@@ -1089,16 +1150,15 @@ func _assign_neighbors() -> void:
 								nb_distances.append(dist_sq)
 
 		if neighbor_max_count > 0 and nb.size() > neighbor_max_count:
-			var indices: Array[int] = []
+			# Use a more efficient way to sort pairs in GDScript
+			var pairs = []
 			for idx in range(nb.size()):
-				indices.append(idx)
-			indices.sort_custom(func(a: int, b: int) -> bool:
-				return nb_distances[a] < nb_distances[b]
-			)
-			var limited: Array = []
-			for j in range(min(neighbor_max_count, indices.size())):
-				limited.append(nb[indices[j]])
-			nb = limited
+				pairs.append([nb_distances[idx], nb[idx]])
+			pairs.sort() # Sorts by first element (distance)
+			
+			nb = []
+			for j in range(neighbor_max_count):
+				nb.append(pairs[j][1])
 								
 		if rat.has_method("set_neighbors"):
 			rat.set_neighbors(nb)
@@ -2163,14 +2223,14 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 	if mark_radius <= 0.02:
 		mark_radius = 0.02
 
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	for i in range(max_buildable):
 		var p := fill_positions[i] + offset
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		immediate_mesh.surface_add_vertex(p + Vector3(-mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, -mark_radius))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, mark_radius))
-		immediate_mesh.surface_end()
+	immediate_mesh.surface_end()
 
 
 func _build_circle_if_possible() -> void:

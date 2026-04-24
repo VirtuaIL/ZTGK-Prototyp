@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://qhnkjc42ei6f"]
+
+[ext_resource type="PackedScene" uid="uid://om48bw8m5a42" path="res://resources/models/external/fantast/3d/props/SM_PROP_barrel_dungeon_03.fbx" id="1_t46gf"]
+
+[node name="SM_PROP_barrel_dungeon_03" unique_id=292756917 instance=ExtResource("1_t46gf")]

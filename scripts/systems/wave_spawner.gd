@@ -18,7 +18,7 @@ enum PositionMode {
 @export var label: String = ""
 @export_range(0, 99, 1) var level_id: int = 1
 ## Opóźnienie przed pierwszą falą (sek.)
-@export var start_delay: float = 5.0
+@export var start_delay: float = 8.0
 @export var reset_on_level_enter: bool = true
 
 # ── Waves ─────────────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ enum PositionMode {
 ## Czy po ostatniej fali zacząć od nowa
 @export var loop_waves: bool = false
 ## Przerwa po wyczyszczeniu fali przed następną (sek.)
-@export var delay_between_waves: float = 5.0
+@export var delay_between_waves: float = 8.0
 
 # ── Positions ─────────────────────────────────────────────────────────────────
 @export_group("Positions")

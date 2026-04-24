@@ -61,6 +61,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8863647, 0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=1756583863]
+visible = false
 
 [node name="DamageOverlay" type="ColorRect" parent="PlayerHUD" unique_id=705330607]
 material = SubResource("ShaderMaterial_Vignette")

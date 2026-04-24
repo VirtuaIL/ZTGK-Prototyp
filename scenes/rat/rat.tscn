@@ -52,7 +52,7 @@ wall_avoidance_force = 92.0
 wall_avoidance_probe_distance = 1.45
 wall_avoidance_side_probe_distance = 1.1
 wall_avoidance_tangent_bias = 1.0
-wild_lifespan = 7.0
+wild_lifespan = -1.0
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=532997029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)

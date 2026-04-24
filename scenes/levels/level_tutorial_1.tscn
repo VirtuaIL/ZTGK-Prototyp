@@ -2,6 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="1_a3020"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_aackc"]
+[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_l6w81"]
+[ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="4_dteol"]
+[ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="5_uidtq"]
+[ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="6_yunbk"]
 
 [node name="Level1" type="Node3D" unique_id=1397753813]
 
@@ -25,3 +29,95 @@ transform = Transform3D(-3.47287e-07, 0, 1, 0, 1, 0, -7.945, 0, -4.371139e-08, -
 
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("3_aackc")]
 transform = Transform3D(-3.5690348e-07, 0, 1, 0, 1, 0, -8.165, 0, -4.371139e-08, 20, 0, 0.46080017)
+
+[node name="Spawners" type="Node3D" parent="." unique_id=414555779]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.723652, 0, -10.425856)
+
+[node name="SpawnerWildLevel1" parent="Spawners" unique_id=183810217 instance=ExtResource("3_l6w81")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.608185, 0, 6)
+label = "Level1 Wild Rats"
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel2" parent="Spawners" unique_id=622003726 instance=ExtResource("3_l6w81")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 100.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpawnerWildLevel3" parent="Spawners" unique_id=484038062 instance=ExtResource("3_l6w81")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.058026314, 0, 0.11108208)
+label = "Level1 Wild Rats"
+start_delay = 0.0
+reset_on_level_enter = false
+count_min = 3
+spawn_radius = 1.8
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 100.0
+wild_rat_prob_green = 0.0
+
+[node name="props" type="Node3D" parent="." unique_id=1828553465]
+
+[node name="SM_PROP_barrel_dungeon_01" parent="props" unique_id=693226456 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.114528, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_02" parent="props" unique_id=342976828 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.844264, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_04" parent="props" unique_id=41708283 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.640434, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_05" parent="props" unique_id=1313656473 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.30203, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_06" parent="props" unique_id=1859837041 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.904934, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_07" parent="props" unique_id=774913146 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.652772, 0.0025275508, -9.457439)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_08" parent="props" unique_id=196445611 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.652772, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_09" parent="props" unique_id=1652555512 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.033514, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_10" parent="props" unique_id=1650885406 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.314146, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_11" parent="props" unique_id=368972758 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.653898, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_12" parent="props" unique_id=2092577150 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.849875, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_13" parent="props" unique_id=927481471 instance=ExtResource("4_dteol")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.168499, 0.0025275508, -8.027463)
+mass = 0.2
+
+[node name="SM_PROP_platform_grid_dungeon" parent="props" unique_id=1848286961 instance=ExtResource("5_uidtq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.774664, 0, -15.8743725)
+
+[node name="SM_PROP_barrel_dungeon_03" parent="props" unique_id=292756917 instance=ExtResource("6_yunbk")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6061587, 0, -16.80452)
