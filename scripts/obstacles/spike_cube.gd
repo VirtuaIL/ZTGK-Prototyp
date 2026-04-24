@@ -9,8 +9,8 @@ class_name SpikeCube
 const SPIKE_VISUAL_MULTIPLIER: float = 1.0
 const RAT_TOUCH_RADIUS: float = 0.22
 const RAT_TOUCH_HEIGHT: float = 0.08
-const SPIKE_ARC_SPACING: float = 0.2
-const SPIKE_ROW_SPACING: float = 0.2
+const SPIKE_ARC_SPACING: float = 0.4
+const SPIKE_ROW_SPACING: float = 0.4
 const SPIKE_VERTICAL_MARGIN: float = 0.25
 
 var _player_dmg_timer: float = 0.0
@@ -159,21 +159,44 @@ func _create_spikes_visuals(center_offset: Vector3) -> void:
 	var usable_height: float = maxf(0.1, visual_size.y - SPIKE_VERTICAL_MARGIN * 2.0)
 	var row_count: int = maxi(1, int(round(usable_height / SPIKE_ROW_SPACING)))
 
+	var transforms := []
+
 	for j in range(row_count):
 		var y_ratio: float = 0.5 if row_count == 1 else float(j) / float(row_count - 1)
 		var yy: float = visual_center.y - (visual_size.y * 0.5) + SPIKE_VERTICAL_MARGIN + y_ratio * usable_height
 		
 		# Right face (+X)
-		_create_spikes_for_face(Vector3(1, 0, 0), Vector3(0, 0, 1), visual_size.z, visual_size.x * 0.5, yy, mat, j, visual_center, container)
+		_create_spikes_for_face(Vector3(1, 0, 0), Vector3(0, 0, 1), visual_size.z, visual_size.x * 0.5, yy, j, visual_center, transforms)
 		# Left face (-X)
-		_create_spikes_for_face(Vector3(-1, 0, 0), Vector3(0, 0, -1), visual_size.z, visual_size.x * 0.5, yy, mat, j, visual_center, container)
+		_create_spikes_for_face(Vector3(-1, 0, 0), Vector3(0, 0, -1), visual_size.z, visual_size.x * 0.5, yy, j, visual_center, transforms)
 		# Back face (+Z)
-		_create_spikes_for_face(Vector3(0, 0, 1), Vector3(-1, 0, 0), visual_size.x, visual_size.z * 0.5, yy, mat, j, visual_center, container)
+		_create_spikes_for_face(Vector3(0, 0, 1), Vector3(-1, 0, 0), visual_size.x, visual_size.z * 0.5, yy, j, visual_center, transforms)
 		# Front face (-Z)
-		_create_spikes_for_face(Vector3(0, 0, -1), Vector3(1, 0, 0), visual_size.x, visual_size.z * 0.5, yy, mat, j, visual_center, container)
+		_create_spikes_for_face(Vector3(0, 0, -1), Vector3(1, 0, 0), visual_size.x, visual_size.z * 0.5, yy, j, visual_center, transforms)
+
+	if transforms.size() > 0:
+		var multimesh_inst = MultiMeshInstance3D.new()
+		var mm = MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.instance_count = transforms.size()
+		
+		var cone = CylinderMesh.new()
+		cone.bottom_radius = 0.1 * SPIKE_VISUAL_MULTIPLIER
+		cone.top_radius = 0.0
+		cone.height = 0.5 * SPIKE_VISUAL_MULTIPLIER
+		cone.radial_segments = 4
+		cone.rings = 1
+		cone.material = mat
+		mm.mesh = cone
+		
+		for k in range(transforms.size()):
+			mm.set_instance_transform(k, transforms[k])
+			
+		multimesh_inst.multimesh = mm
+		container.add_child(multimesh_inst)
 
 
-func _create_spikes_for_face(normal: Vector3, tangent: Vector3, width: float, depth: float, yy: float, mat: Material, row_index: int, center_offset: Vector3, container: Node3D) -> void:
+func _create_spikes_for_face(normal: Vector3, tangent: Vector3, width: float, depth: float, yy: float, row_index: int, center_offset: Vector3, transforms: Array) -> void:
 	var usable_width := maxf(0.01, width - 0.2)
 	var spikes_on_face: int = maxi(1, int(round(usable_width / SPIKE_ARC_SPACING)))
 	
@@ -195,21 +218,15 @@ func _create_spikes_for_face(normal: Vector3, tangent: Vector3, width: float, de
 		var face_point = center_offset + normal * depth + tangent * offset
 		face_point.y = yy
 		
-		var mesh_inst = MeshInstance3D.new()
-		var cone = CylinderMesh.new()
-		cone.bottom_radius = 0.1 * SPIKE_VISUAL_MULTIPLIER
-		cone.top_radius = 0.0
-		cone.height = 0.5 * SPIKE_VISUAL_MULTIPLIER
-		mesh_inst.mesh = cone
-		mesh_inst.material_override = mat
-		
-		var pos_offset = normal * (cone.height * 0.25)
-		mesh_inst.position = face_point + pos_offset
-		container.add_child(mesh_inst)
+		var pos_offset = normal * (0.5 * SPIKE_VISUAL_MULTIPLIER * 0.25)
+		var final_pos = face_point + pos_offset
 		
 		var up = Vector3.UP
 		var rot_axis = up.cross(normal)
+		var basis = Basis.IDENTITY
 		if rot_axis.length_squared() > 0.001:
 			rot_axis = rot_axis.normalized()
 			var rot_angle = acos(up.dot(normal))
-			mesh_inst.basis = Basis(rot_axis, rot_angle)
+			basis = Basis(rot_axis, rot_angle)
+			
+		transforms.append(Transform3D(basis, final_pos))

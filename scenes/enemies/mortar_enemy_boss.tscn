@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://bqhoh4574vpgq"]
+[gd_scene format=3 uid="uid://c358mkj5l3pyr"]
 
-[ext_resource type="Script" uid="uid://c3n4w7iy1hhpt" path="res://scripts/enemies/mortar_enemy.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://bdvo7lqxr6sqd" path="res://resources/models/enemies/bomber/bomber.fbx" id="2_sh7ey"]
+[ext_resource type="Script" uid="uid://c1kvpjbmu58uo" path="res://scripts/enemies/mortar_enemy_boss.gd" id="1_ybnyc"]
+[ext_resource type="PackedScene" uid="uid://bdvo7lqxr6sqd" path="res://resources/models/enemies/bomber/bomber.fbx" id="2_jwntc"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Override"]
 resource_local_to_scene = true
@@ -28,7 +28,15 @@ size = Vector3(0.8, 1.6, 0.8)
 [node name="MortarEnemy" type="CharacterBody3D" unique_id=810920931]
 collision_layer = 16
 collision_mask = 9
-script = ExtResource("1_script")
+script = ExtResource("1_ybnyc")
+shield_chance = 0.0
+move_speed = 0.0
+chase_speed = 0.0
+wall_probe_distance = 0.2
+wall_side_probe_distance = 0.2
+detection_range = 1280.0
+lose_range = 2500.0
+attack_range = 1280.0
 animation_player_path = NodePath("bomber")
 
 [node name="Body" type="MeshInstance3D" parent="." unique_id=105796758]
@@ -46,5 +54,5 @@ mesh = SubResource("SphereMesh_1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="bomber" parent="." unique_id=875047842 instance=ExtResource("2_sh7ey")]
+[node name="bomber" parent="." unique_id=875047842 instance=ExtResource("2_jwntc")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
