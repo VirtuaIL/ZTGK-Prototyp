@@ -22,6 +22,7 @@ func _ready() -> void:
 	super._ready()
 	max_health = 100.0
 	health = max_health
+	_update_hp_bar()
 	move_speed = 2.5
 	chase_speed = 2.5
 	attack_range = bomb_range
