@@ -567,6 +567,45 @@ func _spawn_rats_near_player(count: int) -> void:
 		return
 	_spawn_rats_at_center(count, _player.global_position)
 
+func add_rats_to_horde(rat_type: int, amount: int) -> void:
+	if amount <= 0:
+		return
+	if rat_scene == null:
+		return
+		
+	var parent_node := get_parent()
+	if parent_node == null:
+		parent_node = self
+		
+	var base_pos = global_position
+	if _player:
+		base_pos = _player.global_position
+		
+	for i in range(amount):
+		var rat = rat_scene.instantiate()
+		if rat == null:
+			continue
+			
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(rat_type)
+			
+		parent_node.add_child(rat)
+		rat.global_position = base_pos + Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
+		rat.player = _player
+		
+		if _player:
+			rat.add_collision_exception_with(_player)
+			_player.add_collision_exception_with(rat)
+		register_rat(rat)
+		
+	build_blob_offsets()
+	save_rat_composition()
+
+
+
 
 func _get_fallen_rats() -> Array[Rat]:
 	var fallen: Array[Rat] = []

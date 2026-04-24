@@ -1,5 +1,20 @@
 extends Node3D
 
+@export_group("Horde Upgrades")
+@export var upgrade_common_amount: int = 5
+@export var upgrade_rare_amount: int = 10
+@export var upgrade_epic_amount: int = 15
+@export var upgrade_delay_seconds: float = 2.0
+@export var levels_with_upgrades: Array[int] = [1, 2, 3, 4, 5, 6, 7]
+
+var upgrade_layer: CanvasLayer
+var upgrade_panel: Panel
+var upgrade_vbox: VBoxContainer
+var _upgrade_delay_timer: float = 0.0
+var _upgrade_pending: bool = false
+
+
+
 const LEVEL_BOUNDS := {
 	1: {"min_z": - 140.0, "max_z": 48.0},
 	2: {"min_z": - 137.5, "max_z": - 55.5},
@@ -101,6 +116,7 @@ var _cam_look_ahead: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	_setup_input_map()
+	_setup_upgrade_ui()
 	_init_game()
 	get_viewport().size_changed.connect(_refresh_cheatsheet_size)
 
@@ -759,8 +775,21 @@ func _process(delta: float) -> void:
 	_indicator_blink_time += delta
 	var level_cleared := is_current_level_cleared()
 	if level_cleared != _current_level_cleared:
+		var was_cleared = _current_level_cleared
 		_current_level_cleared = level_cleared
 		_update_level_doors()
+		if _current_level_cleared and not was_cleared:
+			if current_level_id in levels_with_upgrades:
+				_upgrade_delay_timer = upgrade_delay_seconds
+				_upgrade_pending = true
+
+	if _upgrade_pending:
+		_upgrade_delay_timer -= delta
+		if _upgrade_delay_timer <= 0.0:
+			_upgrade_pending = false
+			_show_upgrade_ui()
+
+
 	_log_level_debug_state()
 	
 	if fps_label:
@@ -1615,3 +1644,135 @@ func _log_level_debug_state(reason: String = "") -> void:
 		print("[LEVEL DEBUG] %s" % debug_state)
 	else:
 		print("[LEVEL DEBUG] %s reason=%s" % [debug_state, reason])
+
+
+# ── Horde Upgrade UI ──────────────────────────────────────────────────────────
+func _setup_upgrade_ui() -> void:
+	upgrade_layer = CanvasLayer.new()
+	upgrade_layer.layer = 100 # Draw on top
+	upgrade_layer.process_mode = Node.PROCESS_MODE_ALWAYS # Keep running while paused
+	
+	var dim_rect = ColorRect.new()
+	dim_rect.color = Color(0, 0, 0, 0.5)
+	dim_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	upgrade_layer.add_child(dim_rect)
+	
+	upgrade_panel = Panel.new()
+	upgrade_panel.set_anchors_preset(Control.PRESET_CENTER)
+	upgrade_panel.custom_minimum_size = Vector2(400, 300)
+	
+	var style := StyleBoxFlat.new()
+	style.bg_color = UI_BG_STRONG
+	style.border_color = UI_BORDER
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	upgrade_panel.add_theme_stylebox_override("panel", style)
+	
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	upgrade_panel.add_child(margin)
+	
+	var root_vbox = VBoxContainer.new()
+	root_vbox.add_theme_constant_override("separation", 20)
+	margin.add_child(root_vbox)
+	
+	var title = Label.new()
+	title.text = "WYBIERZ ULEPSZENIE"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", UI_TEXT)
+	title.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	title.add_theme_constant_override("outline_size", 4)
+	root_vbox.add_child(title)
+	
+	upgrade_vbox = VBoxContainer.new()
+	upgrade_vbox.add_theme_constant_override("separation", 15)
+	upgrade_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	upgrade_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	root_vbox.add_child(upgrade_vbox)
+	
+	dim_rect.add_child(upgrade_panel)
+	add_child(upgrade_layer)
+	
+	upgrade_layer.visible = false
+
+func _show_upgrade_ui() -> void:
+	if upgrade_layer == null:
+		return
+		
+	for child in upgrade_vbox.get_children():
+		child.queue_free()
+		
+	var rolled_options: Array[Vector2] = []
+		
+	for i in range(3):
+		var r_type = randi_range(1, 3)
+		var r_rarity = randi_range(0, 2)
+		
+		# Prevent duplicates in the same set
+		var attempts = 0
+		while Vector2(r_type, r_rarity) in rolled_options and attempts < 20:
+			r_type = randi_range(1, 3)
+			r_rarity = randi_range(0, 2)
+			attempts += 1
+		rolled_options.append(Vector2(r_type, r_rarity))
+		
+		var rat_name = ""
+		var amount = 0
+		var type_color = Color.WHITE
+		match r_type:
+			1: 
+				rat_name = "Agresywnych (Czerwone)"
+				type_color = Color(0.9, 0.3, 0.3)
+			2: 
+				rat_name = "Gazowych (Zielone)"
+				type_color = Color(0.3, 0.9, 0.3)
+			3: 
+				rat_name = "Elektrycznych (Niebieskie)"
+				type_color = Color(0.3, 0.5, 0.9)
+				
+		var rarity_name = ""
+		match r_rarity:
+			0:
+				amount = upgrade_common_amount
+				rarity_name = "Zwykłe"
+			1:
+				amount = upgrade_rare_amount
+				rarity_name = "Rzadkie"
+			2:
+				amount = upgrade_epic_amount
+				rarity_name = "Epickie"
+				
+		var btn = Button.new()
+		btn.text = "%s: +%d %s" % [rarity_name, amount, rat_name]
+		btn.custom_minimum_size = Vector2(300, 50)
+		btn.add_theme_color_override("font_color", type_color)
+		btn.add_theme_font_size_override("font_size", 16)
+		btn.pressed.connect(_on_upgrade_selected.bind(r_type, amount))
+		upgrade_vbox.add_child(btn)
+		
+	var vp_size = get_viewport().get_visible_rect().size
+	upgrade_panel.position = vp_size / 2.0 - upgrade_panel.custom_minimum_size / 2.0
+	
+	upgrade_layer.visible = true
+	
+	# Make sure Input is available even when paused
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	get_tree().paused = true
+
+func _on_upgrade_selected(rat_type: int, amount: int) -> void:
+	upgrade_layer.visible = false
+	get_tree().paused = false
+	if rat_manager and rat_manager.has_method("add_rats_to_horde"):
+		rat_manager.add_rats_to_horde(rat_type, amount)
+

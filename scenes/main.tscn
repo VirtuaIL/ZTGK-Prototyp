@@ -45,6 +45,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
+levels_with_upgrades = Array[int]([3, 4, 5, 6, 7])
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]

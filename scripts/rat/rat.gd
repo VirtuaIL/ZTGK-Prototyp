@@ -196,7 +196,9 @@ func _ready() -> void:
 	add_child(_blob_mesh)
 	_cache_visual_meshes()
 	default_rat_type = rat_type
+	_current_buff_material = null
 	set_rat_type(int(rat_type))
+
 
 
 func _process(delta: float) -> void:
