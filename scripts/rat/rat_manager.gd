@@ -97,6 +97,16 @@ var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
+var cached_mouse_world: Vector3 = Vector3.ZERO
+var _mouse_cached_frame: int = -1
+
+func get_mouse_world() -> Vector3:
+	var f := Engine.get_frames_drawn()
+	if _mouse_cached_frame != f:
+		_mouse_cached_frame = f
+		cached_mouse_world = _mouse_to_world()
+	return cached_mouse_world
+
 enum AttackMode { ROTATION, BLOB, PATH_DASH }
 var current_attack_mode: AttackMode = AttackMode.PATH_DASH
 var _combat_blob_offsets: Array[Vector3] = []
@@ -939,9 +949,11 @@ func _update_cursor_follow(_delta: float) -> void:
 		return
 
 	# Arc-length parameterization of the trail
-	var arc: Array[float] = [0.0]
+	var arc := PackedFloat32Array()
+	arc.resize(_mouse_trail.size())
+	arc[0] = 0.0
 	for i in range(1, _mouse_trail.size()):
-		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
+		arc[i] = arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1])
 	var total: float = arc[-1]
 
 	# Calculate how much to resemble a blob based on brush size
@@ -974,16 +986,17 @@ func _update_cursor_follow(_delta: float) -> void:
 				dir.y = 0.0
 				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
 		else:
-			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-
-			var lo := 0
-			var hi := arc.size() - 1
-			while lo < hi - 1:
-				var mid := (lo + hi) / 2
-				if arc[mid] <= arc_pos:
-					lo = mid
-				else:
-					hi = mid
+			# Optimized: search once
+			var lo := arc.bsearch(arc_pos) - 1
+			lo = clampi(lo, 0, arc.size() - 2)
+			var hi := lo + 1
+			
+			var seg: float = arc[hi] - arc[lo]
+			if seg < 0.0001:
+				t_stream = _mouse_trail[lo]
+			else:
+				var t: float = (arc_pos - arc[lo]) / seg
+				t_stream = (_mouse_trail[lo] as Vector3).lerp(_mouse_trail[hi] as Vector3, t)
 
 			var dir := _mouse_trail[hi] - _mouse_trail[lo]
 			dir.y = 0.0
@@ -1137,16 +1150,15 @@ func _assign_neighbors() -> void:
 								nb_distances.append(dist_sq)
 
 		if neighbor_max_count > 0 and nb.size() > neighbor_max_count:
-			var indices: Array[int] = []
+			# Use a more efficient way to sort pairs in GDScript
+			var pairs = []
 			for idx in range(nb.size()):
-				indices.append(idx)
-			indices.sort_custom(func(a: int, b: int) -> bool:
-				return nb_distances[a] < nb_distances[b]
-			)
-			var limited: Array = []
-			for j in range(min(neighbor_max_count, indices.size())):
-				limited.append(nb[indices[j]])
-			nb = limited
+				pairs.append([nb_distances[idx], nb[idx]])
+			pairs.sort() # Sorts by first element (distance)
+			
+			nb = []
+			for j in range(neighbor_max_count):
+				nb.append(pairs[j][1])
 								
 		if rat.has_method("set_neighbors"):
 			rat.set_neighbors(nb)
@@ -2211,14 +2223,14 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 	if mark_radius <= 0.02:
 		mark_radius = 0.02
 
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	for i in range(max_buildable):
 		var p := fill_positions[i] + offset
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		immediate_mesh.surface_add_vertex(p + Vector3(-mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, -mark_radius))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, mark_radius))
-		immediate_mesh.surface_end()
+	immediate_mesh.surface_end()
 
 
 func _build_circle_if_possible() -> void:

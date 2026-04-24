@@ -1220,32 +1220,29 @@ func clamp_position_to_level(level_id: int, pos: Vector3) -> Vector3:
 	)
 
 
-func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
-	return _filter_nodes_by_level(get_tree().get_nodes_in_group(group_name), level_id)
-
+var _level_nodes_cache: Dictionary = {}
+var _cached_physics_frame: int = -1
+var _cached_process_frame: int = -1
+var _cached_level_enemies_id: int = -1
+var _cached_level_enemies: Array[Node3D] = []
 
 func get_nodes_in_current_level(group_name: String) -> Array[Node3D]:
 	return get_nodes_in_level(group_name, current_level_id)
 
-
 func get_current_level_spawn_markers() -> Array[Node3D]:
 	return get_level_spawn_markers(current_level_id)
-
 
 func get_level_spawn_markers(level_id: int) -> Array[Node3D]:
 	return get_nodes_in_level("spawn_markers", level_id)
 
-
 func get_current_level_rat_spawns() -> Array[Node3D]:
 	return get_level_rat_spawns(current_level_id)
-
 
 func get_level_rat_spawns(level_id: int) -> Array[Node3D]:
 	var grouped_spawns := get_nodes_in_level("rat_spawn", level_id)
 	if not grouped_spawns.is_empty():
 		return grouped_spawns
 	return _get_fallback_level_rat_spawns(level_id)
-
 
 func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
 	var fallback_spawns: Array[Node3D] = []
@@ -1274,12 +1271,33 @@ func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
 
 	return fallback_spawns
 
+func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
+	var group_nodes := get_tree().get_nodes_in_group(group_name)
+	var count := group_nodes.size()
+	
+	if not _level_nodes_cache.has(group_name) or _level_nodes_cache[group_name]["count"] != count:
+		_level_nodes_cache[group_name] = {
+			"count": count,
+			"levels": {}
+		}
+		
+	var cache_levels: Dictionary = _level_nodes_cache[group_name]["levels"]
+	if cache_levels.has(level_id):
+		return cache_levels[level_id]
+		
+	var filtered := _filter_nodes_by_level(group_nodes, level_id)
+	cache_levels[level_id] = filtered
+	return filtered
 
 func get_current_level_enemies() -> Array[Node3D]:
 	return get_level_enemies(current_level_id)
 
-
 func get_level_enemies(level_id: int) -> Array[Node3D]:
+	var phys_frame := Engine.get_physics_frames()
+	var proc_frame := Engine.get_process_frames()
+	if phys_frame == _cached_physics_frame and proc_frame == _cached_process_frame and _cached_level_enemies_id == level_id:
+		return _cached_level_enemies
+		
 	var enemies: Array[Node3D] = []
 	enemies.append_array(get_nodes_in_level("enemies", level_id))
 	enemies.append_array(get_nodes_in_level("turrets", level_id))
@@ -1293,8 +1311,12 @@ func get_level_enemies(level_id: int) -> Array[Node3D]:
 		if not enemy.visible:
 			continue
 		alive.append(enemy)
+		
+	_cached_physics_frame = phys_frame
+	_cached_process_frame = proc_frame
+	_cached_level_enemies_id = level_id
+	_cached_level_enemies = alive
 	return alive
-
 
 func is_current_level_cleared() -> bool:
 	return is_level_cleared(current_level_id)

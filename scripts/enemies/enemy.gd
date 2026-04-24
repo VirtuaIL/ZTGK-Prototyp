@@ -84,6 +84,10 @@ var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
 var level_id: int = 0
 
+# Throttling for target finding
+var _find_target_timer: float = 0.0
+@export var find_target_interval: float = 0.2
+
 # ── HP bar visuals ──
 var hp_bar_bg: MeshInstance3D
 var hp_bar_fill: MeshInstance3D
@@ -178,6 +182,8 @@ func _physics_process(delta: float) -> void:
 			_strafe_sign = -_strafe_sign if randf() < 0.55 else _strafe_sign
 	if _unstuck_timer > 0.0:
 		_unstuck_timer = maxf(0.0, _unstuck_timer - delta)
+	if _find_target_timer > 0.0:
+		_find_target_timer = maxf(0.0, _find_target_timer - delta)
 	match ai_state:
 		AIState.PASSIVE:
 			velocity.x = 0.0
@@ -659,6 +665,10 @@ func _respawn() -> void:
 #  HELPERS
 # ═══════════════════════════════════════════════
 func _find_target() -> void:
+	if _find_target_timer > 0.0:
+		return
+	_find_target_timer = find_target_interval
+	
 	var targets: Array[Node3D] = []
 	var players := get_tree().get_nodes_in_group("player")
 	targets.append_array(players)

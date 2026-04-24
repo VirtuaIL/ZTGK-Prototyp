@@ -21,6 +21,10 @@ var _radius_x: float = 1.2
 var _radius_z: float = 1.2
 var _effective_height: float = 2.0
 
+# Throttling
+var _check_timer: float = 0.0
+@export var check_interval: float = 0.1
+
 @onready var _body_mesh: MeshInstance3D = $MeshInstance3D
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 
@@ -32,21 +36,31 @@ func _ready() -> void:
 	_create_spikes_visuals()
 
 func _physics_process(_delta: float) -> void:
+	_check_timer -= _delta
+	if _check_timer > 0.0:
+		return
+	_check_timer = check_interval
+
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
 	if mgr != null and "rats" in mgr:
 		for rat in mgr.rats:
 			if is_instance_valid(rat):
+				# Quick AABB/distance check before expensive to_local
+				var dist_sq = global_position.distance_squared_to(rat.global_position)
+				if dist_sq < (_radius_x + 1.0) * (_radius_x + 1.0):
+					var rat_local := to_local(rat.global_position)
+					if _is_point_inside_hazard(rat_local, RAT_TOUCH_RADIUS, RAT_TOUCH_HEIGHT):
+						if rat.has_method("die"):
+							rat.die()
+
+	for rat in get_tree().get_nodes_in_group("wild_rats"):
+		if is_instance_valid(rat):
+			var dist_sq = global_position.distance_squared_to(rat.global_position)
+			if dist_sq < (_radius_x + 1.0) * (_radius_x + 1.0):
 				var rat_local := to_local(rat.global_position)
 				if _is_point_inside_hazard(rat_local, RAT_TOUCH_RADIUS, RAT_TOUCH_HEIGHT):
 					if rat.has_method("die"):
 						rat.die()
-
-	for rat in get_tree().get_nodes_in_group("wild_rats"):
-		if is_instance_valid(rat):
-			var rat_local := to_local(rat.global_position)
-			if _is_point_inside_hazard(rat_local, RAT_TOUCH_RADIUS, RAT_TOUCH_HEIGHT):
-				if rat.has_method("die"):
-					rat.die()
 
 	# Player damage
 	_player_dmg_timer = maxf(0.0, _player_dmg_timer - _delta)
