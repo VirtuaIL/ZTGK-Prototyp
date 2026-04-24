@@ -963,7 +963,8 @@ func _spawn_wild_rats_wave_group(spawner: WaveSpawner, group: WaveGroup) -> void
 			rat.set_rat_type(_roll_wild_rat_type(
 				spawner.wild_rat_prob_normal,
 				spawner.wild_rat_prob_red,
-				spawner.wild_rat_prob_green
+				spawner.wild_rat_prob_green,
+				spawner.wild_rat_prob_electric
 			))
 		rat_manager.add_child(rat)
 		_assign_level_tag(rat, target_level_id)
@@ -999,7 +1000,8 @@ func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
 			rat.set_rat_type(_roll_wild_rat_type(
 				spawner.wild_rat_prob_normal,
 				spawner.wild_rat_prob_red,
-				spawner.wild_rat_prob_green
+				spawner.wild_rat_prob_green,
+				spawner.wild_rat_prob_electric
 			))
 		rat_manager.add_child(rat)
 		_assign_level_tag(rat, target_level_id)
@@ -1068,8 +1070,8 @@ func _random_spawn_offset(radius: float, y_offset: float) -> Vector3:
 	return Vector3(cos(angle) * dist, y_offset, sin(angle) * dist)
 
 
-func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float) -> int:
-	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green)
+func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float, prob_electric: float) -> int:
+	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green) + maxf(0.0, prob_electric)
 	if total_prob <= 0.0:
 		return 0
 	var roll := randf_range(0.0, total_prob)
@@ -1077,6 +1079,8 @@ func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float)
 		return 1
 	if roll < prob_red + prob_green:
 		return 2
+	if roll < prob_red + prob_green + prob_electric:
+		return 3
 	return 0
 
 

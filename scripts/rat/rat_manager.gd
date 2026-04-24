@@ -29,6 +29,13 @@ var wave_pending: bool = false
 @export var rat_spawn_one_shot: bool = true
 @export var min_cap_respawn_cooldown: float = 0.75
 
+@export_group("Electric Rats")
+@export var electric_arc_max_dist: float = 4.0
+@export var electric_arc_cooldown: float = 0.5
+@export var electric_arc_max_connections: int = 3
+@export var electric_damage_mult: float = 1.5
+@export_group("")
+
 var _player: CharacterBody3D = null
 var _empty_respawn_triggered: bool = false
 var _min_respawn_cooldown: float = 0.0
@@ -214,6 +221,10 @@ var line_mesh_instance: MeshInstance3D
 var immediate_mesh: ImmediateMesh
 var line_material: StandardMaterial3D
 
+var electric_mm_instance: MultiMeshInstance3D
+var _electric_arcs: Array = []
+var _electric_enemy_cooldowns: Dictionary = {}
+
 var unified_shape_combiner: CSGCombiner3D
 
 # ── Blob offsets (sunflower pattern) ──────────────────────────────────────────
@@ -280,6 +291,24 @@ func _ready() -> void:
 	buff_mat_yellow.albedo_color = Color(0.9, 0.9, 0.1)
 	buff_mat_purple = StandardMaterial3D.new()
 	buff_mat_purple.albedo_color = Color(0.6, 0.1, 0.9)
+
+	electric_mm_instance = MultiMeshInstance3D.new()
+	var mm = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = 0
+	var cylinder = CylinderMesh.new()
+	cylinder.top_radius = 0.08
+	cylinder.bottom_radius = 0.08
+	cylinder.height = 1.0
+	cylinder.radial_segments = 6
+	var arc_mat = ShaderMaterial.new()
+	arc_mat.shader = load("res://scripts/rat/electric_arc.gdshader")
+	if arc_mat.shader == null:
+		push_error("Could not load electric_arc.gdshader")
+	cylinder.material = arc_mat
+	mm.mesh = cylinder
+	electric_mm_instance.multimesh = mm
+	add_child(electric_mm_instance)
 
 	immediate_mesh = ImmediateMesh.new()
 	line_mesh_instance = MeshInstance3D.new()
@@ -579,6 +608,8 @@ func _process(delta: float) -> void:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+		
+	_update_electric_arcs()
 	_process_formation_queue()
 	_update_edge_avoidance()
 	if orbit_active:
@@ -643,6 +674,7 @@ func _process(delta: float) -> void:
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
 	_process_damage(delta)
+	_process_electric_damage(delta)
 
 	# Reset game if all rats die (with pity timer)
 	if get_total_rat_count() <= 0 and _player != null:
@@ -722,6 +754,119 @@ func _process_damage(_delta: float) -> void:
 							if rat.attack_cooldown <= 0.0:
 								enemy.take_damage(rat.damage_per_hit * dmg_mult, rat.get_instance_id(), rat.global_position, dmg_color)
 								rat.attack_cooldown = 0.5 # Passive damage cooldown per rat per enemy (effectively)
+
+func _update_electric_arcs() -> void:
+	var active_electric: Array[CharacterBody3D] = []
+	for rat in rats:
+		if is_instance_valid(rat) and rat.get("default_rat_type") == 3 and rat.state == rat.State.FOLLOW and not rat.is_fallen:
+			active_electric.append(rat)
+			
+	var connections = []
+	var connected_count = {}
+	for r in active_electric:
+		connected_count[r] = 0
+		
+	var max_dist_sq = electric_arc_max_dist * electric_arc_max_dist
+	
+	for i in range(active_electric.size()):
+		var r1 = active_electric[i]
+		if connected_count[r1] >= electric_arc_max_connections:
+			continue
+		for j in range(i + 1, active_electric.size()):
+			var r2 = active_electric[j]
+			if connected_count[r2] >= electric_arc_max_connections:
+				continue
+				
+			var dist_sq = r1.global_position.distance_squared_to(r2.global_position)
+			if dist_sq < max_dist_sq:
+				connections.append([r1, r2])
+				connected_count[r1] += 1
+				connected_count[r2] += 1
+				if connected_count[r1] >= electric_arc_max_connections:
+					break
+					
+	_electric_arcs = connections
+	
+	var mm = electric_mm_instance.multimesh
+	mm.instance_count = connections.size()
+	for i in range(connections.size()):
+		var r1 = connections[i][0]
+		var r2 = connections[i][1]
+		var p1 = r1.global_position + Vector3(0, 0.2, 0)
+		var p2 = r2.global_position + Vector3(0, 0.2, 0)
+		var center = (p1 + p2) * 0.5
+		var dir = (p2 - p1)
+		var dist = dir.length()
+		if dist > 0.001:
+			dir = dir / dist
+			
+		var basis = Basis()
+		if abs(dir.y) < 0.999:
+			basis.y = dir
+			basis.x = Vector3.UP.cross(dir).normalized()
+			basis.z = basis.x.cross(basis.y).normalized()
+		else:
+			basis.y = dir
+			basis.x = Vector3.RIGHT.cross(dir).normalized()
+			basis.z = basis.x.cross(basis.y).normalized()
+			
+		basis.y *= dist
+		var t = Transform3D(basis, center)
+		mm.set_instance_transform(i, t)
+
+func _process_electric_damage(delta: float) -> void:
+	if _electric_arcs.is_empty():
+		return
+		
+	var keys_to_remove = []
+	for e in _electric_enemy_cooldowns.keys():
+		_electric_enemy_cooldowns[e] -= delta
+		if _electric_enemy_cooldowns[e] <= 0:
+			keys_to_remove.append(e)
+	for k in keys_to_remove:
+		_electric_enemy_cooldowns.erase(k)
+		
+	var enemies := []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+	else:
+		enemies = get_tree().get_nodes_in_group("enemies")
+		enemies += get_tree().get_nodes_in_group("bosses")
+		
+	if enemies.is_empty():
+		return
+		
+	var arc_segments = []
+	for arc in _electric_arcs:
+		if is_instance_valid(arc[0]) and is_instance_valid(arc[1]):
+			arc_segments.append([arc[0].global_position, arc[1].global_position, arc[0].get("damage_per_hit")])
+			
+	var hit_radius_sq = 1.0 * 1.0
+	
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		if _electric_enemy_cooldowns.has(enemy) and _electric_enemy_cooldowns[enemy] > 0:
+			continue
+			
+		var e_pos = enemy.global_position
+		for seg in arc_segments:
+			var p1 = seg[0]
+			var p2 = seg[1]
+			var dmg = seg[2]
+			
+			var l2 = p1.distance_squared_to(p2)
+			var projection = p1
+			if l2 > 0.0001:
+				var t = max(0, min(1, (e_pos - p1).dot(p2 - p1) / l2))
+				projection = p1 + t * (p2 - p1)
+				
+			if e_pos.distance_squared_to(projection) < hit_radius_sq:
+				enemy.take_damage(dmg * electric_damage_mult, get_instance_id(), projection, Color(0.1, 0.3, 0.9))
+				_electric_enemy_cooldowns[enemy] = electric_arc_cooldown
+				break
 
 
 func _update_edge_avoidance() -> void:

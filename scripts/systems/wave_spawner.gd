@@ -42,6 +42,7 @@ enum PositionMode {
 @export var wild_rat_prob_normal: float = 80.0
 @export var wild_rat_prob_red: float = 10.0
 @export var wild_rat_prob_green: float = 10.0
+@export var wild_rat_prob_electric: float = 0.0
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 var _completed: bool = false

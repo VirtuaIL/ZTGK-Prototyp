@@ -5,7 +5,7 @@ const DeathEffect := preload("res://scenes/rat/rat_death_effect.tscn")
 const GasCloudScene := preload("res://scenes/projectiles/gas_cloud.tscn")
 
 enum State {FOLLOW, ORBIT, WAVE, TRAVEL_TO_BUILD, WAITING_FOR_FORMATION, STATIC, PATH_DASH}
-enum RatType {NORMAL, RED, GREEN}
+enum RatType {NORMAL, RED, GREEN, ELECTRIC}
 @export var rat_type: RatType = RatType.NORMAL
 var default_rat_type: RatType = RatType.NORMAL
 var _base_material: Material = null
@@ -86,7 +86,7 @@ var _dash_lateral_offset: float = 0.0
 @export var dash_speed: float = 30.0
 
 # Damage
-var damage_per_hit: float = 1.5
+var damage_per_hit: float = 2
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
@@ -1022,6 +1022,10 @@ func _make_type_material(r_type: RatType, wild_variant: bool = false) -> Materia
 			var green := StandardMaterial3D.new()
 			green.albedo_color = Color(0.05, 0.5, 0.05) if wild_variant else Color(0.1, 0.9, 0.1)
 			return green
+		RatType.ELECTRIC:
+			var blue := StandardMaterial3D.new()
+			blue.albedo_color = Color(0.05, 0.05, 0.5) if wild_variant else Color(0.1, 0.3, 0.9)
+			return blue
 		_:
 			if wild_variant:
 				var normal_wild := StandardMaterial3D.new()
