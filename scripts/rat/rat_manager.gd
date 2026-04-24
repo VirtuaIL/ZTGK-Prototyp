@@ -18,8 +18,8 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat/rat.tscn")
-@export var rat_count: int = 60
-@export var min_cap: int = 60
+@export var rat_count: int = 42
+@export var min_cap: int = 42
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2

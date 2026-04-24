@@ -67,7 +67,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.14675903, 0, -33.86341)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0.14675903, 0, -15.010208)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -80,6 +80,7 @@ script = ExtResource("7_ability_hud")
 [node name="GameHUD" parent="." unique_id=1968975274 instance=ExtResource("7_game_hud")]
 
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 19)
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
 transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.3713894, 1.855777, -32.24642)
@@ -152,6 +153,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.28909683)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 19)
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0024347305, 0.014601707, -40.005016)

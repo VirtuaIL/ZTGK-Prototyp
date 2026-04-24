@@ -19,6 +19,7 @@ func _ready() -> void:
 	super._ready()
 	max_health = 250.0
 	health = max_health
+	_update_hp_bar()
 	
 	attack_range = 10.0
 	detection_range = 35.0
