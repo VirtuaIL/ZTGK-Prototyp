@@ -269,6 +269,15 @@ var _structure_timer: float = 0.0
 
 
 func _ready() -> void:
+	# Ensure GasDamageManager exists for optimized gas effects
+	if get_tree().get_first_node_in_group("gas_damage_manager") == null:
+		var gdm_script = load("res://scripts/systems/gas_damage_manager.gd")
+		if gdm_script:
+			var gdm = Node.new()
+			gdm.set_script(gdm_script)
+			gdm.name = "GasDamageManager"
+			add_child(gdm)
+
 	add_to_group("rat_manager")
 	_clamp_caps()
 

@@ -136,9 +136,10 @@ var _blob_wobble_amp: float = 0.08
 var _blob_wobble_rot: float = 0.25
 var _blob_wobble_bob: float = 0.03
 
-# Throttling rekrutacji
+# Throttling rekrutacji i cache managera gazu
 var _recruit_timer: float = 0.0
 @export var recruit_interval: float = 0.15
+var _gas_damage_mgr: Node = null
 
 # Shared materials to allow batching
 static var _shared_mats: Dictionary = {}
@@ -244,16 +245,14 @@ func _physics_process(delta: float) -> void:
 			_gas_timer -= delta
 			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
 			if _gas_timer <= 0.0 and speed_sq > 0.05:
-				_gas_timer = 0.07
-				var can_emit := true
-				if mgr.has_method("request_gas_emit"):
-					can_emit = mgr.request_gas_emit()
-				if GasCloudScene and can_emit:
-					var p = get_parent()
-					if p:
-						var g = GasCloudScene.instantiate()
-						p.add_child(g)
-						g.global_position = global_position
+				_gas_timer = 0.12 # Rzadsze próbkowanie dla logiki obrażeń
+				
+				# Powiadamiamy centralny manager o nowym punkcie obrażeń
+				if _gas_damage_mgr == null or not is_instance_valid(_gas_damage_mgr):
+					_gas_damage_mgr = get_tree().get_first_node_in_group("gas_damage_manager")
+					
+				if _gas_damage_mgr:
+					_gas_damage_mgr.add_gas_point(global_position)
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
