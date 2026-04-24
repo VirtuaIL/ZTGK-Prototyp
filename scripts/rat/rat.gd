@@ -306,6 +306,13 @@ func _physics_process(delta: float) -> void:
 	if extra_spin_speed != 0.0:
 		rotation.y += extra_spin_speed * delta
 
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		var collider := col.get_collider()
+		if collider is RigidBody3D:
+			var push_force := 0.2 * _speed_mult
+			collider.apply_impulse(-col.get_normal() * push_force, col.get_position() - collider.global_position)
+
 
 func _process_follow_spring(delta: float) -> void:
 	if not _target_ready:

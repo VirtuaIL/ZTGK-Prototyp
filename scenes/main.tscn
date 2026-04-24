@@ -151,7 +151,7 @@ shape = SubResource("BoxShape3D_yq6so")
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0024347305, 0.014601707, -40.005016)
 
 [node name="Level2" parent="levels" unique_id=488622088 instance=ExtResource("9_choun")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0, -39.93393)
