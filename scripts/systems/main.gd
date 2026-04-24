@@ -39,6 +39,8 @@ var cheatsheet_hint: Label
 var goal_label: Label
 var rat_count_label: RichTextLabel
 var enemy_count_label: RichTextLabel
+var objective_status_body: RichTextLabel
+var objective_custom_body: RichTextLabel
 var recall_indicator: Control
 var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
@@ -89,10 +91,12 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 var _cam_look_ahead: Vector3 = Vector3.ZERO
 @export var reset_level_on_death: bool = true
 @export var allow_level_skips: bool = true
+@export var custom_objectives: PackedStringArray = []
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
+@onready var game_hud: CanvasLayer = $GameHUD
 
 
 func _ready() -> void:
@@ -102,15 +106,8 @@ func _ready() -> void:
 
 
 func _init_game() -> void:
-	_setup_mode_ui()
-	_setup_cheatsheet_ui()
-	_setup_goal_ui()
-	_setup_rat_count_ui()
-	_setup_enemy_count_ui()
-	_setup_buff_ui()
-	_setup_recall_indicator_ui()
-	_setup_offscreen_indicators_ui()
-	_setup_fps_ui()
+	_bind_hud_nodes()
+	call_deferred("_refresh_cheatsheet_size")
 	_rebuild_level_bounds()
 	set_current_level(current_level_id)
 	_log_level_debug_state("init")
@@ -122,6 +119,63 @@ func _init_game() -> void:
 	ability_hud.rat_manager = rat_manager
 	if player and player.has_signal("player_died"):
 		player.player_died.connect(_on_player_died)
+
+
+func _bind_hud_nodes() -> void:
+	if game_hud == null:
+		return
+
+	goal_label = game_hud.get_node_or_null("HUDRoot/GoalLabel") as Label
+	fps_label = game_hud.get_node_or_null("HUDRoot/FPSLabel") as Label
+	rat_count_label = game_hud.get_node_or_null("HUDRoot/RatCountLabel") as RichTextLabel
+	objective_status_body = game_hud.get_node_or_null("HUDRoot/CombatStatusPanel/Margin/VBox/Body") as RichTextLabel
+	objective_custom_body = game_hud.get_node_or_null("HUDRoot/CustomObjectivesPanel/Margin/VBox/Body") as RichTextLabel
+
+	cheatsheet_panel = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel") as Panel
+	cheatsheet_margin = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin") as MarginContainer
+	cheatsheet_vbox = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox") as VBoxContainer
+	cheatsheet_title = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Title") as Label
+	cheatsheet_body = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Body") as RichTextLabel
+	cheatsheet_hint = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Hint") as Label
+
+	lpm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/LPMBox/ValueRect") as ColorRect
+	spm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/ScrollBox/ValueRect") as ColorRect
+	ppm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/PPMBox/ValueRect") as ColorRect
+	space_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/SpaceRow/SpaceBox/ValueRect") as ColorRect
+	lpm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/LPMBox/ValueRect/Value") as Label
+	spm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/ScrollBox/ValueRect/Value") as Label
+	ppm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/PPMBox/ValueRect/Value") as Label
+
+	combat_key_rects.clear()
+	var dash_key_rect := game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/CombatPanel/Margin/VBox/KeyRow/Key3Box/ValueRect") as ColorRect
+	if dash_key_rect != null:
+		combat_key_rects.append(dash_key_rect)
+
+	buff_panel = game_hud.get_node_or_null("BuffPanel") as Panel
+	buff_labels.clear()
+	var buff_red := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffRed") as Label
+	var buff_green := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffGreen") as Label
+	var buff_yellow := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffYellow") as Label
+	var buff_purple := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffPurple") as Label
+	for lbl in [buff_red, buff_green, buff_yellow, buff_purple]:
+		if lbl != null:
+			buff_labels.append(lbl)
+
+	recall_indicator = game_hud.get_node_or_null("HUDRoot/RecallIndicator") as Control
+	indicator_root = game_hud.get_node_or_null("HUDRoot/IndicatorRoot") as Control
+
+
+func _get_current_level_wave_info(level_id: int) -> String:
+	var wave_info := ""
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self ) == level_id:
+			if ws.get_total_wave_count() > 0:
+				var cw := ws.get_current_wave_index() + 1
+				var tw := ws.get_total_wave_count()
+				wave_info = "Fala %d/%d" % [cw, tw]
+				break
+	return wave_info
 
 
 func _setup_input_map() -> void:
@@ -560,7 +614,7 @@ func _get_indicator(idx: int) -> Label:
 	return indicator_pool[idx]
 
 func _update_offscreen_indicators() -> void:
-	if not indicator_layer or not indicator_root or player == null:
+	if not indicator_root or player == null:
 		return
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
@@ -633,26 +687,39 @@ func _update_enemy_count_ui() -> void:
 	var alive := 0
 	if has_method("get_level_enemies"):
 		alive = get_level_enemies(current_level_id).size()
-	
-	var pending_spawners := 0
-	var wave_info := ""
-	for node in get_tree().get_nodes_in_group("main_spawners"):
-		var spawner := node as MainSpawner
-		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self ) == current_level_id and not spawner.is_completed():
-			pending_spawners += 1
-	for node in get_tree().get_nodes_in_group("wave_spawners"):
-		var ws := node as WaveSpawner
-		if ws and ws.enabled and ws.get_target_level_id(self ) == current_level_id and not ws.is_completed():
-			pending_spawners += 1
-			if ws.get_total_wave_count() > 0:
-				var cw := ws.get_current_wave_index() + 1
-				var tw := ws.get_total_wave_count()
-				wave_info = " (Fala %d/%d)" % [cw, tw]
-			
-	if pending_spawners > 0:
-		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)" + wave_info
+	enemy_count_label.text = "Wrogowie: " + str(alive)
+
+
+func _update_objective_ui() -> void:
+	if objective_status_body == null and objective_custom_body == null:
+		return
+
+	var alive_enemies := get_level_enemies(current_level_id).size()
+	var wave_info := _get_current_level_wave_info(current_level_id)
+
+	if objective_status_body != null:
+		var status_lines: Array[String] = []
+		status_lines.append("- Wrogowie: %d" % alive_enemies)
+		if not wave_info.is_empty():
+			status_lines.append("- %s" % wave_info)
+		else:
+			status_lines.append("- Fala: brak")
+		objective_status_body.text = "\n".join(status_lines)
+
+	if objective_custom_body == null:
+		return
+
+	var custom_lines: Array[String] = []
+	if custom_objectives.is_empty():
+		custom_lines.append("- Brak dodatkowych celow")
 	else:
-		enemy_count_label.text = "Wrogowie: " + str(alive)
+		for goal in custom_objectives:
+			var trimmed := String(goal).strip_edges()
+			if not trimmed.is_empty():
+				custom_lines.append("- %s" % trimmed)
+	if custom_lines.is_empty():
+		custom_lines.append("- Brak dodatkowych celow")
+	objective_custom_body.text = "\n".join(custom_lines)
 
 
 func _update_buff_ui() -> void:
@@ -686,10 +753,8 @@ func _update_mode_ui() -> void:
 
 func _process(delta: float) -> void:
 	_current_level_active_time += delta
-	_update_mode_ui()
 	_update_rat_count_ui()
-	_update_enemy_count_ui()
-	_update_buff_ui()
+	_update_objective_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
 	var level_cleared := is_current_level_cleared()
