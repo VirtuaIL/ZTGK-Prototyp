@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://dcsl2kvi36o5t"]
+
+[ext_resource type="Shader" uid="uid://bmnffw1ljwvpr" path="res://resources/shaders/sound_wave_aberration.gdshader" id="1_shader"]
+[ext_resource type="Script" uid="uid://crawuy0cerler" path="res://scripts/effects/sound_wave.gd" id="2_script"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wave"]
+render_priority = 1
+shader = ExtResource("1_shader")
+shader_parameter/wave_frequency = 27.750001223125
+shader_parameter/wave_amplitude = 0.4470000212325
+shader_parameter/wave_speed = 9.474000450015
+shader_parameter/wave_thickness = 0.35200001602148
+shader_parameter/refraction_strength = 0.12800000608
+shader_parameter/chromatic_offset = 0.0330000015675
+shader_parameter/edge_fade_power = 1.3490000403275
+shader_parameter/pulse_speed = 1.2890000612275
+shader_parameter/pulse_amount = 0.07200000342
+shader_parameter/secondary_wave_mix = 0.6550000311125
+shader_parameter/rainbow_intensity = 0.0110000005225
+shader_parameter/rainbow_speed = 0.4050000192375
+shader_parameter/rainbow_scale = 0.734000011115
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_wave"]
+size = Vector2(1.8, 10)
+subdivide_depth = 64
+
+[node name="SoundWave" type="Node3D" unique_id=2020780098]
+script = ExtResource("2_script")
+
+[node name="WaveMesh" type="MeshInstance3D" parent="." unique_id=1909393316]
+material_override = SubResource("ShaderMaterial_wave")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_wave")

@@ -1,5 +1,7 @@
 extends Node3D
 
+const SoundWaveScene := preload("res://scenes/effects/sound_wave.tscn")
+
 signal orbit_started()
 signal orbit_ended()
 signal wave_started()
@@ -229,6 +231,9 @@ var _formation_active: bool = false
 
 
 
+# ── Sound Wave Effect ─────────────────────────────────────────────────────────
+var _sound_wave: Node3D = null
+
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
 @export var neighbor_radius: float = 1.5
 @export var neighbor_max_count: int = 8
@@ -316,6 +321,11 @@ func _ready() -> void:
 	control.add_child(_cheese_buff_label)
 	
 	add_child(_pity_canvas)
+
+	# ── Sound Wave ──
+	if SoundWaveScene:
+		_sound_wave = SoundWaveScene.instantiate()
+		add_child(_sound_wave)
 
 func setup_player(player: CharacterBody3D) -> void:
 	_player = player
@@ -603,6 +613,7 @@ func _process(delta: float) -> void:
 	_check_travel_anchoring()
 	_update_carrier_rat_targets()
 	_update_free_rats_follow_cursor(delta)
+	_update_sound_wave()
 	_process_hover()
 	if structure_lifetime > 0.0 and _has_static_rats():
 		_structure_timer += delta
@@ -1017,6 +1028,38 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 	else:
 		_cursor_follow_timer = 0.0
 	_update_cursor_follow(delta)
+
+
+func _update_sound_wave() -> void:
+	if _sound_wave == null or not is_instance_valid(_sound_wave):
+		return
+	if _player == null:
+		return
+	if not _sound_wave.has_method("update_wave"):
+		return
+
+	# Compute centroid of active follow rats
+	var centroid := Vector3.ZERO
+	var count := 0
+	for rat in rats:
+		if not is_instance_valid(rat):
+			continue
+		if rat.is_fallen:
+			continue
+		if "state" in rat and rat.state != rat.State.FOLLOW:
+			continue
+		centroid += rat.global_position
+		count += 1
+
+	if count == 0:
+		_sound_wave.visible = false
+		return
+
+	centroid /= float(count)
+
+	var start_pos := _player.global_position + Vector3(0.0, 0.4, 0.0)
+	_sound_wave.update_wave(start_pos, centroid)
+
 
 
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
