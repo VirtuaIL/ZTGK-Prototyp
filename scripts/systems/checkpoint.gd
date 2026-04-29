@@ -23,6 +23,10 @@ func _physics_process(_delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
+	var mgr = get_tree().get_first_node_in_group("rat_manager")
+	if level_id != 1:
+		if mgr._pity_toggle == false:
+			mgr._pity_toggle = true
 	_pending_player = body
 	_try_activate(body)
 
