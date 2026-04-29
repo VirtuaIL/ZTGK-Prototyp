@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c6vmn3rsh3cbm" path="res://scripts/player/player.gd" id="1_script"]
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
-[ext_resource type="PackedScene" uid="uid://cmwln5kke4iir" path="res://resources/models/bard/character_v3/character_v1_1.fbx" id="4_dqkch"]
+[ext_resource type="PackedScene" uid="uid://dig2eo6sxf2at" path="res://resources/models/bard/character_v2_2/character_v2_2.fbx" id="4_dqkch"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 albedo_color = Color(0.2, 0.7, 0.3, 1)
@@ -151,8 +151,8 @@ stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer" unique_id=607198590]
 handle_input_locally = false
-size = Vector2i(218, 218)
-render_target_update_mode = 4
+size = Vector2i(2, 2)
+render_target_update_mode = 0
 
 [node name="MinimapCamera" type="Camera3D" parent="PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport" unique_id=1409008809]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 40, 0)
@@ -164,4 +164,4 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_minimap_overlay")
 
-[node name="character_v1_1" parent="." unique_id=1173053234 instance=ExtResource("4_dqkch")]
+[node name="character_v2_2" parent="." unique_id=325091433 instance=ExtResource("4_dqkch")]
