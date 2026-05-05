@@ -131,7 +131,13 @@ transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11.079486)
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("1_07ctq")]
 transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 40.114227, 0, -0.03748684)
 
-[node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("1_07ctq")]
+[node name="wall12" parent="walls" unique_id=1981168902 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -39.877033, 0, -13.037487)
+
+[node name="wall13" parent="walls" unique_id=1209036770 instance=ExtResource("1_07ctq")]
+transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -39.877033, 0, 12.962513)
+
+[node name="wall6" parent="walls" unique_id=931132541 instance=ExtResource("1_07ctq")]
 transform = Transform3D(-7.430936e-08, 0, 1, 0, 1, 0, -1.7, 0, -4.371139e-08, 0, 0, 9.28314)
 
 [node name="wall7" parent="walls" unique_id=744801338 instance=ExtResource("1_07ctq")]
