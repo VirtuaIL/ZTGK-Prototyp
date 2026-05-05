@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://46j07djduyga"]
 
 [ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/systems/main.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Texture2D" uid="uid://dgmvqaclgu06b" path="res://resources/sky_83_2k.png" id="3_muem4"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
@@ -19,19 +18,12 @@
 [ext_resource type="PackedScene" uid="uid://bv8xnvdfu0bn3" path="res://scenes/levels/level_8.tscn" id="16_jbj1t"]
 [ext_resource type="Script" uid="uid://bpnihsbr885pl" path="res://scripts/systems/checkpoint.gd" id="20_gqmmt"]
 
-[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_dp3eg"]
-panorama = ExtResource("2_0ld40")
-
-[sub_resource type="Sky" id="Sky_0ld40"]
-sky_material = SubResource("PanoramaSkyMaterial_dp3eg")
-
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 2
-background_color = Color(0.7083283, 0.11449968, 0.5420097, 1)
-sky = SubResource("Sky_0ld40")
+background_color = Color(0.08, 0.09, 0.11, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.3, 0.28, 0.35, 1)
-ambient_light_energy = 0.5
+ambient_light_color = Color(0.16, 0.18, 0.24, 1)
+ambient_light_energy = 0.35
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
 cull_mode = 2
@@ -46,24 +38,27 @@ material = SubResource("StandardMaterial3D_skydome")
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
 levels_with_upgrades = Array[int]([3, 4, 5, 6, 7])
-cam_look_ahead_max = 4.0
+cam_look_ahead_max = 12.0
+_cam_offset = Vector3(12, 24, 12)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
 environment = SubResource("Environment_1")
 
 [node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
 transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.120464325, 0.12258148, -0.03937912)
+visible = false
 cast_shadow = 0
 mesh = SubResource("SphereMesh_skydome")
 script = ExtResource("7_skydome")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
-transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 5, 10, 5)
+transform = Transform3D(0.9999996, 0, 0, 0, -4.3711374e-08, 1.0000001, 0, -0.9999997, -4.3711392e-08, 5, 10, 5)
+light_color = Color(1, 0.93, 0.82, 1)
+light_energy = 0.4
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=759215990]
-transform = Transform3D(0.25881913, -0.9330128, 0.25000006, 0, 0.2588191, 0.96592593, -0.96592605, -0.25000006, 0.06698732, 10, 50, 10)
-projection = 1
+transform = Transform3D(-0.70710695, -0.64085644, 0.29883626, 0, 0.4226183, 0.90630794, -0.70710695, 0.64085644, -0.29883626, 10, 80, 10)
 fov = 45.0
 size = 22.0
 

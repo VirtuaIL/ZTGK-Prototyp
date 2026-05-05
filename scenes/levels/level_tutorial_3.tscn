@@ -8,9 +8,36 @@
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="4_cbbu3"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="7_1u7kg"]
 [ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="8_l3eoi"]
+[ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="9_gij81"]
 
 [node name="Level3" type="Node3D" unique_id=1397753813]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="DungeonLights" type="Node3D" parent="." unique_id=458473651]
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights" unique_id=1672846641]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4, 14)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="TorchGlow4" type="OmniLight3D" parent="DungeonLights" unique_id=1088319430]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4, -13)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="TorchGlow2" type="OmniLight3D" parent="DungeonLights" unique_id=1897247632]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, 14)
+light_color = Color(1, 0.52, 0.22, 1)
+light_energy = 10.0
+omni_range = 16.0
+
+[node name="TorchGlow3" type="OmniLight3D" parent="DungeonLights" unique_id=862100200]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, -12)
+light_color = Color(1, 0.52, 0.22, 1)
+light_energy = 10.0
+omni_range = 16.0
 
 [node name="Floor2" type="Node3D" parent="." unique_id=1744810670]
 
@@ -78,10 +105,13 @@ wild_rat_prob_green = 0.0
 [node name="RatSpawns" type="Node3D" parent="." unique_id=273696945]
 
 [node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=1616740680 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0035674463, 0, 13.762117)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.004, 0.2, 13.762)
 script = ExtResource("1_vmkp1")
 level_id = 3
 spawn_tag = &"normal"
+
+[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointNormal1" unique_id=1848286961 instance=ExtResource("9_gij81")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="EnemiesParams" type="Node3D" parent="." unique_id=687556177]
 
