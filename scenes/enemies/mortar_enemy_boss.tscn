@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://c358mkj5l3pyr"]
+
+[ext_resource type="Script" uid="uid://c1kvpjbmu58uo" path="res://scripts/enemies/mortar_enemy_boss.gd" id="1_ybnyc"]
+[ext_resource type="PackedScene" uid="uid://bdvo7lqxr6sqd" path="res://resources/models/enemies/bomber/bomber.fbx" id="2_jwntc"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Override"]
+resource_local_to_scene = true
+albedo_color = Color(0.5, 0, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.5, 0, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("StandardMaterial3D_1")
+size = Vector3(0.8, 1.6, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.3, 0, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+material = SubResource("StandardMaterial3D_2")
+radius = 0.3
+height = 0.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8, 1.6, 0.8)
+
+[node name="MortarEnemy" type="CharacterBody3D" unique_id=810920931]
+collision_layer = 16
+collision_mask = 9
+script = ExtResource("1_ybnyc")
+shield_chance = 0.0
+move_speed = 0.0
+chase_speed = 0.0
+wall_probe_distance = 0.2
+wall_side_probe_distance = 0.2
+detection_range = 1280.0
+lose_range = 2500.0
+attack_range = 1280.0
+animation_player_path = NodePath("bomber")
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=105796758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_Override")
+mesh = SubResource("BoxMesh_1")
+
+[node name="Head" type="MeshInstance3D" parent="." unique_id=504773818]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+visible = false
+mesh = SubResource("SphereMesh_1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1941074036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="bomber" parent="." unique_id=875047842 instance=ExtResource("2_jwntc")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)

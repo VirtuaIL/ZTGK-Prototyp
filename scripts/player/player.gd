@@ -30,18 +30,18 @@ var carrier_rats: Array[CharacterBody3D] = []
 var carrier_available_max: int = 0
 var carrier_brush_desired: int = 0
 
-@onready var damage_overlay: ColorRect = $PlayerHUD/DamageOverlay
-@onready var health_bar: ProgressBar = $PlayerHUD/HealthBar/Margin/VBox/HealthProgress
+var damage_overlay: ColorRect = null
+var health_bar: ProgressBar = null
 
 var _spawn_position: Vector3 = Vector3.ZERO
-
-@onready var minimap_camera: Camera3D = $PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport/MinimapCamera
+var minimap_camera: Camera3D = null
 
 func _ready() -> void:
 	add_to_group("player")
 	collision_layer = 2 # Layer 2: Player
 	collision_mask = 13 | (1 << 8) # Floor (1) + Movable (4) + Walls (8) + RatStructures (9)
 	_ensure_move_actions()
+	_resolve_hud_nodes()
 	_configure_minimap_visuals()
 	_spawn_position = global_position
 	current_hp = max_hp
@@ -334,3 +334,17 @@ func _set_highlight_recursive(node: Node, enabled: bool) -> void:
 			node.material_overlay = null
 	for child in node.get_children():
 		_set_highlight_recursive(child, enabled)
+func _resolve_hud_nodes() -> void:
+	var scene_root := get_tree().current_scene
+	if scene_root != null:
+		damage_overlay = scene_root.get_node_or_null("GameHUD/HUDRoot/PlayerHUD/DamageOverlay") as ColorRect
+		health_bar = scene_root.get_node_or_null("GameHUD/HUDRoot/PlayerHUD/HealthBar/Margin/VBox/HealthProgress") as ProgressBar
+		minimap_camera = scene_root.get_node_or_null("GameHUD/HUDRoot/PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport/MinimapCamera") as Camera3D
+
+	# Fallback for legacy scene layout
+	if damage_overlay == null:
+		damage_overlay = get_node_or_null("PlayerHUD/DamageOverlay") as ColorRect
+	if health_bar == null:
+		health_bar = get_node_or_null("PlayerHUD/HealthBar/Margin/VBox/HealthProgress") as ProgressBar
+	if minimap_camera == null:
+		minimap_camera = get_node_or_null("PlayerHUD/MinimapPanel/Margin/SubViewportContainer/SubViewport/MinimapCamera") as Camera3D

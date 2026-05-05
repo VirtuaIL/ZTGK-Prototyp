@@ -12,13 +12,13 @@ enum AIState { WANDER, CHASE, ATTACK, DEAD, PASSIVE }
 enum MovePattern { PURSUIT, STRAFE, KITE }
 
 # ── Health ──
-@export var max_health: float = 120.0
+@export var max_health: float = 50.0
 @export var respawn_time: float = 3.0
 var health: float = max_health
 
 # ── Movement ──
 @export var move_speed: float = 1.4
-@export var chase_speed: float = 2.6
+@export var chase_speed: float = 4.0
 @export var rotation_speed: float = 8.0
 @export var movement_pattern: MovePattern = MovePattern.PURSUIT
 @export var strafe_bias: float = 0.45
@@ -42,7 +42,12 @@ var health: float = max_health
 @export var attack_damage: float = 15.0
 @export var attack_cooldown: float = 1.0
 @export var min_attack_charge_time: float = 0.85
-@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.32)
+@export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.45)
+@export var telegraph_pulse_speed: float = 10.0
+@export var telegraph_pulse_depth: float = 0.18
+@export var animation_player_path: NodePath
+@export var attack_animation_name: StringName = &"attack"
+@export var windup_animation_name: StringName = &"windup"
 
 # ── Wander ──
 @export var wander_radius: float = 5.0
@@ -67,6 +72,7 @@ var _unstuck_dir: Vector3 = Vector3.ZERO
 
 var _attack_timer: float = 0.0
 var _player_ref: CharacterBody3D = null
+var _animation_player: AnimationPlayer = null
 
 enum AttackType { NONE, SLASH, STEP }
 var current_attack: AttackType = AttackType.NONE
@@ -77,6 +83,10 @@ var attack_marker: MeshInstance3D = null
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
 var level_id: int = 0
+
+# Throttling for target finding
+var _find_target_timer: float = 0.0
+@export var find_target_interval: float = 0.2
 
 # ── HP bar visuals ──
 var hp_bar_bg: MeshInstance3D
@@ -102,6 +112,7 @@ func _ready() -> void:
 	health = max_health
 	_pattern_timer = randf_range(0.5, maxf(0.6, movement_jitter_interval))
 	_strafe_sign = -1.0 if randf() < 0.5 else 1.0
+	_resolve_animation_player()
 
 	_create_hp_bar()
 	_create_hp_label()
@@ -129,6 +140,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if _is_dead:
+		return
+
+	if not is_inside_tree():
 		return
 		
 	if is_stuck_in_blob:
@@ -171,6 +185,8 @@ func _physics_process(delta: float) -> void:
 			_strafe_sign = -_strafe_sign if randf() < 0.55 else _strafe_sign
 	if _unstuck_timer > 0.0:
 		_unstuck_timer = maxf(0.0, _unstuck_timer - delta)
+	if _find_target_timer > 0.0:
+		_find_target_timer = maxf(0.0, _find_target_timer - delta)
 	match ai_state:
 		AIState.PASSIVE:
 			velocity.x = 0.0
@@ -379,6 +395,14 @@ func _process_attack(delta: float) -> void:
 	if current_attack != AttackType.NONE:
 		# We are winding up an attack
 		attack_prepare_timer -= delta
+		# Pulse the telegraph marker alpha
+		if attack_marker != null and attack_marker.visible:
+			var mat_pulse := attack_marker.material_override as StandardMaterial3D
+			if mat_pulse:
+				var pulse := sin(Time.get_ticks_msec() * 0.001 * telegraph_pulse_speed) * telegraph_pulse_depth
+				var progress := 1.0 - clampf(attack_prepare_timer / maxf(0.01, attack_delay), 0.0, 1.0)
+				var base_a := attack_charge_color.a + progress * 0.25
+				mat_pulse.albedo_color = Color(1.0, 1.0, 1.0, clampf(base_a + pulse, 0.1, 0.85))
 		if attack_prepare_timer <= 0.0:
 			_execute_attack()
 			current_attack = AttackType.NONE
@@ -393,12 +417,16 @@ func _process_attack(delta: float) -> void:
 			return
 		_pick_and_start_attack()
 	else:
-		# Face target while waiting
+		# Back away from target while waiting for cooldown
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
+			# Retreat slowly
+			var away_dir := -to_player.normalized()
+			velocity.x = away_dir.x * 1.5
+			velocity.z = away_dir.z * 1.5
 
 func _pick_and_start_attack() -> void:
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
@@ -417,10 +445,11 @@ func _pick_and_start_attack() -> void:
 		current_attack = AttackType.SLASH
 		
 	attack_prepare_timer = maxf(attack_delay, min_attack_charge_time)
+	_play_windup_animation()
 	# Flash white to indicate windup
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
-		body.material_override.albedo_color = Color(1.0, 1.0, 1.0)
+		body.material_override.albedo_color = Color(1.0, 0.3, 0.3)
 		
 	if attack_marker == null:
 		attack_marker = MeshInstance3D.new()
@@ -465,6 +494,7 @@ func _pick_and_start_attack() -> void:
 func _execute_attack() -> void:
 	if attack_marker != null:
 		attack_marker.visible = false
+	_play_attack_animation()
 	_flash_attack()
 	
 	var targets = []
@@ -564,9 +594,10 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 		var dir := (global_position - hit_pos)
 		dir.y = 0.0
 		if dir.length() > 0.01:
-			_knockback += dir.normalized() * 1.0
-			if _knockback.length() > 5.0:
-				_knockback = _knockback.normalized() * 5.0
+			_knockback += dir.normalized()
+			if _knockback.length() > 2.0:
+				_knockback = _knockback.normalized() * 2.0
+				# _knockback = _knockback.normalized() * 2.0
 
 	if ai_state == AIState.WANDER:
 		_find_target()
@@ -637,6 +668,10 @@ func _respawn() -> void:
 #  HELPERS
 # ═══════════════════════════════════════════════
 func _find_target() -> void:
+	if _find_target_timer > 0.0:
+		return
+	_find_target_timer = find_target_interval
+	
 	var targets: Array[Node3D] = []
 	var players := get_tree().get_nodes_in_group("player")
 	targets.append_array(players)
@@ -674,6 +709,49 @@ func _distance_to_player() -> float:
 	var dx := global_position.x - _player_ref.global_position.x
 	var dz := global_position.z - _player_ref.global_position.z
 	return sqrt(dx * dx + dz * dz)
+
+
+func _resolve_animation_player() -> void:
+	if not animation_player_path.is_empty():
+		_animation_player = get_node_or_null(animation_player_path) as AnimationPlayer
+	if _animation_player == null:
+		_animation_player = find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if _animation_player == null:
+		var anim_nodes := find_children("*", "AnimationPlayer", true, false)
+		if anim_nodes.size() > 0:
+			_animation_player = anim_nodes[0] as AnimationPlayer
+
+
+func _play_attack_animation() -> void:
+	if _animation_player == null:
+		return
+	if _animation_player.has_animation(attack_animation_name):
+		_animation_player.play(attack_animation_name)
+		return
+	var fallback := StringName()
+	for anim_name in _animation_player.get_animation_list():
+		var lowered := String(anim_name).to_lower()
+		if lowered.contains("attack") or lowered.contains("atk"):
+			fallback = anim_name
+			break
+	if fallback != StringName():
+		_animation_player.play(fallback)
+
+
+func _play_windup_animation() -> void:
+	if _animation_player == null:
+		return
+	if _animation_player.has_animation(windup_animation_name):
+		_animation_player.play(windup_animation_name)
+		return
+	var fallback := StringName()
+	for anim_name in _animation_player.get_animation_list():
+		var lowered := String(anim_name).to_lower()
+		if lowered.contains("windup") or lowered.contains("charge") or lowered.contains("prepare"):
+			fallback = anim_name
+			break
+	if fallback != StringName():
+		_animation_player.play(fallback)
 
 
 func _flash_attack() -> void:

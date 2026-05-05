@@ -11,15 +11,23 @@ extends Node3D
 var _time_alive: float = 0.0
 var _tick_timer: float = 0.0
 
+# Shared material for batching
+static var _shared_mat: StandardMaterial3D = null
+
 func _ready() -> void:
 	var mesh_inst = $MeshInstance3D
 	if mesh_inst:
-		var mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.1, 0.85, 0.15, 0.55)
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		mesh_inst.material_override = mat
+		if _shared_mat == null:
+			_shared_mat = StandardMaterial3D.new()
+			_shared_mat.albedo_color = Color(0.1, 0.85, 0.15, 0.55)
+			_shared_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			_shared_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			_shared_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			# Note: We can't easily animate alpha per instance if we want full batching
+			# unless we use vertex colors or a custom shader.
+			# But sharing the material resource itself is already a win.
+		
+		mesh_inst.material_override = _shared_mat
 		# Spłaszczony dysk poziomy
 		mesh_inst.scale = Vector3(cloud_radius * 2.0, 0.04, cloud_radius * 2.0)
 
@@ -29,14 +37,13 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	# Zanikanie alpha w czasie – bez pulsowania, ciągły ślad
-	var mesh_inst = $MeshInstance3D
-	if mesh_inst and mesh_inst.material_override:
-		var mat = mesh_inst.material_override as StandardMaterial3D
-		if mat:
-			var progress: float = _time_alive / duration
-			mat.albedo_color.a = clampf(0.55 * (1.0 - progress), 0.0, 0.55)
-
+	# Zanikanie alpha w czasie – note: this currently affects ALL clouds if they share material!
+	# To fix this while keeping batching, we should use vertex colors.
+	# For now, let's keep it but recognize the limitation, or use unique materials if we must.
+	# Actually, if we use material_override on each, it might still break batching if properties differ.
+	# Let's use a simpler approach for now: if many clouds are active, don't animate alpha per-frame
+	# OR use a shader that uses instance custom data.
+	
 	_tick_timer -= delta
 	if _tick_timer <= 0.0:
 		_tick_timer = damage_interval

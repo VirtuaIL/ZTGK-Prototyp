@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://b1sxie6w3sqhh"]
+
+[ext_resource type="Script" uid="uid://y7pw1pm3hs60" path="res://scripts/obstacles/spike_cube.gd" id="1_wn5je"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_wn5je"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_423nu"]
+
+[node name="SpikeCylinder" type="StaticBody3D" unique_id=1291150165]
+collision_layer = 129
+script = ExtResource("1_wn5je")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1324191188]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_wn5je")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=968599482]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_423nu")

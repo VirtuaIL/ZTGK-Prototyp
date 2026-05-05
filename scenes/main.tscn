@@ -3,8 +3,10 @@
 [ext_resource type="Script" uid="uid://y1e4e1m65f4i" path="res://scripts/systems/main.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dql8fbuo44y8" path="res://resources/panorama_image.png" id="2_0ld40"]
 [ext_resource type="PackedScene" uid="uid://cc6a8vpeg25d1" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Texture2D" uid="uid://dgmvqaclgu06b" path="res://resources/sky_83_2k.png" id="3_muem4"]
 [ext_resource type="Script" uid="uid://dnap2m0xfu7ny" path="res://scripts/rat/rat_manager.gd" id="4_rat_man"]
 [ext_resource type="Script" uid="uid://cqlm0vrnjh80h" path="res://scripts/ui/ability_timer_hud.gd" id="7_ability_hud"]
+[ext_resource type="PackedScene" uid="uid://br4x1lc2bwye8" path="res://scenes/ui/game_hud.tscn" id="7_game_hud"]
 [ext_resource type="Script" uid="uid://ctc2bsnfge0om" path="res://scripts/systems/skydome_follow.gd" id="7_skydome"]
 [ext_resource type="PackedScene" uid="uid://j83tckwqxndx" path="res://scenes/levels/level_tutorial_1.tscn" id="8_tipki"]
 [ext_resource type="PackedScene" uid="uid://cntib3rg7nfab" path="res://scenes/levels/level_tutorial_2.tscn" id="9_choun"]
@@ -34,7 +36,7 @@ ambient_light_energy = 0.5
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skydome"]
 cull_mode = 2
 shading_mode = 0
-albedo_texture = ExtResource("2_0ld40")
+albedo_texture = ExtResource("3_muem4")
 
 [sub_resource type="SphereMesh" id="SphereMesh_skydome"]
 material = SubResource("StandardMaterial3D_skydome")
@@ -43,6 +45,7 @@ material = SubResource("StandardMaterial3D_skydome")
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
+levels_with_upgrades = Array[int]([3, 4, 5, 6, 7])
 cam_look_ahead_max = 4.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=746167855]
@@ -50,7 +53,6 @@ environment = SubResource("Environment_1")
 
 [node name="Skydome" type="MeshInstance3D" parent="." unique_id=1114823999]
 transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, -0.120464325, 0.12258148, -0.03937912)
-visible = false
 cast_shadow = 0
 mesh = SubResource("SphereMesh_skydome")
 script = ExtResource("7_skydome")
@@ -66,22 +68,28 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14675903, 0, 5.760985)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.3951931, 0, -15.119148)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
+rat_count = 0
+electric_arc_max_dist = 6.0
+electric_damage_mult = 3.0
 use_wide_brush = true
 
 [node name="AbilityTimerHUD" type="CanvasLayer" parent="." unique_id=1316605137]
 script = ExtResource("7_ability_hud")
 
+[node name="GameHUD" parent="." unique_id=1968975274 instance=ExtResource("7_game_hud")]
+
 [node name="checkpoints" type="Node3D" parent="." unique_id=287035403]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 19)
 
 [node name="Area3D" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -2.5124526, 1.855777, -22.119576)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.3713894, 1.855777, -32.24642)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
-level_id = 2
+level_id = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/Area3D" unique_id=1509517560]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.30412865)
@@ -148,11 +156,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.28909683)
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 19)
 
 [node name="Level1" parent="levels" unique_id=1397753813 instance=ExtResource("8_tipki")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0024347305, 0.014601707, -40.005016)
 
 [node name="Level2" parent="levels" unique_id=488622088 instance=ExtResource("9_choun")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -39.93393)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0, -39.93393)
+visible = false
 
 [node name="Level3" parent="levels" unique_id=521719276 instance=ExtResource("10_ya4ey")]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -0.10553932, 0, -79.756905)

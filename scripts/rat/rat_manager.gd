@@ -1,5 +1,7 @@
 extends Node3D
 
+const SoundWaveScene := preload("res://scenes/effects/sound_wave.tscn")
+
 signal orbit_started()
 signal orbit_ended()
 signal wave_started()
@@ -16,7 +18,8 @@ var wave_timer: float = 0.0
 var wave_pending: bool = false
 
 @export var rat_scene: PackedScene = preload("res://scenes/rat/rat.tscn")
-@export var min_cap: int = 60
+@export var rat_count: int = 42
+@export var min_cap: int = 42
 @export var start_with_min: bool = true
 @export var spawn_radius_min: float = 0.8
 @export var spawn_radius_max: float = 2.2
@@ -25,6 +28,13 @@ var wave_pending: bool = false
 @export var rat_spawn_bonus_radius: float = 2.5
 @export var rat_spawn_one_shot: bool = true
 @export var min_cap_respawn_cooldown: float = 0.75
+
+@export_group("Electric Rats")
+@export var electric_arc_max_dist: float = 4.0
+@export var electric_arc_cooldown: float = 0.5
+@export var electric_arc_max_connections: int = 3
+@export var electric_damage_mult: float = 1.5
+@export_group("")
 
 var _player: CharacterBody3D = null
 var _empty_respawn_triggered: bool = false
@@ -94,6 +104,16 @@ var drag_threshold_squared: float = 100.0 # 10 pixels squared threshold
 var mouse_is_down_right: bool = false
 var combat_rmb_down: bool = false
 
+var cached_mouse_world: Vector3 = Vector3.ZERO
+var _mouse_cached_frame: int = -1
+
+func get_mouse_world() -> Vector3:
+	var f := Engine.get_frames_drawn()
+	if _mouse_cached_frame != f:
+		_mouse_cached_frame = f
+		cached_mouse_world = _mouse_to_world()
+	return cached_mouse_world
+
 enum AttackMode { ROTATION, BLOB, PATH_DASH }
 var current_attack_mode: AttackMode = AttackMode.PATH_DASH
 var _combat_blob_offsets: Array[Vector3] = []
@@ -123,7 +143,8 @@ var current_build_y: float = -1000.0
 
 var current_drawn_path: PackedVector3Array = []
 var min_point_dist_squared: float = 0.05
-var _pity_timer: float = 5.0
+@export var _pity_toggle: bool = false 
+@export var _pity_timer: float = 5.0
 var _pity_canvas: CanvasLayer = null
 var _pity_label: Label = null
 
@@ -200,6 +221,10 @@ var line_mesh_instance: MeshInstance3D
 var immediate_mesh: ImmediateMesh
 var line_material: StandardMaterial3D
 
+var electric_mm_instance: MultiMeshInstance3D
+var _electric_arcs: Array = []
+var _electric_enemy_cooldowns: Dictionary = {}
+
 var unified_shape_combiner: CSGCombiner3D
 
 # ── Blob offsets (sunflower pattern) ──────────────────────────────────────────
@@ -227,6 +252,9 @@ var _formation_active: bool = false
 
 
 
+# ── Sound Wave Effect ─────────────────────────────────────────────────────────
+var _sound_wave: Node3D = null
+
 # ── Neighbor throttle ─────────────────────────────────────────────────────────
 @export var neighbor_radius: float = 1.5
 @export var neighbor_max_count: int = 8
@@ -252,6 +280,15 @@ var _structure_timer: float = 0.0
 
 
 func _ready() -> void:
+	# Ensure GasDamageManager exists for optimized gas effects
+	if get_tree().get_first_node_in_group("gas_damage_manager") == null:
+		var gdm_script = load("res://scripts/systems/gas_damage_manager.gd")
+		if gdm_script:
+			var gdm = Node.new()
+			gdm.set_script(gdm_script)
+			gdm.name = "GasDamageManager"
+			add_child(gdm)
+
 	add_to_group("rat_manager")
 	_clamp_caps()
 
@@ -263,6 +300,24 @@ func _ready() -> void:
 	buff_mat_yellow.albedo_color = Color(0.9, 0.9, 0.1)
 	buff_mat_purple = StandardMaterial3D.new()
 	buff_mat_purple.albedo_color = Color(0.6, 0.1, 0.9)
+
+	electric_mm_instance = MultiMeshInstance3D.new()
+	var mm = MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.instance_count = 0
+	var cylinder = CylinderMesh.new()
+	cylinder.top_radius = 0.08
+	cylinder.bottom_radius = 0.08
+	cylinder.height = 1.0
+	cylinder.radial_segments = 6
+	var arc_mat = ShaderMaterial.new()
+	arc_mat.shader = load("res://scripts/rat/electric_arc.gdshader")
+	if arc_mat.shader == null:
+		push_error("Could not load electric_arc.gdshader")
+	cylinder.material = arc_mat
+	mm.mesh = cylinder
+	electric_mm_instance.multimesh = mm
+	add_child(electric_mm_instance)
 
 	immediate_mesh = ImmediateMesh.new()
 	line_mesh_instance = MeshInstance3D.new()
@@ -315,6 +370,11 @@ func _ready() -> void:
 	
 	add_child(_pity_canvas)
 
+	# ── Sound Wave ──
+	if SoundWaveScene:
+		_sound_wave = SoundWaveScene.instantiate()
+		add_child(_sound_wave)
+
 func setup_player(player: CharacterBody3D) -> void:
 	_player = player
 	if _player and not _player.is_in_group("player"):
@@ -323,7 +383,9 @@ func setup_player(player: CharacterBody3D) -> void:
 	if _player.has_signal("player_died") and not _player.player_died.is_connected(_on_player_died):
 		_player.player_died.connect(_on_player_died)
 		
-	_spawn_rats_near_player(60)
+	# Spawn initial rats using current-level rat spawn markers when available.
+	# Falls back to player position inside _spawn_rats() when no markers exist.
+	_spawn_rats(rat_count)
 	respawn_count = max(respawn_count, rats.size())
 
 
@@ -505,6 +567,45 @@ func _spawn_rats_near_player(count: int) -> void:
 		return
 	_spawn_rats_at_center(count, _player.global_position)
 
+func add_rats_to_horde(rat_type: int, amount: int) -> void:
+	if amount <= 0:
+		return
+	if rat_scene == null:
+		return
+		
+	var parent_node := get_parent()
+	if parent_node == null:
+		parent_node = self
+		
+	var base_pos = global_position
+	if _player:
+		base_pos = _player.global_position
+		
+	for i in range(amount):
+		var rat = rat_scene.instantiate()
+		if rat == null:
+			continue
+			
+		var angle := randf() * TAU
+		var radius := randf_range(spawn_radius_min, spawn_radius_max)
+		
+		if rat.has_method("set_rat_type"):
+			rat.set_rat_type(rat_type)
+			
+		parent_node.add_child(rat)
+		rat.global_position = base_pos + Vector3(cos(angle) * radius, 0.5, sin(angle) * radius)
+		rat.player = _player
+		
+		if _player:
+			rat.add_collision_exception_with(_player)
+			_player.add_collision_exception_with(rat)
+		register_rat(rat)
+		
+	build_blob_offsets()
+	save_rat_composition()
+
+
+
 
 func _get_fallen_rats() -> Array[Rat]:
 	var fallen: Array[Rat] = []
@@ -555,6 +656,8 @@ func _process(delta: float) -> void:
 		_build_force_timer = max(0.0, _build_force_timer - delta)
 	if _min_respawn_cooldown > 0.0:
 		_min_respawn_cooldown = max(0.0, _min_respawn_cooldown - delta)
+		
+	_update_electric_arcs()
 	_process_formation_queue()
 	_update_edge_avoidance()
 	if orbit_active:
@@ -599,6 +702,7 @@ func _process(delta: float) -> void:
 	_check_travel_anchoring()
 	_update_carrier_rat_targets()
 	_update_free_rats_follow_cursor(delta)
+	_update_sound_wave()
 	_process_hover()
 	if structure_lifetime > 0.0 and _has_static_rats():
 		_structure_timer += delta
@@ -618,16 +722,18 @@ func _process(delta: float) -> void:
 	_check_empty_respawn()
 	_check_rat_spawn_bonus()
 	_process_damage(delta)
+	_process_electric_damage(delta)
 
 	# Reset game if all rats die (with pity timer)
 	if get_total_rat_count() <= 0 and _player != null:
-		_pity_timer -= delta
-		if _pity_label:
-			_pity_label.visible = true
-			_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
-		if _pity_timer <= 0.0:
-			if _player.has_method("die"):
-				_player.die()
+		if _pity_toggle == true:
+			_pity_timer -= delta
+			if _pity_label:
+				_pity_label.visible = true
+				_pity_label.text = "Znajdź nowe szczury\n%.1f" % maxf(0.0, _pity_timer)
+			if _pity_timer <= 0.0:
+				if _player.has_method("die"):
+					_player.die()
 	else:
 		_pity_timer = 5.0
 		if _pity_label:
@@ -696,6 +802,119 @@ func _process_damage(_delta: float) -> void:
 							if rat.attack_cooldown <= 0.0:
 								enemy.take_damage(rat.damage_per_hit * dmg_mult, rat.get_instance_id(), rat.global_position, dmg_color)
 								rat.attack_cooldown = 0.5 # Passive damage cooldown per rat per enemy (effectively)
+
+func _update_electric_arcs() -> void:
+	var active_electric: Array[CharacterBody3D] = []
+	for rat in rats:
+		if is_instance_valid(rat) and rat.get("default_rat_type") == 3 and rat.state == rat.State.FOLLOW and not rat.is_fallen:
+			active_electric.append(rat)
+			
+	var connections = []
+	var connected_count = {}
+	for r in active_electric:
+		connected_count[r] = 0
+		
+	var max_dist_sq = electric_arc_max_dist * electric_arc_max_dist
+	
+	for i in range(active_electric.size()):
+		var r1 = active_electric[i]
+		if connected_count[r1] >= electric_arc_max_connections:
+			continue
+		for j in range(i + 1, active_electric.size()):
+			var r2 = active_electric[j]
+			if connected_count[r2] >= electric_arc_max_connections:
+				continue
+				
+			var dist_sq = r1.global_position.distance_squared_to(r2.global_position)
+			if dist_sq < max_dist_sq:
+				connections.append([r1, r2])
+				connected_count[r1] += 1
+				connected_count[r2] += 1
+				if connected_count[r1] >= electric_arc_max_connections:
+					break
+					
+	_electric_arcs = connections
+	
+	var mm = electric_mm_instance.multimesh
+	mm.instance_count = connections.size()
+	for i in range(connections.size()):
+		var r1 = connections[i][0]
+		var r2 = connections[i][1]
+		var p1 = r1.global_position + Vector3(0, 0.2, 0)
+		var p2 = r2.global_position + Vector3(0, 0.2, 0)
+		var center = (p1 + p2) * 0.5
+		var dir = (p2 - p1)
+		var dist = dir.length()
+		if dist > 0.001:
+			dir = dir / dist
+			
+		var basis = Basis()
+		if abs(dir.y) < 0.999:
+			basis.y = dir
+			basis.x = Vector3.UP.cross(dir).normalized()
+			basis.z = basis.x.cross(basis.y).normalized()
+		else:
+			basis.y = dir
+			basis.x = Vector3.RIGHT.cross(dir).normalized()
+			basis.z = basis.x.cross(basis.y).normalized()
+			
+		basis.y *= dist
+		var t = Transform3D(basis, center)
+		mm.set_instance_transform(i, t)
+
+func _process_electric_damage(delta: float) -> void:
+	if _electric_arcs.is_empty():
+		return
+		
+	var keys_to_remove = []
+	for e in _electric_enemy_cooldowns.keys():
+		_electric_enemy_cooldowns[e] -= delta
+		if _electric_enemy_cooldowns[e] <= 0:
+			keys_to_remove.append(e)
+	for k in keys_to_remove:
+		_electric_enemy_cooldowns.erase(k)
+		
+	var enemies := []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
+		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
+	else:
+		enemies = get_tree().get_nodes_in_group("enemies")
+		enemies += get_tree().get_nodes_in_group("bosses")
+		
+	if enemies.is_empty():
+		return
+		
+	var arc_segments = []
+	for arc in _electric_arcs:
+		if is_instance_valid(arc[0]) and is_instance_valid(arc[1]):
+			arc_segments.append([arc[0].global_position, arc[1].global_position, arc[0].get("damage_per_hit")])
+			
+	var hit_radius_sq = 1.0 * 1.0
+	
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		if _electric_enemy_cooldowns.has(enemy) and _electric_enemy_cooldowns[enemy] > 0:
+			continue
+			
+		var e_pos = enemy.global_position
+		for seg in arc_segments:
+			var p1 = seg[0]
+			var p2 = seg[1]
+			var dmg = seg[2]
+			
+			var l2 = p1.distance_squared_to(p2)
+			var projection = p1
+			if l2 > 0.0001:
+				var t = max(0, min(1, (e_pos - p1).dot(p2 - p1) / l2))
+				projection = p1 + t * (p2 - p1)
+				
+			if e_pos.distance_squared_to(projection) < hit_radius_sq:
+				enemy.take_damage(dmg * electric_damage_mult, get_instance_id(), projection, Color(0.1, 0.3, 0.9))
+				_electric_enemy_cooldowns[enemy] = electric_arc_cooldown
+				break
 
 
 func _update_edge_avoidance() -> void:
@@ -923,9 +1142,11 @@ func _update_cursor_follow(_delta: float) -> void:
 		return
 
 	# Arc-length parameterization of the trail
-	var arc: Array[float] = [0.0]
+	var arc := PackedFloat32Array()
+	arc.resize(_mouse_trail.size())
+	arc[0] = 0.0
 	for i in range(1, _mouse_trail.size()):
-		arc.append(arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1]))
+		arc[i] = arc[i - 1] + _mouse_trail[i].distance_to(_mouse_trail[i - 1])
 	var total: float = arc[-1]
 
 	# Calculate how much to resemble a blob based on brush size
@@ -958,16 +1179,17 @@ func _update_cursor_follow(_delta: float) -> void:
 				dir.y = 0.0
 				lateral_dir = dir.normalized().cross(Vector3.UP).normalized()
 		else:
-			t_stream = _arc_sample(_mouse_trail, arc, arc_pos)
-
-			var lo := 0
-			var hi := arc.size() - 1
-			while lo < hi - 1:
-				var mid := (lo + hi) / 2
-				if arc[mid] <= arc_pos:
-					lo = mid
-				else:
-					hi = mid
+			# Optimized: search once
+			var lo := arc.bsearch(arc_pos) - 1
+			lo = clampi(lo, 0, arc.size() - 2)
+			var hi := lo + 1
+			
+			var seg: float = arc[hi] - arc[lo]
+			if seg < 0.0001:
+				t_stream = _mouse_trail[lo]
+			else:
+				var t: float = (arc_pos - arc[lo]) / seg
+				t_stream = (_mouse_trail[lo] as Vector3).lerp(_mouse_trail[hi] as Vector3, t)
 
 			var dir := _mouse_trail[hi] - _mouse_trail[lo]
 			dir.y = 0.0
@@ -1012,6 +1234,38 @@ func _update_free_rats_follow_cursor(delta: float) -> void:
 	else:
 		_cursor_follow_timer = 0.0
 	_update_cursor_follow(delta)
+
+
+func _update_sound_wave() -> void:
+	if _sound_wave == null or not is_instance_valid(_sound_wave):
+		return
+	if _player == null:
+		return
+	if not _sound_wave.has_method("update_wave"):
+		return
+
+	# Compute centroid of active follow rats
+	var centroid := Vector3.ZERO
+	var count := 0
+	for rat in rats:
+		if not is_instance_valid(rat):
+			continue
+		if rat.is_fallen:
+			continue
+		if "state" in rat and rat.state != rat.State.FOLLOW:
+			continue
+		centroid += rat.global_position
+		count += 1
+
+	if count == 0:
+		_sound_wave.visible = false
+		return
+
+	centroid /= float(count)
+
+	var start_pos := _player.global_position + Vector3(0.0, 0.4, 0.0)
+	_sound_wave.update_wave(start_pos, centroid)
+
 
 
 func _arc_sample(path: Array, arc: Array, want: float) -> Vector3:
@@ -1089,16 +1343,15 @@ func _assign_neighbors() -> void:
 								nb_distances.append(dist_sq)
 
 		if neighbor_max_count > 0 and nb.size() > neighbor_max_count:
-			var indices: Array[int] = []
+			# Use a more efficient way to sort pairs in GDScript
+			var pairs = []
 			for idx in range(nb.size()):
-				indices.append(idx)
-			indices.sort_custom(func(a: int, b: int) -> bool:
-				return nb_distances[a] < nb_distances[b]
-			)
-			var limited: Array = []
-			for j in range(min(neighbor_max_count, indices.size())):
-				limited.append(nb[indices[j]])
-			nb = limited
+				pairs.append([nb_distances[idx], nb[idx]])
+			pairs.sort() # Sorts by first element (distance)
+			
+			nb = []
+			for j in range(neighbor_max_count):
+				nb.append(pairs[j][1])
 								
 		if rat.has_method("set_neighbors"):
 			rat.set_neighbors(nb)
@@ -2163,14 +2416,14 @@ func _update_circle_preview(invalid_surface: bool = false) -> void:
 	if mark_radius <= 0.02:
 		mark_radius = 0.02
 
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 	for i in range(max_buildable):
 		var p := fill_positions[i] + offset
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		immediate_mesh.surface_add_vertex(p + Vector3(-mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(mark_radius, 0, 0))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, -mark_radius))
 		immediate_mesh.surface_add_vertex(p + Vector3(0, 0, mark_radius))
-		immediate_mesh.surface_end()
+	immediate_mesh.surface_end()
 
 
 func _build_circle_if_possible() -> void:

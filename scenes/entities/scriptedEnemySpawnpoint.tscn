@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cal0jt5qugi2r"]
+
+[ext_resource type="Script" uid="uid://d0bgb05mp3u8l" path="res://scripts/spawners/scripted_enemy_spawner.gd" id="1_xckds"]
+
+[node name="ScriptedEnemySpawn" type="Node3D" unique_id=829970318]
+script = ExtResource("1_xckds")
+enemy_type = 4
+trigger_node_path = NodePath("../ScriptedEnemyTrigger")

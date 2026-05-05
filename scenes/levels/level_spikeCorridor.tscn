@@ -1,0 +1,215 @@
+[gd_scene format=3 uid="uid://fhxyl6r1aab5"]
+
+[ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="1_5lqu3"]
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_a1pkj"]
+[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_loppc"]
+[ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_iu6n4"]
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="5_qxmbo"]
+[ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="6_cd3l1"]
+[ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="7_pe51j"]
+[ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="8_nt72m"]
+[ext_resource type="PackedScene" uid="uid://b1sxie6w3sqhh" path="res://scenes/obstacles/spike_wall.tscn" id="9_8imme"]
+[ext_resource type="PackedScene" uid="uid://bnhu7nve8y6mr" path="res://scenes/entities/scriptedEnemyTrigger.tscn" id="10_axkck"]
+[ext_resource type="PackedScene" uid="uid://cal0jt5qugi2r" path="res://scenes/entities/scriptedEnemySpawnpoint.tscn" id="11_risfb"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="12_r7dcd"]
+
+[sub_resource type="Resource" id="Resource_u1w5x"]
+script = ExtResource("8_nt72m")
+count_max = 1
+
+[sub_resource type="Resource" id="Resource_posk4"]
+script = ExtResource("7_pe51j")
+groups = Array[ExtResource("8_nt72m")]([SubResource("Resource_u1w5x")])
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hpdxt"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xbilj"]
+size = Vector3(9, 0.08, 0.08)
+
+[node name="Level1" type="Node3D" unique_id=1397753813]
+
+[node name="Floor" type="Node3D" parent="." unique_id=1849893464]
+
+[node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("1_5lqu3")]
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="walls" type="Node3D" parent="." unique_id=1791057824]
+
+[node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("2_a1pkj")]
+transform = Transform3D(-1.7703113e-07, 0, 1, 0, 1, 0, -4.05, 0, -4.371139e-08, 38.74427, 0, 12.469006)
+
+[node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("2_a1pkj")]
+transform = Transform3D(-1.7703113e-07, 0, 1, 0, 1, 0, -4.05, 0, -4.371139e-08, 38.74427, 0, -12.987566)
+
+[node name="wall9" parent="walls" unique_id=2116112980 instance=ExtResource("2_a1pkj")]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.03181855, 0, -20.000002)
+
+[node name="wall10" parent="walls" unique_id=2106827679 instance=ExtResource("2_a1pkj")]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.032, 0, 20)
+
+[node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
+
+[node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -27.56261, 0, -2.3658452)
+radius = 1.0
+
+[node name="SpikeCylinder2" parent="Spikes" unique_id=1235761826 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -14.045328, 0, 2.4418893)
+radius = 1.0
+
+[node name="SpikeCylinder3" parent="Spikes" unique_id=352876558 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -4.174444, 9.536743e-07, -2.5051928)
+radius = 1.0
+
+[node name="SpikeCylinder4" parent="Spikes" unique_id=60596173 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 9.414647, 9.536743e-07, 2.9658282)
+radius = 1.0
+
+[node name="SpikeCylinder5" parent="Spikes" unique_id=2049858562 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 23.569294, 9.536743e-07, -2.3836899)
+radius = 1.0
+
+[node name="SpikeCylinder6" parent="Spikes" unique_id=904326495 instance=ExtResource("3_loppc")]
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 33.654697, 9.536743e-07, 2.8935282)
+radius = 1.0
+
+[node name="Spawners" type="Node3D" parent="." unique_id=439441642]
+
+[node name="EnemyBasic" parent="Spawners" unique_id=360313630 instance=ExtResource("4_iu6n4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+enabled = false
+label = "EnemyBasic"
+level_id = 7
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 1
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="EnemyFlame" parent="Spawners" unique_id=360313631 instance=ExtResource("4_iu6n4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+enabled = false
+label = "EnemyFlame"
+level_id = 7
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 2
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="EnemySniper" parent="Spawners" unique_id=360313632 instance=ExtResource("4_iu6n4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.502322, 0, 8.019377)
+enabled = false
+label = "EnemySniper"
+level_id = 7
+start_delay = 0.0
+repeat_interval = 10.0
+reset_on_level_enter = false
+spawn_kind = 4
+count_max = 1
+spawn_radius = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="enemies_spawnpoints" type="Node3D" parent="." unique_id=987657001]
+script = ExtResource("5_qxmbo")
+level_id = 7
+
+[node name="Marker3D2" type="Marker3D" parent="enemies_spawnpoints" unique_id=599329600 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.78827, 0, 0.580045)
+
+[node name="Spawners3" type="Node3D" parent="." unique_id=1946203983]
+
+[node name="SpawnerWildLevel2" parent="Spawners3" unique_id=538418512 instance=ExtResource("4_iu6n4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.557735, 0, 6)
+label = "Level1 Wild Rats"
+level_id = 7
+start_delay = 0.0
+repeat = true
+repeat_interval = 8.0
+max_triggers = 6
+reset_on_level_enter = false
+count_min = 10
+count_max = 24
+spawn_radius = 1.8
+position_mode = 3
+wild_rat_prob_normal = 60.0
+wild_rat_prob_red = 20.0
+wild_rat_prob_green = 20.0
+
+[node name="WaveSpawner" type="Node3D" parent="." unique_id=2128264012]
+script = ExtResource("6_cd3l1")
+level_id = 7
+start_delay = 1.0
+reset_on_level_enter = false
+waves = Array[ExtResource("7_pe51j")]([SubResource("Resource_posk4")])
+delay_between_waves = 1.0
+position_mode = 3
+wild_rat_prob_normal = 0.0
+wild_rat_prob_red = 0.0
+wild_rat_prob_green = 0.0
+
+[node name="SpikeCylinder" parent="." unique_id=1291150165 instance=ExtResource("9_8imme")]
+transform = Transform3D(77.37572, 0, 0, 0, 2.8902066, 0, 0, 0, 1, -0.19465828, -1.5824294, 4.0662003)
+
+[node name="SpikeCylinder2" parent="." unique_id=1843844331 instance=ExtResource("9_8imme")]
+transform = Transform3D(77.37572, 0, 0, 0, 2.8902066, 0, 0, 0, 1, -0.19465828, -1.5824294, -3.9337997)
+
+[node name="ScriptedEnemies" type="Node3D" parent="." unique_id=2070115370]
+
+[node name="ScriptedEnemyTrigger" parent="ScriptedEnemies" unique_id=1990679590 instance=ExtResource("10_axkck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -38.180344, 0, 0.17473769)
+
+[node name="ScriptedEnemySpawner" parent="ScriptedEnemies" unique_id=1153410840 instance=ExtResource("11_risfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.675993, 0, -0.5365815)
+enemy_type = 0
+
+[node name="ScriptedEnemyTrigger2" parent="ScriptedEnemies" unique_id=1528552764 instance=ExtResource("10_axkck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.846113, 0, 0.17473769)
+
+[node name="ScriptedEnemySpawner2" parent="ScriptedEnemies" unique_id=1286649295 instance=ExtResource("11_risfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.569245, 0, -0.5365815)
+enemy_type = 0
+trigger_node_path = NodePath("../ScriptedEnemyTrigger2")
+
+[node name="ScriptedEnemyTrigger3" parent="ScriptedEnemies" unique_id=1046888032 instance=ExtResource("10_axkck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.106077, 0, 0.17473769)
+
+[node name="ScriptedEnemySpawner3" parent="ScriptedEnemies" unique_id=1096427505 instance=ExtResource("11_risfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.048138, 0, 1.1687534)
+enemy_type = 0
+trigger_node_path = NodePath("../ScriptedEnemyTrigger3")
+
+[node name="ScriptedEnemyTrigger4" parent="ScriptedEnemies" unique_id=1887315364 instance=ExtResource("10_axkck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.692076, 0, 0.17473769)
+
+[node name="ScriptedEnemySpawner4" parent="ScriptedEnemies" unique_id=1775589539 instance=ExtResource("11_risfb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.529354, 0, -1.2587779)
+enemy_type = 0
+trigger_node_path = NodePath("../ScriptedEnemyTrigger4")
+
+[node name="door3" parent="." unique_id=1230442315 instance=ExtResource("12_r7dcd")]
+transform = Transform3D(-4.8082526e-08, 0, -1, 0, 1, 0, 1.1, 0, -4.371139e-08, 38.773724, 0, -0.23278046)
+controlled_level_id = 4
+target_level_id = 9
+
+[node name="DebugDirection" type="MeshInstance3D" parent="door3" unique_id=273195365]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_hpdxt")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_xbilj")

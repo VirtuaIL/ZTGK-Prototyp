@@ -1,5 +1,20 @@
 extends Node3D
 
+@export_group("Horde Upgrades")
+@export var upgrade_common_amount: int = 5
+@export var upgrade_rare_amount: int = 10
+@export var upgrade_epic_amount: int = 15
+@export var upgrade_delay_seconds: float = 2.0
+@export var levels_with_upgrades: Array[int] = [1, 2, 3, 4, 5, 6, 7]
+
+var upgrade_layer: CanvasLayer
+var upgrade_panel: Panel
+var upgrade_vbox: VBoxContainer
+var _upgrade_delay_timer: float = 0.0
+var _upgrade_pending: bool = false
+
+
+
 const LEVEL_BOUNDS := {
 	1: {"min_z": - 140.0, "max_z": 48.0},
 	2: {"min_z": - 137.5, "max_z": - 55.5},
@@ -39,6 +54,8 @@ var cheatsheet_hint: Label
 var goal_label: Label
 var rat_count_label: RichTextLabel
 var enemy_count_label: RichTextLabel
+var objective_status_body: RichTextLabel
+var objective_custom_body: RichTextLabel
 var recall_indicator: Control
 var recall_indicator_layer: CanvasLayer
 var _recall_hold_time: float = 0.0
@@ -89,28 +106,24 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 var _cam_look_ahead: Vector3 = Vector3.ZERO
 @export var reset_level_on_death: bool = true
 @export var allow_level_skips: bool = true
+@export var custom_objectives: PackedStringArray = []
 
 @onready var player: CharacterBody3D = $Player
 @onready var rat_manager: Node3D = $RatManager
 @onready var ability_hud: CanvasLayer = $AbilityTimerHUD
+@onready var game_hud: CanvasLayer = $GameHUD
 
 
 func _ready() -> void:
 	_setup_input_map()
+	_setup_upgrade_ui()
 	_init_game()
 	get_viewport().size_changed.connect(_refresh_cheatsheet_size)
 
 
 func _init_game() -> void:
-	_setup_mode_ui()
-	_setup_cheatsheet_ui()
-	_setup_goal_ui()
-	_setup_rat_count_ui()
-	_setup_enemy_count_ui()
-	_setup_buff_ui()
-	_setup_recall_indicator_ui()
-	_setup_offscreen_indicators_ui()
-	_setup_fps_ui()
+	_bind_hud_nodes()
+	call_deferred("_refresh_cheatsheet_size")
 	_rebuild_level_bounds()
 	set_current_level(current_level_id)
 	_log_level_debug_state("init")
@@ -122,6 +135,63 @@ func _init_game() -> void:
 	ability_hud.rat_manager = rat_manager
 	if player and player.has_signal("player_died"):
 		player.player_died.connect(_on_player_died)
+
+
+func _bind_hud_nodes() -> void:
+	if game_hud == null:
+		return
+
+	goal_label = game_hud.get_node_or_null("HUDRoot/GoalLabel") as Label
+	fps_label = game_hud.get_node_or_null("HUDRoot/FPSLabel") as Label
+	rat_count_label = game_hud.get_node_or_null("HUDRoot/RatCountLabel") as RichTextLabel
+	objective_status_body = game_hud.get_node_or_null("HUDRoot/CombatStatusPanel/Margin/VBox/Body") as RichTextLabel
+	objective_custom_body = game_hud.get_node_or_null("HUDRoot/CustomObjectivesPanel/Margin/VBox/Body") as RichTextLabel
+
+	cheatsheet_panel = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel") as Panel
+	cheatsheet_margin = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin") as MarginContainer
+	cheatsheet_vbox = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox") as VBoxContainer
+	cheatsheet_title = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Title") as Label
+	cheatsheet_body = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Body") as RichTextLabel
+	cheatsheet_hint = game_hud.get_node_or_null("HUDRoot/CheatsheetPanel/Margin/VBox/Hint") as Label
+
+	lpm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/LPMBox/ValueRect") as ColorRect
+	spm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/ScrollBox/ValueRect") as ColorRect
+	ppm_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/PPMBox/ValueRect") as ColorRect
+	space_rect_val = game_hud.get_node_or_null("ModeRoot/MainVBox/SpaceRow/SpaceBox/ValueRect") as ColorRect
+	lpm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/LPMBox/ValueRect/Value") as Label
+	spm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/ScrollBox/ValueRect/Value") as Label
+	ppm_label_val = game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/Actions/PPMBox/ValueRect/Value") as Label
+
+	combat_key_rects.clear()
+	var dash_key_rect := game_hud.get_node_or_null("ModeRoot/MainVBox/BottomRow/CombatPanel/Margin/VBox/KeyRow/Key3Box/ValueRect") as ColorRect
+	if dash_key_rect != null:
+		combat_key_rects.append(dash_key_rect)
+
+	buff_panel = game_hud.get_node_or_null("BuffPanel") as Panel
+	buff_labels.clear()
+	var buff_red := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffRed") as Label
+	var buff_green := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffGreen") as Label
+	var buff_yellow := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffYellow") as Label
+	var buff_purple := game_hud.get_node_or_null("BuffPanel/Margin/VBox/BuffPurple") as Label
+	for lbl in [buff_red, buff_green, buff_yellow, buff_purple]:
+		if lbl != null:
+			buff_labels.append(lbl)
+
+	recall_indicator = game_hud.get_node_or_null("HUDRoot/RecallIndicator") as Control
+	indicator_root = game_hud.get_node_or_null("HUDRoot/IndicatorRoot") as Control
+
+
+func _get_current_level_wave_info(level_id: int) -> String:
+	var wave_info := ""
+	for node in get_tree().get_nodes_in_group("wave_spawners"):
+		var ws := node as WaveSpawner
+		if ws and ws.enabled and ws.get_target_level_id(self ) == level_id:
+			if ws.get_total_wave_count() > 0:
+				var cw := ws.get_current_wave_index() + 1
+				var tw := ws.get_total_wave_count()
+				wave_info = "Fala %d/%d" % [cw, tw]
+				break
+	return wave_info
 
 
 func _setup_input_map() -> void:
@@ -560,7 +630,7 @@ func _get_indicator(idx: int) -> Label:
 	return indicator_pool[idx]
 
 func _update_offscreen_indicators() -> void:
-	if not indicator_layer or not indicator_root or player == null:
+	if not indicator_root or player == null:
 		return
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
@@ -633,26 +703,39 @@ func _update_enemy_count_ui() -> void:
 	var alive := 0
 	if has_method("get_level_enemies"):
 		alive = get_level_enemies(current_level_id).size()
-	
-	var pending_spawners := 0
-	var wave_info := ""
-	for node in get_tree().get_nodes_in_group("main_spawners"):
-		var spawner := node as MainSpawner
-		if spawner and spawner.enabled and spawner.spawn_kind != MainSpawner.SpawnKind.WILD_RAT and spawner.get_target_level_id(self ) == current_level_id and not spawner.is_completed():
-			pending_spawners += 1
-	for node in get_tree().get_nodes_in_group("wave_spawners"):
-		var ws := node as WaveSpawner
-		if ws and ws.enabled and ws.get_target_level_id(self ) == current_level_id and not ws.is_completed():
-			pending_spawners += 1
-			if ws.get_total_wave_count() > 0:
-				var cw := ws.get_current_wave_index() + 1
-				var tw := ws.get_total_wave_count()
-				wave_info = " (Fala %d/%d)" % [cw, tw]
-			
-	if pending_spawners > 0:
-		enemy_count_label.text = "Wrogowie: " + str(alive) + " (+)" + wave_info
+	enemy_count_label.text = "Wrogowie: " + str(alive)
+
+
+func _update_objective_ui() -> void:
+	if objective_status_body == null and objective_custom_body == null:
+		return
+
+	var alive_enemies := get_level_enemies(current_level_id).size()
+	var wave_info := _get_current_level_wave_info(current_level_id)
+
+	if objective_status_body != null:
+		var status_lines: Array[String] = []
+		status_lines.append("- Wrogowie: %d" % alive_enemies)
+		if not wave_info.is_empty():
+			status_lines.append("- %s" % wave_info)
+		else:
+			status_lines.append("- Fala: brak")
+		objective_status_body.text = "\n".join(status_lines)
+
+	if objective_custom_body == null:
+		return
+
+	var custom_lines: Array[String] = []
+	if custom_objectives.is_empty():
+		custom_lines.append("- Brak dodatkowych celow")
 	else:
-		enemy_count_label.text = "Wrogowie: " + str(alive)
+		for goal in custom_objectives:
+			var trimmed := String(goal).strip_edges()
+			if not trimmed.is_empty():
+				custom_lines.append("- %s" % trimmed)
+	if custom_lines.is_empty():
+		custom_lines.append("- Brak dodatkowych celow")
+	objective_custom_body.text = "\n".join(custom_lines)
 
 
 func _update_buff_ui() -> void:
@@ -686,16 +769,27 @@ func _update_mode_ui() -> void:
 
 func _process(delta: float) -> void:
 	_current_level_active_time += delta
-	_update_mode_ui()
 	_update_rat_count_ui()
-	_update_enemy_count_ui()
-	_update_buff_ui()
+	_update_objective_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
 	var level_cleared := is_current_level_cleared()
 	if level_cleared != _current_level_cleared:
+		var was_cleared = _current_level_cleared
 		_current_level_cleared = level_cleared
 		_update_level_doors()
+		if _current_level_cleared and not was_cleared:
+			if current_level_id in levels_with_upgrades:
+				_upgrade_delay_timer = upgrade_delay_seconds
+				_upgrade_pending = true
+
+	if _upgrade_pending:
+		_upgrade_delay_timer -= delta
+		if _upgrade_delay_timer <= 0.0:
+			_upgrade_pending = false
+			_show_upgrade_ui()
+
+
 	_log_level_debug_state()
 	
 	if fps_label:
@@ -888,17 +982,18 @@ func _spawn_wild_rats_wave_group(spawner: WaveSpawner, group: WaveGroup) -> void
 		if rat == null:
 			continue
 		var target_level_id := spawner.get_target_level_id(self )
-		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+		if rat_manager.has_method("get_wild_lifespan_for_level"):
 			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
-			if override_lifespan >= 0.0:
-				rat.wild_lifespan = override_lifespan
+			if override_lifespan >= 0.0 and rat is Rat:
+				(rat as Rat).wild_lifespan = override_lifespan
 		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
 		rat.player = player
 		if rat.has_method("set_rat_type"):
 			rat.set_rat_type(_roll_wild_rat_type(
 				spawner.wild_rat_prob_normal,
 				spawner.wild_rat_prob_red,
-				spawner.wild_rat_prob_green
+				spawner.wild_rat_prob_green,
+				spawner.wild_rat_prob_electric
 			))
 		rat_manager.add_child(rat)
 		_assign_level_tag(rat, target_level_id)
@@ -924,17 +1019,18 @@ func _spawn_wild_rats_from_spawner(spawner: MainSpawner) -> bool:
 		if rat == null:
 			continue
 		var target_level_id := spawner.get_target_level_id(self )
-		if rat_manager.has_method("get_wild_lifespan_for_level") and "wild_lifespan" in rat:
+		if rat_manager.has_method("get_wild_lifespan_for_level"):
 			var override_lifespan := float(rat_manager.get_wild_lifespan_for_level(target_level_id))
-			if override_lifespan >= 0.0:
-				rat.wild_lifespan = override_lifespan
+			if override_lifespan >= 0.0 and rat is Rat:
+				(rat as Rat).wild_lifespan = override_lifespan
 		var spawn_pos := _pick_spawner_point(points, spawner.choose_random_point, i) + _random_spawn_offset(spawner.spawn_radius, 0.2)
 		rat.player = player
 		if rat.has_method("set_rat_type"):
 			rat.set_rat_type(_roll_wild_rat_type(
 				spawner.wild_rat_prob_normal,
 				spawner.wild_rat_prob_red,
-				spawner.wild_rat_prob_green
+				spawner.wild_rat_prob_green,
+				spawner.wild_rat_prob_electric
 			))
 		rat_manager.add_child(rat)
 		_assign_level_tag(rat, target_level_id)
@@ -1003,8 +1099,8 @@ func _random_spawn_offset(radius: float, y_offset: float) -> Vector3:
 	return Vector3(cos(angle) * dist, y_offset, sin(angle) * dist)
 
 
-func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float) -> int:
-	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green)
+func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float, prob_electric: float) -> int:
+	var total_prob := maxf(0.0, prob_normal) + maxf(0.0, prob_red) + maxf(0.0, prob_green) + maxf(0.0, prob_electric)
 	if total_prob <= 0.0:
 		return 0
 	var roll := randf_range(0.0, total_prob)
@@ -1012,6 +1108,8 @@ func _roll_wild_rat_type(prob_normal: float, prob_red: float, prob_green: float)
 		return 1
 	if roll < prob_red + prob_green:
 		return 2
+	if roll < prob_red + prob_green + prob_electric:
+		return 3
 	return 0
 
 
@@ -1029,6 +1127,10 @@ func _on_player_died() -> void:
 	for e in enemies:
 		if is_instance_valid(e):
 			e.queue_free()
+	# Clean up lingering rat death effects
+	for eff in get_tree().get_nodes_in_group("rat_death_effects"):
+		if is_instance_valid(eff):
+			eff.queue_free()
 	if reset_level_on_death:
 		_reset_level_runtime(current_level_id)
 
@@ -1151,34 +1253,31 @@ func clamp_position_to_level(level_id: int, pos: Vector3) -> Vector3:
 	)
 
 
-func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
-	return _filter_nodes_by_level(get_tree().get_nodes_in_group(group_name), level_id)
-
+var _level_nodes_cache: Dictionary = {}
+var _cached_physics_frame: int = -1
+var _cached_process_frame: int = -1
+var _cached_level_enemies_id: int = -1
+var _cached_level_enemies: Array[Node3D] = []
 
 func get_nodes_in_current_level(group_name: String) -> Array[Node3D]:
 	return get_nodes_in_level(group_name, current_level_id)
 
-
 func get_current_level_spawn_markers() -> Array[Node3D]:
 	return get_level_spawn_markers(current_level_id)
-
 
 func get_level_spawn_markers(level_id: int) -> Array[Node3D]:
 	return get_nodes_in_level("spawn_markers", level_id)
 
+func get_current_level_rat_spawns(spawn_tag: StringName = &"") -> Array[Node3D]:
+	return get_level_rat_spawns(current_level_id, spawn_tag)
 
-func get_current_level_rat_spawns() -> Array[Node3D]:
-	return get_level_rat_spawns(current_level_id)
-
-
-func get_level_rat_spawns(level_id: int) -> Array[Node3D]:
+func get_level_rat_spawns(level_id: int, spawn_tag: StringName = &"") -> Array[Node3D]:
 	var grouped_spawns := get_nodes_in_level("rat_spawn", level_id)
 	if not grouped_spawns.is_empty():
-		return grouped_spawns
-	return _get_fallback_level_rat_spawns(level_id)
+		return _filter_rat_spawn_points_by_tag(grouped_spawns, spawn_tag)
+	return _get_fallback_level_rat_spawns(level_id, spawn_tag)
 
-
-func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
+func _get_fallback_level_rat_spawns(level_id: int, spawn_tag: StringName = &"") -> Array[Node3D]:
 	var fallback_spawns: Array[Node3D] = []
 	if level_id <= 0:
 		return fallback_spawns
@@ -1201,16 +1300,58 @@ func _get_fallback_level_rat_spawns(level_id: int) -> Array[Node3D]:
 				continue
 			if _get_level_id_for_node(marker) != level_id:
 				continue
+			if not _matches_spawn_tag(marker, spawn_tag):
+				continue
 			fallback_spawns.append(marker)
 
 	return fallback_spawns
 
+func _filter_rat_spawn_points_by_tag(spawn_points: Array[Node3D], spawn_tag: StringName) -> Array[Node3D]:
+	if spawn_tag.is_empty():
+		return spawn_points
+
+	var filtered: Array[Node3D] = []
+	for marker in spawn_points:
+		if _matches_spawn_tag(marker, spawn_tag):
+			filtered.append(marker)
+	return filtered
+
+func _matches_spawn_tag(node: Node, spawn_tag: StringName) -> bool:
+	if spawn_tag.is_empty():
+		return true
+	if node == null or not is_instance_valid(node):
+		return false
+	if node is LevelTag:
+		return (node as LevelTag).spawn_tag == spawn_tag
+	return false
+
+func get_nodes_in_level(group_name: String, level_id: int) -> Array[Node3D]:
+	var group_nodes := get_tree().get_nodes_in_group(group_name)
+	var count := group_nodes.size()
+	
+	if not _level_nodes_cache.has(group_name) or _level_nodes_cache[group_name]["count"] != count:
+		_level_nodes_cache[group_name] = {
+			"count": count,
+			"levels": {}
+		}
+		
+	var cache_levels: Dictionary = _level_nodes_cache[group_name]["levels"]
+	if cache_levels.has(level_id):
+		return cache_levels[level_id]
+		
+	var filtered := _filter_nodes_by_level(group_nodes, level_id)
+	cache_levels[level_id] = filtered
+	return filtered
 
 func get_current_level_enemies() -> Array[Node3D]:
 	return get_level_enemies(current_level_id)
 
-
 func get_level_enemies(level_id: int) -> Array[Node3D]:
+	var phys_frame := Engine.get_physics_frames()
+	var proc_frame := Engine.get_process_frames()
+	if phys_frame == _cached_physics_frame and proc_frame == _cached_process_frame and _cached_level_enemies_id == level_id:
+		return _cached_level_enemies
+		
 	var enemies: Array[Node3D] = []
 	enemies.append_array(get_nodes_in_level("enemies", level_id))
 	enemies.append_array(get_nodes_in_level("turrets", level_id))
@@ -1224,8 +1365,12 @@ func get_level_enemies(level_id: int) -> Array[Node3D]:
 		if not enemy.visible:
 			continue
 		alive.append(enemy)
+		
+	_cached_physics_frame = phys_frame
+	_cached_process_frame = proc_frame
+	_cached_level_enemies_id = level_id
+	_cached_level_enemies = alive
 	return alive
-
 
 func is_current_level_cleared() -> bool:
 	return is_level_cleared(current_level_id)
@@ -1429,9 +1574,12 @@ func _update_level_doors() -> void:
 			
 		var should_open = is_level_cleared(gate.controlled_level_id)
 		
-		# If the CURRENT level is not cleared, doors behind and ahead stay closed
+		# If the CURRENT level is not cleared, close doors that lead
+		# out of the current level (both forward and backward)
 		if not _current_level_cleared:
-			if gate.controlled_level_id == current_level_id or gate.controlled_level_id == current_level_id - 1:
+			# Close current level doors and any door whose level_id >= current
+			# (prevents doors ahead from being open when entering a new level)
+			if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
 				should_open = false
 				
 		if should_open:
@@ -1517,3 +1665,134 @@ func _log_level_debug_state(reason: String = "") -> void:
 		print("[LEVEL DEBUG] %s" % debug_state)
 	else:
 		print("[LEVEL DEBUG] %s reason=%s" % [debug_state, reason])
+
+
+# ── Horde Upgrade UI ──────────────────────────────────────────────────────────
+func _setup_upgrade_ui() -> void:
+	upgrade_layer = CanvasLayer.new()
+	upgrade_layer.layer = 100 # Draw on top
+	upgrade_layer.process_mode = Node.PROCESS_MODE_ALWAYS # Keep running while paused
+	
+	var dim_rect = ColorRect.new()
+	dim_rect.color = Color(0, 0, 0, 0.5)
+	dim_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	upgrade_layer.add_child(dim_rect)
+	
+	upgrade_panel = Panel.new()
+	upgrade_panel.set_anchors_preset(Control.PRESET_CENTER)
+	upgrade_panel.custom_minimum_size = Vector2(400, 300)
+	
+	var style := StyleBoxFlat.new()
+	style.bg_color = UI_BG_STRONG
+	style.border_color = UI_BORDER
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	upgrade_panel.add_theme_stylebox_override("panel", style)
+	
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	upgrade_panel.add_child(margin)
+	
+	var root_vbox = VBoxContainer.new()
+	root_vbox.add_theme_constant_override("separation", 20)
+	margin.add_child(root_vbox)
+	
+	var title = Label.new()
+	title.text = "WYBIERZ ULEPSZENIE"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", UI_TEXT)
+	title.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	title.add_theme_constant_override("outline_size", 4)
+	root_vbox.add_child(title)
+	
+	upgrade_vbox = VBoxContainer.new()
+	upgrade_vbox.add_theme_constant_override("separation", 15)
+	upgrade_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	upgrade_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	root_vbox.add_child(upgrade_vbox)
+	
+	dim_rect.add_child(upgrade_panel)
+	add_child(upgrade_layer)
+	
+	upgrade_layer.visible = false
+
+func _show_upgrade_ui() -> void:
+	if upgrade_layer == null:
+		return
+		
+	for child in upgrade_vbox.get_children():
+		child.queue_free()
+		
+	var rolled_options: Array[Vector2] = []
+		
+	for i in range(3):
+		var r_type = randi_range(1, 3)
+		var r_rarity = randi_range(0, 2)
+		
+		# Prevent duplicates in the same set
+		var attempts = 0
+		while Vector2(r_type, r_rarity) in rolled_options and attempts < 20:
+			r_type = randi_range(1, 3)
+			r_rarity = randi_range(0, 2)
+			attempts += 1
+		rolled_options.append(Vector2(r_type, r_rarity))
+		
+		var rat_name = ""
+		var amount = 0
+		var type_color = Color.WHITE
+		match r_type:
+			1: 
+				rat_name = "Agresywnych (Czerwone)"
+				type_color = Color(0.9, 0.3, 0.3)
+			2: 
+				rat_name = "Gazowych (Zielone)"
+				type_color = Color(0.3, 0.9, 0.3)
+			3: 
+				rat_name = "Elektrycznych (Niebieskie)"
+				type_color = Color(0.3, 0.5, 0.9)
+				
+		var rarity_name = ""
+		match r_rarity:
+			0:
+				amount = upgrade_common_amount
+				rarity_name = "Zwykłe"
+			1:
+				amount = upgrade_rare_amount
+				rarity_name = "Rzadkie"
+			2:
+				amount = upgrade_epic_amount
+				rarity_name = "Epickie"
+				
+		var btn = Button.new()
+		btn.text = "%s: +%d %s" % [rarity_name, amount, rat_name]
+		btn.custom_minimum_size = Vector2(300, 50)
+		btn.add_theme_color_override("font_color", type_color)
+		btn.add_theme_font_size_override("font_size", 16)
+		btn.pressed.connect(_on_upgrade_selected.bind(r_type, amount))
+		upgrade_vbox.add_child(btn)
+		
+	var vp_size = get_viewport().get_visible_rect().size
+	upgrade_panel.position = vp_size / 2.0 - upgrade_panel.custom_minimum_size / 2.0
+	
+	upgrade_layer.visible = true
+	
+	# Make sure Input is available even when paused
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	get_tree().paused = true
+
+func _on_upgrade_selected(rat_type: int, amount: int) -> void:
+	upgrade_layer.visible = false
+	get_tree().paused = false
+	if rat_manager and rat_manager.has_method("add_rats_to_horde"):
+		rat_manager.add_rats_to_horde(rat_type, amount)

@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://bnhu7nve8y6mr"]
+
+[ext_resource type="Script" uid="uid://ucoqtcqetkjc" path="res://scripts/triggers/player_trigger_area.gd" id="1_ueupt"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muem4"]
+size = Vector3(9.484497, 3.4285889, 8.911621)
+
+[node name="ScriptedEnemyTrigger" type="Area3D" unique_id=570688746]
+collision_mask = 3
+script = ExtResource("1_ueupt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=380436575]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2422485, 1.2142944, -3.9558105)
+shape = SubResource("BoxShape3D_muem4")

@@ -1,9 +1,13 @@
 [gd_scene format=3 uid="uid://bfcj0ua6gp4yq"]
 
 [ext_resource type="Script" uid="uid://c23ka7g0u3rsb" path="res://scripts/obstacles/door.gd" id="1_hpvv5"]
+[ext_resource type="Texture2D" uid="uid://bt1lo4yh1se2g" path="res://resources/assets/brick_lowdensity_darker.png" id="2_fp04d"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.67880243, 0.33396435, 1.92523e-07, 1)
+albedo_color = Color(0.8558135, 0.43301237, 1.92523e-07, 1)
+albedo_texture = ExtResource("2_fp04d")
+uv1_triplanar = true
+uv1_world_triplanar = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_5f452"]
 material = SubResource("StandardMaterial3D_1")
@@ -26,10 +30,10 @@ mesh = SubResource("BoxMesh_5f452")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.083, 1.436, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="TransitionArea" type="Area3D" parent="."]
+[node name="TransitionArea" type="Area3D" parent="." unique_id=929894903]
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="TransitionArea"]
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="TransitionArea" unique_id=2082094160]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.083, 1.436, 0)
 shape = SubResource("BoxShape3D_transition")
