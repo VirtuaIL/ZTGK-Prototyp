@@ -54,7 +54,6 @@ script = ExtResource("7_skydome")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=901514293]
 transform = Transform3D(0.9999996, 0, 0, 0, -4.3711374e-08, 1.0000001, 0, -0.9999997, -4.3711392e-08, 5, 10, 5)
 light_color = Color(1, 0.93, 0.82, 1)
-light_energy = 0.4
 shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=759215990]
