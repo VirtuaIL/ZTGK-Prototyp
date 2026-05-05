@@ -112,17 +112,17 @@ transform = Transform3D(-6.993822e-07, 0, 1, 0, 1, 0, -16, 0, -4.371139e-08, -40
 [node name="wall5" parent="walls" unique_id=510026693 instance=ExtResource("2_ki8mi")]
 transform = Transform3D(7.5, 0, 0, 0, 1, 0, 0, 0, 1, -21.494274, 0, -40)
 
-[node name="wall" parent="walls" unique_id=781074221 instance=ExtResource("2_805pq")]
-transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, 15, 0, 15)
+[node name="pillar" parent="walls" unique_id=781074221 instance=ExtResource("2_805pq")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 15, 0, 15)
 
-[node name="wall6" parent="walls" unique_id=1034547472 instance=ExtResource("2_805pq")]
-transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -15, 0, 15)
+[node name="pillar2" parent="walls" unique_id=1034547472 instance=ExtResource("2_805pq")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -15, 0, 15)
 
-[node name="wall7" parent="walls" unique_id=2045284155 instance=ExtResource("2_805pq")]
-transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, -15, 0, -15)
+[node name="pillar3" parent="walls" unique_id=2045284155 instance=ExtResource("2_805pq")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, -15, 0, -15)
 
-[node name="wall8" parent="walls" unique_id=978883573 instance=ExtResource("2_805pq")]
-transform = Transform3D(3, 0, 0, 0, 6, 0, 0, 0, 3, 15, 0, -15)
+[node name="pillar4" parent="walls" unique_id=978883573 instance=ExtResource("2_805pq")]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 15, 0, -15)
 
 [node name="Spikes" type="Node3D" parent="." unique_id=1224863487]
 
