@@ -17,7 +17,7 @@
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
 [node name="wall1" parent="walls" unique_id=1767367743 instance=ExtResource("3_aackc")]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 1, 10.344297, 0, -19.517975)
+transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, 12.344297, 0, -19.517975)
 
 [node name="wall3" parent="walls" unique_id=1981168902 instance=ExtResource("3_aackc")]
 transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -12.722517, 0, -19.517975)

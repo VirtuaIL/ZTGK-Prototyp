@@ -43,6 +43,7 @@ var health: float = max_health
 @export var attack_cooldown: float = 1.0
 @export var min_attack_charge_time: float = 0.85
 @export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.45)
+@export var attack_flash_color: Color = Color(1.0, 0.0, 0.0, 0.55)
 @export var telegraph_pulse_speed: float = 10.0
 @export var telegraph_pulse_depth: float = 0.18
 @export var animation_player_path: NodePath
@@ -79,6 +80,8 @@ var current_attack: AttackType = AttackType.NONE
 var attack_prepare_timer: float = 0.0
 @export var attack_delay: float = 0.5
 var attack_marker: MeshInstance3D = null
+@export var attack_flash_duration: float = 0.14
+var _attack_flash_timer: float = 0.0
 
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
@@ -392,6 +395,15 @@ func _process_attack(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, chase_speed * delta * 5.0)
 	velocity.z = move_toward(velocity.z, 0.0, chase_speed * delta * 5.0)
 
+	if _attack_flash_timer > 0.0:
+		_attack_flash_timer -= delta
+		if attack_marker != null and attack_marker.visible:
+			var mat_flash := attack_marker.material_override as StandardMaterial3D
+			if mat_flash:
+				mat_flash.albedo_color = attack_flash_color
+		if _attack_flash_timer <= 0.0 and attack_marker != null:
+			attack_marker.visible = false
+
 	if current_attack != AttackType.NONE:
 		# We are winding up an attack
 		attack_prepare_timer -= delta
@@ -493,7 +505,11 @@ func _pick_and_start_attack() -> void:
 
 func _execute_attack() -> void:
 	if attack_marker != null:
-		attack_marker.visible = false
+		var mat := attack_marker.material_override as StandardMaterial3D
+		if mat != null:
+			mat.albedo_color = attack_flash_color
+		attack_marker.visible = true
+		_attack_flash_timer = attack_flash_duration
 	_play_attack_animation()
 	_flash_attack()
 	
@@ -755,11 +771,11 @@ func _play_windup_animation() -> void:
 
 
 func _flash_attack() -> void:
-	# Brief strong red pulse on attack (after white charge)
+	# Brief strong pulse on attack (after charge telegraph)
 	var body: MeshInstance3D = get_child(0) as MeshInstance3D
 	if body and body.material_override:
 		var original_color: Color = Color(0.8, 0.15, 0.15)
-		body.material_override.albedo_color = Color(1.0, 0.0, 0.0)
+		body.material_override.albedo_color = attack_flash_color
 		var tween := create_tween()
 		tween.tween_property(body.material_override, "albedo_color", original_color, 0.22)
 
