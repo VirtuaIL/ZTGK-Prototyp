@@ -49,7 +49,14 @@ func _try_activate(body: Node3D) -> void:
 	_pending_player = null
 
 	if body.has_method("set_spawn_position"):
-		body.set_spawn_position(global_position)
+		var spawn_pos := global_position
+		if current_scene != null and current_scene.has_method("get_level_spawn_markers") and level_id > 0:
+			var spawns: Array = current_scene.get_level_spawn_markers(level_id)
+			if not spawns.is_empty():
+				var marker := spawns[0] as Node3D
+				if marker != null and is_instance_valid(marker):
+					spawn_pos = marker.global_position
+		body.set_spawn_position(spawn_pos)
 		var mgr = get_tree().get_first_node_in_group("rat_manager")
 		if mgr and mgr.has_method("save_rat_composition"):
 			mgr.save_rat_composition()

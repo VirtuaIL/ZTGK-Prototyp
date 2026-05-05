@@ -5,10 +5,16 @@
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_spike"]
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="4_wall"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_marker"]
+shading_mode = 0
+albedo_color = Color(0.0, 1.0, 0.6, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_marker"]
+size = Vector3(8, 0.08, 0.08)
+
 [node name="LevelCorridor1" type="Node3D" unique_id=1397753813]
 script = ExtResource("1_tag")
 level_id = 2
-
 [node name="Floor" type="Node3D" parent="." unique_id=485588761]
 
 [node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("2_808pb")]
