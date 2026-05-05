@@ -1,21 +1,26 @@
 [gd_scene format=3 uid="uid://bqxwa11a2b3c4"]
 
+[ext_resource type="Shader" path="res://resources/shaders/wall_occlusion_fade.gdshader" id="1_shader"]
 [ext_resource type="Script" uid="uid://ckkwtbwnawegl" path="res://scripts/obstacles/spike_cylinder.gd" id="1_1"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.3, 0.3, 0.3, 1)
-metallic = 0.8
-roughness = 0.4
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("1_shader")
+shader_parameter/tint_color = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/triplanar_scale = 0.9
+shader_parameter/reveal_radius = 1.5
+shader_parameter/reveal_softness = 0.8
+shader_parameter/reveal_strength = 0.85
+shader_parameter/min_alpha = 0.22
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-material = SubResource("StandardMaterial3D_1")
+material = SubResource("ShaderMaterial_1")
 top_radius = 0.8
 bottom_radius = 0.8
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 radius = 0.8
 
-[node name="SpikeCylinder" type="StaticBody3D"]
+[node name="SpikeCylinder" type="StaticBody3D" groups=["wall_occlusion_fade"]]
 collision_layer = 129
 script = ExtResource("1_1")
 radius = 1.3

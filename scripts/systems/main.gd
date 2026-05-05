@@ -104,6 +104,8 @@ const UI_OUTLINE_DARK: Color = Color(0, 0, 0, 0.75)
 @export var cam_look_ahead_deadzone: float = 0.2
 @export var cam_look_ahead_smooth: float = 6.0
 var _cam_look_ahead: Vector3 = Vector3.ZERO
+@export var _cam_offset := Vector3(10, 12, 10)
+@export var wall_occlusion_fade_max_rats: int = 7
 @export var reset_level_on_death: bool = true
 @export var allow_level_skips: bool = true
 @export var custom_objectives: PackedStringArray = []
@@ -850,12 +852,12 @@ func _process(delta: float) -> void:
 			_cam_look_ahead = _cam_look_ahead.lerp(Vector3.ZERO, 1.0 - exp(-cam_look_ahead_smooth * delta))
 
 		# Keep constant offset angle
-		var offset := Vector3(10, 12, 10)
-		cam.position = cam.position.lerp(focus + offset + _cam_look_ahead, 0.03)
+		cam.position = cam.position.lerp(focus + _cam_offset + _cam_look_ahead, 0.03)
 		
 		# Force strict isometric angle by looking parallel to the offset vector
-		var current_focus := cam.position - offset
+		var current_focus := cam.position - _cam_offset
 		cam.look_at(current_focus, Vector3.UP)
+		_update_wall_occlusion_fade(cam)
 	
 	_update_offscreen_indicators()
 
@@ -877,6 +879,91 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			if event.pressed:
 				_scroll_highlight_timer = 0.15
+
+
+func _update_wall_occlusion_fade(cam: Camera3D) -> void:
+	if cam == null:
+		return
+
+	var walls := get_tree().get_nodes_in_group("wall_occlusion_fade")
+	if walls.is_empty():
+		return
+
+	var targets: Array[Vector3] = []
+	if player != null and is_instance_valid(player):
+		targets.append(player.global_position)
+
+	targets.append_array(_get_nearest_rats_for_occlusion(cam.global_position, wall_occlusion_fade_max_rats))
+	if targets.is_empty():
+		return
+
+	for wall_node in walls:
+		var wall := wall_node as Node3D
+		if wall == null or not is_instance_valid(wall) or not wall.is_inside_tree():
+			continue
+
+		var mesh := _find_occlusion_mesh(wall)
+		if mesh == null or not is_instance_valid(mesh):
+			continue
+
+		var material := mesh.get_active_material(0) as ShaderMaterial
+		if material == null:
+			continue
+
+		material.set_shader_parameter("camera_world_pos", cam.global_position)
+		material.set_shader_parameter("reveal_target_count", targets.size())
+
+		for i in range(8):
+			var param_name := "reveal_target_%d" % i
+			var target_value := Vector4.ZERO
+			if i < targets.size():
+				var target_pos := targets[i]
+				target_value = Vector4(target_pos.x, target_pos.y, target_pos.z, 1.0 if i == 0 else 0.85)
+			material.set_shader_parameter(param_name, target_value)
+
+
+func _find_occlusion_mesh(root: Node) -> MeshInstance3D:
+	var body := root.get_node_or_null("Body") as MeshInstance3D
+	if body != null:
+		return body
+
+	for child in root.get_children():
+		var mesh := child as MeshInstance3D
+		if mesh != null:
+			return mesh
+
+	return null
+
+
+func _get_nearest_rats_for_occlusion(camera_pos: Vector3, max_count: int) -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	if rat_manager == null or max_count <= 0:
+		return result
+
+	var rats_value: Variant = rat_manager.get("rats")
+	if typeof(rats_value) != TYPE_ARRAY:
+		return result
+
+	var candidates: Array[Node3D] = []
+	for rat_value in rats_value:
+		var rat := rat_value as Node3D
+		if rat == null or not is_instance_valid(rat) or not rat.is_inside_tree():
+			continue
+		candidates.append(rat)
+
+	while result.size() < max_count and not candidates.is_empty():
+		var best_idx := 0
+		var best_dist := INF
+		for i in range(candidates.size()):
+			var dist := candidates[i].global_position.distance_squared_to(camera_pos)
+			if dist < best_dist:
+				best_dist = dist
+				best_idx = i
+
+		result.append(candidates[best_idx].global_position)
+		candidates.remove_at(best_idx)
+
+	return result
 
 
 func _update_recall_hold(delta: float) -> void:

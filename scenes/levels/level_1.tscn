@@ -33,6 +33,32 @@ mesh = SubResource("PlaneMesh_ksju7")
 [node name="floor_collision1" type="CollisionShape3D" parent="Floor" unique_id=849582682]
 shape = SubResource("BoxShape3D_6iamk")
 
+[node name="TorchLights" type="Node3D" parent="." unique_id=204611522]
+
+[node name="TorchLightNW" type="OmniLight3D" parent="TorchLights" unique_id=204611523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 3.5, -14)
+light_color = Color(1, 0.7, 0.34, 1)
+light_energy = 2.0
+omni_range = 13.0
+
+[node name="TorchLightNE" type="OmniLight3D" parent="TorchLights" unique_id=204611524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.5, -14)
+light_color = Color(1, 0.56, 0.24, 1)
+light_energy = 1.8
+omni_range = 13.0
+
+[node name="TorchLightSW" type="OmniLight3D" parent="TorchLights" unique_id=204611525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 3.5, 14)
+light_color = Color(1, 0.66, 0.28, 1)
+light_energy = 1.6
+omni_range = 12.0
+
+[node name="TorchLightSE" type="OmniLight3D" parent="TorchLights" unique_id=204611526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.5, 14)
+light_color = Color(1, 0.62, 0.32, 1)
+light_energy = 1.7
+omni_range = 12.0
+
 [node name="doors" type="Node3D" parent="." unique_id=1688798836]
 transform = Transform3D(6, 0, 0, 0, 1, 0, 0, 0, 1, -134.17656, 0.016834497, 17.054758)
 
