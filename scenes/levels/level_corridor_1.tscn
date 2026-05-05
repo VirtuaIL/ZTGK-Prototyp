@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://ckp1gtpmq360w"]
+
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_tag"]
+[ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="2_808pb"]
+[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_spike"]
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="4_wall"]
+
+[node name="LevelCorridor1" type="Node3D" unique_id=1397753813]
+script = ExtResource("1_tag")
+level_id = 2
+
+[node name="Floor" type="Node3D" parent="." unique_id=485588761]
+
+[node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("2_808pb")]
+transform = Transform3D(0.3, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="walls" type="Node3D" parent="." unique_id=1791057824]
+
+[node name="wall_left" parent="walls" unique_id=1767367743 instance=ExtResource("4_wall")]
+transform = Transform3D(-3.496911e-07, 0, 1, 0, 1, 0, -8, 0, -4.371139e-08, -6, 0, 0)
+
+[node name="wall_right" parent="walls" unique_id=1981168902 instance=ExtResource("4_wall")]
+transform = Transform3D(-3.496911e-07, 0, 1, 0, 1, 0, -8, 0, -4.371139e-08, 6, 0, 0)
+
+[node name="Torches" type="Node3D" parent="." unique_id=204611522]
+
+[node name="TorchGlow1" type="OmniLight3D" parent="Torches" unique_id=204611523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3.2, -14)
+light_color = Color(1, 0.68, 0.32, 1)
+light_energy = 2.0
+omni_range = 11.0
+
+[node name="TorchGlow2" type="OmniLight3D" parent="Torches" unique_id=204611524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.2, -4)
+light_color = Color(1, 0.58, 0.24, 1)
+light_energy = 1.8
+omni_range = 10.0
+
+[node name="TorchGlow3" type="OmniLight3D" parent="Torches" unique_id=204611525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3.2, 14)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 1.7
+omni_range = 10.0
+
+[node name="TorchGlow4" type="OmniLight3D" parent="Torches" unique_id=204611526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.2, 8)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 1.6
+omni_range = 11.0
+
+[node name="Hazards" type="Node3D" parent="." unique_id=345612700]
+
+[node name="SpikeCylinder1" parent="Hazards" unique_id=566211329 instance=ExtResource("3_spike")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -3.5, 0, -7)
+radius = 0.8
+
+[node name="SpikeCylinder2" parent="Hazards" unique_id=1235761826 instance=ExtResource("3_spike")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 3.5, 0, 0)
+radius = 0.8
+
+[node name="SpikeCylinder3" parent="Hazards" unique_id=352876558 instance=ExtResource("3_spike")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -3.5, 0, 8)
+radius = 0.8

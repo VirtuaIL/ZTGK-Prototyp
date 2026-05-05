@@ -13,6 +13,9 @@
 [node name="Level3" type="Node3D" unique_id=1397753813]
 transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0, 0)
 
+[node name="PlayerSpawn" type="Marker3D" parent="." unique_id=124500001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -16)
+
 [node name="DungeonLights" type="Node3D" parent="." unique_id=458473651]
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights" unique_id=1672846641]
@@ -48,12 +51,18 @@ omni_range = 16.0
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_f8eeo")]
 transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, -20, 0, -0.14181803)
 
+[node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("2_f8eeo")]
+transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.000002, 0, -20.141817)
+
+[node name="wall7" parent="walls" unique_id=699681574 instance=ExtResource("2_f8eeo")]
+transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, 12.999998, 0, -20.14182)
+
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("2_f8eeo")]
 transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 20, 0, -0.009366949)
 
 [node name="doors" type="Node3D" parent="." unique_id=341833824]
 
-[node name="door" parent="doors" unique_id=1981168902 instance=ExtResource("4_cbbu3")]
+[node name="door" parent="doors" unique_id=1925018360 instance=ExtResource("4_cbbu3")]
 transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.98019236, 0, 19.952682)
 controlled_level_id = 3
 target_level_id = 4
