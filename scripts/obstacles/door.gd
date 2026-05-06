@@ -23,6 +23,13 @@ class_name door
 # If true, the door starts open and closes when triggered
 @export var is_inverse: bool = false
 
+# If true, the door is visually open as soon as the scene loads.
+@export var start_open: bool = false
+
+# If true, the door stays open until the player enters the level
+# matched by controlled_level_id.
+@export var open_until_level_enter: bool = false
+
 @export var debug_show_direction: bool = false:
 	set(value):
 		_debug_show_direction = value
@@ -52,7 +59,10 @@ func _ready() -> void:
 	# Use local basis to keep slide direction consistent with parent rotation.
 	_open_position = position + transform.basis.x * slide_distance
 	
-	if is_inverse:
+	if start_open:
+		position = _open_position
+		_is_open = true
+	elif is_inverse:
 		position = _open_position
 		_is_open = true
 	else:

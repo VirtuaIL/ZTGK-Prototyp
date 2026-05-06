@@ -1658,17 +1658,19 @@ func _update_level_doors() -> void:
 		var gate := node as door
 		if gate == null or gate.controlled_level_id <= 0:
 			continue
-			
-		var should_open = is_level_cleared(gate.controlled_level_id)
-		
-		# If the CURRENT level is not cleared, close doors that lead
-		# out of the current level (both forward and backward)
-		if not _current_level_cleared:
+
+		var should_open := is_level_cleared(gate.controlled_level_id)
+		if gate.open_until_level_enter:
+			if current_level_id < gate.controlled_level_id:
+				should_open = true
+			else:
+				should_open = is_level_cleared(gate.controlled_level_id)
+		elif not _current_level_cleared:
 			# Close current level doors and any door whose level_id >= current
 			# (prevents doors ahead from being open when entering a new level)
 			if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
 				should_open = false
-				
+
 		if should_open:
 			gate.open()
 		else:
