@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dwrwyp6bpxyym"]
+
+[ext_resource type="Texture2D" uid="uid://fmat8nj3p5sh" path="res://resources/models/external/fantast/2d/Textures/T_PROP_orevein_dungeon_BC.png" id="1_pguio"]
+
+[resource]
+albedo_texture = ExtResource("1_pguio")

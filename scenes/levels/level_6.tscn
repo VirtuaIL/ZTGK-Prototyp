@@ -6,8 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://ccyg167jj26e5" path="res://scenes/obstacles/cylinder_wall.tscn" id="2_y2agi"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_g44gb"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="4_kydov"]
+[ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="5_4wfvb"]
 [ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="5_7x7cx"]
-[ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="5_uwlxl"]
 [ext_resource type="PackedScene" uid="uid://b5oehjsdd0flc" path="res://resources/models/external/sm_prop_torch_standing_dungeon.tscn" id="6_4wfvb"]
 [ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="6_b6i88"]
 [ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="7_e18e5"]
@@ -74,8 +74,8 @@ mass = 0.2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.603062, 0.0025275508, 11.34546)
 mass = 0.2
 
-[node name="SM_PROP_barrel_dungeon_03" parent="props" unique_id=292756917 instance=ExtResource("5_uwlxl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.66282797, 0, -1.8482723)
+[node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=1430227353 instance=ExtResource("5_4wfvb")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0.52472085, 0, -3.6475363)
 
 [node name="DungeonLights" type="Node3D" parent="." unique_id=679642546]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8356256e-11, 0, 0.0011062622)

@@ -4,8 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_aackc"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="3_l6w81"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="4_dteol"]
+[ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="4_hgud6"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="5_uidtq"]
-[ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="6_yunbk"]
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="7_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://b5oehjsdd0flc" path="res://resources/models/external/sm_prop_torch_standing_dungeon.tscn" id="8_hgud6"]
 [ext_resource type="PackedScene" uid="uid://c13crs5g72jc1" path="res://resources/models/external/sm_prop_torch_wall_dungeon.tscn" id="9_egxwk"]
@@ -59,8 +59,14 @@ mass = 0.2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.9624815, 0.0025275508, 7.345458)
 mass = 0.2
 
-[node name="SM_PROP_barrel_dungeon_03" parent="props" unique_id=292756917 instance=ExtResource("6_yunbk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.6061587, 0, -16.80452)
+[node name="sm_prop_debris_stones_dunegon_04" parent="props" unique_id=1430227353 instance=ExtResource("4_hgud6")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 17.626621, 0, -16.76516)
+
+[node name="sm_prop_debris_stones_dunegon_05" parent="props" unique_id=782409362 instance=ExtResource("4_hgud6")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 8.0637045, 0, -10.946743)
+
+[node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=626453615 instance=ExtResource("4_hgud6")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.47528, 0, 15.352465)
 
 [node name="RatParams" type="Node3D" parent="." unique_id=414555779]
 

@@ -6,10 +6,10 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="2_f8eeo"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_f8eeo"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="4_cbbu3"]
+[ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="5_pwit0"]
 [ext_resource type="PackedScene" uid="uid://b5oehjsdd0flc" path="res://resources/models/external/sm_prop_torch_standing_dungeon.tscn" id="6_pwit0"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="7_1u7kg"]
 [ext_resource type="PackedScene" uid="uid://c13crs5g72jc1" path="res://resources/models/external/sm_prop_torch_wall_dungeon.tscn" id="7_kyuet"]
-[ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="8_l3eoi"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="9_gij81"]
 
 [node name="Level3" type="Node3D" unique_id=1397753813]
@@ -57,8 +57,8 @@ mass = 0.2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3774233, 0.0025275508, -3.594131)
 mass = 0.2
 
-[node name="stock_barrels_1" parent="props" unique_id=292756917 instance=ExtResource("8_l3eoi")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7055361, 0, 8.323356)
+[node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=1430227353 instance=ExtResource("5_pwit0")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.48488203, 0, 9.352862)
 
 [node name="DungeonLights" type="Node3D" parent="." unique_id=2079021912]
 
