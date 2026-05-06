@@ -1006,7 +1006,7 @@ func _capture_combat_offsets(mouse_world: Vector3) -> void:
 
 
 func _update_combat_attack_circle(delta: float) -> void:
-	var mouse_world := _mouse_to_world()
+	var mouse_world := _get_path_dash_mouse_world() if current_attack_mode == AttackMode.PATH_DASH else _mouse_to_world()
 	if mouse_world == Vector3.ZERO:
 		return
 
@@ -1409,6 +1409,55 @@ func _mouse_to_world() -> Vector3:
 	return Vector3.ZERO
 
 
+func _get_path_dash_mouse_world() -> Vector3:
+	var hit := _get_mouse_ground_hit()
+	if hit:
+		return hit.position + hit.normal * build_surface_offset
+
+	var player_ref: Node3D = get_tree().get_first_node_in_group("player") as Node3D
+	if player_ref:
+		var fallback := _get_mouse_pos_at_y(player_ref.global_position.y)
+		if fallback != Vector3.ZERO:
+			return fallback
+	return Vector3.ZERO
+
+
+func _get_path_dash_blocker_hit(from_pos: Vector3, to_pos: Vector3) -> Dictionary:
+	var world := get_world_3d()
+	if world == null:
+		return {}
+	var ss := world.direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(from_pos + Vector3.UP * 0.2, to_pos + Vector3.UP * 0.2)
+	query.collision_mask = 8 | 16 | (1 << 8) # Walls + barriers + RatStructures
+	query.exclude = []
+	return ss.intersect_ray(query)
+
+
+func _sanitize_path_dash_path(path: PackedVector3Array) -> PackedVector3Array:
+	var safe_path := PackedVector3Array()
+	if path.size() < 2:
+		return safe_path
+
+	safe_path.append(path[0])
+	for i in range(1, path.size()):
+		var from_pos: Vector3 = safe_path[safe_path.size() - 1]
+		var to_pos: Vector3 = path[i]
+		var hit := _get_path_dash_blocker_hit(from_pos, to_pos)
+		if not hit.is_empty():
+			var stop_pos: Vector3 = hit.position
+			var hit_normal: Vector3 = hit.normal
+			hit_normal.y = 0.0
+			if hit_normal.length_squared() > 0.000001:
+				stop_pos -= hit_normal.normalized() * 0.12
+			stop_pos.y = from_pos.y
+			if stop_pos.distance_squared_to(from_pos) > 0.01:
+				safe_path.append(stop_pos)
+			break
+		safe_path.append(to_pos)
+
+	return safe_path
+
+
 # ── Anchoring, formation, carrier ─────────────────────────────────────────────
 
 func _check_travel_anchoring() -> void:
@@ -1691,7 +1740,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			combat_rmb_down = mb.pressed
 			if combat_rmb_down:
-				var mouse_world := _mouse_to_world()
+				var mouse_world := _get_path_dash_mouse_world() if current_attack_mode == AttackMode.PATH_DASH else _mouse_to_world()
 				if mouse_world != Vector3.ZERO:
 					if current_attack_mode == AttackMode.PATH_DASH:
 						current_drawn_path.clear()
@@ -1888,6 +1937,10 @@ func _fire_wave_at_mouse(screen_pos: Vector2) -> void:
 func _trigger_path_dash() -> void:
 	if current_drawn_path.size() < 2:
 		return
+
+	var safe_path := _sanitize_path_dash_path(current_drawn_path)
+	if safe_path.size() < 2:
+		return
 		
 	var active := _get_active_follow_rats()
 	var count := active.size()
@@ -1906,7 +1959,7 @@ func _trigger_path_dash() -> void:
 		var rand_offset := randf_range(-0.15, 0.15)
 		
 		if rat.has_method("start_path_dash"):
-			rat.start_path_dash(current_drawn_path.duplicate(), base_offset + rand_offset)
+			rat.start_path_dash(safe_path.duplicate(), base_offset + rand_offset)
 
 
 func _get_path_dash_brush_t() -> float:
@@ -2327,10 +2380,7 @@ func _update_cursor_preview() -> void:
 	if combat_rmb_down and current_attack_mode == AttackMode.PATH_DASH:
 		return
 
-	# Use _mouse_to_world() for preview — it raycasts against ALL collision
-	# layers and falls back to player-Y plane, so it never desyncs like
-	# _get_mouse_ground_hit() (floor-only) + current_build_y did.
-	var raw_pos: Vector3 = _mouse_to_world()
+	var raw_pos: Vector3 = _get_path_dash_mouse_world() if current_attack_mode == AttackMode.PATH_DASH else _mouse_to_world()
 	if raw_pos == Vector3.ZERO:
 		immediate_mesh.clear_surfaces()
 		return

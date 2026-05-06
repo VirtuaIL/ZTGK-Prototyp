@@ -479,7 +479,7 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 		var probe_dir: Vector3 = dirs[i]
 		var probe_dist: float = maxf(0.05, ranges[i])
 		var query := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
-		query.collision_mask = 8 # Walls
+		query.collision_mask = 8 | (1 << 8) # Walls + RatStructures
 		query.exclude = [ self ]
 		var hit := ss.intersect_ray(query)
 		if hit.is_empty():
@@ -510,18 +510,21 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 	return steer
 
 
-func _update_stuck_recovery(delta: float) -> void:
+func _update_stuck_recovery(delta: float, target_position: Vector3 = _target_position) -> void:
 	if not stuck_recovery_enabled:
 		_stuck_time = 0.0
 		return
-	if _target_ready == false or state != State.FOLLOW:
+	if state != State.FOLLOW and state != State.PATH_DASH:
+		_stuck_time = 0.0
+		return
+	if state == State.FOLLOW and _target_ready == false:
 		_stuck_time = 0.0
 		return
 	if is_carrier or is_anchored or _recall_boost_timer > 0.0:
 		_stuck_time = 0.0
 		return
 
-	var to_target := _target_position - global_position
+	var to_target := target_position - global_position
 	to_target.y = 0.0
 	var target_dist_sq := to_target.length_squared()
 	if target_dist_sq < stuck_target_distance * stuck_target_distance:
@@ -629,6 +632,8 @@ func _process_path_dash(delta: float) -> void:
 	var lateral_dir := dir_forward.cross(Vector3.UP).normalized()
 	var target = p0 + lateral_dir * _dash_lateral_offset
 	target.y = global_position.y
+	_target_position = target
+	_target_ready = true
 	
 	var dist_sq = global_position.distance_squared_to(target)
 	if dist_sq < 0.64: # 0.8 * 0.8
@@ -638,7 +643,15 @@ func _process_path_dash(delta: float) -> void:
 			return
 			
 	var to_target = target - global_position
-	var dir := to_target.normalized()
+	to_target.y = 0.0
+	var dir := Vector3.ZERO
+	if to_target.length_squared() > 0.000001:
+		dir = to_target.normalized()
+
+	var steer := _compute_wall_avoidance(to_target) * delta
+	if steer.length_squared() > 0.000001:
+		dir = (dir + steer).normalized()
+
 	velocity.x = dir.x * dash_speed * _speed_mult
 	velocity.z = dir.z * dash_speed * _speed_mult
 	
@@ -649,6 +662,7 @@ func _process_path_dash(delta: float) -> void:
 	move_and_slide()
 	if velocity.x * velocity.x + velocity.z * velocity.z > 0.01:
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), lerp_speed * delta)
+	_update_stuck_recovery(delta, target)
 
 
 # Static cache for enemies to avoid multiple get_nodes_in_group calls per frame

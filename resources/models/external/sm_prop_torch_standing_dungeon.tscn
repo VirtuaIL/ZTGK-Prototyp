@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://b5oehjsdd0flc"]
+
+[ext_resource type="PackedScene" uid="uid://cf16lr3jqcnvs" path="res://resources/models/external/fantast/3d/props/SM_PROP_torch_standing_dungeon.fbx" id="1_3gri1"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_43ay5"]
+radius = 0.28320313
+
+[node name="SmPropTorchStandingDungeon" type="Node3D" unique_id=1658036043]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="SM_PROP_torch_standing_dungeon" parent="." unique_id=208867722 instance=ExtResource("1_3gri1")]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="SM_PROP_torch_standing_dungeon" unique_id=209576921]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_PROP_torch_standing_dungeon/StaticBody3D" unique_id=1734274684]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CylinderShape3D_43ay5")
