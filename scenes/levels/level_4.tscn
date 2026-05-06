@@ -137,7 +137,10 @@ transform = Transform3D(2.5, 0, 0, 0, 1, 0, 0, 0, 1.7, 0, 0, 0)
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
 [node name="wall2" parent="walls" unique_id=592629127 instance=ExtResource("2_w6h2s")]
-transform = Transform3D(19, 0, 0, 0, 1, 0, 0, 0, 1, 2.5277405, 0, 32.024)
+transform = Transform3D(9.5, 0, 0, 0, 1, 0, 0, 0, 1, 25.869991, 0, 32.023994)
+
+[node name="wall9" parent="walls" unique_id=1981168902 instance=ExtResource("2_w6h2s")]
+transform = Transform3D(9.5, 0, 0, 0, 1, 0, 0, 0, 1, -26.707417, 0, 32.024002)
 
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_w6h2s")]
 transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50, 0, 17.746632)
@@ -145,7 +148,7 @@ transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, -50
 [node name="wall5" parent="walls" unique_id=673475615 instance=ExtResource("2_w6h2s")]
 transform = Transform3D(-2.6226832e-07, 0, 1, 0, 1, 0, -6, 0, -4.371139e-08, 50, 0, -17.32035)
 
-[node name="wall3" parent="walls" unique_id=1981168902 instance=ExtResource("2_w6h2s")]
+[node name="wall3" parent="walls" unique_id=1053879200 instance=ExtResource("2_w6h2s")]
 transform = Transform3D(9.7, 0, 0, 0, 1, 0, 0, 0, 1, 26.100842, 0, -32.000004)
 
 [node name="wall6" parent="walls" unique_id=698658039 instance=ExtResource("2_w6h2s")]
@@ -244,7 +247,7 @@ visibility_range_end = 80.0
 mesh = SubResource("BoxMesh_rej77")
 
 [node name="door2" parent="doors" unique_id=559140944 instance=ExtResource("3_w6h2s")]
-transform = Transform3D(-4.8082526e-08, 0, 1, 0, 1, 0, -1.1, 0, -4.371139e-08, -32.598064, 0, -77.586235)
+transform = Transform3D(-4.8082526e-08, 0, 1, 0, 1, 0, -1.1, 0, -4.371139e-08, -32.59806, 0, -30.41601)
 controlled_level_id = 4
 target_level_id = 8
 debug_show_direction = true

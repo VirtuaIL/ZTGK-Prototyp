@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://d0eoeufegu0en"]
+
+[ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_7ctli"]
+[ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="2_ywrr1"]
+[ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_a8gu5"]
+[ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_02uar"]
+[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="5_ywrr1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anwe6"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rej77"]
+size = Vector3(9, 0.08, 0.08)
+
+[node name="LevelCorridor1" type="Node3D" unique_id=1397753813]
+script = ExtResource("1_7ctli")
+level_id = 2
+
+[node name="Floor" type="Node3D" parent="." unique_id=485588761]
+
+[node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("2_ywrr1")]
+transform = Transform3D(0.3, 0, 0, 0, 1, 0, 0, 0, 0.6, 0, 0, 8)
+
+[node name="Floor2" parent="Floor" unique_id=1032682772 instance=ExtResource("2_ywrr1")]
+transform = Transform3D(-1.7484556e-08, 0, 1, 0, 1, 0, -0.4, 0, -4.371139e-08, 0, 0, 26.720211)
+
+[node name="walls" type="Node3D" parent="." unique_id=1791057824]
+
+[node name="wall_right" parent="walls" unique_id=1981168902 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(-2.0544351e-07, 0, 1, 0, 1, 0, -4.7, 0, -4.371139e-08, 6, 0, 7.6789484)
+
+[node name="wall_right2" parent="walls" unique_id=2021171089 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(-2.0544351e-07, 0, 1, 0, 1, 0, -4.7, 0, -4.371139e-08, -6, 0, 7.6789484)
+
+[node name="wall_right3" parent="walls" unique_id=656267644 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(2.8, 0, 0, 0, 1, 0, 0, 0, 1, -12.679056, 0, 19.17303)
+
+[node name="wall_right5" parent="walls" unique_id=998911597 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(-1.2239188e-07, 0, 1, 0, 1, 0, -2.8, 0, -4.371139e-08, -19.401499, 0, 25.74598)
+
+[node name="wall_right6" parent="walls" unique_id=1706008572 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(-1.2239188e-07, 0, 1, 0, 1, 0, -2.8, 0, -4.371139e-08, 19.589886, 0, 25.74598)
+
+[node name="wall_right4" parent="walls" unique_id=1739966199 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(2.8, 0, 0, 0, 1, 0, 0, 0, 1, 12.767487, 0, 19.17303)
+
+[node name="wall_right7" parent="walls" unique_id=8886764 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(3.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.77485275, 0, 31.745571)
+
+[node name="wall_right8" parent="walls" unique_id=449667706 instance=ExtResource("3_a8gu5")]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 1, 17.793037, 0, 31.745571)
+
+[node name="Torches" type="Node3D" parent="." unique_id=204611522]
+
+[node name="TorchGlow1" type="OmniLight3D" parent="Torches" unique_id=204611523]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3.2, -2)
+light_color = Color(1, 0.68, 0.32, 1)
+light_energy = 2.0
+omni_range = 11.0
+
+[node name="TorchGlow2" type="OmniLight3D" parent="Torches" unique_id=204611524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.376606, 3.2, -2.0012386)
+light_color = Color(1, 0.58, 0.24, 1)
+light_energy = 1.8
+omni_range = 10.0
+
+[node name="TorchGlow3" type="OmniLight3D" parent="Torches" unique_id=204611525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3.2, 14)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 1.7
+omni_range = 10.0
+
+[node name="TorchGlow4" type="OmniLight3D" parent="Torches" unique_id=204611526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.2, 13)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 1.6
+omni_range = 11.0
+
+[node name="Hazards" type="Node3D" parent="." unique_id=345612700]
+
+[node name="SpikeCylinder1" parent="Hazards" unique_id=566211329 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -3.5, 0, 2.875471)
+radius = 0.8
+
+[node name="SpikeCylinder2" parent="Hazards" unique_id=1235761826 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 3.5, 0, 8.394886)
+radius = 0.8
+
+[node name="SpikeCylinder3" parent="Hazards" unique_id=352876558 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -3.5, 0, 17)
+radius = 0.8
+
+[node name="SpikeCylinder4" parent="Hazards" unique_id=1605817393 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 0.5, 0, 25.73968)
+radius = 0.8
+
+[node name="SpikeCylinder5" parent="Hazards" unique_id=931914302 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -11.5, 0, 25.73968)
+radius = 0.8
+
+[node name="SpikeCylinder6" parent="Hazards" unique_id=2113107085 instance=ExtResource("4_02uar")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 11.5, 0, 25.73968)
+radius = 0.8
+
+[node name="door" parent="." unique_id=697170393 instance=ExtResource("5_ywrr1")]
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 12.119942, 0, 31.750435)
+controlled_level_id = 5
+target_level_id = 5
+start_open = null
+open_until_level_enter = true
+debug_show_direction = true
+
+[node name="DebugDirection" type="MeshInstance3D" parent="door" unique_id=1806388821]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_anwe6")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_rej77")

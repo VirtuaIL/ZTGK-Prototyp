@@ -3,7 +3,6 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="1_dswqx"]
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="1_vvoq0"]
-[ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="3_dswqx"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_fi56y"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="4_6xwso"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_laj7o"]
@@ -116,20 +115,20 @@ transform = Transform3D(-4.8956753e-08, 0, 1, 0, 1, 0, -1.12, 0, -4.371139e-08, 
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("1_dswqx")]
 transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 40.114227, 0, -0.03748684)
 
-[node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("1_dswqx")]
+[node name="wall11" parent="walls" unique_id=1981168902 instance=ExtResource("1_dswqx")]
+transform = Transform3D(-1.7484555e-07, 0, 1, 0, 1, 0, -4, 0, -4.371139e-08, -39.586, 0, -10.037479)
+
+[node name="wall6" parent="walls" unique_id=498458253 instance=ExtResource("1_dswqx")]
 transform = Transform3D(-4.8956753e-08, 0, 1, 0, 1, 0, -1.12, 0, -4.371139e-08, -29, 0, 12)
 
 [node name="wall7" parent="walls" unique_id=744801338 instance=ExtResource("1_dswqx")]
 transform = Transform3D(-4.8956753e-08, 0, 1, 0, 1, 0, -1.12, 0, -4.371139e-08, -29, 0, -12)
 
 [node name="wall8" parent="walls" unique_id=1248697216 instance=ExtResource("1_dswqx")]
-transform = Transform3D(12, 0, 0, 0, 1, 0, 0, 0, 1, -10.918505, 0, 20.000002)
+transform = Transform3D(16.1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3911077, 0, 20)
 
 [node name="wall9" parent="walls" unique_id=2116112980 instance=ExtResource("1_dswqx")]
 transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.03181855, 0, -20.000002)
-
-[node name="wall10" parent="walls" unique_id=1893740575 instance=ExtResource("1_dswqx")]
-transform = Transform3D(3.2, 0, 0, 0, 1, 0, 0, 0, 1, 32.641968, 0, 19.999998)
 
 [node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
 
@@ -144,15 +143,6 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 12, 0, -12)
 
 [node name="SpikeCylinder4" parent="Spikes" unique_id=1418753542 instance=ExtResource("3_fi56y")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 32, 0, -12)
-
-[node name="doors" type="Node3D" parent="." unique_id=870990220]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.745697, 0, -1.988492e-06)
-
-[node name="door" parent="doors" unique_id=1184451191 instance=ExtResource("3_dswqx")]
-transform = Transform3D(1.15, 0, 0, 0, 1, 0, 0, 0, 1, -0.9888058, 0, 19.952682)
-controlled_level_id = 5
-target_level_id = 6
-transition_requires_open = true
 
 [node name="RatParams" type="Node3D" parent="." unique_id=760022215]
 
