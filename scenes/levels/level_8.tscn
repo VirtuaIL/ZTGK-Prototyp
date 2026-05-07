@@ -128,7 +128,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon6" parent="DungeonLights" unique_id=623804243 instance=ExtResource("4_vsqe1")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -43.894585, 0, -7.0986276)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -31.396091, 0, -7.0986285)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon6" unique_id=404656132]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
