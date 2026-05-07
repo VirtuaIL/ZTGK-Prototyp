@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://71bei4ytyyq6"]
+[gd_scene format=3 uid="uid://71bei4ytyyq6"]
 
 [ext_resource type="PackedScene" uid="uid://co1th66js8eow" path="res://resources/models/external/fantast/3d/props/SM_PROP_barrel_dungeon_01.fbx" id="1_o0xtl"]
 
@@ -6,13 +6,13 @@
 height = 1.2
 radius = 0.55
 
-[node name="SM_PROP_barrel_dungeon_01" type="RigidBody3D"]
+[node name="SM_PROP_barrel_dungeon_01" type="RigidBody3D" unique_id=855386167]
 mass = 5.0
 linear_damp = 0.5
 angular_damp = 0.5
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1135713140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("CylinderShape3D_barrel")
 
-[node name="MeshPivot" parent="." instance=ExtResource("1_o0xtl")]
+[node name="MeshPivot" parent="." unique_id=2143167273 instance=ExtResource("1_o0xtl")]

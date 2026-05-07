@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://gmo7vvn1s4mw"]
+
+[ext_resource type="Texture2D" uid="uid://blokskv8qh0oc" path="res://resources/models/external/fantast/2d/Textures/T_wood_planks_dungeon_03_BC.png" id="1_xsvxx"]
+
+[resource]
+albedo_texture = ExtResource("1_xsvxx")

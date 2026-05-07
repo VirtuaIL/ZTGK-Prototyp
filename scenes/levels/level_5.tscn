@@ -4,10 +4,12 @@
 [ext_resource type="Script" uid="uid://1g6oiyyjuqpl" path="res://scripts/systems/level_tag.gd" id="1_vmkp1"]
 [ext_resource type="PackedScene" uid="uid://bwslltmepeaoy" path="res://scenes/obstacles/floor.tscn" id="1_vvoq0"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="3_fi56y"]
+[ext_resource type="PackedScene" uid="uid://b5oehjsdd0flc" path="res://resources/models/external/sm_prop_torch_standing_dungeon.tscn" id="4_5ke18"]
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="4_6xwso"]
 [ext_resource type="PackedScene" path="res://scenes/systems/main_spawner.tscn" id="4_laj7o"]
-[ext_resource type="PackedScene" uid="uid://qhnkjc42ei6f" path="res://resources/models/external/sm_prop_barrel_dungeon_03.tscn" id="5_5ke18"]
+[ext_resource type="PackedScene" uid="uid://c13crs5g72jc1" path="res://resources/models/external/sm_prop_torch_wall_dungeon.tscn" id="5_j14br"]
 [ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="6_mxx4w"]
+[ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="7_5ke18"]
 [ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="7_vvoq0"]
 [ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="8_tqnj0"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="10_tqnj0"]
@@ -47,6 +49,80 @@ wild_rat_prob_normal = 0.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
+[node name="DungeonLights" type="Node3D" parent="." unique_id=1903178885]
+
+[node name="SmPropTorchStandingDungeon" parent="DungeonLights" unique_id=1658036043 instance=ExtResource("4_5ke18")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, 12)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon" unique_id=520906106]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchStandingDungeon2" parent="DungeonLights" unique_id=137811183 instance=ExtResource("4_5ke18")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -10.536237, 0, -10.850527)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon2" unique_id=972392380]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchStandingDungeon3" parent="DungeonLights" unique_id=1281685137 instance=ExtResource("4_5ke18")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 17.145693, 0, -5.0000005)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon3" unique_id=1984733163]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchStandingDungeon4" parent="DungeonLights" unique_id=1140625396 instance=ExtResource("4_5ke18")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 23.973219, 0, 10.999999)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon4" unique_id=1296016672]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon" parent="DungeonLights" unique_id=1858704794 instance=ExtResource("5_j14br")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 1.869925, -19.505447)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon" unique_id=13295952]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.36596298)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon2" parent="DungeonLights" unique_id=1962157272 instance=ExtResource("5_j14br")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.240286, 1.869925, -19.548101)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon2" unique_id=1960001579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon3" parent="DungeonLights" unique_id=1269989033 instance=ExtResource("5_j14br")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -18.999996, 1.869925, 19.496746)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon3" unique_id=1852665501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.09392357, 0.36128426, 0.21937513)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon4" parent="DungeonLights" unique_id=278656083 instance=ExtResource("5_j14br")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10.286922, 1.869925, 19.511772)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon4" unique_id=1225883729]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19526291, 0.36128426, 0.21937513)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
 [node name="props" type="Node3D" parent="." unique_id=99278924]
 
 [node name="SM_PROP_barrel_dungeon_05" parent="props" unique_id=670770588 instance=ExtResource("4_6xwso")]
@@ -73,34 +149,8 @@ mass = 0.2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.603062, 0.0025275508, 11.345459)
 mass = 0.2
 
-[node name="SM_PROP_barrel_dungeon_03" parent="props" unique_id=292756917 instance=ExtResource("5_5ke18")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.66282797, 0, -1.8482723)
-
-[node name="DungeonLights" type="Node3D" parent="." unique_id=217177231]
-
-[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights" unique_id=1203112610]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4, 14)
-light_color = Color(1, 0.66, 0.34, 1)
-light_energy = 10.0
-omni_range = 18.0
-
-[node name="TorchGlow4" type="OmniLight3D" parent="DungeonLights" unique_id=1935927434]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 4, -13)
-light_color = Color(1, 0.66, 0.34, 1)
-light_energy = 10.0
-omni_range = 18.0
-
-[node name="TorchGlow2" type="OmniLight3D" parent="DungeonLights" unique_id=1787936519]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.979021, 4, 13.999999)
-light_color = Color(1, 0.52, 0.22, 1)
-light_energy = 10.0
-omni_range = 16.0
-
-[node name="TorchGlow3" type="OmniLight3D" parent="DungeonLights" unique_id=428874508]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.332388, 4, -12.000001)
-light_color = Color(1, 0.52, 0.22, 1)
-light_energy = 10.0
-omni_range = 16.0
+[node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=1430227353 instance=ExtResource("7_5ke18")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.4752812, 0, 0.3524647)
 
 [node name="Floor" type="Node3D" parent="." unique_id=1237094415]
 

@@ -135,6 +135,10 @@ var _blob_wobble_speed: float = 6.5
 var _blob_wobble_amp: float = 0.08
 var _blob_wobble_rot: float = 0.25
 var _blob_wobble_bob: float = 0.03
+var _pickup_marker_light: OmniLight3D = null
+var _pickup_marker_mesh: MeshInstance3D = null
+var _pickup_marker_pulse: float = 0.0
+var _pickup_marker_visible: bool = false
 
 # Throttling rekrutacji i cache managera gazu
 var _recruit_timer: float = 0.0
@@ -195,6 +199,7 @@ func _ready() -> void:
 	_blob_mesh.visible = false
 	add_child(_blob_mesh)
 	_cache_visual_meshes()
+	_setup_pickup_marker()
 	default_rat_type = rat_type
 	_current_buff_material = null
 	set_rat_type(int(rat_type))
@@ -213,6 +218,7 @@ func _process(delta: float) -> void:
 	
 	if _is_showing_blob:
 		_update_blob_visuals(delta)
+	_update_pickup_marker(delta)
 	
 	if _wild_timer > 0.0 and is_wild:
 		_wild_timer -= delta
@@ -479,7 +485,7 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 		var probe_dir: Vector3 = dirs[i]
 		var probe_dist: float = maxf(0.05, ranges[i])
 		var query := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
-		query.collision_mask = 8 # Walls
+		query.collision_mask = 8 | (1 << 8) # Walls + RatStructures
 		query.exclude = [ self ]
 		var hit := ss.intersect_ray(query)
 		if hit.is_empty():
@@ -510,18 +516,21 @@ func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
 	return steer
 
 
-func _update_stuck_recovery(delta: float) -> void:
+func _update_stuck_recovery(delta: float, target_position: Vector3 = _target_position) -> void:
 	if not stuck_recovery_enabled:
 		_stuck_time = 0.0
 		return
-	if _target_ready == false or state != State.FOLLOW:
+	if state != State.FOLLOW and state != State.PATH_DASH:
+		_stuck_time = 0.0
+		return
+	if state == State.FOLLOW and _target_ready == false:
 		_stuck_time = 0.0
 		return
 	if is_carrier or is_anchored or _recall_boost_timer > 0.0:
 		_stuck_time = 0.0
 		return
 
-	var to_target := _target_position - global_position
+	var to_target := target_position - global_position
 	to_target.y = 0.0
 	var target_dist_sq := to_target.length_squared()
 	if target_dist_sq < stuck_target_distance * stuck_target_distance:
@@ -629,6 +638,8 @@ func _process_path_dash(delta: float) -> void:
 	var lateral_dir := dir_forward.cross(Vector3.UP).normalized()
 	var target = p0 + lateral_dir * _dash_lateral_offset
 	target.y = global_position.y
+	_target_position = target
+	_target_ready = true
 	
 	var dist_sq = global_position.distance_squared_to(target)
 	if dist_sq < 0.64: # 0.8 * 0.8
@@ -638,7 +649,15 @@ func _process_path_dash(delta: float) -> void:
 			return
 			
 	var to_target = target - global_position
-	var dir := to_target.normalized()
+	to_target.y = 0.0
+	var dir := Vector3.ZERO
+	if to_target.length_squared() > 0.000001:
+		dir = to_target.normalized()
+
+	var steer := _compute_wall_avoidance(to_target) * delta
+	if steer.length_squared() > 0.000001:
+		dir = (dir + steer).normalized()
+
 	velocity.x = dir.x * dash_speed * _speed_mult
 	velocity.z = dir.z * dash_speed * _speed_mult
 	
@@ -649,6 +668,7 @@ func _process_path_dash(delta: float) -> void:
 	move_and_slide()
 	if velocity.x * velocity.x + velocity.z * velocity.z > 0.01:
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), lerp_speed * delta)
+	_update_stuck_recovery(delta, target)
 
 
 # Static cache for enemies to avoid multiple get_nodes_in_group calls per frame
@@ -1030,7 +1050,10 @@ func _make_type_material(r_type: RatType, wild_variant: bool = false) -> Materia
 		_:
 			if wild_variant:
 				var normal_wild := StandardMaterial3D.new()
-				normal_wild.albedo_color = Color.BLACK
+				normal_wild.albedo_color = Color(0.95, 0.8, 0.2)
+				normal_wild.emission_enabled = true
+				normal_wild.emission = Color(1.0, 0.9, 0.35)
+				normal_wild.emission_energy_multiplier = 1.4
 				return normal_wild
 			return null
 
@@ -1060,6 +1083,7 @@ func set_wild(wild: bool) -> void:
 		if is_in_group("wild_rats"):
 			remove_from_group("wild_rats")
 		state = State.FOLLOW
+		_set_pickup_marker_visible(false)
 		_base_material = _get_shared_material(default_rat_type, false)
 		if _current_buff_material != _base_material:
 			_current_buff_material = _base_material
@@ -1112,6 +1136,61 @@ func _reset_blob_visuals() -> void:
 		if _visual_base_transforms.has(m):
 			m.transform = _visual_base_transforms[m]
 
+
+func _setup_pickup_marker() -> void:
+	_pickup_marker_light = OmniLight3D.new()
+	_pickup_marker_light.name = "PickupMarkerLight"
+	_pickup_marker_light.light_color = Color(1.0, 0.95, 0.6)
+	_pickup_marker_light.light_energy = 2.2
+	_pickup_marker_light.omni_range = 6.5
+	_pickup_marker_light.shadow_enabled = false
+	_pickup_marker_light.visible = false
+	_pickup_marker_light.position = Vector3(0.0, 0.95, 0.0)
+	add_child(_pickup_marker_light)
+
+	_pickup_marker_mesh = MeshInstance3D.new()
+	_pickup_marker_mesh.name = "PickupMarkerHalo"
+	var halo := SphereMesh.new()
+	halo.radius = 0.11
+	halo.height = 0.22
+	_pickup_marker_mesh.mesh = halo
+	var halo_mat := StandardMaterial3D.new()
+	halo_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	halo_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	halo_mat.albedo_color = Color(1.0, 0.97, 0.65, 0.95)
+	halo_mat.emission_enabled = true
+	halo_mat.emission = Color(1.0, 0.96, 0.55)
+	halo_mat.emission_energy_multiplier = 3.5
+	halo_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	halo_mat.no_depth_test = true
+	_pickup_marker_mesh.material_override = halo_mat
+	_pickup_marker_mesh.visible = false
+	_pickup_marker_mesh.position = Vector3(0.0, 1.05, 0.0)
+	add_child(_pickup_marker_mesh)
+
+
+func _set_pickup_marker_visible(visible: bool) -> void:
+	_pickup_marker_visible = visible
+	if _pickup_marker_light:
+		_pickup_marker_light.visible = visible
+	if _pickup_marker_mesh:
+		_pickup_marker_mesh.visible = visible
+
+
+func _update_pickup_marker(delta: float) -> void:
+	if not is_wild or is_fallen:
+		_set_pickup_marker_visible(false)
+		return
+	if not _pickup_marker_light or not _pickup_marker_mesh:
+		return
+	_pickup_marker_pulse += delta * 4.0
+	var pulse := 0.5 + 0.5 * sin(_pickup_marker_pulse)
+	_pickup_marker_light.light_energy = 1.3 + pulse * 1.6
+	_pickup_marker_mesh.scale = Vector3.ONE * (1.0 + pulse * 0.28)
+	if _pickup_marker_visible:
+		_pickup_marker_light.visible = true
+		_pickup_marker_mesh.visible = true
+
 func _process_wild_physics(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= ProjectSettings.get_setting("physics/3d/default_gravity") * delta * 50
@@ -1136,6 +1215,7 @@ func _process_wild_physics(delta: float) -> void:
 		mgr = get_tree().get_first_node_in_group("rat_manager")
 	
 	if mgr == null or mgr.get("combat_rmb_down") == true:
+		_set_pickup_marker_visible(false)
 		return
 		
 	var dist_sq = _flat_distance_squared(global_position, player.global_position)
@@ -1158,7 +1238,8 @@ func _process_wild_physics(delta: float) -> void:
 				if _flat_distance_squared(global_position, r.global_position) <= chain_range_sq:
 					can_recruit = true
 					break
-					
+	
+	_set_pickup_marker_visible(can_recruit)
 	if can_recruit:
 		add_collision_exception_with(player)
 		player.add_collision_exception_with(self )

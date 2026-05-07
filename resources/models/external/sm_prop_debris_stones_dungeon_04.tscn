@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://b0cd2i3hlpwqm"]
+
+[ext_resource type="PackedScene" uid="uid://bittfguh86h38" path="res://resources/models/external/fantast/3d/props/SM_PROP_debris_stones_dungeon_04.fbx" id="1_jtups"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_jtups"]
+height = 0.93566895
+radius = 1.0786133
+
+[node name="sm_prop_debris_stones_dunegon_04" type="Node3D" unique_id=1430227353]
+
+[node name="SM_PROP_debris_stones_dungeon_04" parent="." unique_id=1338373144 instance=ExtResource("1_jtups")]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="SM_PROP_debris_stones_dungeon_04" unique_id=362055859]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_PROP_debris_stones_dungeon_04/StaticBody3D" unique_id=542371247]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46783447, 0)
+shape = SubResource("CylinderShape3D_jtups")

@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://c13crs5g72jc1"]
+
+[ext_resource type="PackedScene" uid="uid://dkhacxv0qtys4" path="res://resources/models/external/fantast/3d/props/SM_PROP_torch_wall_dungeon.fbx" id="1_brjpx"]
+
+[node name="SmPropTorchWallDungeon" type="Node3D" unique_id=1658036043]
+
+[node name="SM_PROP_torch_wall_dungeon" parent="." unique_id=448452044 instance=ExtResource("1_brjpx")]
