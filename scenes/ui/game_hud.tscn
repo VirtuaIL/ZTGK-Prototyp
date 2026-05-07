@@ -316,4 +316,31 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+
+[node name="CheeseCounter" type="HBoxContainer" parent="HUDRoot" unique_id=1718096589]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -67.0
+grow_horizontal = 0
+grow_vertical = 0
+alignment = 2
+
+[node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounter" unique_id=182642318]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HUDRoot/CheeseCounter" unique_id=937839977]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 48
+text = "0"

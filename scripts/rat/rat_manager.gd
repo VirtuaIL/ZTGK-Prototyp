@@ -61,6 +61,7 @@ var buff_mat_red: StandardMaterial3D
 var buff_mat_green: StandardMaterial3D
 var buff_mat_yellow: StandardMaterial3D
 var buff_mat_purple: StandardMaterial3D
+var collected_cheese: int = 0
 
 func get_current_buff_material():
 	if buff_red_timer > 0.0: return buff_mat_red
@@ -71,6 +72,7 @@ func get_current_buff_material():
 
 var _cheese_msg_timer: float = 0.0
 var _cheese_buff_label: Label = null
+var _cheese_counter_label: Label = null
 
 func _show_cheese_msg(msg: String, color: Color) -> void:
 	if _cheese_buff_label:
@@ -80,19 +82,18 @@ func _show_cheese_msg(msg: String, color: Color) -> void:
 		_cheese_msg_timer = 3.0
 
 func apply_cheese_buff(type: int) -> void:
-	match type:
-		0: 
-			buff_red_timer = 5.0
-			_show_cheese_msg("Agresywne szczury!", Color(0.9, 0.1, 0.1))
-		1: 
-			buff_green_timer = 5.0
-			_show_cheese_msg("Śmierdzące szczury!", Color(0.1, 0.9, 0.1))
-		2: 
-			buff_yellow_timer = 5.0
-			_show_cheese_msg("Nieśmiertelne szczury!", Color(0.9, 0.9, 0.1))
-		3: 
-			buff_purple_timer = 5.0
-			_show_cheese_msg("Dezorientacja szczurów!", Color(0.6, 0.1, 0.9))
+	if type == 2: # YELLOW
+		collected_cheese += 1
+		if _cheese_counter_label == null:
+			_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
+			var icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
+			if icon and icon is TextureRect and not icon.texture:
+				icon.texture = _create_cheese_icon()
+		if _cheese_counter_label:
+			_cheese_counter_label.text = str(collected_cheese)
+	elif type == 3: # PURPLE
+		buff_purple_timer = 5.0
+		_show_cheese_msg("Dezorientacja szczurów!", Color(0.1, 0.1, 0.1))
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -299,7 +300,7 @@ func _ready() -> void:
 	buff_mat_yellow = StandardMaterial3D.new()
 	buff_mat_yellow.albedo_color = Color(0.9, 0.9, 0.1)
 	buff_mat_purple = StandardMaterial3D.new()
-	buff_mat_purple.albedo_color = Color(0.6, 0.1, 0.9)
+	buff_mat_purple.albedo_color = Color(0.1, 0.1, 0.1)
 
 	electric_mm_instance = MultiMeshInstance3D.new()
 	var mm = MultiMesh.new()
@@ -369,6 +370,13 @@ func _ready() -> void:
 	control.add_child(_cheese_buff_label)
 	
 	add_child(_pity_canvas)
+	
+	# Szukamy UI w GameHUD (lub poczekamy na update() / ready głównej sceny)
+	# Na wszelki wypadek przypisanie odbywa się też w process/update jeżeli nie znaleziono
+	_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
+	var cheese_icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
+	if cheese_icon and cheese_icon is TextureRect:
+		cheese_icon.texture = _create_cheese_icon()
 
 	# ── Sound Wave ──
 	if SoundWaveScene:
@@ -413,6 +421,13 @@ func _on_player_died() -> void:
 		if is_instance_valid(r) and r.has_method("die"):
 			r.die()
 	rats.clear()
+	
+	collected_cheese = 0
+	if _cheese_counter_label == null:
+		_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
+	if _cheese_counter_label:
+		_cheese_counter_label.text = "0"
+		
 	_spawn_rats_near_player(respawn_count)
 
 
@@ -617,6 +632,30 @@ func _get_fallen_rats() -> Array[Rat]:
 
 func _check_empty_respawn() -> void:
 	pass
+
+func _create_cheese_icon() -> ImageTexture:
+	var img = Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	var c0 = Color(0, 0, 0, 0)
+	var c_outline = Color(0, 0, 0, 1)
+	var c_fill = Color(0.9, 0.9, 0.1, 1)
+	img.fill(c0)
+	var pixels = [
+		0,0,0,0,0,0,0,0,
+		0,0,0,2,2,0,0,0,
+		0,0,2,1,1,2,0,0,
+		0,2,1,1,1,1,2,0,
+		2,1,1,1,0,1,1,2,
+		2,1,0,1,1,1,1,2,
+		0,2,2,2,2,2,2,0,
+		0,0,0,0,0,0,0,0
+	]
+	for i in range(64):
+		var p = pixels[i]
+		if p == 1:
+			img.set_pixel(i%8, i/8, c_fill)
+		elif p == 2:
+			img.set_pixel(i%8, i/8, c_outline)
+	return ImageTexture.create_from_image(img)
 
 
 func _restore_to_min_near_player() -> void:

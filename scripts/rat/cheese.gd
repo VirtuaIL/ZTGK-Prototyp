@@ -104,7 +104,7 @@ func _update_visuals() -> void:
 			mat.albedo_color = Color(0.9, 0.9, 0.1) # Immortality
 			particles.emitting = false
 		Type.PURPLE:
-			mat.albedo_color = Color(0.6, 0.1, 0.9) # Loss of control, no aggro
+			mat.albedo_color = Color(0.1, 0.1, 0.1) # Black poison
 			particles.emitting = true
 
 	# Trutka (PURPLE) ma model kuli, reszta zostaje z pryzma

@@ -422,60 +422,6 @@ wild_rat_prob_normal = 100.0
 wild_rat_prob_red = 0.0
 wild_rat_prob_green = 0.0
 
-[node name="RedRatParams" parent="RatParams" unique_id=1086014474 instance=ExtResource("4_ki8mi")]
-label = "Level1 Wild Rats"
-level_id = 8
-start_delay = 15.0
-repeat = true
-repeat_interval = 15.0
-reset_on_level_enter = false
-count_min = 5
-count_max = 5
-spawn_radius = 1.8
-repeat_only_when_spawn_points_free = true
-position_mode = 2
-rat_spawn_tag = &"red"
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 100.0
-wild_rat_prob_green = 0.0
-
-[node name="GreenRatParams" parent="RatParams" unique_id=386486111 instance=ExtResource("4_ki8mi")]
-label = "Level1 Wild Rats"
-level_id = 8
-start_delay = 15.0
-repeat = true
-repeat_interval = 15.0
-max_triggers = 2
-reset_on_level_enter = false
-count_min = 3
-count_max = 3
-spawn_radius = 1.8
-repeat_only_when_spawn_points_free = true
-position_mode = 2
-rat_spawn_tag = &"green"
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 100.0
-
-[node name="BlueRatParams" parent="RatParams" unique_id=27530434 instance=ExtResource("4_ki8mi")]
-label = "Level1 Wild Rats"
-level_id = 8
-start_delay = 5.0
-repeat = true
-repeat_interval = 16.0
-max_triggers = 2
-reset_on_level_enter = false
-count_min = 5
-count_max = 5
-spawn_radius = 1.8
-repeat_only_when_spawn_points_free = true
-position_mode = 2
-rat_spawn_tag = &"electric"
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-wild_rat_prob_electric = 100.0
-
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1715066317]
 
 [node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=113238676 groups=["rat_spawn"]]

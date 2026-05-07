@@ -673,7 +673,10 @@ func _die() -> void:
 					sin(throw_angle) * throw_dist
 				)
 				if c.has_method("set_type"):
-					c.set_type(randi() % 4)
+					var drop_type = 2 # YELLOW
+					if randf() < 0.2:
+						drop_type = 3 # PURPLE
+					c.set_type(drop_type)
 	)
 
 	# Stay dead — no auto-respawn. F2 toggle revives all enemies.
@@ -956,7 +959,7 @@ func _create_hp_label() -> void:
 func _update_hp_bar() -> void:
 	var ratio: float = health / max_health
 	hp_bar_fill.scale.x = ratio
-	hp_bar_fill.position.x = - (1.0 - ratio) * 0.5
+	hp_bar_fill.position.x = - (1.0 - ratio) * 0.9
 
 	if ratio > 0.5:
 		hp_bar_fill_mat.albedo_color = Color(0.2, 0.9, 0.3)
