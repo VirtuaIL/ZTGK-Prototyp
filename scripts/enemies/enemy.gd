@@ -39,7 +39,7 @@ var health: float = max_health
 @export var detection_range: float = 32.0
 @export var lose_range: float = 40.0
 @export var attack_range: float = 3.0
-@export var attack_damage: float = 15.0
+@export var attack_damage: float = 25.0
 @export var attack_cooldown: float = 1.0
 @export var min_attack_charge_time: float = 0.85
 @export var attack_charge_color: Color = Color(1.0, 1.0, 1.0, 0.45)
@@ -96,6 +96,10 @@ var hp_bar_bg: MeshInstance3D
 var hp_bar_fill: MeshInstance3D
 var hp_bar_fill_mat: StandardMaterial3D
 var hp_label: Label3D
+
+var _accumulated_damage: Dictionary = {}
+var _damage_text_timer: float = 0.0
+@export var damage_text_interval: float = 0.25
 
 var is_stuck_in_blob: bool = false
 var blob_center: Vector3 = Vector3.ZERO
@@ -179,6 +183,12 @@ func _physics_process(delta: float) -> void:
 			to_remove.append(key)
 	for key in to_remove:
 		damage_cooldowns.erase(key)
+		
+	# ── Flush damage texts ──
+	_damage_text_timer -= delta
+	if _damage_text_timer <= 0.0:
+		_flush_damage_texts()
+		_damage_text_timer = damage_text_interval
 
 	# ── AI state machine ──
 	if movement_jitter_interval > 0.0:
@@ -316,6 +326,16 @@ func _compose_move_dir(base_dir: Vector3, target_dist: float, delta: float) -> V
 
 	if wall_avoidance_enabled:
 		dir = _apply_wall_avoidance(dir)
+		
+	var separation := Vector3.ZERO
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy != self and is_instance_valid(enemy):
+			var d = global_position.distance_to(enemy.global_position)
+			if d > 0.001 and d < 1.5:
+				separation += (global_position - enemy.global_position).normalized() * (1.5 - d) / 1.5
+	if separation.length_squared() > 0:
+		dir = (dir + separation * 0.8).normalized()
 
 	if unstuck_enabled:
 		_update_unstuck(dir, delta)
@@ -429,16 +449,14 @@ func _process_attack(delta: float) -> void:
 			return
 		_pick_and_start_attack()
 	else:
-		# Back away from target while waiting for cooldown
+		# Face target but stand still while waiting for cooldown
 		var to_player := _player_ref.global_position - global_position
 		to_player.y = 0.0
 		if to_player.length() > 0.01:
 			var target_angle := atan2(to_player.x, to_player.z)
 			rotation.y = lerp_angle(rotation.y, target_angle, rotation_speed * delta)
-			# Retreat slowly
-			var away_dir := -to_player.normalized()
-			velocity.x = away_dir.x * 1.5
-			velocity.z = away_dir.z * 1.5
+			velocity.x = 0.0
+			velocity.z = 0.0
 
 func _pick_and_start_attack() -> void:
 	var mgr = get_tree().get_first_node_in_group("rat_manager")
@@ -598,13 +616,12 @@ func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.
 	_flash_hit()
 	_spawn_blood_burst(hit_pos)
 
-	if DamageTextScene:
-		var dt = DamageTextScene.instantiate()
-		get_parent().add_child(dt)
-		dt.global_position = global_position + Vector3(0, 1.5, 0)
-		if hit_pos != Vector3.ZERO:
-			dt.global_position = hit_pos + Vector3(0, 0.5, 0)
-		dt.set_damage(int(ceil(amount)), text_color)
+	var color_key := text_color.to_html(false)
+	if not _accumulated_damage.has(color_key):
+		# Default spawn position above the enemy's HP bar
+		_accumulated_damage[color_key] = { "amount": 0.0, "pos": global_position + Vector3(0, 2.8, 0), "color": text_color }
+	
+	_accumulated_damage[color_key]["amount"] += amount
 
 	if hit_pos != Vector3.ZERO:
 		var dir := (global_position - hit_pos)
@@ -628,6 +645,7 @@ func _die() -> void:
 	if _is_dead:
 		return
 	_is_dead = true
+	_flush_damage_texts()
 	set_physics_process(false)
 	ai_state = AIState.DEAD
 	damage_cooldowns.clear()
@@ -659,6 +677,24 @@ func _die() -> void:
 	)
 
 	# Stay dead — no auto-respawn. F2 toggle revives all enemies.
+
+
+func _flush_damage_texts() -> void:
+	if DamageTextScene == null or _accumulated_damage.is_empty():
+		return
+		
+	for color_key in _accumulated_damage:
+		var data = _accumulated_damage[color_key]
+		var amount = data["amount"]
+		if amount <= 0.0:
+			continue
+			
+		var dt = DamageTextScene.instantiate()
+		get_parent().add_child(dt)
+		dt.global_position = data["pos"]
+		dt.set_damage(int(ceil(amount)), data["color"])
+		
+	_accumulated_damage.clear()
 
 
 func _respawn() -> void:
@@ -870,8 +906,8 @@ func _spawn_blood_burst(hit_pos: Vector3) -> void:
 #  HP BAR (unchanged from original)
 # ═══════════════════════════════════════════════
 func _create_hp_bar() -> void:
-	var bar_width: float = 1.0
-	var bar_height: float = 0.08
+	var bar_width: float = 1.8
+	var bar_height: float = 0.15
 
 	hp_bar_bg = MeshInstance3D.new()
 	hp_bar_bg.layers = 2
@@ -909,10 +945,10 @@ func _create_hp_bar() -> void:
 func _create_hp_label() -> void:
 	hp_label = Label3D.new()
 	hp_label.text = str(int(health))
-	hp_label.position.y = 2.4
+	hp_label.position.y = 2.45
 	hp_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	hp_label.pixel_size = 0.01
-	hp_label.outline_size = 6
+	hp_label.pixel_size = 0.015
+	hp_label.outline_size = 8
 	hp_label.outline_modulate = Color(0, 0, 0, 0.9)
 	add_child(hp_label)
 

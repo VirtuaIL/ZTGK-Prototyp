@@ -9,6 +9,7 @@ func set_damage(amount: int, color: Color) -> void:
 	if label:
 		label.text = str(amount)
 		label.modulate = color
+		scale = Vector3(2.5, 2.5, 2.5)
 		
 		# add slight random horizontal velocity
 		_velocity.x = randf_range(-1.0, 1.0)

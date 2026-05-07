@@ -781,6 +781,8 @@ func _process(delta: float) -> void:
 		_current_level_cleared = level_cleared
 		_update_level_doors()
 		if _current_level_cleared and not was_cleared:
+			if player and player.has_method("heal_full"):
+				player.heal_full()
 			if current_level_id in levels_with_upgrades:
 				_upgrade_delay_timer = upgrade_delay_seconds
 				_upgrade_pending = true

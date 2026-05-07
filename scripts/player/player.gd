@@ -51,12 +51,6 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# HP Regeneration
-	time_since_last_damage += delta
-	if time_since_last_damage >= regen_delay and current_hp < max_hp:
-		current_hp = min(current_hp + hp_regen_rate * delta, max_hp)
-		_update_health_bar()
-
 
 		
 	# Update Damage Vignette Overlay
@@ -92,6 +86,10 @@ func _physics_process(delta: float) -> void:
 
 	
 
+
+func heal_full() -> void:
+	current_hp = max_hp
+	_update_health_bar()
 
 func take_damage(amount: float) -> void:
 	current_hp -= amount

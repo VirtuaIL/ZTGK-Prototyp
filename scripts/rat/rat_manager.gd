@@ -602,7 +602,6 @@ func add_rats_to_horde(rat_type: int, amount: int) -> void:
 		register_rat(rat)
 		
 	build_blob_offsets()
-	save_rat_composition()
 
 
 
@@ -2014,9 +2013,13 @@ func _draw_path_dash_brush_marker(center: Vector3, lateral: Vector3) -> void:
 	var half_width := maxf(0.25, float(max(1, lane_count - 1)) * brush_lane_spacing * 0.5)
 	var offset := Vector3(0, 0.1, 0)
 
-	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	immediate_mesh.surface_add_vertex(center - lateral * half_width + offset)
-	immediate_mesh.surface_add_vertex(center + lateral * half_width + offset)
+	var segments := 32
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+	for i in range(segments + 1):
+		var t := float(i) / float(segments) * TAU
+		var x := cos(t) * half_width
+		var z := sin(t) * half_width
+		immediate_mesh.surface_add_vertex(center + Vector3(x, 0, z) + offset)
 	immediate_mesh.surface_end()
 
 func receive_laser(delta: float) -> void:
@@ -2421,9 +2424,13 @@ func _update_cursor_preview() -> void:
 			line_material.albedo_color = _brush_color(Color.WHITE)
 		
 		var offset := Vector3(0, 0.1, 0)
-		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-		immediate_mesh.surface_add_vertex(raw_pos - lateral * (width / 2.0) + offset)
-		immediate_mesh.surface_add_vertex(raw_pos + lateral * (width / 2.0) + offset)
+		var segments := 32
+		immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+		for i in range(segments + 1):
+			var t := float(i) / float(segments) * TAU
+			var x := cos(t) * (width / 2.0)
+			var z := sin(t) * (width / 2.0)
+			immediate_mesh.surface_add_vertex(raw_pos + Vector3(x, 0, z) + offset)
 		immediate_mesh.surface_end()
 
 
