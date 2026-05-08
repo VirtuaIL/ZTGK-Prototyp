@@ -4,11 +4,11 @@
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
 [ext_resource type="PackedScene" uid="uid://dig2eo6sxf2at" path="res://resources/models/bard/character_v2_2/character_v2_2.fbx" id="4_dqkch"]
-[ext_resource type="PackedScene" uid="uid://cmwln5kke4iir" path="res://resources/models/bard/character_v3/character_v1_1.fbx" id="5_qlg0r"]
+[ext_resource type="PackedScene" uid="uid://0ccf341bl45w" path="res://resources/models/bard/character_v4/character.glb" id="5_qlg0r"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.9345703
-height = 2.9261475
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_qlg0r"]
+height = 2.1574707
+radius = 0.9707031
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
@@ -45,8 +45,8 @@ shadow_size = 6
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1970706798]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8863647, 0)
-shape = SubResource("CapsuleShape3D_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0860412, 0)
+shape = SubResource("CylinderShape3D_qlg0r")
 
 [node name="PlayerHUD" type="CanvasLayer" parent="." unique_id=1756583863]
 visible = false
@@ -153,5 +153,7 @@ mouse_filter = 2
 script = ExtResource("3_minimap_overlay")
 
 [node name="character_1" parent="." unique_id=205091434 instance=ExtResource("4_dqkch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11979076, 0)
 
-[node name="character_2" parent="." unique_id=1173053234 instance=ExtResource("5_qlg0r")]
+[node name="character_2" parent="." unique_id=671166532 instance=ExtResource("5_qlg0r")]
+visible = false

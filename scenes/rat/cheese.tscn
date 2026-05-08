@@ -10,6 +10,7 @@ size = Vector3(0.6, 0.4, 0.6)
 
 [node name="Cheese" type="Area3D"]
 script = ExtResource("1_cheese")
+type = 0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_ch")

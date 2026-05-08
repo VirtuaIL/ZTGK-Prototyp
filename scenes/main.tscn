@@ -55,7 +55,7 @@ size = Vector3(1.854248, 1, 1)
 size = Vector3(1, 1, 2.2684937)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jscy8"]
-size = Vector3(2.246643, 1, 1)
+size = Vector3(1.3685455, 1, 1)
 
 [node name="Main" type="Node3D" unique_id=709470400]
 script = ExtResource("1_script")
@@ -175,6 +175,16 @@ level_id = 8
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/check_8" unique_id=1068755813]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15316772, 0, 0)
+shape = SubResource("BoxShape3D_jscy8")
+
+[node name="check_9" type="Area3D" parent="checkpoints" unique_id=1666654653]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0.34515762, 1.855777, -270.54938)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 9
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/check_9" unique_id=522755719]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18618011, 0, 0)
 shape = SubResource("BoxShape3D_jscy8")
 
 [node name="levels" type="Node3D" parent="." unique_id=1117700867]

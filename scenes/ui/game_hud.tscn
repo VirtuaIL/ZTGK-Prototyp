@@ -4,6 +4,7 @@
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
 [ext_resource type="Texture2D" uid="uid://dxx64ltafxyln" path="res://resources/assets/cheese.png" id="4_8n052"]
+[ext_resource type="Texture2D" uid="uid://dp3e2njwtdxgf" path="res://resources/assets/key.png" id="5_acb04"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
@@ -47,6 +48,22 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="GoalLabel" type="Label" parent="HUDRoot" unique_id=1987123456]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 402.0
+offset_top = 26.0
+offset_right = -313.0
+offset_bottom = 60.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 18
+text = "Cel prototypu: Wydostań się z labiryntu, pokonując kolejne poziomy zbierając klucze potrzebne do ucieczki z lochu"
+horizontal_alignment = 1
+
 [node name="PlayerHUD" type="Control" parent="HUDRoot" unique_id=1004472351]
 anchors_preset = 0
 anchor_right = 1.0
@@ -62,13 +79,16 @@ mouse_filter = 2
 
 [node name="HealthBar" type="Panel" parent="HUDRoot/PlayerHUD" unique_id=156489337]
 layout_mode = 1
-offset_right = 531.0
-offset_bottom = 100.0
+offset_left = 719.0
+offset_top = 1002.0
+offset_right = 1280.0
+offset_bottom = 1070.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_HealthPanel")
 
 [node name="Margin" type="MarginContainer" parent="HUDRoot/PlayerHUD/HealthBar" unique_id=8701878]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -149,24 +169,25 @@ text = "FPS: 0"
 [node name="RatCountLabel" type="RichTextLabel" parent="HUDRoot" unique_id=205973368]
 custom_minimum_size = Vector2(10, 20)
 layout_mode = 1
-offset_left = 419.0
-offset_top = 108.0
-offset_right = 537.0
-offset_bottom = 138.0
+offset_left = 947.0
+offset_top = 962.0
+offset_right = 1065.0
+offset_bottom = 992.0
 theme_override_font_sizes/normal_font_size = 20
 text = "Szczury: 0"
 fit_content = true
 scroll_active = false
 
 [node name="CombatStatusPanel" type="Panel" parent="HUDRoot" unique_id=209333342]
+visible = false
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -960.0
-offset_top = 108.0
-offset_right = -787.0
-offset_bottom = 222.0
+offset_left = -913.0
+offset_top = 44.0
+offset_right = -740.0
+offset_bottom = 158.0
 grow_horizontal = 2
 
 [node name="Margin" type="MarginContainer" parent="HUDRoot/CombatStatusPanel" unique_id=1283991200]
@@ -211,15 +232,15 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="CheeseCounters" type="VBoxContainer" parent="HUDRoot" unique_id=1718096589]
+[node name="CheeseCounters" type="HBoxContainer" parent="HUDRoot" unique_id=23114267]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -413.0
-offset_top = 63.0
-offset_right = -195.0
-offset_bottom = 267.0
+offset_left = -1194.0
+offset_top = 947.0
+offset_right = -905.99994
+offset_bottom = 1028.4194
 grow_horizontal = 0
 scale = Vector2(0.62, 0.62)
 theme_override_constants/separation = 6
@@ -227,7 +248,7 @@ alignment = 2
 
 [node name="RedCheeseCounter" type="HBoxContainer" parent="HUDRoot/CheeseCounters" unique_id=1798096589]
 layout_mode = 2
-alignment = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/RedCheeseCounter" unique_id=182642318]
 modulate = Color(1, 0.38, 0.38, 1)
@@ -287,10 +308,10 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -500.99988
-offset_top = 210.0
-offset_right = -282.99988
-offset_bottom = 242.0
+offset_left = -909.99994
+offset_top = 960.0
+offset_right = -621.1111
+offset_bottom = 992.0
 grow_horizontal = 0
 scale = Vector2(0.9, 0.9)
 theme_override_colors/font_color = Color(1, 0.92, 0.72, 1)
@@ -316,6 +337,7 @@ alignment = 2
 [node name="Icon" type="TextureRect" parent="HUDRoot/DungeonKeyCounter" unique_id=583731583]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+texture = ExtResource("5_acb04")
 expand_mode = 1
 
 [node name="Label" type="Label" parent="HUDRoot/DungeonKeyCounter" unique_id=1592686179]
