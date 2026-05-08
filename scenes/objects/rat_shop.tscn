@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://dib8ewo8axhid"]
+
+[ext_resource type="Script" path="res://scripts/objects/rat_shop.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dyc8g7fuc8pds" path="res://resources/models/external/fantast/3d/props/SM_PROP_platform_grid_dungeon.fbx" id="2_fbx"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_Area"]
+height = 2.0
+radius = 2.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_Solid"]
+height = 0.3
+radius = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(1, 0.84, 0, 1)
+metallic = 0.8
+roughness = 0.3
+
+[node name="RatShop" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_Area")
+
+[node name="ShopLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+light_color = Color(1, 0.84, 0.2, 1)
+light_energy = 5.0
+light_size = 1.0
+shadow_enabled = true
+omni_range = 8.0
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+shape = SubResource("CylinderShape3D_Solid")
+
+[node name="Visual" parent="." instance=ExtResource("2_fbx")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 50
+visible = false
+
+[node name="Panel" type="Panel" parent="CanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="CanvasLayer/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Sklep ze Szczurami"
+horizontal_alignment = 1
+
+[node name="CheeseLabel" type="Label" parent="CanvasLayer/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 32
+text = "Twoje sery: 0"
+horizontal_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BtnRed" type="Button" parent="CanvasLayer/Panel/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 24
+text = "5x Agresywne
+(1 Ser)"
+
+[node name="BtnGreen" type="Button" parent="CanvasLayer/Panel/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.9, 0.2, 1)
+theme_override_font_sizes/font_size = 24
+text = "5x Gazowe
+(1 Ser)"
+
+[node name="BtnElectric" type="Button" parent="CanvasLayer/Panel/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.6, 0.9, 1)
+theme_override_font_sizes/font_size = 24
+text = "5x Elektryczne
+(1 Ser)"
