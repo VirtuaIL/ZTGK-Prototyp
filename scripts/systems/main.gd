@@ -68,6 +68,9 @@ var current_level_id: int = 1
 var _current_level_cleared: bool = false
 var _current_level_active_time: float = 0.0
 var _debug_last_level_state: String = ""
+@export var tutorial_player_unlock_count: int = 8
+var tutorial_rats_collected: int = 0
+var tutorial_player_unlocked: bool = false
 @export var dungeon_key_required_count: int = 3
 var collected_dungeon_keys: int = 0
 var _dungeon_key_counter_label: Label = null
@@ -134,6 +137,7 @@ func _init_game() -> void:
 	call_deferred("_refresh_cheatsheet_size")
 	_rebuild_level_bounds()
 	set_current_level(current_level_id)
+	_update_tutorial_player_state()
 	_log_level_debug_state("init")
 	
 	rat_manager.setup_player(player)
@@ -203,6 +207,7 @@ func _bind_hud_nodes() -> void:
 	# 	_dungeon_key_counter_label.text = "Klucze: 0/3"
 	# 	game_hud.get_node("HUDRoot").add_child(_dungeon_key_counter_label)
 	_update_dungeon_key_ui()
+	_update_tutorial_goal_ui()
 
 
 func _get_current_level_wave_info(level_id: int) -> String:
@@ -793,6 +798,7 @@ func _update_mode_ui() -> void:
 
 func _process(delta: float) -> void:
 	_current_level_active_time += delta
+	_sync_tutorial_unlock_from_rats()
 	_update_rat_count_ui()
 	_update_objective_ui()
 	_update_recall_hold(delta)
@@ -1225,6 +1231,66 @@ func _on_scripted_enemy_died(enemy: Node) -> void:
 		_update_level_doors()
 
 
+func register_tutorial_rat_collection(_rat: Node = null) -> void:
+	if current_level_id != 1:
+		return
+	if tutorial_player_unlocked:
+		return
+
+	tutorial_rats_collected = min(tutorial_player_unlock_count, tutorial_rats_collected + 1)
+	_update_tutorial_goal_ui()
+
+	_sync_tutorial_unlock_from_rats()
+
+
+func _sync_tutorial_unlock_from_rats() -> void:
+	if tutorial_player_unlocked or current_level_id != 1:
+		return
+
+	var unlocked := false
+	if rat_manager != null:
+		if rat_manager.has_method("is_tutorial_lift_unlocked"):
+			unlocked = bool(rat_manager.is_tutorial_lift_unlocked())
+		else:
+			var rats_value: Variant = rat_manager.get("rats")
+			if rats_value is Array:
+				unlocked = (rats_value as Array).size() >= tutorial_player_unlock_count
+
+	if not unlocked:
+		return
+
+	if rat_manager != null and rat_manager.has_method("consume_rats_for_player_lift"):
+		if not bool(rat_manager.consume_rats_for_player_lift(tutorial_player_unlock_count)):
+			return
+
+	tutorial_player_unlocked = true
+	tutorial_rats_collected = tutorial_player_unlock_count
+	_update_tutorial_player_state()
+	_update_tutorial_goal_ui()
+
+
+func _update_tutorial_player_state() -> void:
+	if player == null:
+		return
+
+	var movement_enabled := tutorial_player_unlocked or current_level_id != 1
+	if player.has_method("set_movement_enabled"):
+		player.set_movement_enabled(movement_enabled)
+	if player.has_method("set_lifted_form_enabled"):
+		player.set_lifted_form_enabled(tutorial_player_unlocked)
+
+	_update_tutorial_goal_ui()
+
+
+func _update_tutorial_goal_ui() -> void:
+	if goal_label == null:
+		return
+	if current_level_id == 1 and not tutorial_player_unlocked:
+		goal_label.text = "Zbierz %d szczurów, aby odblokować ruch." % tutorial_player_unlock_count
+	else:
+		goal_label.text = "Cel prototypu: Wydostań się z labiryntu, pokonując kolejne poziomy."
+
+
 func _on_player_died() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	for e in enemies:
@@ -1236,6 +1302,9 @@ func _on_player_died() -> void:
 			eff.queue_free()
 	if reset_level_on_death:
 		_reset_level_runtime(current_level_id)
+		if not tutorial_player_unlocked:
+			tutorial_rats_collected = 0
+			_update_tutorial_player_state()
 
 
 func can_activate_level(level_id: int) -> bool:
@@ -1275,6 +1344,7 @@ func set_current_level(level_id: int) -> void:
 		_refresh_level_visibility()
 		_refresh_level_activity()
 		_update_level_doors()
+		_update_tutorial_player_state()
 		_log_level_debug_state("refresh")
 		return
 	current_level_id = level_id
@@ -1284,6 +1354,7 @@ func set_current_level(level_id: int) -> void:
 	_refresh_level_visibility()
 	_refresh_level_activity()
 	_update_level_doors()
+	_update_tutorial_player_state()
 	_log_level_debug_state("level_changed")
 	
 	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):

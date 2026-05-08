@@ -86,7 +86,7 @@ var _dash_lateral_offset: float = 0.0
 @export var dash_speed: float = 30.0
 
 # Damage
-var damage_per_hit: float = 2
+var damage_per_hit: float = 4
 var hit_range: float = 0.8
 var attack_cooldown: float = 0.0
 
@@ -689,6 +689,13 @@ func _get_enemies_cached() -> Array:
 			_cached_enemies += get_tree().get_nodes_in_group("bosses")
 	return _cached_enemies
 
+
+func _get_destructible_props_cached() -> Array:
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		return current_scene.get_nodes_in_current_level("destructible_props")
+	return get_tree().get_nodes_in_group("destructible_props")
+
 func _check_damage() -> void:
 	if attack_cooldown > 0.0:
 		return
@@ -706,7 +713,9 @@ func _check_damage() -> void:
 	if mgr != null and mgr.get("current_attack_mode") == 1: # BLOB mode
 		return
 		
-	var enemies := _get_enemies_cached()
+	var targets: Array = _get_enemies_cached().duplicate()
+	if state == State.PATH_DASH and mgr != null and int(mgr.get("current_attack_mode")) == 2:
+		targets.append_array(_get_destructible_props_cached())
 	
 	var final_dmg = damage_per_hit
 	var dmg_color = Color.WHITE
@@ -716,10 +725,12 @@ func _check_damage() -> void:
 		dmg_color = Color(0.9, 0.1, 0.1)
 	
 	var hit_range_sq = hit_range * hit_range
-	for enemy in enemies:
-		var dist_sq: float = global_position.distance_squared_to(enemy.global_position)
+	for target in targets:
+		if target == null or not is_instance_valid(target) or not target.has_method("take_damage"):
+			continue
+		var dist_sq: float = global_position.distance_squared_to(target.global_position)
 		if dist_sq < hit_range_sq:
-			enemy.take_damage(final_dmg, get_instance_id(), global_position, dmg_color)
+			target.take_damage(final_dmg, get_instance_id(), global_position, dmg_color)
 			attack_cooldown = 1.0
 			break
 
@@ -1242,8 +1253,10 @@ func _process_wild_physics(delta: float) -> void:
 		set_wild(false)
 		if mgr.has_method("register_rat"):
 			mgr.register_rat(self )
-			if mgr.has_method("build_blob_offsets"):
-				mgr.build_blob_offsets()
+		if mgr.has_method("register_tutorial_rat_collection"):
+			mgr.register_tutorial_rat_collection(self)
+		if mgr.has_method("build_blob_offsets"):
+			mgr.build_blob_offsets()
 
 func _process_wild(delta: float) -> void:
 	# This function is now mostly handled by _process and _process_wild_physics

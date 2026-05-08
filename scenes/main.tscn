@@ -82,7 +82,7 @@ fov = 45.0
 size = 22.0
 
 [node name="Player" parent="." unique_id=70268198 instance=ExtResource("2_player")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 30.34954, 0, 21.66919)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 28.34954, 0, 23.66919)
 
 [node name="RatManager" type="Node3D" parent="." unique_id=169060230]
 script = ExtResource("4_rat_man")
@@ -100,13 +100,21 @@ script = ExtResource("7_ability_hud")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 19)
 
 [node name="check_1" type="Area3D" parent="checkpoints" unique_id=1137166872]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 30.442995, 1.855777, 5.8960876)
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 28.442995, 1.855777, 4.8960876)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/check_1" unique_id=1509517560]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.8000002)
+shape = SubResource("BoxShape3D_yq6so")
+
+[node name="check_2" type="Area3D" parent="checkpoints" unique_id=1449766797]
+transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 28.442995, 1.855777, -13.103912)
+collision_mask = 3
+script = ExtResource("20_gqmmt")
+level_id = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="checkpoints/check_2" unique_id=816321579]
 shape = SubResource("BoxShape3D_yq6so")
 
 [node name="check_3" type="Area3D" parent="checkpoints" unique_id=560227551]
