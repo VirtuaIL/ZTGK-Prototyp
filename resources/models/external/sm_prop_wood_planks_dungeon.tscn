@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://2drqg6px31nl"]
+
+[ext_resource type="PackedScene" uid="uid://dfbntfvjjaa1q" path="res://resources/models/external/fantast/3d/props/SM_PROP_planks_dungeon_05.fbx" id="1_ctmqo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_planks"]
+size = Vector3(3.6, 1.8, 1.6)
+
+[node name="SmPropWoodPlanksDungeon" type="StaticBody3D" unique_id=1658036043]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=143987230]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0.0)
+shape = SubResource("BoxShape3D_planks")
+
+[node name="SM_PROP_planks_dungeon_05" parent="." unique_id=2039443827 instance=ExtResource("1_ctmqo")]
+
+[node name="BrokenModel" type="Node3D" parent="." unique_id=548942317]

@@ -49,7 +49,10 @@ func _try_activate(body: Node3D) -> void:
 	_pending_player = null
 
 	if body.has_method("set_spawn_position"):
-		body.set_spawn_position(global_position)
+		# Keep the player's current height. The checkpoint marker itself can sit above the floor,
+		# so copying its full global_position would lift the respawn point on Y.
+		var spawn_position := Vector3(global_position.x, body.global_position.y, global_position.z)
+		body.set_spawn_position(spawn_position)
 		var mgr = get_tree().get_first_node_in_group("rat_manager")
 		if mgr and mgr.has_method("save_rat_composition"):
 			mgr.save_rat_composition()

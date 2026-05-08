@@ -35,6 +35,11 @@ var health_bar: ProgressBar = null
 
 var _spawn_position: Vector3 = Vector3.ZERO
 var minimap_camera: Camera3D = null
+@onready var _character_1: Node3D = get_node_or_null("character_1") as Node3D
+@onready var _character_2: Node3D = get_node_or_null("character_2") as Node3D
+
+var _movement_enabled: bool = false
+var _lifted_form_enabled: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
@@ -46,6 +51,7 @@ func _ready() -> void:
 	_spawn_position = global_position
 	current_hp = max_hp
 	_update_health_bar()
+	_update_character_forms()
 
 	_setup_minimap_camera()
 
@@ -70,7 +76,13 @@ func _physics_process(delta: float) -> void:
 		die()
 		return
 
-	_apply_movement(delta)
+	_sync_tutorial_state_from_scene()
+
+	if not _movement_enabled:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:
+		_apply_movement(delta)
 
 	# Gravity — accumulated independently of horizontal movement
 	if not is_on_floor():
@@ -104,6 +116,18 @@ func take_damage(amount: float) -> void:
 
 func set_spawn_position(pos: Vector3) -> void:
 	_spawn_position = pos
+
+
+func set_movement_enabled(enabled: bool) -> void:
+	_movement_enabled = enabled
+	if not _movement_enabled:
+		velocity.x = 0.0
+		velocity.z = 0.0
+
+
+func set_lifted_form_enabled(enabled: bool) -> void:
+	_lifted_form_enabled = enabled
+	_update_character_forms()
 
 
 func _ensure_move_actions() -> void:
@@ -312,6 +336,42 @@ func _update_health_bar() -> void:
 		return
 	health_bar.max_value = max_hp
 	health_bar.value = clampf(current_hp, 0.0, max_hp)
+
+
+func _update_character_forms() -> void:
+	if _character_1 == null:
+		_character_1 = get_node_or_null("character_1") as Node3D
+	if _character_2 == null:
+		_character_2 = get_node_or_null("character_2") as Node3D
+	if _character_1:
+		_character_1.visible = not _lifted_form_enabled
+	if _character_2:
+		_character_2.visible = _lifted_form_enabled
+
+
+func _sync_tutorial_state_from_scene() -> void:
+	var rat_manager := get_tree().get_first_node_in_group("rat_manager")
+	if rat_manager == null:
+		return
+	var current_scene := get_tree().current_scene
+	var level_id := -1
+	if current_scene != null:
+		var level_id_value: Variant = current_scene.get("current_level_id")
+		if level_id_value is int:
+			level_id = int(level_id_value)
+	var unlocked := false
+	if rat_manager.has_method("is_tutorial_lift_unlocked"):
+		unlocked = bool(rat_manager.is_tutorial_lift_unlocked())
+	else:
+		var collected_value: Variant = rat_manager.get("tutorial_lift_collected_rats")
+		var required_value: Variant = rat_manager.get("tutorial_lift_required_rats")
+		if collected_value is int and required_value is int:
+			unlocked = int(collected_value) >= int(required_value)
+	var movement_enabled := unlocked or level_id != 1
+	if _movement_enabled != movement_enabled:
+		set_movement_enabled(movement_enabled)
+	if _lifted_form_enabled != unlocked:
+		set_lifted_form_enabled(unlocked)
 
 func set_highlight(enabled: bool) -> void:
 	_set_highlight_recursive(self, enabled)

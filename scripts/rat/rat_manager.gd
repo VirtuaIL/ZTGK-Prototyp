@@ -42,6 +42,9 @@ var _min_respawn_cooldown: float = 0.0
 var _rat_spawn_used: Dictionary = {}
 var respawn_count: int = 60
 var saved_rat_composition: Array[int] = []
+@export var tutorial_lift_required_rats: int = 8
+var tutorial_lift_collected_rats: int = 0
+var tutorial_lift_unlocked: bool = false
 
 func save_rat_composition() -> void:
 	saved_rat_composition.clear()
@@ -617,6 +620,38 @@ func add_rats_to_horde(rat_type: int, amount: int) -> void:
 		register_rat(rat)
 		
 	build_blob_offsets()
+
+
+func consume_rats_for_player_lift(count: int) -> bool:
+	if _player == null:
+		return false
+	if count <= 0:
+		return false
+	var available_rats: Array[CharacterBody3D] = _get_available_follow_rats()
+	var rats_to_remove: Array[CharacterBody3D] = available_rats.duplicate()
+	if rats_to_remove.size() < count:
+		for rat in rats:
+			var rat_node := rat as CharacterBody3D
+			if rat_node == null or not is_instance_valid(rat_node):
+				continue
+			if rats_to_remove.has(rat_node):
+				continue
+			rats_to_remove.append(rat_node)
+			if rats_to_remove.size() >= count:
+				break
+	if rats_to_remove.size() < count:
+		return false
+
+	for i in range(count):
+		var rat: CharacterBody3D = rats_to_remove[i]
+		if rat == null or not is_instance_valid(rat):
+			continue
+		var idx := rats.find(rat)
+		if idx != -1:
+			rats.remove_at(idx)
+		rat.queue_free()
+	build_blob_offsets()
+	return true
 
 
 
@@ -1852,6 +1887,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					# Finalize build disabled, pass
 					pass
 
+				combat_rmb_down = false
 				mouse_is_down_left = false
 				_lmb_is_object_drag = false
 				current_build_y = -1000.0
@@ -1878,6 +1914,14 @@ func register_rat(rat: CharacterBody3D) -> void:
 	rats.append(rat)
 	if rat.has_method("set_wall_collision"):
 		rat.set_wall_collision(rats_collide_with_walls)
+	if not tutorial_lift_unlocked:
+		tutorial_lift_collected_rats = min(tutorial_lift_required_rats, rats.size())
+		if tutorial_lift_collected_rats >= tutorial_lift_required_rats:
+			tutorial_lift_unlocked = true
+
+
+func is_tutorial_lift_unlocked() -> bool:
+	return tutorial_lift_unlocked
 
 
 func get_active_rat_count() -> int:
@@ -1976,6 +2020,9 @@ func _trigger_path_dash() -> void:
 	if current_drawn_path.size() < 2:
 		return
 
+	_damage_destructible_props_along_path(current_drawn_path)
+	_damage_destructible_props_via_raycasts(current_drawn_path)
+
 	var safe_path := _sanitize_path_dash_path(current_drawn_path)
 	if safe_path.size() < 2:
 		return
@@ -1998,6 +2045,87 @@ func _trigger_path_dash() -> void:
 		
 		if rat.has_method("start_path_dash"):
 			rat.start_path_dash(safe_path.duplicate(), base_offset + rand_offset)
+
+
+func _damage_destructible_props_along_path(path: PackedVector3Array) -> void:
+	if path.size() < 2:
+		return
+
+	var props: Array = []
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
+		props = current_scene.get_nodes_in_current_level("destructible_props")
+	else:
+		props = get_tree().get_nodes_in_group("destructible_props")
+	if props.is_empty():
+		return
+
+	var hit_radius_sq := 2.75 * 2.75
+	var damage_amount := 8.0
+
+	for prop in props:
+		var prop_node := prop as Node3D
+		if prop_node == null or not is_instance_valid(prop_node) or not prop_node.has_method("take_damage"):
+			continue
+
+		var prop_pos := prop_node.global_position
+		for i in range(1, path.size()):
+			var a := path[i - 1]
+			var b := path[i]
+			var seg_dist_sq := _point_to_segment_distance_squared_2d(prop_pos, a, b)
+			if seg_dist_sq <= hit_radius_sq:
+				prop_node.take_damage(damage_amount, get_instance_id(), prop_pos, Color(0.8, 0.55, 0.25))
+				break
+
+
+func _damage_destructible_props_via_raycasts(path: PackedVector3Array) -> void:
+	if path.size() < 2:
+		return
+
+	var current_scene := get_tree().current_scene
+	if current_scene == null:
+		return
+
+	var world: World3D = current_scene.get_world_3d()
+	if world == null:
+		return
+
+	var ss := world.direct_space_state
+	if ss == null:
+		return
+
+	var query := PhysicsRayQueryParameters3D.new()
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	query.hit_from_inside = true
+	query.collision_mask = 8 | (1 << 8)
+
+	for i in range(1, path.size()):
+		query.from = path[i - 1]
+		query.to = path[i]
+		var hit: Dictionary = ss.intersect_ray(query)
+		if hit.is_empty():
+			continue
+
+		var collider: Object = hit.get("collider", null)
+		var prop_node := collider as Node3D
+		if prop_node != null and prop_node.has_method("take_damage"):
+			var hit_pos: Vector3 = hit.get("position", path[i])
+			prop_node.take_damage(8.0, get_instance_id(), hit_pos, Color(0.8, 0.55, 0.25))
+			break
+
+
+func _point_to_segment_distance_squared_2d(point: Vector3, a: Vector3, b: Vector3) -> float:
+	var ap := Vector2(point.x - a.x, point.z - a.z)
+	var ab := Vector2(b.x - a.x, b.z - a.z)
+	var ab_len_sq := ab.length_squared()
+	if ab_len_sq <= 0.000001:
+		return ap.length_squared()
+
+	var t := clampf(ap.dot(ab) / ab_len_sq, 0.0, 1.0)
+	var closest := Vector2(a.x, a.z) + ab * t
+	var delta := Vector2(point.x, point.z) - closest
+	return delta.length_squared()
 
 
 func _get_path_dash_brush_t() -> float:
@@ -2688,12 +2816,14 @@ func _send_horde_to_point() -> void:
 		_build_force_timer = max(0.1, build_force_timeout)
 
 
-func _surround_object_with_rats(obj: CharacterBody3D) -> void:
+func _surround_object_with_rats(obj: CharacterBody3D, max_count: int = -1) -> void:
 	var center: Vector3 = obj.global_position
 
 	var available_rats: Array[CharacterBody3D] = _get_nearest_available_rats(center)
 
 	var count: int = available_rats.size()
+	if max_count > 0:
+		count = min(count, max_count)
 	if count == 0:
 		return
 

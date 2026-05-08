@@ -4,14 +4,7 @@
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
 [ext_resource type="PackedScene" uid="uid://dig2eo6sxf2at" path="res://resources/models/bard/character_v2_2/character_v2_2.fbx" id="4_dqkch"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.2, 0.7, 0.3, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
-material = SubResource("StandardMaterial3D_1")
-radius = 0.4
-height = 1.6
+[ext_resource type="PackedScene" uid="uid://cmwln5kke4iir" path="res://resources/models/bard/character_v3/character_v1_1.fbx" id="5_qlg0r"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.9345703
@@ -50,11 +43,6 @@ shadow_size = 6
 
 [node name="Player" type="CharacterBody3D" unique_id=70268198]
 script = ExtResource("1_script")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2005916585]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
-visible = false
-mesh = SubResource("CapsuleMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1970706798]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8863647, 0)
@@ -164,4 +152,6 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("3_minimap_overlay")
 
-[node name="character_v2_2" parent="." unique_id=325091433 instance=ExtResource("4_dqkch")]
+[node name="character_1" parent="." unique_id=205091434 instance=ExtResource("4_dqkch")]
+
+[node name="character_2" parent="." unique_id=1173053234 instance=ExtResource("5_qlg0r")]
