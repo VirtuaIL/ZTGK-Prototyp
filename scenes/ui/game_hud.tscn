@@ -149,10 +149,10 @@ text = "FPS: 0"
 [node name="RatCountLabel" type="RichTextLabel" parent="HUDRoot" unique_id=205973368]
 custom_minimum_size = Vector2(10, 20)
 layout_mode = 1
-offset_left = 5.0
-offset_top = 100.0
-offset_right = 123.0
-offset_bottom = 130.0
+offset_left = 419.0
+offset_top = 108.0
+offset_right = 537.0
+offset_bottom = 138.0
 theme_override_font_sizes/normal_font_size = 20
 text = "Szczury: 0"
 fit_content = true
@@ -163,9 +163,10 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -86.5
-offset_right = 86.5
-offset_bottom = 114.0
+offset_left = -960.0
+offset_top = 108.0
+offset_right = -787.0
+offset_bottom = 222.0
 grow_horizontal = 2
 
 [node name="Margin" type="MarginContainer" parent="HUDRoot/CombatStatusPanel" unique_id=1283991200]
@@ -215,25 +216,25 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -176.0
-offset_top = 254.00002
-offset_right = 42.0
-offset_bottom = 407.0
+offset_left = -413.0
+offset_top = 63.0
+offset_right = -195.0
+offset_bottom = 267.0
 grow_horizontal = 0
 scale = Vector2(0.62, 0.62)
-alignment = 2
 theme_override_constants/separation = 6
+alignment = 2
 
 [node name="RedCheeseCounter" type="HBoxContainer" parent="HUDRoot/CheeseCounters" unique_id=1798096589]
 layout_mode = 2
 alignment = 2
 
 [node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/RedCheeseCounter" unique_id=182642318]
+modulate = Color(1, 0.38, 0.38, 1)
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("4_8n052")
 expand_mode = 1
-modulate = Color(1, 0.38, 0.38, 1)
 
 [node name="Label" type="Label" parent="HUDRoot/CheeseCounters/RedCheeseCounter" unique_id=937839977]
 layout_mode = 2
@@ -248,11 +249,11 @@ layout_mode = 2
 alignment = 2
 
 [node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/GreenCheeseCounter" unique_id=182642319]
+modulate = Color(0.36, 0.95, 0.42, 1)
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("4_8n052")
 expand_mode = 1
-modulate = Color(0.36, 0.95, 0.42, 1)
 
 [node name="Label" type="Label" parent="HUDRoot/CheeseCounters/GreenCheeseCounter" unique_id=937839978]
 layout_mode = 2
@@ -267,11 +268,11 @@ layout_mode = 2
 alignment = 2
 
 [node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/BlueCheeseCounter" unique_id=182642320]
+modulate = Color(0.31891623, 0.4732402, 1, 1)
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("4_8n052")
 expand_mode = 1
-modulate = Color(0.42, 0.68, 1, 1)
 
 [node name="Label" type="Label" parent="HUDRoot/CheeseCounters/BlueCheeseCounter" unique_id=937839979]
 layout_mode = 2
@@ -287,9 +288,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -159.0
-offset_top = 412.0
+offset_top = 271.0
 offset_right = 42.0
-offset_bottom = 481.0
+offset_bottom = 340.0
 grow_horizontal = 0
 scale = Vector2(0.7, 0.7)
 alignment = 2

@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_a8gu5"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_02uar"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="5_ywrr1"]
+[ext_resource type="PackedScene" path="res://scenes/objects/sewer_grate.tscn" id="7_02uar"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anwe6"]
 shading_mode = 0
@@ -154,7 +155,7 @@ transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 11.5, 0, 25.73968)
 radius = 0.8
 
 [node name="door" parent="." unique_id=697170393 instance=ExtResource("5_ywrr1")]
-transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 12.119942, 0, 31.750435)
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 31.919945, 0, 31.750435)
 controlled_level_id = 5
 target_level_id = 5
 start_open = true
@@ -167,3 +168,8 @@ material_override = SubResource("StandardMaterial3D_anwe6")
 cast_shadow = 0
 visibility_range_end = 80.0
 mesh = SubResource("BoxMesh_rej77")
+
+[node name="Interactive" type="Node3D" parent="." unique_id=868407735]
+
+[node name="SewerGrate" parent="Interactive" unique_id=1256708695 instance=ExtResource("7_02uar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.384857, 0, 29.652851)

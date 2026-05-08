@@ -52,7 +52,10 @@ func _check_for_gas_rats() -> bool:
 	for rat in mgr.rats:
 		if not is_instance_valid(rat) or rat.get("is_fallen"):
 			continue
-		if rat.get("default_rat_type") != 2:  # 2 = GREEN
+		var rat_type := int(rat.get("default_rat_type"))
+		if mgr.has_method("get_effective_rat_type"):
+			rat_type = int(mgr.get_effective_rat_type(rat_type))
+		if rat_type != 2:  # 2 = GREEN
 			continue
 		var dist_sq = global_position.distance_squared_to(rat.global_position)
 		if dist_sq <= rad_sq:

@@ -197,7 +197,7 @@ script = ExtResource("1_vmkp1")
 level_id = 3
 
 [node name="Marker3D" type="Marker3D" parent="EnemiesSpawns" unique_id=987654322 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.4982786, 0, 8.200947)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4982796, 0, 2.2009473)
 
 [node name="Marker3D2" type="Marker3D" parent="EnemiesSpawns" unique_id=987654323 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3834248, 0, 7.7951818)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.3834243, 0, 0.7951817)

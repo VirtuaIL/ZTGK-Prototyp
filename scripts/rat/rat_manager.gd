@@ -91,6 +91,8 @@ var _cheese_buff_label: Label = null
 var _cheese_counter_labels: Dictionary = {}
 var _cheese_wheel_root: Control = null
 var _cheese_wheel_cards: Dictionary = {}
+var _cheese_wheel_card_titles: Dictionary = {}
+var _cheese_wheel_card_bodies: Dictionary = {}
 var _cheese_wheel_title: Label = null
 var _cheese_wheel_hint: Label = null
 var _cheese_wheel_timer_label: Label = null
@@ -317,6 +319,8 @@ func _create_cheese_wheel_ui(parent: Control) -> void:
 
 		_cheese_wheel_root.add_child(card)
 		_cheese_wheel_cards[type] = card
+		_cheese_wheel_card_titles[type] = title
+		_cheese_wheel_card_bodies[type] = body
 
 
 func _set_cheese_wheel_open(open: bool) -> void:
@@ -377,6 +381,8 @@ func _update_cheese_wheel_ui() -> void:
 			_cheese_wheel_timer_label.modulate = Color(0.95, 0.95, 0.95)
 	for type in _cheese_wheel_cards.keys():
 		var card := _cheese_wheel_cards[type] as PanelContainer
+		var title := _cheese_wheel_card_titles.get(type, null) as Label
+		var body := _cheese_wheel_card_bodies.get(type, null) as Label
 		if card == null:
 			continue
 		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
@@ -384,8 +390,6 @@ func _update_cheese_wheel_ui() -> void:
 			var selected : int = _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese()
 			style.bg_color = _get_cheese_color(type) if selected else Color(0.08, 0.08, 0.1, 0.9)
 			style.border_color = _get_cheese_color(type)
-		var title := card.get_node("MarginContainer/VBoxContainer/Title") as Label
-		var body := card.get_node("MarginContainer/VBoxContainer/Body") as Label
 		if title != null:
 			title.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
 		if body != null:
