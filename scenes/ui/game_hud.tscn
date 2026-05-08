@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bi0skewg4edso" path="res://scripts/ui/hold_recall_indicator.gd" id="1_recall"]
 [ext_resource type="Shader" uid="uid://3r67ixik4bsw" path="res://scenes/ui/vignette.gdshader" id="2_shader"]
 [ext_resource type="Script" uid="uid://b2eo0kavsjl4r" path="res://scripts/ui/minimap_overlay.gd" id="3_minimap_overlay"]
+[ext_resource type="Texture2D" uid="uid://dxx64ltafxyln" path="res://resources/assets/cheese.png" id="4_8n052"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_Vignette"]
 shader = ExtResource("2_shader")
@@ -327,15 +328,18 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -260.0
+offset_left = -295.0
 offset_top = -67.0
+offset_right = -35.0
 grow_horizontal = 0
 grow_vertical = 0
 alignment = 2
 
 [node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounter" unique_id=182642318]
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
+texture = ExtResource("4_8n052")
+expand_mode = 1
 
 [node name="Label" type="Label" parent="HUDRoot/CheeseCounter" unique_id=937839977]
 layout_mode = 2

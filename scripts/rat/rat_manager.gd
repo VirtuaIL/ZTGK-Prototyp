@@ -87,8 +87,8 @@ func apply_cheese_buff(type: int) -> void:
 		if _cheese_counter_label == null:
 			_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
 			var icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
-			if icon and icon is TextureRect and not icon.texture:
-				icon.texture = _create_cheese_icon()
+			# if icon and icon is TextureRect and not icon.texture:
+			# 	icon.texture = _create_cheese_icon()
 		if _cheese_counter_label:
 			_cheese_counter_label.text = str(collected_cheese)
 	elif type == 3: # PURPLE
@@ -375,8 +375,8 @@ func _ready() -> void:
 	# Na wszelki wypadek przypisanie odbywa się też w process/update jeżeli nie znaleziono
 	_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
 	var cheese_icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
-	if cheese_icon and cheese_icon is TextureRect:
-		cheese_icon.texture = _create_cheese_icon()
+	# if cheese_icon and cheese_icon is TextureRect:
+	# 	cheese_icon.texture = _create_cheese_icon()
 
 	# ── Sound Wave ──
 	if SoundWaveScene:
