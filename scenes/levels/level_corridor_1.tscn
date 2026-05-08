@@ -86,7 +86,15 @@ transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, -3.5, 0, -7)
 radius = 0.8
 
 [node name="SpikeCylinder2" parent="Hazards" unique_id=1235761826 instance=ExtResource("3_spike")]
-transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 3.5, 0, 0)
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 2.5, 0, 0)
+radius = 0.8
+
+[node name="SpikeCylinder5" parent="Hazards" unique_id=33568231 instance=ExtResource("3_spike")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 2.5, 0, 13)
+radius = 0.8
+
+[node name="SpikeCylinder4" parent="Hazards" unique_id=156750061 instance=ExtResource("3_spike")]
+transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 2.5, 0, -12)
 radius = 0.8
 
 [node name="SpikeCylinder3" parent="Hazards" unique_id=352876558 instance=ExtResource("3_spike")]

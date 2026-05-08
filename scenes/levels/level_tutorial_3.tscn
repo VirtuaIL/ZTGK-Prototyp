@@ -18,31 +18,32 @@ transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 0
 [node name="Floor2" type="Node3D" parent="." unique_id=1744810670]
 
 [node name="Floor" parent="Floor2" unique_id=1470818878 instance=ExtResource("1_upoor")]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.8, 0, 0, 0)
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
 [node name="wall4" parent="walls" unique_id=4803383 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, -20, 0, -0.14181803)
+transform = Transform3D(-2.84124e-07, 0, 1, 0, 1, 0, -6.5, 0, -4.371139e-08, -16, 0, -0.14181837)
 
 [node name="wall6" parent="walls" unique_id=1981168902 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -13.000002, 0, -20.141817)
+transform = Transform3D(2.2, 0, 0, 0, 1, 0, 0, 0, 1, -10.627063, 0, -16.141819)
 
 [node name="wall9" parent="walls" unique_id=123576054 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, -12.999998, 0, 19.858183)
+transform = Transform3D(2.2, 0, 0, 0, 1, 0, 0, 0, 1, -11.031699, 0, 15.93721)
 
 [node name="wall7" parent="walls" unique_id=699681574 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(3, 0, 0, 0, 1, 0, 0, 0, 1, 12.999998, 0, -20.14182)
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 1, 11.41758, 0, -16.14182)
 
 [node name="wall8" parent="walls" unique_id=1606431290 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(4.1, 0, 0, 0, 1, 0, 0, 0, 1, 9.995035, 0, 19.858181)
+transform = Transform3D(3.2, 0, 0, 0, 1, 0, 0, 0, 1, 7.745231, 0, 15.939033)
 
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("2_f8eeo")]
-transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 20, 0, -0.009366949)
+transform = Transform3D(-2.84124e-07, 0, 1, 0, 1, 0, -6.5, 0, -4.371139e-08, 16, 0, -0.0093666)
 
 [node name="doors" type="Node3D" parent="." unique_id=341833824]
 
 [node name="door" parent="doors" unique_id=1925018360 instance=ExtResource("4_cbbu3")]
-transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9801924, 0, 19.952682)
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9801927, 0, 15.9526825)
 controlled_level_id = 3
 target_level_id = 4
 transition_requires_open = true
@@ -50,20 +51,20 @@ transition_requires_open = true
 [node name="props" type="Node3D" parent="." unique_id=1768439073]
 
 [node name="barrel_1" parent="props" unique_id=1578240576 instance=ExtResource("7_1u7kg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7828627, 0.0025275508, -3.594132)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7828627, 0.0025275508, -6.594132)
 mass = 0.2
 
 [node name="barrel_2" parent="props" unique_id=796321636 instance=ExtResource("7_1u7kg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3774233, 0.0025275508, -3.594131)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.3774233, 0.0025275508, -6.594131)
 mass = 0.2
 
 [node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=1430227353 instance=ExtResource("5_pwit0")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.48488203, 0, 9.352862)
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.48488244, 0, 4.3528624)
 
 [node name="DungeonLights" type="Node3D" parent="." unique_id=2079021912]
 
 [node name="SmPropTorchStandingDungeon" parent="DungeonLights" unique_id=1658036043 instance=ExtResource("6_pwit0")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, 6.0000005)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, 11)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon" unique_id=1736812625]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
@@ -72,7 +73,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon2" parent="DungeonLights" unique_id=358476532 instance=ExtResource("6_pwit0")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, -14)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, -13)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon2" unique_id=1655102323]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
@@ -90,7 +91,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon4" parent="DungeonLights" unique_id=516695403 instance=ExtResource("6_pwit0")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 14, 0, 5.9999995)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 14, 0, 11)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon4" unique_id=1586991228]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -99,7 +100,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon" parent="DungeonLights" unique_id=1115422835 instance=ExtResource("7_kyuet")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0000005, 1.869925, -19.64343)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.869925, -15.64343)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon" unique_id=890006557]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.36596298)
@@ -108,7 +109,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon2" parent="DungeonLights" unique_id=2098902034 instance=ExtResource("7_kyuet")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.9999995, 1.869925, -19.64343)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1.869925, -15.643432)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon2" unique_id=1384753061]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
@@ -117,7 +118,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon3" parent="DungeonLights" unique_id=702791962 instance=ExtResource("7_kyuet")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -5.9999967, 1.869925, 19.359554)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -5.999997, 1.869925, 15.359555)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon3" unique_id=944802734]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.09392357, 0.36128426, 0.21937513)
@@ -126,7 +127,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon4" parent="DungeonLights" unique_id=515337867 instance=ExtResource("7_kyuet")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6.0000033, 1.869925, 19.386097)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 6.000003, 1.869925, 15.386096)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon4" unique_id=1707726976]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19526291, 0.36128426, 0.21937513)
@@ -137,13 +138,13 @@ omni_range = 18.0
 [node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
 
 [node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("3_f8eeo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.6237335, 0, 9.040831)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.623734, 0, 5.0408306)
 
 [node name="SpikeCylinder2" parent="Spikes" unique_id=34377547 instance=ExtResource("3_f8eeo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3762665, 0, 9.040829)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.376266, 0, 5.0408287)
 
 [node name="SpikeCylinder3" parent="Spikes" unique_id=1569445166 instance=ExtResource("3_f8eeo")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03735451, 0, 0.44907618)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03735407, 0, -4.550924)
 
 [node name="RatParams" type="Node3D" parent="." unique_id=1860751266]
 
@@ -167,7 +168,7 @@ wild_rat_prob_green = 0.0
 [node name="RatSpawns" type="Node3D" parent="." unique_id=273696945]
 
 [node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=1616740680 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.004, 0.2, 13.762)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.004000263, 0.2, 10.762)
 script = ExtResource("1_vmkp1")
 level_id = 3
 spawn_tag = &"normal"

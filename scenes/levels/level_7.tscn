@@ -160,7 +160,7 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.4752798, 0, -1.1464024)
 [node name="Floor" type="Node3D" parent="." unique_id=1849893464]
 
 [node name="Floor" parent="Floor" unique_id=1470818878 instance=ExtResource("1_posk4")]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1.7, 0, 0, 0, 1, 0, 0, 0, 1, 0.05085945, 0, -0.026929855)
 
 [node name="walls" type="Node3D" parent="." unique_id=1791057824]
 
@@ -168,13 +168,13 @@ transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11.079486)
 
 [node name="wall5" parent="walls" unique_id=1233817000 instance=ExtResource("1_07ctq")]
-transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 40.114227, 0, -0.03748684)
+transform = Transform3D(-3.5406225e-07, 0, 1, 0, 1, 0, -8.1, 0, -4.371139e-08, 34.114227, 0, -0.03748684)
 
 [node name="wall12" parent="walls" unique_id=1981168902 instance=ExtResource("1_07ctq")]
-transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -39.877033, 0, -13.037487)
+transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -33.877033, 0, -13.037487)
 
 [node name="wall13" parent="walls" unique_id=1209036770 instance=ExtResource("1_07ctq")]
-transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -39.877033, 0, 12.962513)
+transform = Transform3D(-1.3113416e-07, 0, 1, 0, 1, 0, -3, 0, -4.371139e-08, -33.877033, 0, 12.962513)
 
 [node name="wall6" parent="walls" unique_id=931132541 instance=ExtResource("1_07ctq")]
 transform = Transform3D(-7.430936e-08, 0, 1, 0, 1, 0, -1.7, 0, -4.371139e-08, 0, 0, 9.28314)
@@ -183,10 +183,10 @@ transform = Transform3D(-7.430936e-08, 0, 1, 0, 1, 0, -1.7, 0, -4.371139e-08, 0,
 transform = Transform3D(-6.119594e-08, 0, 1, 0, 1, 0, -1.4, 0, -4.371139e-08, -25, 0, -8)
 
 [node name="wall9" parent="walls" unique_id=2116112980 instance=ExtResource("1_07ctq")]
-transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.03181855, 0, -20.000002)
+transform = Transform3D(13.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.03181855, 0, -20.000002)
 
 [node name="wall10" parent="walls" unique_id=2106827679 instance=ExtResource("1_07ctq")]
-transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 1, 0.032, 0, 20)
+transform = Transform3D(13.5, 0, 0, 0, 1, 0, 0, 0, 1, 0.032, 0, 20)
 
 [node name="wall8" parent="walls" unique_id=1697514026 instance=ExtResource("1_07ctq")]
 transform = Transform3D(-6.119594e-08, 0, 1, 0, 1, 0, -1.4, 0, -4.371139e-08, 25, 0, -8)
@@ -197,10 +197,10 @@ transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.9746923)
 [node name="Spikes" type="Node3D" parent="." unique_id=1193377246]
 
 [node name="SpikeCylinder" parent="Spikes" unique_id=566211329 instance=ExtResource("2_bl61q")]
-transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 32, 0, 12)
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, 28, 0, 15)
 
 [node name="SpikeCylinder2" parent="Spikes" unique_id=158563560 instance=ExtResource("2_bl61q")]
-transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -32, 0, 12)
+transform = Transform3D(2, 0, 0, 0, 0.5, 0, 0, 0, 2, -28, 0, 13)
 
 [node name="RatParams" type="Node3D" parent="." unique_id=2136949836]
 
@@ -225,7 +225,7 @@ wild_rat_prob_green = 0.0
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1591046901]
 
 [node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=521858620 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31.282, 0.2, 6.194)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.282, 0.2, 0.19399977)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"normal"
@@ -243,7 +243,7 @@ spawn_tag = &"normal"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="RatSpawnPointRed1" type="Marker3D" parent="RatSpawns" unique_id=989086145 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.247, 0.2, -9.721)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.247002, 0.2, -9.721)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"red"
@@ -270,7 +270,7 @@ spawn_tag = &"green"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="RatSpawnPointGreen2" type="Marker3D" parent="RatSpawns" unique_id=374477223 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.769, 0.2, 11.132)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.769, 0.2, 12.132)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"green"
@@ -279,7 +279,7 @@ spawn_tag = &"green"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="RatSpawnPointElectric1" type="Marker3D" parent="RatSpawns" unique_id=1894932298 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32.315, 0.2, 3.373)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.314999, 0.2, 6.373)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"electric"
@@ -288,7 +288,7 @@ spawn_tag = &"electric"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="RatSpawnPointElectric2" type="Marker3D" parent="RatSpawns" unique_id=1221263347 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.008, 0.2, 9.661)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.008, 0.2, 12.661)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"electric"
@@ -348,7 +348,7 @@ script = ExtResource("1_vmkp1")
 level_id = 7
 
 [node name="Marker3D" type="Marker3D" parent="EnemySpawns" unique_id=2076241992 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.519775, 0, 11.948427)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.519775, 0, 14.948427)
 
 [node name="Marker3D3" type="Marker3D" parent="EnemySpawns" unique_id=2141563772 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.089385, 0, 0.76407355)
