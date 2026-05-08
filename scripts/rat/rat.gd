@@ -240,27 +240,21 @@ func _physics_process(delta: float) -> void:
 			_mgr = get_tree().get_first_node_in_group("rat_manager")
 			_mgr_refresh_timer = mgr_refresh_interval
 	var mgr = _mgr
+	var effective_rat_type := _get_effective_rat_type(mgr)
 	
 	# ── Purple poison: slow down instead of freezing ──
 	_speed_mult = 1.0
-	if mgr != null and "buff_purple_timer" in mgr and mgr.buff_purple_timer > 0.0:
-		_speed_mult = 0.15
 
 	# ── Green gas ──
-	if mgr != null:
-		var has_green = (default_rat_type == RatType.GREEN) or ("buff_green_timer" in mgr and mgr.buff_green_timer > 0.0)
-		if has_green:
-			_gas_timer -= delta
-			var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
-			if _gas_timer <= 0.0 and speed_sq > 0.05:
-				_gas_timer = 0.12 # Rzadsze próbkowanie dla logiki obrażeń
-				
-				# Powiadamiamy centralny manager o nowym punkcie obrażeń
-				if _gas_damage_mgr == null or not is_instance_valid(_gas_damage_mgr):
-					_gas_damage_mgr = get_tree().get_first_node_in_group("gas_damage_manager")
-					
-				if _gas_damage_mgr:
-					_gas_damage_mgr.add_gas_point(global_position)
+	if effective_rat_type == RatType.GREEN:
+		_gas_timer -= delta
+		var speed_sq = velocity.x * velocity.x + velocity.z * velocity.z
+		if _gas_timer <= 0.0 and speed_sq > 0.05:
+			_gas_timer = 0.12
+			if _gas_damage_mgr == null or not is_instance_valid(_gas_damage_mgr):
+				_gas_damage_mgr = get_tree().get_first_node_in_group("gas_damage_manager")
+			if _gas_damage_mgr:
+				_gas_damage_mgr.add_gas_point(global_position)
 		
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(0.0, attack_cooldown - delta)
@@ -445,6 +439,12 @@ func set_target(pos: Vector3) -> void:
 
 func set_neighbors(n: Array) -> void:
 	_neighbors = n
+
+
+func _get_effective_rat_type(mgr: Node) -> RatType:
+	if mgr != null and mgr.has_method("get_effective_rat_type"):
+		return int(mgr.get_effective_rat_type(int(default_rat_type))) as RatType
+	return default_rat_type
 
 
 func _compute_wall_avoidance(to_target: Vector3) -> Vector3:
@@ -697,9 +697,7 @@ func _check_damage() -> void:
 	if mgr == null or not is_instance_valid(mgr):
 		mgr = get_tree().get_first_node_in_group("rat_manager")
 		
-	var mgr_has_red = (mgr != null and "buff_red_timer" in mgr and mgr.buff_red_timer > 0.0)
-	var is_red_rat = (default_rat_type == RatType.RED)
-	var is_red = is_red_rat or mgr_has_red
+	var is_red = _get_effective_rat_type(mgr) == RatType.RED
 	
 	if not is_red:
 		if mgr == null or (state != State.PATH_DASH):
@@ -1019,8 +1017,6 @@ func die() -> void:
 	var mgr = _mgr
 	if mgr == null or not is_instance_valid(mgr):
 		mgr = get_tree().get_first_node_in_group("rat_manager")
-	if mgr != null and "buff_yellow_timer" in mgr and mgr.buff_yellow_timer > 0.0:
-		return
 
 	if DeathEffect:
 		var eff = DeathEffect.instantiate()

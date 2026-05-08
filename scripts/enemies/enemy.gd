@@ -5,6 +5,7 @@ const DamageTextScene := preload("res://scenes/ui/damage_text.tscn")
 const ShieldScene := preload("res://scenes/enemies/enemy_shield.tscn")
 
 @export var shield_chance: float = 0.3
+@export var cheese_drop_chance: float = 0.85
 
 signal enemy_died
 
@@ -730,7 +731,7 @@ func _die() -> void:
 		visible = false
 		enemy_died.emit()
 		
-		if randf() <= 0.5:
+		if randf() <= cheese_drop_chance:
 			if CheeseScene:
 				var c = CheeseScene.instantiate()
 				get_parent().add_child(c)
@@ -743,10 +744,7 @@ func _die() -> void:
 					sin(throw_angle) * throw_dist
 				)
 				if c.has_method("set_type"):
-					var drop_type = 2 # YELLOW
-					if randf() < 0.2:
-						drop_type = 3 # PURPLE
-					c.set_type(drop_type)
+					c.set_type(randi_range(0, 2))
 	)
 
 	# Stay dead — no auto-respawn. F2 toggle revives all enemies.

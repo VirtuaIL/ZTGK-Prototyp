@@ -1,8 +1,8 @@
 extends Area3D
 
-enum Type { RED, GREEN, YELLOW, PURPLE }
+enum Type { RED, GREEN, BLUE }
 
-var type: int = Type.YELLOW
+var type: int = Type.RED
 var time_alive: float = 0.0
 var _scan_timer: float = 0.0
 var _mgr: Node = null
@@ -95,24 +95,14 @@ func _update_visuals() -> void:
 	
 	match type:
 		Type.RED:
-			mat.albedo_color = Color(0.9, 0.1, 0.1) # Aggression
+			mat.albedo_color = Color(0.9, 0.1, 0.1)
 			particles.emitting = false
 		Type.GREEN:
-			mat.albedo_color = Color(0.1, 0.9, 0.1) # Gas
+			mat.albedo_color = Color(0.1, 0.9, 0.1)
 			particles.emitting = false
-		Type.YELLOW:
-			mat.albedo_color = Color(0.9, 0.9, 0.1) # Immortality
+		Type.BLUE:
+			mat.albedo_color = Color(0.1, 0.3, 0.95)
 			particles.emitting = false
-		Type.PURPLE:
-			mat.albedo_color = Color(0.1, 0.1, 0.1) # Black poison
-			particles.emitting = true
-
-	# Trutka (PURPLE) ma model kuli, reszta zostaje z pryzma
-	if type == Type.PURPLE:
-		var sphere := SphereMesh.new()
-		sphere.radius = 0.25
-		sphere.height = 0.5
-		mesh_inst.mesh = sphere
 
 	mesh_inst.material_override = mat
 
@@ -150,7 +140,7 @@ func _physics_process(delta: float) -> void:
 			var d_sq = global_position.distance_squared_to(rat.global_position)
 			if d_sq < pickup_radius * pickup_radius:
 				# Pickup!
-				if mgr.has_method("apply_cheese_buff"):
-					mgr.apply_cheese_buff(type)
+				if mgr.has_method("collect_cheese"):
+					mgr.collect_cheese(type)
 				queue_free()
 				break

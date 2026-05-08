@@ -1,6 +1,9 @@
 extends Node3D
 
 const SoundWaveScene := preload("res://scenes/effects/sound_wave.tscn")
+const CHEESE_WHEEL_ACTION := &"open_cheese_wheel"
+
+enum CheeseType { RED, GREEN, BLUE }
 
 signal orbit_started()
 signal orbit_ended()
@@ -54,25 +57,42 @@ var mode: int = 1 # Always BUILD-like unified mode
 
 var buff_red_timer: float = 0.0
 var buff_green_timer: float = 0.0
+var buff_blue_timer: float = 0.0
 var buff_yellow_timer: float = 0.0
 var buff_purple_timer: float = 0.0
+@export var cheese_buff_duration: float = 15.0
 
 var buff_mat_red: StandardMaterial3D
 var buff_mat_green: StandardMaterial3D
+var buff_mat_blue: StandardMaterial3D
 var buff_mat_yellow: StandardMaterial3D
 var buff_mat_purple: StandardMaterial3D
-var collected_cheese: int = 0
+var cheese_inventory: Dictionary = {
+	CheeseType.RED: 0,
+	CheeseType.GREEN: 0,
+	CheeseType.BLUE: 0,
+}
+var active_cheese_type: int = -1
+var active_cheese_timer: float = 0.0
 
 func get_current_buff_material():
 	if buff_red_timer > 0.0: return buff_mat_red
 	if buff_green_timer > 0.0: return buff_mat_green
+	if buff_blue_timer > 0.0: return buff_mat_blue
 	if buff_yellow_timer > 0.0: return buff_mat_yellow
 	if buff_purple_timer > 0.0: return buff_mat_purple
 	return null
 
 var _cheese_msg_timer: float = 0.0
 var _cheese_buff_label: Label = null
-var _cheese_counter_label: Label = null
+var _cheese_counter_labels: Dictionary = {}
+var _cheese_wheel_root: Control = null
+var _cheese_wheel_cards: Dictionary = {}
+var _cheese_wheel_title: Label = null
+var _cheese_wheel_hint: Label = null
+var _cheese_wheel_timer_label: Label = null
+var _cheese_wheel_open: bool = false
+var _cheese_wheel_selected_type: int = -1
 
 func _show_cheese_msg(msg: String, color: Color) -> void:
 	if _cheese_buff_label:
@@ -81,19 +101,293 @@ func _show_cheese_msg(msg: String, color: Color) -> void:
 		_cheese_buff_label.visible = true
 		_cheese_msg_timer = 3.0
 
-func apply_cheese_buff(type: int) -> void:
-	if type == 2: # YELLOW
-		collected_cheese += 1
-		if _cheese_counter_label == null:
-			_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
-			var icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
-			# if icon and icon is TextureRect and not icon.texture:
-			# 	icon.texture = _create_cheese_icon()
-		if _cheese_counter_label:
-			_cheese_counter_label.text = str(collected_cheese)
-	elif type == 3: # PURPLE
-		buff_purple_timer = 5.0
-		_show_cheese_msg("Dezorientacja szczurów!", Color(0.1, 0.1, 0.1))
+func collect_cheese(type: int) -> void:
+	if not cheese_inventory.has(type):
+		return
+	cheese_inventory[type] = int(cheese_inventory[type]) + 1
+	_update_cheese_inventory_ui()
+	_update_cheese_wheel_ui()
+	_show_cheese_msg("Zebrano %s ser" % _get_cheese_name(type), _get_cheese_color(type))
+
+func has_active_cheese() -> bool:
+	return active_cheese_type >= 0 and active_cheese_timer > 0.0
+
+
+func get_active_horde_rat_type() -> int:
+	match active_cheese_type:
+		CheeseType.RED:
+			return Rat.RatType.RED
+		CheeseType.GREEN:
+			return Rat.RatType.GREEN
+		CheeseType.BLUE:
+			return Rat.RatType.ELECTRIC
+		_:
+			return -1
+
+
+func get_effective_rat_type(default_type: int) -> int:
+	var override_type := get_active_horde_rat_type()
+	return override_type if override_type >= 0 else default_type
+
+
+func activate_cheese(type: int) -> bool:
+	if not cheese_inventory.has(type):
+		return false
+	if has_active_cheese():
+		_show_cheese_msg("Mozna aktywowac tylko jeden ser naraz", Color(1.0, 0.92, 0.72))
+		return false
+	if int(cheese_inventory[type]) <= 0:
+		_show_cheese_msg("Brak: %s" % _get_cheese_name(type), Color(0.9, 0.9, 0.9))
+		return false
+
+	cheese_inventory[type] = int(cheese_inventory[type]) - 1
+	active_cheese_type = type
+	active_cheese_timer = cheese_buff_duration
+	_sync_cheese_buff_timers()
+	_update_cheese_inventory_ui()
+	_update_cheese_wheel_ui()
+	_show_cheese_msg("%s horda aktywna" % _get_cheese_name(type), _get_cheese_color(type))
+	return true
+
+
+func _clear_active_cheese() -> void:
+	active_cheese_type = -1
+	active_cheese_timer = 0.0
+	_sync_cheese_buff_timers()
+	_update_cheese_wheel_ui()
+
+
+func _sync_cheese_buff_timers() -> void:
+	buff_red_timer = active_cheese_timer if active_cheese_type == CheeseType.RED else 0.0
+	buff_green_timer = active_cheese_timer if active_cheese_type == CheeseType.GREEN else 0.0
+	buff_blue_timer = active_cheese_timer if active_cheese_type == CheeseType.BLUE else 0.0
+	buff_yellow_timer = 0.0
+	buff_purple_timer = 0.0
+
+
+func _get_cheese_name(type: int) -> String:
+	match type:
+		CheeseType.RED:
+			return "czerwony"
+		CheeseType.GREEN:
+			return "zielony"
+		CheeseType.BLUE:
+			return "niebieski"
+		_:
+			return "nieznany"
+
+
+func _get_cheese_color(type: int) -> Color:
+	match type:
+		CheeseType.RED:
+			return Color(0.95, 0.28, 0.28)
+		CheeseType.GREEN:
+			return Color(0.32, 0.95, 0.42)
+		CheeseType.BLUE:
+			return Color(0.36, 0.62, 1.0)
+		_:
+			return Color.WHITE
+
+
+func _ensure_cheese_input_action() -> void:
+	if InputMap.has_action(CHEESE_WHEEL_ACTION):
+		return
+	InputMap.add_action(CHEESE_WHEEL_ACTION)
+	var event := InputEventKey.new()
+	event.keycode = KEY_Q
+	InputMap.action_add_event(CHEESE_WHEEL_ACTION, event)
+
+
+func _resolve_cheese_counter_nodes() -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
+	_cheese_counter_labels[CheeseType.RED] = scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounters/RedCheeseCounter/Label")
+	_cheese_counter_labels[CheeseType.GREEN] = scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounters/GreenCheeseCounter/Label")
+	_cheese_counter_labels[CheeseType.BLUE] = scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounters/BlueCheeseCounter/Label")
+
+
+func _update_cheese_inventory_ui() -> void:
+	if _cheese_counter_labels.is_empty():
+		_resolve_cheese_counter_nodes()
+	for type in cheese_inventory.keys():
+		var label := _cheese_counter_labels.get(type, null) as Label
+		if label != null:
+			label.text = str(int(cheese_inventory[type]))
+
+
+func _create_cheese_wheel_ui(parent: Control) -> void:
+	_cheese_wheel_root = Control.new()
+	_cheese_wheel_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_cheese_wheel_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cheese_wheel_root.visible = false
+	parent.add_child(_cheese_wheel_root)
+
+	var overlay := ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.0, 0.0, 0.0, 0.25)
+	_cheese_wheel_root.add_child(overlay)
+
+	_cheese_wheel_title = Label.new()
+	_cheese_wheel_title.set_anchors_preset(Control.PRESET_CENTER)
+	_cheese_wheel_title.position = Vector2(-140.0, -170.0)
+	_cheese_wheel_title.size = Vector2(280.0, 36.0)
+	_cheese_wheel_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cheese_wheel_title.add_theme_font_size_override("font_size", 24)
+	_cheese_wheel_title.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cheese_wheel_title.add_theme_constant_override("outline_size", 5)
+	_cheese_wheel_root.add_child(_cheese_wheel_title)
+
+	_cheese_wheel_hint = Label.new()
+	_cheese_wheel_hint.set_anchors_preset(Control.PRESET_CENTER)
+	_cheese_wheel_hint.position = Vector2(-170.0, 126.0)
+	_cheese_wheel_hint.size = Vector2(340.0, 28.0)
+	_cheese_wheel_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cheese_wheel_hint.add_theme_font_size_override("font_size", 16)
+	_cheese_wheel_hint.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cheese_wheel_hint.add_theme_constant_override("outline_size", 4)
+	_cheese_wheel_root.add_child(_cheese_wheel_hint)
+
+	_cheese_wheel_timer_label = Label.new()
+	_cheese_wheel_timer_label.set_anchors_preset(Control.PRESET_CENTER)
+	_cheese_wheel_timer_label.position = Vector2(-140.0, -16.0)
+	_cheese_wheel_timer_label.size = Vector2(280.0, 32.0)
+	_cheese_wheel_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cheese_wheel_timer_label.add_theme_font_size_override("font_size", 20)
+	_cheese_wheel_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cheese_wheel_timer_label.add_theme_constant_override("outline_size", 4)
+	_cheese_wheel_root.add_child(_cheese_wheel_timer_label)
+
+	var specs := {
+		CheeseType.RED: {"offset": Vector2(0.0, -88.0), "title": "Czerwony", "hint": "obrazenia"},
+		CheeseType.GREEN: {"offset": Vector2(-112.0, 56.0), "title": "Zielony", "hint": "gaz"},
+		CheeseType.BLUE: {"offset": Vector2(112.0, 56.0), "title": "Niebieski", "hint": "elektryczne"},
+	}
+	for type in specs.keys():
+		var card := PanelContainer.new()
+		card.set_anchors_preset(Control.PRESET_CENTER)
+		card.position = specs[type]["offset"] - Vector2(74.0, 42.0)
+		card.custom_minimum_size = Vector2(148.0, 84.0)
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.08, 0.08, 0.1, 0.9)
+		style.border_width_left = 3
+		style.border_width_top = 3
+		style.border_width_right = 3
+		style.border_width_bottom = 3
+		style.corner_radius_top_left = 20
+		style.corner_radius_top_right = 20
+		style.corner_radius_bottom_left = 20
+		style.corner_radius_bottom_right = 20
+		style.border_color = _get_cheese_color(type)
+		card.add_theme_stylebox_override("panel", style)
+
+		var margin := MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 12)
+		margin.add_theme_constant_override("margin_top", 10)
+		margin.add_theme_constant_override("margin_right", 12)
+		margin.add_theme_constant_override("margin_bottom", 10)
+		card.add_child(margin)
+
+		var vbox := VBoxContainer.new()
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_theme_constant_override("separation", 4)
+		margin.add_child(vbox)
+
+		var title := Label.new()
+		title.name = "Title"
+		title.text = specs[type]["title"]
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.add_theme_font_size_override("font_size", 18)
+		title.add_theme_color_override("font_color", _get_cheese_color(type))
+		title.add_theme_color_override("font_outline_color", Color.BLACK)
+		title.add_theme_constant_override("outline_size", 4)
+		vbox.add_child(title)
+
+		var body := Label.new()
+		body.name = "Body"
+		body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		body.add_theme_font_size_override("font_size", 14)
+		body.add_theme_color_override("font_outline_color", Color.BLACK)
+		body.add_theme_constant_override("outline_size", 3)
+		body.text = "x0\n%s" % specs[type]["hint"]
+		vbox.add_child(body)
+
+		_cheese_wheel_root.add_child(card)
+		_cheese_wheel_cards[type] = card
+
+
+func _set_cheese_wheel_open(open: bool) -> void:
+	_cheese_wheel_open = open
+	if _cheese_wheel_root != null:
+		_cheese_wheel_root.visible = open
+	if not open:
+		_cheese_wheel_selected_type = -1
+	_update_cheese_wheel_ui()
+
+
+func _confirm_cheese_wheel_selection() -> void:
+	var selected := _cheese_wheel_selected_type
+	_set_cheese_wheel_open(false)
+	if selected >= 0:
+		activate_cheese(selected)
+
+
+func _refresh_cheese_wheel_selection() -> void:
+	if not _cheese_wheel_open:
+		return
+	var center := get_viewport().get_visible_rect().size * 0.5
+	var mouse_pos := get_viewport().get_mouse_position()
+	var dir := mouse_pos - center
+	if dir.length_squared() < 40.0 * 40.0:
+		_cheese_wheel_selected_type = -1
+	else:
+		var directions := {
+			CheeseType.RED: Vector2(0.0, -1.0),
+			CheeseType.GREEN: Vector2(-0.8, 0.6).normalized(),
+			CheeseType.BLUE: Vector2(0.8, 0.6).normalized(),
+		}
+		var best_type := -1
+		var best_dot := -INF
+		var dir_norm := dir.normalized()
+		for type in directions.keys():
+			var dot := dir_norm.dot(directions[type])
+			if dot > best_dot:
+				best_dot = dot
+				best_type = type
+		_cheese_wheel_selected_type = best_type
+	_update_cheese_wheel_ui()
+
+
+func _update_cheese_wheel_ui() -> void:
+	if _cheese_wheel_root == null:
+		return
+	if _cheese_wheel_title != null:
+		_cheese_wheel_title.text = "Kolo serow"
+	if _cheese_wheel_hint != null:
+		_cheese_wheel_hint.text = "Przytrzymaj Q, wybierz kierunek, pusc Q"
+	if _cheese_wheel_timer_label != null:
+		if has_active_cheese():
+			_cheese_wheel_timer_label.text = "%s: %.1fs" % [_get_cheese_name(active_cheese_type), active_cheese_timer]
+			_cheese_wheel_timer_label.modulate = _get_cheese_color(active_cheese_type)
+		else:
+			_cheese_wheel_timer_label.text = "Brak aktywnego sera"
+			_cheese_wheel_timer_label.modulate = Color(0.95, 0.95, 0.95)
+	for type in _cheese_wheel_cards.keys():
+		var card := _cheese_wheel_cards[type] as PanelContainer
+		if card == null:
+			continue
+		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
+		if style != null:
+			var selected : int = _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese()
+			style.bg_color = _get_cheese_color(type) if selected else Color(0.08, 0.08, 0.1, 0.9)
+			style.border_color = _get_cheese_color(type)
+		var title := card.get_node("MarginContainer/VBoxContainer/Title") as Label
+		var body := card.get_node("MarginContainer/VBoxContainer/Body") as Label
+		if title != null:
+			title.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
+		if body != null:
+			body.text = "x%d\n%s" % [int(cheese_inventory.get(type, 0)), "aktywny" if active_cheese_type == type and has_active_cheese() else "gotowy"]
+			body.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -281,6 +575,7 @@ var _structure_timer: float = 0.0
 
 
 func _ready() -> void:
+	_ensure_cheese_input_action()
 	# Ensure GasDamageManager exists for optimized gas effects
 	if get_tree().get_first_node_in_group("gas_damage_manager") == null:
 		var gdm_script = load("res://scripts/systems/gas_damage_manager.gd")
@@ -297,6 +592,8 @@ func _ready() -> void:
 	buff_mat_red.albedo_color = Color(0.9, 0.1, 0.1)
 	buff_mat_green = StandardMaterial3D.new()
 	buff_mat_green.albedo_color = Color(0.1, 0.9, 0.1)
+	buff_mat_blue = StandardMaterial3D.new()
+	buff_mat_blue.albedo_color = Color(0.1, 0.3, 0.9)
 	buff_mat_yellow = StandardMaterial3D.new()
 	buff_mat_yellow.albedo_color = Color(0.9, 0.9, 0.1)
 	buff_mat_purple = StandardMaterial3D.new()
@@ -368,15 +665,16 @@ func _ready() -> void:
 	_cheese_buff_label.offset_top = 150 # Position it down from the top
 	_cheese_buff_label.visible = false
 	control.add_child(_cheese_buff_label)
+	_create_cheese_wheel_ui(control)
 	
 	add_child(_pity_canvas)
 	
 	# Szukamy UI w GameHUD (lub poczekamy na update() / ready głównej sceny)
 	# Na wszelki wypadek przypisanie odbywa się też w process/update jeżeli nie znaleziono
-	_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
-	var cheese_icon = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Icon")
-	# if cheese_icon and cheese_icon is TextureRect:
-	# 	cheese_icon.texture = _create_cheese_icon()
+	_resolve_cheese_counter_nodes()
+	_update_cheese_inventory_ui()
+	_update_cheese_wheel_ui()
+	_sync_cheese_buff_timers()
 
 	# ── Sound Wave ──
 	if SoundWaveScene:
@@ -422,11 +720,10 @@ func _on_player_died() -> void:
 			r.die()
 	rats.clear()
 	
-	collected_cheese = 0
-	if _cheese_counter_label == null:
-		_cheese_counter_label = get_tree().current_scene.get_node_or_null("GameHUD/HUDRoot/CheeseCounter/Label")
-	if _cheese_counter_label:
-		_cheese_counter_label.text = "0"
+	for type in cheese_inventory.keys():
+		cheese_inventory[type] = 0
+	_clear_active_cheese()
+	_update_cheese_inventory_ui()
 		
 	_spawn_rats_near_player(respawn_count)
 
@@ -709,10 +1006,14 @@ func _process(delta: float) -> void:
 			wave_active = false
 			wave_ended.emit()
 
-	if buff_red_timer > 0.0: buff_red_timer -= delta
-	if buff_green_timer > 0.0: buff_green_timer -= delta
-	if buff_yellow_timer > 0.0: buff_yellow_timer -= delta
-	if buff_purple_timer > 0.0: buff_purple_timer -= delta
+	if active_cheese_timer > 0.0:
+		active_cheese_timer = maxf(0.0, active_cheese_timer - delta)
+		if active_cheese_timer <= 0.0:
+			_clear_active_cheese()
+		else:
+			_sync_cheese_buff_timers()
+	if _cheese_wheel_open:
+		_refresh_cheese_wheel_selection()
 	if gas_emit_per_second > 0.0:
 		_gas_emit_budget = min(gas_emit_budget_max, _gas_emit_budget + gas_emit_per_second * delta)
 
@@ -844,7 +1145,9 @@ func _process_damage(_delta: float) -> void:
 func _update_electric_arcs() -> void:
 	var active_electric: Array[CharacterBody3D] = []
 	for rat in rats:
-		if is_instance_valid(rat) and rat.get("default_rat_type") == 3 and rat.state == rat.State.FOLLOW and not rat.is_fallen:
+		if not is_instance_valid(rat):
+			continue
+		if get_effective_rat_type(int(rat.get("default_rat_type"))) == Rat.RatType.ELECTRIC and rat.state == rat.State.FOLLOW and not rat.is_fallen:
 			active_electric.append(rat)
 			
 	var connections = []
@@ -1729,6 +2032,18 @@ func _form_unified_mesh() -> void:
 # ── Input handling ────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(CHEESE_WHEEL_ACTION):
+		_set_cheese_wheel_open(true)
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_released(CHEESE_WHEEL_ACTION):
+		_confirm_cheese_wheel_selection()
+		get_viewport().set_input_as_handled()
+		return
+	if _cheese_wheel_open:
+		get_viewport().set_input_as_handled()
+		return
+
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_1 or event.keycode == KEY_2 or event.keycode == KEY_3:
 			current_attack_mode = AttackMode.PATH_DASH

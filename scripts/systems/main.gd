@@ -1,19 +1,15 @@
 extends Node3D
 
-@export_group("Horde Upgrades")
-@export var upgrade_common_amount: int = 5
-@export var upgrade_rare_amount: int = 10
-@export var upgrade_epic_amount: int = 15
-@export var upgrade_delay_seconds: float = 2.0
-@export var levels_with_upgrades: Array[int] = [1, 2, 3, 4, 5, 6, 7]
-
-var upgrade_layer: CanvasLayer
-var upgrade_panel: Panel
-var upgrade_vbox: VBoxContainer
+var upgrade_common_amount: int = 0
+var upgrade_rare_amount: int = 0
+var upgrade_epic_amount: int = 0
+var upgrade_delay_seconds: float = 0.0
+var levels_with_upgrades: Array[int] = []
+var upgrade_layer: CanvasLayer = null
+var upgrade_panel: Panel = null
+var upgrade_vbox: VBoxContainer = null
 var _upgrade_delay_timer: float = 0.0
 var _upgrade_pending: bool = false
-
-
 
 const LEVEL_BOUNDS := {
 	1: {"min_z": - 140.0, "max_z": 48.0},
@@ -129,7 +125,6 @@ var _cam_look_ahead: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	_setup_input_map()
-	_setup_upgrade_ui()
 	_init_game()
 	get_viewport().size_changed.connect(_refresh_cheatsheet_size)
 
@@ -811,15 +806,6 @@ func _process(delta: float) -> void:
 		if _current_level_cleared and not was_cleared:
 			if player and player.has_method("heal_full"):
 				player.heal_full()
-			if current_level_id in levels_with_upgrades:
-				_upgrade_delay_timer = upgrade_delay_seconds
-				_upgrade_pending = true
-
-	if _upgrade_pending:
-		_upgrade_delay_timer -= delta
-		if _upgrade_delay_timer <= 0.0:
-			_upgrade_pending = false
-			_show_upgrade_ui()
 
 
 	_log_level_debug_state()

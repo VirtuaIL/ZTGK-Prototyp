@@ -49,27 +49,13 @@ func _process(_delta: float) -> void:
 		_update_ui()
 
 func _update_ui() -> void:
-	if rat_mgr == null:
-		rat_mgr = get_tree().get_first_node_in_group("rat_manager")
-	
-	if rat_mgr:
-		var current_cheese = rat_mgr.get("collected_cheese")
-		if current_cheese != null:
-			cheese_label.text = "Twoje sery: " + str(current_cheese)
-			var can_buy = current_cheese >= 1
-			btn_red.disabled = not can_buy
-			btn_green.disabled = not can_buy
-			btn_electric.disabled = not can_buy
+	cheese_label.text = "Sklep serow jest wylaczony"
+	btn_red.disabled = true
+	btn_green.disabled = true
+	btn_electric.disabled = true
 
 func _buy_rats(rat_type: int) -> void:
-	if rat_mgr and rat_mgr.get("collected_cheese") >= 1:
-		rat_mgr.collected_cheese -= 1
-		# Update GameHUD UI for cheese
-		if rat_mgr._cheese_counter_label:
-			rat_mgr._cheese_counter_label.text = str(rat_mgr.collected_cheese)
-		
-		rat_mgr.add_rats_to_horde(rat_type, 5)
-		_update_ui()
+	_update_ui()
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):

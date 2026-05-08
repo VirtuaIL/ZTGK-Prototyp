@@ -210,31 +210,75 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="CheeseCounter" type="HBoxContainer" parent="HUDRoot" unique_id=1718096589]
+[node name="CheeseCounters" type="VBoxContainer" parent="HUDRoot" unique_id=1718096589]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -159.0
+offset_left = -176.0
 offset_top = 254.00002
 offset_right = 42.0
-offset_bottom = 323.0
+offset_bottom = 407.0
 grow_horizontal = 0
-scale = Vector2(0.7, 0.7)
+scale = Vector2(0.62, 0.62)
+alignment = 2
+theme_override_constants/separation = 6
+
+[node name="RedCheeseCounter" type="HBoxContainer" parent="HUDRoot/CheeseCounters" unique_id=1798096589]
+layout_mode = 2
 alignment = 2
 
-[node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounter" unique_id=182642318]
+[node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/RedCheeseCounter" unique_id=182642318]
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 texture = ExtResource("4_8n052")
 expand_mode = 1
+modulate = Color(1, 0.38, 0.38, 1)
 
-[node name="Label" type="Label" parent="HUDRoot/CheeseCounter" unique_id=937839977]
+[node name="Label" type="Label" parent="HUDRoot/CheeseCounters/RedCheeseCounter" unique_id=937839977]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.1, 1)
+theme_override_colors/font_color = Color(0.95, 0.28, 0.28, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 50
+theme_override_font_sizes/font_size = 42
+text = "0"
+
+[node name="GreenCheeseCounter" type="HBoxContainer" parent="HUDRoot/CheeseCounters" unique_id=1798096590]
+layout_mode = 2
+alignment = 2
+
+[node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/GreenCheeseCounter" unique_id=182642319]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("4_8n052")
+expand_mode = 1
+modulate = Color(0.36, 0.95, 0.42, 1)
+
+[node name="Label" type="Label" parent="HUDRoot/CheeseCounters/GreenCheeseCounter" unique_id=937839978]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.95, 0.42, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 42
+text = "0"
+
+[node name="BlueCheeseCounter" type="HBoxContainer" parent="HUDRoot/CheeseCounters" unique_id=1798096591]
+layout_mode = 2
+alignment = 2
+
+[node name="Icon" type="TextureRect" parent="HUDRoot/CheeseCounters/BlueCheeseCounter" unique_id=182642320]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+texture = ExtResource("4_8n052")
+expand_mode = 1
+modulate = Color(0.42, 0.68, 1, 1)
+
+[node name="Label" type="Label" parent="HUDRoot/CheeseCounters/BlueCheeseCounter" unique_id=937839979]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.62, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 42
 text = "0"
 
 [node name="DungeonKeyCounter" type="HBoxContainer" parent="HUDRoot" unique_id=1856037887]
@@ -243,9 +287,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -159.0
-offset_top = 302.00003
+offset_top = 412.0
 offset_right = 42.0
-offset_bottom = 371.00003
+offset_bottom = 481.0
 grow_horizontal = 0
 scale = Vector2(0.7, 0.7)
 alignment = 2
