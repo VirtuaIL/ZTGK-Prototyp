@@ -282,6 +282,24 @@ theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 42
 text = "0"
 
+[node name="CheeseEffectTimer" type="Label" parent="HUDRoot" unique_id=1209384756]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -500.99988
+offset_top = 210.0
+offset_right = -282.99988
+offset_bottom = 242.0
+grow_horizontal = 0
+scale = Vector2(0.9, 0.9)
+theme_override_colors/font_color = Color(1, 0.92, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 22
+text = "Efekt: brak"
+horizontal_alignment = 2
+
 [node name="DungeonKeyCounter" type="HBoxContainer" parent="HUDRoot" unique_id=1856037887]
 layout_mode = 1
 anchors_preset = 1

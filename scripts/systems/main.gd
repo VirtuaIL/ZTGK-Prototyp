@@ -62,6 +62,7 @@ var _scroll_highlight_timer: float = 0.0
 var indicator_layer: CanvasLayer
 var indicator_root: Control
 var indicator_pool: Array[Label] = []
+var dungeon_key_door_indicator: Label = null
 var _indicator_blink_time: float = 0.0
 var fps_label: Label
 var current_level_id: int = 1
@@ -81,6 +82,8 @@ var combat_mode_label: RichTextLabel
 var _last_attack_mode: int = -1
 var combat_key_rects: Array[ColorRect] = []
 var buff_panel: Panel
+var active_cheese_label: Label
+var cheese_effect_timer_label: Label
 var buff_labels: Array[Label] = []
 
 const DUNGEON_KEY_LEVEL_IDS: Array[int] = [5, 6, 7]
@@ -191,6 +194,23 @@ func _bind_hud_nodes() -> void:
 
 	recall_indicator = game_hud.get_node_or_null("HUDRoot/RecallIndicator") as Control
 	indicator_root = game_hud.get_node_or_null("HUDRoot/IndicatorRoot") as Control
+	cheese_effect_timer_label = game_hud.get_node_or_null("HUDRoot/CheeseEffectTimer") as Label
+	if indicator_root != null and dungeon_key_door_indicator == null:
+		dungeon_key_door_indicator = Label.new()
+		dungeon_key_door_indicator.name = "DungeonDoorIndicator"
+		dungeon_key_door_indicator.text = "▲"
+		dungeon_key_door_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		dungeon_key_door_indicator.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dungeon_key_door_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dungeon_key_door_indicator.custom_minimum_size = Vector2(64, 64)
+		dungeon_key_door_indicator.size = Vector2(64, 64)
+		dungeon_key_door_indicator.pivot_offset = dungeon_key_door_indicator.size * 0.5
+		dungeon_key_door_indicator.add_theme_font_size_override("font_size", 54)
+		dungeon_key_door_indicator.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25, 1.0))
+		dungeon_key_door_indicator.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1.0))
+		dungeon_key_door_indicator.add_theme_constant_override("outline_size", 7)
+		dungeon_key_door_indicator.visible = false
+		indicator_root.add_child(dungeon_key_door_indicator)
 
 	_dungeon_key_counter_label = game_hud.get_node_or_null("HUDRoot/DungeonKeyCounter/Label") as Label
 	# if _dungeon_key_counter_label == null:
@@ -558,7 +578,7 @@ func _setup_buff_ui() -> void:
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	# Place modifiers above the health bar (HealthBar top is at -130).
 	panel.position = Vector2(20, -280)
-	panel.custom_minimum_size = Vector2(260, 140)
+	panel.custom_minimum_size = Vector2(280, 164)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var style := StyleBoxFlat.new()
@@ -592,6 +612,14 @@ func _setup_buff_ui() -> void:
 	title.add_theme_constant_override("outline_size", 3)
 	title.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(title)
+
+	active_cheese_label = Label.new()
+	active_cheese_label.text = "SER: brak"
+	active_cheese_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.72))
+	active_cheese_label.add_theme_color_override("font_outline_color", UI_OUTLINE_DARK)
+	active_cheese_label.add_theme_constant_override("outline_size", 3)
+	active_cheese_label.add_theme_font_size_override("font_size", 15)
+	vbox.add_child(active_cheese_label)
 
 	buff_labels.clear()
 	var names := ["CZERWONY", "ZIELONY", "ZOLTY", "FIOLETOWY"]
@@ -720,6 +748,76 @@ func _update_offscreen_indicators() -> void:
 	for i in range(idx, indicator_pool.size()):
 		indicator_pool[i].visible = false
 
+
+func _get_dungeon_key_door_target() -> Node3D:
+	if collected_dungeon_keys < dungeon_key_required_count or player == null:
+		return null
+
+	var best_door: Node3D = null
+	var best_dist := INF
+	for node in get_tree().get_nodes_in_group("doors"):
+		var door_node := node as Node3D
+		if door_node == null or not is_instance_valid(door_node):
+			continue
+		if not is_node_in_current_level(door_node):
+			continue
+		var required_keys := int(door_node.get("required_dungeon_keys"))
+		if required_keys <= 0:
+			continue
+		if door_node.has_meta("_dungeon_key_unlocked") and bool(door_node.get_meta("_dungeon_key_unlocked")):
+			continue
+		var dist := player.global_position.distance_squared_to(door_node.global_position)
+		if dist < best_dist:
+			best_dist = dist
+			best_door = door_node
+	return best_door
+
+
+func _update_dungeon_key_door_indicator() -> void:
+	if dungeon_key_door_indicator == null or player == null:
+		return
+
+	var door_target := _get_dungeon_key_door_target()
+	if door_target == null:
+		dungeon_key_door_indicator.visible = false
+		return
+
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		dungeon_key_door_indicator.visible = false
+		return
+
+	var vp_rect: Rect2 = get_viewport().get_visible_rect()
+	var pad: float = 28.0
+	var inner_rect := Rect2(Vector2(pad, pad), vp_rect.size - Vector2(pad * 2.0, pad * 2.0))
+	var center: Vector2 = inner_rect.get_center()
+	var screen_pos: Vector2 = cam.unproject_position(door_target.global_position)
+	var behind: bool = cam.is_position_behind(door_target.global_position)
+	if not behind and inner_rect.has_point(screen_pos):
+		dungeon_key_door_indicator.visible = false
+		return
+
+	var dir: Vector2 = screen_pos - center
+	if dir.length() < 0.001:
+		return
+	if behind:
+		dir = -dir
+
+	var half: Vector2 = inner_rect.size * 0.5
+	var scale_x: float = half.x / max(0.001, absf(dir.x))
+	var scale_y: float = half.y / max(0.001, absf(dir.y))
+	var scale: float = min(scale_x, scale_y)
+	var pos: Vector2 = center + dir * scale
+	var dist := player.global_position.distance_to(door_target.global_position)
+	var t_dist: float = clampf(dist / 30.0, 0.0, 1.0)
+	var alpha: float = lerpf(1.0, 0.7, t_dist)
+	var blink: float = 1.0 - 0.25 + 0.25 * (0.5 + 0.5 * sin(_indicator_blink_time * 5.0))
+
+	dungeon_key_door_indicator.visible = true
+	dungeon_key_door_indicator.position = pos - dungeon_key_door_indicator.pivot_offset
+	dungeon_key_door_indicator.rotation = atan2(dir.y, dir.x) + PI * 0.5
+	dungeon_key_door_indicator.modulate = Color(1.0, 0.88, 0.25, alpha * blink)
+
 func _update_rat_count_ui() -> void:
 	if not rat_count_label or not rat_manager:
 		return
@@ -768,6 +866,32 @@ func _update_objective_ui() -> void:
 
 
 func _update_buff_ui() -> void:
+	if cheese_effect_timer_label:
+		if rat_manager and rat_manager.has_method("has_active_cheese") and rat_manager.has_active_cheese():
+			var cheese_name: String = rat_manager.get_active_cheese_name() if rat_manager.has_method("get_active_cheese_name") else "ser"
+			var cheese_time: float = rat_manager.get_active_cheese_remaining_time() if rat_manager.has_method("get_active_cheese_remaining_time") else 0.0
+			var cheese_color: Color = rat_manager.get_active_cheese_color() if rat_manager.has_method("get_active_cheese_color") else Color(1.0, 0.92, 0.72)
+			cheese_effect_timer_label.text = "Efekt: %s %.1fs" % [cheese_name, cheese_time]
+			cheese_effect_timer_label.modulate = cheese_color
+		else:
+			cheese_effect_timer_label.text = "Efekt: brak"
+			cheese_effect_timer_label.modulate = Color(1.0, 0.92, 0.72)
+	if active_cheese_label:
+		if rat_manager and rat_manager.has_method("has_active_cheese") and rat_manager.has_active_cheese():
+			var cheese_name: String = "ser"
+			var cheese_time: float = 0.0
+			var cheese_color: Color = Color(1.0, 0.92, 0.72)
+			if rat_manager.has_method("get_active_cheese_name"):
+				cheese_name = rat_manager.get_active_cheese_name()
+			if rat_manager.has_method("get_active_cheese_remaining_time"):
+				cheese_time = rat_manager.get_active_cheese_remaining_time()
+			if rat_manager.has_method("get_active_cheese_color"):
+				cheese_color = rat_manager.get_active_cheese_color()
+			active_cheese_label.text = "SER: %s %.1fs" % [cheese_name, cheese_time]
+			active_cheese_label.modulate = cheese_color
+		else:
+			active_cheese_label.text = "SER: brak"
+			active_cheese_label.modulate = Color(1.0, 0.92, 0.72)
 	if buff_labels.is_empty():
 		return
 	var timers := [0.0, 0.0, 0.0, 0.0]
@@ -801,6 +925,7 @@ func _process(delta: float) -> void:
 	_sync_tutorial_unlock_from_rats()
 	_update_rat_count_ui()
 	_update_objective_ui()
+	_update_buff_ui()
 	_update_recall_hold(delta)
 	_indicator_blink_time += delta
 	var level_cleared := is_current_level_cleared()
@@ -882,6 +1007,7 @@ func _process(delta: float) -> void:
 		_update_wall_occlusion_fade(cam)
 	
 	_update_offscreen_indicators()
+	_update_dungeon_key_door_indicator()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1287,6 +1413,8 @@ func _update_tutorial_goal_ui() -> void:
 		return
 	if current_level_id == 1 and not tutorial_player_unlocked:
 		goal_label.text = "Zbierz %d szczurów, aby odblokować ruch." % tutorial_player_unlock_count
+	elif collected_dungeon_keys >= dungeon_key_required_count:
+		goal_label.text = "Masz komplet kluczy. Podejdz do glownych drzwi."
 	else:
 		goal_label.text = "Cel prototypu: Wydostań się z labiryntu, pokonując kolejne poziomy."
 
@@ -1606,7 +1734,7 @@ func collect_dungeon_key(level_id: int, key_node: Node = null) -> void:
 	_dungeon_key_collected_levels[level_id] = true
 	collected_dungeon_keys = min(dungeon_key_required_count, collected_dungeon_keys + 1)
 	_update_dungeon_key_ui()
-	_update_level_doors()
+	_update_tutorial_goal_ui()
 
 	if key_node != null and is_instance_valid(key_node):
 		key_node.queue_free()
@@ -1837,12 +1965,7 @@ func _update_level_doors() -> void:
 		var should_open := is_level_cleared(gate.controlled_level_id)
 		var required_keys := int(gate.required_dungeon_keys)
 		if required_keys > 0:
-			var unlocked := bool(gate.get_meta("_dungeon_key_unlocked")) if gate.has_meta("_dungeon_key_unlocked") else false
-			if not unlocked and has_dungeon_keys(required_keys):
-				if consume_dungeon_keys(required_keys):
-					unlocked = true
-					gate.set_meta("_dungeon_key_unlocked", true)
-			should_open = unlocked
+			should_open = bool(gate.get_meta("_dungeon_key_unlocked")) if gate.has_meta("_dungeon_key_unlocked") else false
 		else:
 			if gate.open_until_level_enter:
 				if current_level_id < gate.controlled_level_id:

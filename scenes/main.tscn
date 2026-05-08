@@ -224,9 +224,9 @@ script = ExtResource("11_ya4ey")
 level_id = 7
 
 [node name="LevelCorridor4" parent="levels" unique_id=527547048 instance=ExtResource("18_dp3eg")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0797119, 0, -173.99945)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0797119, 0, -173.55168)
 
 [node name="Level8" parent="levels" unique_id=296544604 instance=ExtResource("16_jbj1t")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 1.1956635, 0, -225.66997)
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 1.1956635, 0, -225.2222)
 script = ExtResource("11_ya4ey")
 level_id = 8

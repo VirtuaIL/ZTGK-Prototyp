@@ -75,6 +75,11 @@ var cheese_inventory: Dictionary = {
 	CheeseType.GREEN: 0,
 	CheeseType.BLUE: 0,
 }
+var cheese_total_collected: Dictionary = {
+	CheeseType.RED: 0,
+	CheeseType.GREEN: 0,
+	CheeseType.BLUE: 0,
+}
 var active_cheese_type: int = -1
 var active_cheese_timer: float = 0.0
 
@@ -110,12 +115,33 @@ func collect_cheese(type: int) -> void:
 	if not cheese_inventory.has(type):
 		return
 	cheese_inventory[type] = int(cheese_inventory[type]) + 1
+	cheese_total_collected[type] = int(cheese_total_collected.get(type, 0)) + 1
 	_update_cheese_inventory_ui()
 	_update_cheese_wheel_ui()
 	_show_cheese_msg("Zebrano %s ser" % _get_cheese_name(type), _get_cheese_color(type))
 
 func has_active_cheese() -> bool:
 	return active_cheese_type >= 0 and active_cheese_timer > 0.0
+
+
+func get_active_cheese_name() -> String:
+	return _get_cheese_name(active_cheese_type) if has_active_cheese() else "brak"
+
+
+func get_active_cheese_remaining_time() -> float:
+	return active_cheese_timer if has_active_cheese() else 0.0
+
+
+func get_active_cheese_color() -> Color:
+	return _get_cheese_color(active_cheese_type) if has_active_cheese() else Color(0.95, 0.95, 0.95)
+
+
+func get_cheese_inventory_count(type: int) -> int:
+	return int(cheese_inventory.get(type, 0))
+
+
+func get_cheese_total_collected(type: int) -> int:
+	return int(cheese_total_collected.get(type, 0))
 
 
 func get_active_horde_rat_type() -> int:
@@ -272,7 +298,7 @@ func _create_cheese_wheel_ui(parent: Control) -> void:
 		var card := PanelContainer.new()
 		card.set_anchors_preset(Control.PRESET_CENTER)
 		card.position = specs[type]["offset"] - Vector2(74.0, 42.0)
-		card.custom_minimum_size = Vector2(148.0, 84.0)
+		card.custom_minimum_size = Vector2(148.0, 96.0)
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0.08, 0.08, 0.1, 0.9)
 		style.border_width_left = 3
@@ -311,7 +337,7 @@ func _create_cheese_wheel_ui(parent: Control) -> void:
 		var body := Label.new()
 		body.name = "Body"
 		body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		body.add_theme_font_size_override("font_size", 14)
+		body.add_theme_font_size_override("font_size", 13)
 		body.add_theme_color_override("font_outline_color", Color.BLACK)
 		body.add_theme_constant_override("outline_size", 3)
 		body.text = "x0\n%s" % specs[type]["hint"]
@@ -374,7 +400,7 @@ func _update_cheese_wheel_ui() -> void:
 		_cheese_wheel_hint.text = "Przytrzymaj Q, wybierz kierunek, pusc Q"
 	if _cheese_wheel_timer_label != null:
 		if has_active_cheese():
-			_cheese_wheel_timer_label.text = "%s: %.1fs" % [_get_cheese_name(active_cheese_type), active_cheese_timer]
+			_cheese_wheel_timer_label.text = "Aktywny ser: %s (%.1fs)" % [_get_cheese_name(active_cheese_type), active_cheese_timer]
 			_cheese_wheel_timer_label.modulate = _get_cheese_color(active_cheese_type)
 		else:
 			_cheese_wheel_timer_label.text = "Brak aktywnego sera"
@@ -393,7 +419,10 @@ func _update_cheese_wheel_ui() -> void:
 		if title != null:
 			title.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
 		if body != null:
-			body.text = "x%d\n%s" % [int(cheese_inventory.get(type, 0)), "aktywny" if active_cheese_type == type and has_active_cheese() else "gotowy"]
+			var available := int(cheese_inventory.get(type, 0))
+			var collected := int(cheese_total_collected.get(type, 0))
+			var status := "aktywny" if active_cheese_type == type and has_active_cheese() else "gotowy"
+			body.text = "dost. x%d\nzebr. x%d\n%s" % [available, collected, status]
 			body.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
 
 # Drawing & Blob
@@ -729,6 +758,7 @@ func _on_player_died() -> void:
 	
 	for type in cheese_inventory.keys():
 		cheese_inventory[type] = 0
+		cheese_total_collected[type] = 0
 	_clear_active_cheese()
 	_update_cheese_inventory_ui()
 		
@@ -1123,6 +1153,9 @@ func _process(delta: float) -> void:
 			_cheese_buff_label.visible = false
 		if _pity_label:
 			_pity_label.visible = false
+
+	_update_cheese_inventory_ui()
+	_update_cheese_wheel_ui()
 
 
 func _process_damage(_delta: float) -> void:

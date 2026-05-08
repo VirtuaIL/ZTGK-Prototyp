@@ -2,6 +2,8 @@
 extends CharacterBody3D
 class_name door
 
+const DUNGEON_KEY_SCENE := preload("res://scenes/objects/dungeon_key.tscn")
+
 # The ID used by buttons to target this door
 @export var doorId: int = -1
 
@@ -49,6 +51,7 @@ var _closed_position: Vector3
 var _open_position: Vector3
 var _is_open: bool = false
 var _transition_locked: bool = false
+var _dungeon_key_sequence_running: bool = false
 var _debug_mesh: MeshInstance3D
 var _debug_show_direction: bool = false
 var _debug_length_override: float = 0.0
@@ -126,9 +129,46 @@ func _on_transition_body_entered(body: Node3D) -> void:
 		return
 	if not body.is_in_group("player"):
 		return
+	if required_dungeon_keys > 0 and not _is_open:
+		await _try_unlock_with_keys(body)
+		return
 	if transition_requires_open and not _is_open:
 		return
 
+	await _enter_target_level()
+
+
+func _try_unlock_with_keys(body: Node3D) -> void:
+	if _dungeon_key_sequence_running or _is_open:
+		return
+
+	var current_scene := get_tree().current_scene
+	if current_scene == null:
+		return
+	if not current_scene.has_method("has_dungeon_keys") or not current_scene.has_method("consume_dungeon_keys"):
+		return
+	if not current_scene.has_dungeon_keys(required_dungeon_keys):
+		return
+
+	_dungeon_key_sequence_running = true
+	_transition_locked = true
+	if not current_scene.consume_dungeon_keys(required_dungeon_keys):
+		_dungeon_key_sequence_running = false
+		_transition_locked = false
+		return
+
+	var inserted_keys := _spawn_inserted_key_visuals(required_dungeon_keys)
+	_play_key_insert_animation(inserted_keys)
+	await get_tree().create_timer(0.85).timeout
+	set_meta("_dungeon_key_unlocked", true)
+	open()
+	_dungeon_key_sequence_running = false
+	_transition_locked = false
+	if body != null and is_instance_valid(body) and body.is_in_group("player"):
+		await _enter_target_level()
+
+
+func _enter_target_level() -> void:
 	var current_scene := get_tree().current_scene
 	if current_scene == null:
 		return
@@ -146,6 +186,51 @@ func _on_transition_body_entered(body: Node3D) -> void:
 	current_scene.transition_to_level(target_level_id, target_position)
 	await get_tree().create_timer(0.35).timeout
 	_transition_locked = false
+
+
+func _spawn_inserted_key_visuals(count: int) -> Array[Node3D]:
+	var spawned: Array[Node3D] = []
+	if count <= 0 or DUNGEON_KEY_SCENE == null:
+		return spawned
+
+	for i in range(count):
+		var key: Node = DUNGEON_KEY_SCENE.instantiate()
+		if key == null:
+			continue
+		var key_node: Node3D = key as Node3D
+		if key_node == null:
+			continue
+		add_child(key_node)
+		key_node.set_process(false)
+		key_node.set_physics_process(false)
+		if key_node is Area3D:
+			var key_area := key_node as Area3D
+			key_area.monitoring = false
+			key_area.monitorable = false
+			key_area.collision_layer = 0
+			key_area.collision_mask = 0
+		key_node.position = Vector3(-1.0 + float(i) * 1.0, 1.4, 0.45)
+		spawned.append(key_node)
+	return spawned
+
+
+func _play_key_insert_animation(keys: Array[Node3D]) -> void:
+	if keys.is_empty():
+		return
+
+	var slots := [
+		Vector3(-0.95, 1.4, 0.0),
+		Vector3(0.0, 1.4, 0.0),
+		Vector3(0.95, 1.4, 0.0),
+	]
+	for i in range(min(keys.size(), slots.size())):
+		var key: Node3D = keys[i]
+		if key == null or not is_instance_valid(key):
+			continue
+		var tween := create_tween()
+		tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+		tween.tween_property(key, "position", slots[i], 0.75).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(key, "rotation", Vector3(0.0, PI * 2.0, 0.0), 0.75)
 
 
 func _get_target_position() -> Vector3:
