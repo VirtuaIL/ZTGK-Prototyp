@@ -26,19 +26,12 @@ groups = Array[ExtResource("7_sjq8i")]([SubResource("Resource_u1w5x")])
 
 [sub_resource type="Resource" id="Resource_sjq8i"]
 script = ExtResource("7_sjq8i")
-spawn_kind = 4
-count_min = 2
-count_max = 2
-
-[sub_resource type="Resource" id="Resource_ivh0c"]
-script = ExtResource("7_sjq8i")
-spawn_kind = 2
-count_min = 2
-count_max = 2
+count_min = 5
+count_max = 5
 
 [sub_resource type="Resource" id="Resource_q0wsq"]
 script = ExtResource("6_posk4")
-groups = Array[ExtResource("7_sjq8i")]([SubResource("Resource_sjq8i"), SubResource("Resource_ivh0c")])
+groups = Array[ExtResource("7_sjq8i")]([SubResource("Resource_sjq8i")])
 
 [node name="Level7" type="Node3D" unique_id=1397753813]
 
@@ -362,21 +355,6 @@ start_delay = 0.0
 repeat_interval = 10.0
 reset_on_level_enter = false
 spawn_kind = 1
-count_max = 1
-spawn_radius = 1.0
-position_mode = 3
-wild_rat_prob_normal = 0.0
-wild_rat_prob_red = 0.0
-wild_rat_prob_green = 0.0
-
-[node name="EnemyFlame" parent="EnemiesParams" unique_id=977639274 instance=ExtResource("3_bl61q")]
-enabled = false
-label = "FlameThrowerEnemy"
-level_id = 7
-start_delay = 0.0
-repeat_interval = 10.0
-reset_on_level_enter = false
-spawn_kind = 2
 count_max = 1
 spawn_radius = 1.0
 position_mode = 3

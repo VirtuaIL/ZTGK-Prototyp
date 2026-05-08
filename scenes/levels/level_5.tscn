@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://685ve5nxq2os" path="res://resources/models/external/sm_prop_altar_dungeon.tscn" id="8_j14br"]
 [ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="8_tqnj0"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="10_tqnj0"]
-[ext_resource type="PackedScene" uid="uid://jmos3edll0ji" path="res://scenes/objects/sewer_grate.tscn" id="15_0y7y4"]
+[ext_resource type="PackedScene" path="res://scenes/objects/sewer_grate.tscn" id="15_0y7y4"]
 
 [sub_resource type="Resource" id="Resource_dwyms"]
 script = ExtResource("8_tqnj0")

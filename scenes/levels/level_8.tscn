@@ -26,14 +26,12 @@ count_max = 2
 [sub_resource type="Resource" id="Resource_w2i51"]
 script = ExtResource("8_xsrpe")
 spawn_kind = 5
-count_min = 2
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Resource_xsrpe"]
 script = ExtResource("8_xsrpe")
 spawn_kind = 4
-count_min = 2
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Resource_0kxia"]
 script = ExtResource("7_w2i51")
@@ -42,8 +40,7 @@ groups = Array[ExtResource("8_xsrpe")]([SubResource("Resource_h6r4t"), SubResour
 [sub_resource type="Resource" id="Resource_5umh1"]
 script = ExtResource("8_xsrpe")
 spawn_kind = 2
-count_min = 2
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Resource_v7ucw"]
 script = ExtResource("8_xsrpe")
@@ -56,8 +53,7 @@ groups = Array[ExtResource("8_xsrpe")]([SubResource("Resource_5umh1"), SubResour
 [sub_resource type="Resource" id="Resource_kk2ik"]
 script = ExtResource("8_xsrpe")
 spawn_kind = 5
-count_min = 2
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Resource_6to6e"]
 script = ExtResource("8_xsrpe")
@@ -67,8 +63,7 @@ count_max = 2
 [sub_resource type="Resource" id="Resource_40qa3"]
 script = ExtResource("8_xsrpe")
 spawn_kind = 2
-count_min = 2
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Resource_e7lui"]
 script = ExtResource("8_xsrpe")
@@ -76,15 +71,9 @@ spawn_kind = 4
 count_min = 2
 count_max = 2
 
-[sub_resource type="Resource" id="Resource_acgl5"]
-script = ExtResource("8_xsrpe")
-spawn_kind = 5
-count_min = 2
-count_max = 2
-
 [sub_resource type="Resource" id="Resource_61loj"]
 script = ExtResource("7_w2i51")
-groups = Array[ExtResource("8_xsrpe")]([SubResource("Resource_kk2ik"), SubResource("Resource_6to6e"), SubResource("Resource_40qa3"), SubResource("Resource_e7lui"), SubResource("Resource_acgl5")])
+groups = Array[ExtResource("8_xsrpe")]([SubResource("Resource_kk2ik"), SubResource("Resource_6to6e"), SubResource("Resource_40qa3"), SubResource("Resource_e7lui")])
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e7lui"]
 shading_mode = 0

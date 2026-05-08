@@ -179,7 +179,7 @@ func activate_cheese(type: int) -> bool:
 	_sync_cheese_buff_timers()
 	_update_cheese_inventory_ui()
 	_update_cheese_wheel_ui()
-	_show_cheese_msg("%s horda aktywna" % _get_cheese_name(type), _get_cheese_color(type))
+	_show_cheese_msg("%s ser aktywny" % _get_cheese_name(type), _get_cheese_color(type))
 	return true
 
 
