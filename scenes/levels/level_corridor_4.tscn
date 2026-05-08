@@ -125,3 +125,9 @@ omni_range = 18.0
 
 [node name="TeslaLamp" parent="Interactive" unique_id=1567373144 instance=ExtResource("7_p1gxi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8335843, 0, -11.1749525)
+
+[node name="TeslaLamp2" parent="Interactive" unique_id=1052028602 instance=ExtResource("7_p1gxi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.354589, 0, 12.967145)
+
+[node name="TeslaLamp3" parent="Interactive" unique_id=1848335629 instance=ExtResource("7_p1gxi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6223855, 0, 5.887267)

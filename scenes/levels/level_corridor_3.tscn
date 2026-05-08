@@ -6,7 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://bqxwbpahonh57" path="res://scenes/obstacles/wall.tscn" id="3_a8gu5"]
 [ext_resource type="PackedScene" uid="uid://bqxwa11a2b3c4" path="res://scenes/obstacles/spike_cylinder.tscn" id="4_02uar"]
 [ext_resource type="PackedScene" uid="uid://bfcj0ua6gp4yq" path="res://scenes/obstacles/door.tscn" id="5_ywrr1"]
-[ext_resource type="PackedScene" path="res://scenes/objects/sewer_grate.tscn" id="7_02uar"]
+[ext_resource type="PackedScene" uid="uid://jmos3edll0ji" path="res://scenes/objects/sewer_grate.tscn" id="7_02uar"]
+[ext_resource type="PackedScene" uid="uid://ch5tj1fsscex2" path="res://scenes/objects/tesla_lamp.tscn" id="8_xp5ui"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_anwe6"]
 shading_mode = 0
@@ -155,7 +156,7 @@ transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 11.5, 0, 25.73968)
 radius = 0.8
 
 [node name="door" parent="." unique_id=697170393 instance=ExtResource("5_ywrr1")]
-transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 31.919945, 0, 31.750435)
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 41.819946, 0, 31.750435)
 controlled_level_id = 5
 target_level_id = 5
 start_open = true
@@ -173,3 +174,15 @@ mesh = SubResource("BoxMesh_rej77")
 
 [node name="SewerGrate" parent="Interactive" unique_id=1256708695 instance=ExtResource("7_02uar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.384857, 0, 29.652851)
+
+[node name="SewerGrate2" parent="Interactive" unique_id=1580892721 instance=ExtResource("7_02uar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.388908, 0, 29.652851)
+
+[node name="SewerGrate3" parent="Interactive" unique_id=2059504001 instance=ExtResource("7_02uar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.42022, 0, 9.344932)
+
+[node name="SewerGrate4" parent="Interactive" unique_id=1852650106 instance=ExtResource("7_02uar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.398332, 0, 16.294683)
+
+[node name="TeslaLamp" parent="Interactive" unique_id=1567373144 instance=ExtResource("8_xp5ui")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.85994, 0, 21.93111)
