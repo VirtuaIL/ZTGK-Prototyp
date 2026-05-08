@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://jmos3edll0ji"]
+
+[ext_resource type="Script" uid="uid://bybeojcjdy04x" path="res://scripts/objects/sewer_grate.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="2"]
+
+[node name="SewerGrate" type="Node3D" unique_id=1256708695 groups=["sewer_grates"]]
+script = ExtResource("1")
+gas_cloud_radius = 5.0
+
+[node name="Model" parent="." unique_id=814982079 instance=ExtResource("2")]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=643418733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+light_color = Color(0.2, 1, 0.2, 1)
+shadow_enabled = true

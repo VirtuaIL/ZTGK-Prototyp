@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://ch5tj1fsscex2"]
+
+[ext_resource type="Script" uid="uid://tw64o4rrv305" path="res://scripts/objects/tesla_lamp.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://b5oehjsdd0flc" path="res://resources/models/external/sm_prop_torch_standing_dungeon.tscn" id="2"]
+
+[node name="TeslaLamp" type="Node3D" unique_id=1567373144]
+script = ExtResource("1")
+radius = 10.0
+
+[node name="Model" parent="." unique_id=2146769655 instance=ExtResource("2")]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1279239583]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+light_color = Color(0.2, 0.6, 1, 1)
+light_energy = 3.0
+shadow_enabled = true
+omni_range = 8.0
