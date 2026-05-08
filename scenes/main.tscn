@@ -149,7 +149,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07336426, 0, -0.13879967)
 shape = SubResource("BoxShape3D_gqmmt")
 
 [node name="check_7" type="Area3D" parent="checkpoints" unique_id=722377995]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 81.36937, 1.855777, -132.20184)
+transform = Transform3D(4.2710247, 0, -2.5996835, 0, 5, 0, 2.5996835, 0, 4.2710247, 70.96504, 1.8557761, -94.6249)
 collision_mask = 3
 script = ExtResource("20_gqmmt")
 level_id = 7
@@ -207,10 +207,10 @@ script = ExtResource("11_ya4ey")
 level_id = 6
 
 [node name="LevelCorridor3" parent="levels" unique_id=1639330098 instance=ExtResource("18_dp3eg")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 59.338074, 0, -131.56395)
+transform = Transform3D(0.4967619, 0, 0.86788684, 0, 1, 0, -0.86788684, 0, 0.4967619, 51.214783, -1.9073486e-06, -105.60264)
 
 [node name="Level7" parent="levels" unique_id=502345460 instance=ExtResource("15_jkv2x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 112.82129, 0, -131.68713)
+transform = Transform3D(0.86788684, 0, -0.49676192, 0, 1, 0, 0.49676192, 0, 0.86788684, 97.69336, -1.9073486e-06, -79.14112)
 script = ExtResource("11_ya4ey")
 level_id = 7
 
