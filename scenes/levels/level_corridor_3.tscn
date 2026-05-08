@@ -157,6 +157,7 @@ radius = 0.8
 transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 12.119942, 0, 31.750435)
 controlled_level_id = 5
 target_level_id = 5
+start_open = true
 open_until_level_enter = true
 debug_show_direction = true
 
