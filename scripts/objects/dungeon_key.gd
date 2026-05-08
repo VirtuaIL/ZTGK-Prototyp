@@ -28,7 +28,7 @@ func set_source_level_id(level_id: int) -> void:
 func _process(delta: float) -> void:
 	_time_alive += delta
 	if _visual_root:
-		_visual_root.position.y = 2.05 + sin(_time_alive * bob_speed) * bob_height
+		_visual_root.position.y = sin(_time_alive * bob_speed) * bob_height
 		_visual_root.rotation.y += spin_speed * delta
 	if _light:
 		_light.light_energy = 1.5 + sin(_time_alive * 3.0) * 0.25
