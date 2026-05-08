@@ -156,7 +156,7 @@ transform = Transform3D(1.6, 0, 0, 0, 0.5, 0, 0, 0, 1.6, 11.5, 0, 25.73968)
 radius = 0.8
 
 [node name="door" parent="." unique_id=697170393 instance=ExtResource("5_ywrr1")]
-transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 41.819946, 0, 31.750435)
+transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1, 12.121483, 0, 31.750435)
 controlled_level_id = 5
 target_level_id = 5
 start_open = true

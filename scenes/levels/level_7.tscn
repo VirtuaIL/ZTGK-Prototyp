@@ -11,9 +11,9 @@
 [ext_resource type="Script" uid="uid://ckxmacrdhmcob" path="res://scripts/systems/wave_spawner.gd" id="5_u1w5x"]
 [ext_resource type="Script" uid="uid://birtjlxs3uiyf" path="res://scripts/systems/wave_definition.gd" id="6_posk4"]
 [ext_resource type="Script" uid="uid://37k8k6otqyr" path="res://scripts/systems/wave_group.gd" id="7_sjq8i"]
-[ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="7_ymk4h"]
 [ext_resource type="PackedScene" uid="uid://685ve5nxq2os" path="res://resources/models/external/sm_prop_altar_dungeon.tscn" id="8_st48t"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="9_sjq8i"]
+[ext_resource type="PackedScene" uid="uid://ebarrel1234" path="res://scenes/objects/explosive_barrel.tscn" id="14_st48t"]
 
 [sub_resource type="Resource" id="Resource_u1w5x"]
 script = ExtResource("7_sjq8i")
@@ -58,7 +58,7 @@ wild_rat_prob_green = 0.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.00218153)
 
 [node name="SmPropTorchStandingDungeon" parent="DungeonLights" unique_id=1658036043 instance=ExtResource("4_ymk4h")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -14, 0, 12)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.6970019, 0, 6.345614)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon" unique_id=145435642]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
@@ -67,7 +67,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon2" parent="DungeonLights" unique_id=1002322187 instance=ExtResource("4_ymk4h")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -10.536237, 0, -8.850527)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -24.12453, 0, -9.916649)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon2" unique_id=71952287]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
@@ -76,7 +76,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon3" parent="DungeonLights" unique_id=22261324 instance=ExtResource("4_ymk4h")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 17.145693, 0, -5.0000005)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 23.575142, 0, -9.970194)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon3" unique_id=1792419314]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7744615, 0)
@@ -85,7 +85,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchStandingDungeon4" parent="DungeonLights" unique_id=409748690 instance=ExtResource("4_ymk4h")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 23.973219, 0, 10.999999)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 1.5396638, 0, 6.409242)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchStandingDungeon4" unique_id=983118115]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
@@ -94,7 +94,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon" parent="DungeonLights" unique_id=1481318879 instance=ExtResource("5_st48t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 1.869925, -19.505447)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.90292, 1.869925, -19.505447)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon" unique_id=1466683163]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.36596298)
@@ -103,7 +103,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon2" parent="DungeonLights" unique_id=364159009 instance=ExtResource("5_st48t")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.240286, 1.869925, -19.548101)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.151085, 1.869925, -19.548101)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon2" unique_id=286605888]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
@@ -121,7 +121,7 @@ light_energy = 10.0
 omni_range = 18.0
 
 [node name="SmPropTorchWallDungeon4" parent="DungeonLights" unique_id=1259942021 instance=ExtResource("5_st48t")]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 10.286922, 1.869925, 19.511772)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 17.142834, 1.869925, 19.511772)
 
 [node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon4" unique_id=754947699]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.19526291, 0.36128426, 0.21937513)
@@ -129,37 +129,134 @@ light_color = Color(1, 0.66, 0.34, 1)
 light_energy = 10.0
 omni_range = 18.0
 
+[node name="SmPropTorchWallDungeon5" parent="DungeonLights" unique_id=1192444357 instance=ExtResource("5_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1510849, 1.869925, -10.548101)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon5" unique_id=1594879301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon6" parent="DungeonLights" unique_id=650118562 instance=ExtResource("5_st48t")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.68781, 1.869925, -1.9762144)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon6" unique_id=1902664648]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
+[node name="SmPropTorchWallDungeon7" parent="DungeonLights" unique_id=1566918206 instance=ExtResource("5_st48t")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 33.68781, 1.869925, 1.580914)
+
+[node name="TorchGlow1" type="OmniLight3D" parent="DungeonLights/SmPropTorchWallDungeon7" unique_id=668642341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36128426, 0.426939)
+light_color = Color(1, 0.66, 0.34, 1)
+light_energy = 10.0
+omni_range = 18.0
+
 [node name="props" type="Node3D" parent="." unique_id=699821434]
-
-[node name="SM_PROP_barrel_dungeon_05" parent="props" unique_id=1114656659 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.028694, 0.0025275508, 9.72935)
-mass = 0.2
-
-[node name="SM_PROP_barrel_dungeon_06" parent="props" unique_id=795817606 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.195113, 0.0025275508, -6.4574394)
-mass = 0.2
-
-[node name="SM_PROP_barrel_dungeon_07" parent="props" unique_id=1090835681 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.720811, 0.0025275508, -15.744845)
-mass = 0.2
-
-[node name="SM_PROP_barrel_dungeon_08" parent="props" unique_id=1230100522 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.683716, 0.0025275508, -15.491935)
-mass = 0.2
-
-[node name="SM_PROP_barrel_dungeon_09" parent="props" unique_id=371358526 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.033514, 0.0025275508, 14.353805)
-mass = 0.2
-
-[node name="SM_PROP_barrel_dungeon_10" parent="props" unique_id=1187347667 instance=ExtResource("4_ivh0c")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.9624815, 0.0025275508, 11.345458)
-mass = 0.2
-
-[node name="sm_prop_debris_stones_dunegon_06" parent="props" unique_id=1430227353 instance=ExtResource("7_ymk4h")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.4752798, 0, -7.6934366)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.093996, 0, 0.7376528)
 
 [node name="SM_PROP_altar_dungeon_01" parent="props" unique_id=951230073 instance=ExtResource("8_st48t")]
-transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0.033514023, 0.0025275508, -0.34616804)
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 7.543377, 0.0025275508, -0.868382)
+
+[node name="SM_PROP_barrel_dungeon_06" parent="props" unique_id=855386167 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -47.918587, 0.58426255, -3.039011)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_08" parent="props" unique_id=2004477261 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.46456, 0.0025275508, -2.360853)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_09" parent="props" unique_id=125640571 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.707794, 0.0025275508, -4.39612)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_07" parent="props" unique_id=723446882 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -47.918587, 0.0025275508, -0.051416397)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_10" parent="props" unique_id=800444504 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.46456, 0.0025275508, -0.8358455)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_11" parent="props" unique_id=1778654403 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -49.344696, 0.0025275508, -1.4085255)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_12" parent="props" unique_id=1282188038 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.06729, 0.0025275508, 2.8209786)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_13" parent="props" unique_id=1954434531 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.46456, 0.0025275508, 1.5680914)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_14" parent="props" unique_id=305741050 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -49.12133, 0.0025275508, 1.4638696)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_15" parent="props" unique_id=1005311410 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -25.673334, 0.58426255, 8.045494)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_16" parent="props" unique_id=255327735 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.219309, 0.0025275508, 8.723652)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_17" parent="props" unique_id=1198442971 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.462542, 0.0025275508, 6.688385)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_18" parent="props" unique_id=684777655 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.673334, 0.0025275508, 11.033089)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_19" parent="props" unique_id=1117496763 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.219309, 0.0025275508, 10.24866)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_20" parent="props" unique_id=967744884 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.099443, 0.0025275508, 9.67598)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_21" parent="props" unique_id=1694686327 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.822039, 0.0025275508, 13.905484)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_22" parent="props" unique_id=580751943 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.876078, 0.0025275508, 12.548375)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_23" parent="props" unique_id=429278990 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.590853, 0.0025275508, 5.8889017)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_24" parent="props" unique_id=48074704 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.739557, 0.0025275508, 8.761297)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_25" parent="props" unique_id=1360179085 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.793596, 0.0025275508, 7.404188)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_26" parent="props" unique_id=761942697 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 8.613405, 0.58426255, 2.044777)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_27" parent="props" unique_id=1423309499 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.187296, 0.0025275508, 3.6752625)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_28" parent="props" unique_id=882202197 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.739557, 0.0025275508, -19.28424)
+mass = 0.2
+
+[node name="SM_PROP_barrel_dungeon_29" parent="props" unique_id=831493651 instance=ExtResource("4_ivh0c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.522617, 0.0025275508, -18.75193)
+mass = 0.2
 
 [node name="Floor" type="Node3D" parent="." unique_id=1849893464]
 
@@ -229,7 +326,7 @@ wild_rat_prob_green = 0.0
 [node name="RatSpawns" type="Node3D" parent="." unique_id=1591046901]
 
 [node name="RatSpawnPointNormal1" type="Marker3D" parent="RatSpawns" unique_id=521858620 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.282, 0.2, 0.19399977)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.769423, 0.2, -16.56187)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"normal"
@@ -238,7 +335,7 @@ spawn_tag = &"normal"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="RatSpawnPointNormal2" type="Marker3D" parent="RatSpawns" unique_id=965273234 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.54, 0.2, -7.178)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30.453465, 0.2, -15.814805)
 script = ExtResource("1_vmkp1")
 level_id = 7
 spawn_tag = &"normal"
@@ -246,58 +343,13 @@ spawn_tag = &"normal"
 [node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointNormal2" unique_id=1538659322 instance=ExtResource("9_sjq8i")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
-[node name="RatSpawnPointRed1" type="Marker3D" parent="RatSpawns" unique_id=989086145 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.247002, 0.2, -9.721)
+[node name="RatSpawnPointNormal3" type="Marker3D" parent="RatSpawns" unique_id=527689462 groups=["rat_spawn"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.23057747, 0.2, -16.56187)
 script = ExtResource("1_vmkp1")
 level_id = 7
-spawn_tag = &"red"
+spawn_tag = &"normal"
 
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointRed1" unique_id=1222615730 instance=ExtResource("9_sjq8i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-
-[node name="RatSpawnPointRed2" type="Marker3D" parent="RatSpawns" unique_id=981472477 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.377, 0.2, 12.583)
-script = ExtResource("1_vmkp1")
-level_id = 7
-spawn_tag = &"red"
-
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointRed2" unique_id=2027246125 instance=ExtResource("9_sjq8i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-
-[node name="RatSpawnPointGreen1" type="Marker3D" parent="RatSpawns" unique_id=263474439 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705, 0.2, -5.16)
-script = ExtResource("1_vmkp1")
-level_id = 7
-spawn_tag = &"green"
-
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointGreen1" unique_id=134345366 instance=ExtResource("9_sjq8i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-
-[node name="RatSpawnPointGreen2" type="Marker3D" parent="RatSpawns" unique_id=374477223 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.769, 0.2, 12.132)
-script = ExtResource("1_vmkp1")
-level_id = 7
-spawn_tag = &"green"
-
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointGreen2" unique_id=1443448562 instance=ExtResource("9_sjq8i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-
-[node name="RatSpawnPointElectric1" type="Marker3D" parent="RatSpawns" unique_id=1894932298 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.314999, 0.2, 6.373)
-script = ExtResource("1_vmkp1")
-level_id = 7
-spawn_tag = &"electric"
-
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointElectric1" unique_id=1996098189 instance=ExtResource("9_sjq8i")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
-
-[node name="RatSpawnPointElectric2" type="Marker3D" parent="RatSpawns" unique_id=1221263347 groups=["rat_spawn"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.008, 0.2, 12.661)
-script = ExtResource("1_vmkp1")
-level_id = 7
-spawn_tag = &"electric"
-
-[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointElectric2" unique_id=2040310339 instance=ExtResource("9_sjq8i")]
+[node name="SM_PROP_platform_grid_dungeon" parent="RatSpawns/RatSpawnPointNormal3" unique_id=1483080115 instance=ExtResource("9_sjq8i")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="EnemiesParams" type="Node3D" parent="." unique_id=1084135045]
@@ -352,25 +404,162 @@ script = ExtResource("1_vmkp1")
 level_id = 7
 
 [node name="Marker3D" type="Marker3D" parent="EnemySpawns" unique_id=2076241992 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.519775, 0, 14.948427)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.519775, 0, 14.789755)
 
 [node name="Marker3D3" type="Marker3D" parent="EnemySpawns" unique_id=2141563772 groups=["spawn_markers"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.089385, 0, 0.76407355)
 
 [node name="Marker3D5" type="Marker3D" parent="EnemySpawns" unique_id=1567260468 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.605286, 0, -1.7694821)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.015636, 0, -1.7694821)
 
 [node name="Marker3D7" type="Marker3D" parent="EnemySpawns" unique_id=2019035348 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.361685, 0, -3.3890052)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.25097, 0, -15.998016)
 
 [node name="Marker3D8" type="Marker3D" parent="EnemySpawns" unique_id=597367773 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.705373, 0, -13.909654)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1044016, 0, -2.2379289)
 
 [node name="Marker3D9" type="Marker3D" parent="EnemySpawns" unique_id=1449896671 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5401607, 0, -14.956239)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.310663, 0, -14.956239)
 
 [node name="Marker3D10" type="Marker3D" parent="EnemySpawns" unique_id=1142775148 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8549657, 0, 15.413524)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.710957, 0, -2.6770878)
 
 [node name="Marker3D11" type="Marker3D" parent="EnemySpawns" unique_id=1621105652 groups=["spawn_markers"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.7687645, 0, 15.478682)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.415041, 0, 14.850687)
+
+[node name="Marker3D2" type="Marker3D" parent="EnemySpawns" unique_id=440437719 groups=["spawn_markers"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.708599, 0, 15.187245)
+
+[node name="Interactive" type="Node3D" parent="." unique_id=257860512]
+
+[node name="ExplosiveBarrel" parent="Interactive" unique_id=1830331414 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.513487, 0, 0.8198347)
+
+[node name="ExplosiveBarrel2" parent="Interactive" unique_id=1347402006 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.291304, 0, 1.5093865)
+
+[node name="ExplosiveBarrel3" parent="Interactive" unique_id=2128991090 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.513487, 0, 2.3013124)
+
+[node name="ExplosiveBarrel4" parent="Interactive" unique_id=1909512385 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.388315, 0, -8.033448)
+
+[node name="ExplosiveBarrel5" parent="Interactive" unique_id=2133145038 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.166132, 0, -7.343897)
+
+[node name="ExplosiveBarrel6" parent="Interactive" unique_id=1540399728 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.388315, 0, -6.5519705)
+
+[node name="ExplosiveBarrel7" parent="Interactive" unique_id=243913831 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6295214, 0, -8.47395)
+
+[node name="ExplosiveBarrel8" parent="Interactive" unique_id=426520915 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.407338, 0, -7.7843986)
+
+[node name="ExplosiveBarrel9" parent="Interactive" unique_id=2048599274 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.6295214, 0, -6.9924726)
+
+[node name="ExplosiveBarrel10" parent="Interactive" unique_id=1673807990 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8460464, 0, -1.3790121)
+
+[node name="ExplosiveBarrel11" parent="Interactive" unique_id=920085454 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6238632, 0, -0.6894603)
+
+[node name="ExplosiveBarrel12" parent="Interactive" unique_id=1889226317 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8460464, 0, 0.10246563)
+
+[node name="ExplosiveBarrel13" parent="Interactive" unique_id=1473528502 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4594593, 0, -8.47395)
+
+[node name="ExplosiveBarrel14" parent="Interactive" unique_id=1762240775 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.681643, 0, -7.7843986)
+
+[node name="ExplosiveBarrel15" parent="Interactive" unique_id=153508762 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.4594593, 0, -6.9924726)
+
+[node name="ExplosiveBarrel16" parent="Interactive" unique_id=289321052 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.084044, 0, -8.47395)
+
+[node name="ExplosiveBarrel17" parent="Interactive" unique_id=1442130101 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.306227, 0, -7.7843986)
+
+[node name="ExplosiveBarrel18" parent="Interactive" unique_id=893604956 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.084044, 0, -6.9924726)
+
+[node name="ExplosiveBarrel19" parent="Interactive" unique_id=562801728 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22368813, 0, 0.7960119)
+
+[node name="ExplosiveBarrel20" parent="Interactive" unique_id=450375558 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9984951, 0, 1.4855642)
+
+[node name="ExplosiveBarrel21" parent="Interactive" unique_id=1719926651 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22368813, 0, 2.2774897)
+
+[node name="ExplosiveBarrel22" parent="Interactive" unique_id=2089798143 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.446373, 0, -7.1076365)
+
+[node name="ExplosiveBarrel23" parent="Interactive" unique_id=1118182114 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.9931917, 0, -7.2047725)
+
+[node name="ExplosiveBarrel24" parent="Interactive" unique_id=1155982694 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.23912, 0, -4.9393187)
+
+[node name="ExplosiveBarrel25" parent="Interactive" unique_id=1780300209 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.392805, 0, -3.6799736)
+
+[node name="ExplosiveBarrel26" parent="Interactive" unique_id=561256670 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.614988, 0, -2.9904218)
+
+[node name="ExplosiveBarrel27" parent="Interactive" unique_id=609789421 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.392805, 0, -2.1984959)
+
+[node name="ExplosiveBarrel28" parent="Interactive" unique_id=1979895359 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.015163, 0, -1.5049496)
+
+[node name="ExplosiveBarrel29" parent="Interactive" unique_id=780337160 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.237347, 0, -0.81539726)
+
+[node name="ExplosiveBarrel30" parent="Interactive" unique_id=345189965 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.015163, 0, -0.023471832)
+
+[node name="ExplosiveBarrel31" parent="Interactive" unique_id=1315425514 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.031723, 0, -0.23817396)
+
+[node name="ExplosiveBarrel32" parent="Interactive" unique_id=1865003224 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.253906, 0, 0.45137787)
+
+[node name="ExplosiveBarrel33" parent="Interactive" unique_id=208647649 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.031723, 0, 1.2433038)
+
+[node name="ExplosiveBarrel34" parent="Interactive" unique_id=1010768918 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.654081, 0, 1.9368501)
+
+[node name="ExplosiveBarrel35" parent="Interactive" unique_id=458526056 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.876265, 0, 2.6264024)
+
+[node name="ExplosiveBarrel36" parent="Interactive" unique_id=1940048207 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.654081, 0, 3.4183278)
+
+[node name="ExplosiveBarrel37" parent="Interactive" unique_id=143265545 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.434309, 0, 11.395463)
+
+[node name="ExplosiveBarrel38" parent="Interactive" unique_id=534417503 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.212126, 0, 12.085014)
+
+[node name="ExplosiveBarrel39" parent="Interactive" unique_id=564634129 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.434309, 0, 12.876941)
+
+[node name="ExplosiveBarrel40" parent="Interactive" unique_id=1934189832 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.900578, 0, 12.66464)
+
+[node name="ExplosiveBarrel41" parent="Interactive" unique_id=307688609 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.54211, 0, 9.52601)
+
+[node name="ExplosiveBarrel42" parent="Interactive" unique_id=1496348227 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.764294, 0, 13.220686)
+
+[node name="ExplosiveBarrel43" parent="Interactive" unique_id=1851982267 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.778833, 0, 14.012612)
+
+[node name="ExplosiveBarrel44" parent="Interactive" unique_id=467876748 instance=ExtResource("14_st48t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.691304, 0, 15.625265)
