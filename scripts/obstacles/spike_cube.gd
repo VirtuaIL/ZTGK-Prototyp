@@ -65,42 +65,32 @@ func _physics_process(_delta: float) -> void:
 					p.take_damage(player_damage)
 
 	# Enemy damage
-	var enemies: Array = []
-	var current_scene := get_tree().current_scene
-	if current_scene != null and current_scene.has_method("get_nodes_in_current_level"):
-		enemies.append_array(current_scene.get_nodes_in_current_level("enemies"))
-		enemies.append_array(current_scene.get_nodes_in_current_level("bosses"))
-	else:
-		enemies = get_tree().get_nodes_in_group("enemies")
-		enemies += get_tree().get_nodes_in_group("bosses")
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	enemies.append_array(get_tree().get_nodes_in_group("bosses"))
 
 	for enemy in enemies:
 		if is_instance_valid(enemy) and enemy.has_method("take_damage") and (not enemy.has_method("is_dead") or not enemy.is_dead()):
-			var t := 0.0
-			if enemy.has_meta("spike_cooldown"):
-				t = enemy.get_meta("spike_cooldown")
-				t = maxf(0.0, t - _delta)
-				enemy.set_meta("spike_cooldown", t)
-
 			var enemy_local := to_local(enemy.global_position)
-			if _is_point_inside_hazard(enemy_local):
+			# Large padding (0.7 radius, 0.5 height) for cubic hazards
+			if _is_point_inside_hazard(enemy_local, 0.7, 0.5):
+				var t := 0.0
+				if enemy.has_meta("spike_cooldown"):
+					t = enemy.get_meta("spike_cooldown")
+					t = maxf(0.0, t - _delta)
+					
+				var enemy_timer = enemy.get("_spike_dmg_timer")
+				if enemy_timer != null:
+					t = maxf(t, enemy_timer)
+
 				if t <= 0.0:
-					var vel = enemy.get("velocity")
-					if vel is Vector3:
-						var flat_speed = Vector2(vel.x, vel.z).length()
-						var walk_speed = 2.6
-						if "chase_speed" in enemy:
-							walk_speed = enemy.get("chase_speed")
-						
-						if flat_speed > walk_speed + 0.2:
-							enemy.take_damage(enemy_damage)
-							enemy.set_meta("spike_cooldown", 0.5)
-
-
-
+					enemy.take_damage(enemy_damage)
+					enemy.set_meta("spike_cooldown", 0.5)
+					if "set" in enemy:
+						enemy.set("_spike_dmg_timer", 0.5)
 
 
 func _is_point_inside_hazard(local_offset: Vector3, radius_padding: float = 0.0, height_padding: float = 0.0) -> bool:
+
 	var offset = local_offset - _hazard_center
 	
 	var visual_offset = Vector3(

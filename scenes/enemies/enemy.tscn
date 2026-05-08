@@ -25,6 +25,7 @@ size = Vector3(0.9084961, 2.1272461, 0.91936034)
 collision_layer = 16
 collision_mask = 9
 script = ExtResource("1_script")
+separation_radius = 3.4
 animation_player_path = NodePath("enemy_2")
 attack_animation_name = &"Armature|ArmatureAction"
 

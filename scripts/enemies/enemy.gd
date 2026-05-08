@@ -25,11 +25,15 @@ var health: float = max_health
 @export var kite_preferred_range: float = 8.5
 @export var movement_jitter_interval: float = 1.2
 @export var wall_avoidance_enabled: bool = true
-@export var wall_avoidance_mask: int = 8 | 1
+@export var wall_avoidance_mask: int = 8 | 1 | 128
 @export var wall_avoidance_force: float = 2.8
 @export var wall_probe_distance: float = 1.2
 @export var wall_side_probe_distance: float = 0.9
 @export var wall_tangent_bias: float = 0.65
+@export var hazard_avoidance_multiplier: float = 5.0
+@export var separation_enabled: bool = true
+@export var separation_radius: float = 1.4
+@export var separation_force: float = 4.2
 @export var unstuck_enabled: bool = true
 @export var unstuck_min_move: float = 0.05
 @export var unstuck_time: float = 0.8
@@ -85,6 +89,7 @@ var _attack_flash_timer: float = 0.0
 
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
+var _spike_dmg_timer: float = 0.0
 var level_id: int = 0
 
 # Throttling for target finding
@@ -112,7 +117,8 @@ func _ready() -> void:
 	add_to_group("enemies")
 	# Decouple from parent's non-uniform transform so move_and_slide works
 	top_level = true
-	collision_mask = collision_mask | (1 << 8) # Include RatStructures (9)
+	# collision_mask bits: 1(World), 4(Enemies), 8(RatStructures), 128(Hazards)
+	collision_mask = collision_mask | 128 | (1 << 3) 
 	_spawn_transform = global_transform
 	_collision_layer_saved = collision_layer
 	_collision_mask_saved = collision_mask
@@ -219,8 +225,61 @@ func _physics_process(delta: float) -> void:
 	# Apply and decay knockback
 	_knockback = _knockback.lerp(Vector3.ZERO, 10.0 * delta)
 	velocity += _knockback
+	
+	_spike_dmg_timer = maxf(0.0, _spike_dmg_timer - delta)
+	
+	_apply_separation(delta)
 
 	move_and_slide()
+	_check_spike_collisions()
+
+
+func _check_spike_collisions() -> void:
+	if _is_dead or ai_state == AIState.PASSIVE:
+		return
+		
+	for i in get_slide_collision_count():
+		var collision = get_slide_collision(i)
+		var collider = collision.get_collider()
+		if collider == null:
+			continue
+			
+		# Check if it's a spike by class or by name/group as fallback
+		var is_spike = collider is SpikeCylinder or collider is SpikeCube
+		if not is_spike:
+			is_spike = collider.is_in_group("spikes") or collider.name.to_lower().contains("spike")
+			
+		if is_spike:
+			if _spike_dmg_timer <= 0.0:
+				var dmg = 50.0
+				if "enemy_damage" in collider:
+					dmg = collider.enemy_damage
+				take_damage(dmg)
+				_spike_dmg_timer = 0.5
+				return # Only take damage from one spike per frame
+
+
+func _apply_separation(_delta: float) -> void:
+	if not separation_enabled or _is_dead or ai_state == AIState.PASSIVE:
+		return
+		
+	var separation_vector := Vector3.ZERO
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy == self or not is_instance_valid(enemy) or enemy.is_dead():
+			continue
+			
+		var diff = global_position - enemy.global_position
+		diff.y = 0.0
+		var dist = diff.length()
+		
+		if dist > 0.001 and dist < separation_radius:
+			var strength = (separation_radius - dist) / separation_radius
+			separation_vector += diff.normalized() * strength
+			
+	if separation_vector.length_squared() > 0.0001:
+		velocity.x += separation_vector.x * separation_force
+		velocity.z += separation_vector.z * separation_force
 
 
 # ═══════════════════════════════════════════════
@@ -326,16 +385,6 @@ func _compose_move_dir(base_dir: Vector3, target_dist: float, delta: float) -> V
 
 	if wall_avoidance_enabled:
 		dir = _apply_wall_avoidance(dir)
-		
-	var separation := Vector3.ZERO
-	var enemies = get_tree().get_nodes_in_group("enemies")
-	for enemy in enemies:
-		if enemy != self and is_instance_valid(enemy):
-			var d = global_position.distance_to(enemy.global_position)
-			if d > 0.001 and d < 1.5:
-				separation += (global_position - enemy.global_position).normalized() * (1.5 - d) / 1.5
-	if separation.length_squared() > 0:
-		dir = (dir + separation * 0.8).normalized()
 
 	if unstuck_enabled:
 		_update_unstuck(dir, delta)
@@ -351,37 +400,58 @@ func _apply_wall_avoidance(desired_dir: Vector3) -> Vector3:
 		return desired_dir
 	var ss := world.direct_space_state
 	var origin := global_position + Vector3.UP * 0.45
-	var dirs := [
-		desired_dir,
-		desired_dir.rotated(Vector3.UP, deg_to_rad(30.0)),
-		desired_dir.rotated(Vector3.UP, deg_to_rad(-30.0)),
-	]
-	var ranges := [wall_probe_distance, wall_side_probe_distance, wall_side_probe_distance]
+	
+	# More rays for better coverage (5 rays instead of 3)
+	var angles = [0.0, 25.0, -25.0, 50.0, -50.0]
 	var steer := Vector3.ZERO
+	
+	for angle in angles:
+		var probe_dir = desired_dir.rotated(Vector3.UP, deg_to_rad(angle))
+		# Hazards (spikes) get longer probe distance (2.2 instead of 1.2)
+		var probe_dist = wall_probe_distance if absf(angle) < 0.1 else wall_side_probe_distance
+		
+		# First pass: check for hazards only with longer range
+		var q_hazard := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * (probe_dist * 1.8))
+		q_hazard.collision_mask = 128 # Hazard layer only
+		q_hazard.exclude = [self]
+		var hit_h = ss.intersect_ray(q_hazard)
+		
+		if not hit_h.is_empty():
+			var n: Vector3 = hit_h.normal
+			n.y = 0.0
+			if n.length_squared() > 0.001:
+				n = n.normalized()
+				var d := origin.distance_to(hit_h.position)
+				var proximity := clampf(1.0 - d / (probe_dist * 1.8), 0.0, 1.0)
+				
+				# Very strong force for hazards
+				var force = wall_avoidance_force * hazard_avoidance_multiplier * 1.5
+				steer += n * (force * proximity)
+				
+				var tangent := n.cross(Vector3.UP).normalized()
+				if tangent.dot(desired_dir) < 0.0:
+					tangent = -tangent
+				steer += tangent * (force * wall_tangent_bias * proximity)
+				continue # If we hit a hazard, prioritize avoiding it
 
-	for i in range(dirs.size()):
-		var probe_dir: Vector3 = dirs[i]
-		var probe_dist: float = maxf(0.2, ranges[i])
-		var q := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
-		q.collision_mask = wall_avoidance_mask
-		q.collide_with_areas = true
-		q.collide_with_bodies = true
-		q.exclude = [self]
-		var hit := ss.intersect_ray(q)
-		if hit.is_empty():
-			continue
-		var n: Vector3 = hit.normal
-		n.y = 0.0
-		if n.length_squared() < 0.0001:
-			continue
-		n = n.normalized()
-		var d := origin.distance_to(hit.position)
-		var proximity := clampf(1.0 - d / probe_dist, 0.0, 1.0)
-		steer += n * (wall_avoidance_force * proximity)
-		var tangent := n.cross(Vector3.UP).normalized()
-		if tangent.dot(desired_dir) < 0.0:
-			tangent = -tangent
-		steer += tangent * (wall_avoidance_force * wall_tangent_bias * proximity)
+		# Second pass: check for normal walls
+		var q_wall := PhysicsRayQueryParameters3D.create(origin, origin + probe_dir * probe_dist)
+		q_wall.collision_mask = wall_avoidance_mask & ~128 # World/Structures only
+		q_wall.exclude = [self]
+		var hit_w = ss.intersect_ray(q_wall)
+		
+		if not hit_w.is_empty():
+			var n: Vector3 = hit_w.normal
+			n.y = 0.0
+			if n.length_squared() > 0.001:
+				n = n.normalized()
+				var d := origin.distance_to(hit_w.position)
+				var proximity := clampf(1.0 - d / probe_dist, 0.0, 1.0)
+				steer += n * (wall_avoidance_force * proximity)
+				var tangent := n.cross(Vector3.UP).normalized()
+				if tangent.dot(desired_dir) < 0.0:
+					tangent = -tangent
+				steer += tangent * (wall_avoidance_force * wall_tangent_bias * proximity)
 
 	if steer.length_squared() < 0.0001:
 		return desired_dir
