@@ -38,6 +38,8 @@ const GLOBAL_VISIBILITY_ROOTS := {
 	"DirectionalLight3D": true,
 }
 
+const DUNGEON_KEY_SCENE := preload("res://scenes/objects/dungeon_key.tscn")
+
 var lpm_label_val: Label
 var spm_label_val: Label
 var ppm_label_val: Label
@@ -70,11 +72,20 @@ var current_level_id: int = 1
 var _current_level_cleared: bool = false
 var _current_level_active_time: float = 0.0
 var _debug_last_level_state: String = ""
+@export var dungeon_key_required_count: int = 3
+var collected_dungeon_keys: int = 0
+var _dungeon_key_counter_label: Label = null
+var _dungeon_key_spawned_levels: Dictionary = {}
+var _dungeon_key_collected_levels: Dictionary = {}
+var _dungeon_key_door_unlocks: Dictionary = {}
 var combat_mode_label: RichTextLabel
 var _last_attack_mode: int = -1
 var combat_key_rects: Array[ColorRect] = []
 var buff_panel: Panel
 var buff_labels: Array[Label] = []
+
+const DUNGEON_KEY_LEVEL_IDS: Array[int] = [5, 6, 7]
+const DUNGEON_KEY_ALTAR_NAME: String = "SM_PROP_altar_dungeon_01"
 
 # ── Spawner Scenes ────────────────────────────────────────────────────────────
 var _wave_enemy_scene: PackedScene = preload("res://scenes/enemies/enemy.tscn")
@@ -181,6 +192,22 @@ func _bind_hud_nodes() -> void:
 
 	recall_indicator = game_hud.get_node_or_null("HUDRoot/RecallIndicator") as Control
 	indicator_root = game_hud.get_node_or_null("HUDRoot/IndicatorRoot") as Control
+
+	_dungeon_key_counter_label = game_hud.get_node_or_null("HUDRoot/DungeonKeyCounter") as Label
+	if _dungeon_key_counter_label == null:
+		_dungeon_key_counter_label = Label.new()
+		_dungeon_key_counter_label.name = "DungeonKeyCounter"
+		_dungeon_key_counter_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_dungeon_key_counter_label.add_theme_font_size_override("font_size", 18)
+		_dungeon_key_counter_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25))
+		_dungeon_key_counter_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		_dungeon_key_counter_label.add_theme_constant_override("outline_size", 3)
+		_dungeon_key_counter_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_dungeon_key_counter_label.offset_left = 24.0
+		_dungeon_key_counter_label.offset_top = 48.0
+		_dungeon_key_counter_label.text = "Klucze: 0/3"
+		game_hud.get_node("HUDRoot").add_child(_dungeon_key_counter_label)
+	_update_dungeon_key_ui()
 
 
 func _get_current_level_wave_info(level_id: int) -> String:
@@ -779,6 +806,7 @@ func _process(delta: float) -> void:
 	if level_cleared != _current_level_cleared:
 		var was_cleared = _current_level_cleared
 		_current_level_cleared = level_cleared
+		_maybe_spawn_dungeon_key_for_level(current_level_id, _current_level_cleared)
 		_update_level_doors()
 		if _current_level_cleared and not was_cleared:
 			if player and player.has_method("heal_full"):
@@ -1256,6 +1284,7 @@ func set_current_level(level_id: int) -> void:
 		return
 	if level_id == current_level_id:
 		_current_level_cleared = is_current_level_cleared()
+		_maybe_spawn_dungeon_key_for_level(current_level_id)
 		_rebuild_level_bounds()
 		_refresh_level_visibility()
 		_refresh_level_activity()
@@ -1264,6 +1293,7 @@ func set_current_level(level_id: int) -> void:
 		return
 	current_level_id = level_id
 	_current_level_cleared = is_current_level_cleared()
+	_maybe_spawn_dungeon_key_for_level(current_level_id, _current_level_cleared)
 	_rebuild_level_bounds()
 	_refresh_level_visibility()
 	_refresh_level_activity()
@@ -1500,6 +1530,92 @@ func is_level_cleared(level_id: int) -> bool:
 	return true
 
 
+func get_dungeon_key_count() -> int:
+	return collected_dungeon_keys
+
+
+func has_dungeon_keys(required_count: int) -> bool:
+	return collected_dungeon_keys >= max(0, required_count)
+
+
+func collect_dungeon_key(level_id: int, key_node: Node = null) -> void:
+	if level_id <= 0:
+		return
+	if _dungeon_key_collected_levels.has(level_id):
+		if key_node != null and is_instance_valid(key_node):
+			key_node.queue_free()
+		return
+
+	_dungeon_key_collected_levels[level_id] = true
+	collected_dungeon_keys = min(dungeon_key_required_count, collected_dungeon_keys + 1)
+	_update_dungeon_key_ui()
+	_update_level_doors()
+
+	if key_node != null and is_instance_valid(key_node):
+		key_node.queue_free()
+
+
+func consume_dungeon_keys(amount: int) -> bool:
+	var to_consume := maxi(0, amount)
+	if to_consume <= 0:
+		return true
+	if collected_dungeon_keys < to_consume:
+		return false
+	collected_dungeon_keys -= to_consume
+	_update_dungeon_key_ui()
+	return true
+
+
+func _update_dungeon_key_ui() -> void:
+	if _dungeon_key_counter_label == null:
+		return
+	_dungeon_key_counter_label.text = "Klucze: %d/%d" % [collected_dungeon_keys, dungeon_key_required_count]
+
+
+func _maybe_spawn_dungeon_key_for_level(level_id: int, force_spawn: bool = false) -> void:
+	if level_id not in DUNGEON_KEY_LEVEL_IDS:
+		return
+	if _dungeon_key_collected_levels.has(level_id):
+		return
+	if _dungeon_key_spawned_levels.has(level_id):
+		return
+	if not force_spawn and not is_level_cleared(level_id):
+		return
+
+	var altar := _find_dungeon_key_altar(level_id)
+	if altar == null:
+		return
+
+	var key_scene := DUNGEON_KEY_SCENE as PackedScene
+	if key_scene == null:
+		return
+
+	var key := key_scene.instantiate()
+	if key == null:
+		return
+
+	_dungeon_key_spawned_levels[level_id] = true
+	if key.has_method("set_source_level_id"):
+		key.call("set_source_level_id", level_id)
+	altar.add_child(key)
+	if key is Node3D:
+		var key_3d := key as Node3D
+		key_3d.position = Vector3(0.0, 2.05, 0.0)
+
+
+func _find_dungeon_key_altar(level_id: int) -> Node3D:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return null
+	for candidate in scene_root.find_children(DUNGEON_KEY_ALTAR_NAME, "Node3D", true, false):
+		var altar := candidate as Node3D
+		if altar == null:
+			continue
+		if _get_level_id_for_node(altar) == level_id:
+			return altar
+	return null
+
+
 func is_node_in_current_level(node: Node) -> bool:
 	if node == null or not is_instance_valid(node):
 		return false
@@ -1662,16 +1778,25 @@ func _update_level_doors() -> void:
 			continue
 
 		var should_open := is_level_cleared(gate.controlled_level_id)
-		if gate.open_until_level_enter:
-			if current_level_id < gate.controlled_level_id:
-				should_open = true
-			else:
-				should_open = is_level_cleared(gate.controlled_level_id)
-		elif not _current_level_cleared:
-			# Close current level doors and any door whose level_id >= current
-			# (prevents doors ahead from being open when entering a new level)
-			if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
-				should_open = false
+		var required_keys := int(gate.required_dungeon_keys)
+		if required_keys > 0:
+			var unlocked := bool(gate.get_meta("_dungeon_key_unlocked")) if gate.has_meta("_dungeon_key_unlocked") else false
+			if not unlocked and has_dungeon_keys(required_keys):
+				if consume_dungeon_keys(required_keys):
+					unlocked = true
+					gate.set_meta("_dungeon_key_unlocked", true)
+			should_open = unlocked
+		else:
+			if gate.open_until_level_enter:
+				if current_level_id < gate.controlled_level_id:
+					should_open = true
+				else:
+					should_open = is_level_cleared(gate.controlled_level_id)
+			elif not _current_level_cleared:
+				# Close current level doors and any door whose level_id >= current
+				# (prevents doors ahead from being open when entering a new level)
+				if gate.controlled_level_id >= current_level_id or gate.controlled_level_id == current_level_id - 1:
+					should_open = false
 
 		if should_open:
 			gate.open()

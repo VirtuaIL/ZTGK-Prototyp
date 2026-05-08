@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://clm4vk7chhocl"]
+
+[ext_resource type="PackedScene" uid="uid://ce7yd4lppg5y2" path="res://resources/models/external/fantast/3d/props/SM_PROP_key_dungeon_02.fbx" id="1_y378q"]
+
+[node name="SmPropKeyDungeon" type="Node3D" unique_id=1658036043]
+
+[node name="SM_PROP_key_dungeon_02" parent="." unique_id=602547940 instance=ExtResource("1_y378q")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)

@@ -13,6 +13,7 @@ class_name door
 @export var target_level_id: int = 0
 @export var target_spawn_path: NodePath
 @export var transition_requires_open: bool = false
+@export var required_dungeon_keys: int = 0
 
 # How far (in local X units) the door slides when opened
 @export var slide_distance: float = 9.0
