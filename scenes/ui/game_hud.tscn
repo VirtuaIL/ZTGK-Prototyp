@@ -236,3 +236,29 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 50
 text = "0"
+
+[node name="DungeonKeyCounter" type="HBoxContainer" parent="HUDRoot" unique_id=1856037887]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -159.0
+offset_top = 302.00003
+offset_right = 42.0
+offset_bottom = 371.00003
+grow_horizontal = 0
+scale = Vector2(0.7, 0.7)
+alignment = 2
+
+[node name="Icon" type="TextureRect" parent="HUDRoot/DungeonKeyCounter" unique_id=583731583]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+
+[node name="Label" type="Label" parent="HUDRoot/DungeonKeyCounter" unique_id=1592686179]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 50
+text = "0"

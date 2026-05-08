@@ -193,20 +193,20 @@ func _bind_hud_nodes() -> void:
 	recall_indicator = game_hud.get_node_or_null("HUDRoot/RecallIndicator") as Control
 	indicator_root = game_hud.get_node_or_null("HUDRoot/IndicatorRoot") as Control
 
-	_dungeon_key_counter_label = game_hud.get_node_or_null("HUDRoot/DungeonKeyCounter") as Label
-	if _dungeon_key_counter_label == null:
-		_dungeon_key_counter_label = Label.new()
-		_dungeon_key_counter_label.name = "DungeonKeyCounter"
-		_dungeon_key_counter_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_dungeon_key_counter_label.add_theme_font_size_override("font_size", 18)
-		_dungeon_key_counter_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25))
-		_dungeon_key_counter_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-		_dungeon_key_counter_label.add_theme_constant_override("outline_size", 3)
-		_dungeon_key_counter_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		_dungeon_key_counter_label.offset_left = 24.0
-		_dungeon_key_counter_label.offset_top = 48.0
-		_dungeon_key_counter_label.text = "Klucze: 0/3"
-		game_hud.get_node("HUDRoot").add_child(_dungeon_key_counter_label)
+	_dungeon_key_counter_label = game_hud.get_node_or_null("HUDRoot/DungeonKeyCounter/Label") as Label
+	# if _dungeon_key_counter_label == null:
+	# 	_dungeon_key_counter_label = Label.new()
+	# 	_dungeon_key_counter_label.name = "DungeonKeyCounter"
+	# 	_dungeon_key_counter_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 	_dungeon_key_counter_label.add_theme_font_size_override("font_size", 18)
+	# 	_dungeon_key_counter_label.add_theme_color_override("font_color", Color(1.0, 0.88, 0.25))
+	# 	_dungeon_key_counter_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	# 	_dungeon_key_counter_label.add_theme_constant_override("outline_size", 3)
+	# 	_dungeon_key_counter_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	# 	_dungeon_key_counter_label.offset_left = 24.0
+	# 	_dungeon_key_counter_label.offset_top = 48.0
+	# 	_dungeon_key_counter_label.text = "Klucze: 0/3"
+	# 	game_hud.get_node("HUDRoot").add_child(_dungeon_key_counter_label)
 	_update_dungeon_key_ui()
 
 
