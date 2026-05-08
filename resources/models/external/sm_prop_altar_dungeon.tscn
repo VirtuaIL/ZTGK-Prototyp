@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://685ve5nxq2os"]
+
+[ext_resource type="PackedScene" uid="uid://81eh78xehva8" path="res://resources/models/external/fantast/3d/props/SM_PROP_altar_dungeon_01.fbx" id="1_r00fe"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_eswoq"]
+size = Vector3(1.5349121, 0.7871094, 2.2521667)
+
+[node name="SmPropAltarDungeon" type="Node3D" unique_id=1658036043]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+
+[node name="SM_PROP_altar_dungeon_01" parent="." unique_id=1436319810 instance=ExtResource("1_r00fe")]
+
+[node name="StaticBody3D" type="StaticBody3D" parent="SM_PROP_altar_dungeon_01" unique_id=516382719]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_PROP_altar_dungeon_01/StaticBody3D" unique_id=2128337832]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.049194336, 0.37662762, 0.046188354)
+shape = SubResource("BoxShape3D_eswoq")

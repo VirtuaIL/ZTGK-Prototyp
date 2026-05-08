@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://71bei4ytyyq6" path="res://resources/models/external/sm_prop_barrel_dungeon_01.tscn" id="7_qvnao"]
 [ext_resource type="PackedScene" uid="uid://b0cd2i3hlpwqm" path="res://resources/models/external/sm_prop_debris_stones_dungeon_04.tscn" id="10_fcb7b"]
 [ext_resource type="PackedScene" uid="uid://dj3tyfijf7dbc" path="res://resources/models/external/sm_prop_platform_grid_dungeon.tscn" id="12_fcb7b"]
+[ext_resource type="PackedScene" uid="uid://c47hinj77bcql" path="res://scenes/obstacles/door_keys.tscn" id="12_pmra4"]
 [ext_resource type="PackedScene" uid="uid://dib8ewo8axhid" path="res://scenes/objects/rat_shop.tscn" id="99_ratshop"]
 
 [sub_resource type="Resource" id="Resource_ts8eg"]
@@ -41,18 +42,18 @@ albedo_color = Color(0, 1, 0.6, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_rej77"]
 size = Vector3(9, 0.08, 0.08)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5vn0v"]
-shading_mode = 0
-albedo_color = Color(0, 1, 0.6, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_ts8eg"]
-size = Vector3(9, 0.08, 0.08)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_um320"]
 shading_mode = 0
 albedo_color = Color(0, 1, 0.6, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_glw47"]
+size = Vector3(9, 0.08, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1bx01"]
+shading_mode = 0
+albedo_color = Color(0, 1, 0.6, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vq5n0"]
 size = Vector3(9, 0.08, 0.08)
 
 [node name="Level4" type="Node3D" unique_id=1397753813]
@@ -374,19 +375,6 @@ cast_shadow = 0
 visibility_range_end = 80.0
 mesh = SubResource("BoxMesh_rej77")
 
-[node name="door2" parent="doors" unique_id=559140944 instance=ExtResource("3_w6h2s")]
-transform = Transform3D(-4.8082526e-08, 0, 1, 0, 1, 0, -1.1, 0, -4.371139e-08, -30.59806, 0, -30.41601)
-controlled_level_id = 4
-target_level_id = 8
-debug_show_direction = true
-
-[node name="DebugDirection" type="MeshInstance3D" parent="doors/door2" unique_id=1153355212]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
-material_override = SubResource("StandardMaterial3D_5vn0v")
-cast_shadow = 0
-visibility_range_end = 80.0
-mesh = SubResource("BoxMesh_ts8eg")
-
 [node name="door3" parent="doors" unique_id=1873507529 instance=ExtResource("3_w6h2s")]
 transform = Transform3D(0.95262796, 0, -0.5, 0, 1, 0, 0.55, 0, 0.8660254, 14.019804, 0, -63.981964)
 controlled_level_id = 4
@@ -398,6 +386,28 @@ material_override = SubResource("StandardMaterial3D_um320")
 cast_shadow = 0
 visibility_range_end = 80.0
 mesh = SubResource("BoxMesh_glw47")
+
+[node name="door4" parent="doors" unique_id=533060453 instance=ExtResource("12_pmra4")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -30.481754, 0, -30.411945)
+controlled_level_id = 4
+target_level_id = 8
+transition_requires_open = true
+required_dungeon_keys = 3
+debug_show_direction = true
+
+[node name="DebugDirection" type="MeshInstance3D" parent="doors/door4" unique_id=2006914304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_um320")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_glw47")
+
+[node name="DebugDirection_22627968162387" type="MeshInstance3D" parent="doors/door4" unique_id=1066622244]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 0)
+material_override = SubResource("StandardMaterial3D_1bx01")
+cast_shadow = 0
+visibility_range_end = 80.0
+mesh = SubResource("BoxMesh_vq5n0")
 
 [node name="RatParams" type="Node3D" parent="." unique_id=1071793139]
 

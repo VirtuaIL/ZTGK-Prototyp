@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bsbubgwb0je7p"]
+
+[ext_resource type="Texture2D" uid="uid://bmn4u3v3pytjq" path="res://resources/models/external/fantast/2d/Textures/T_PROP_fabric_dungeon_BC.png" id="1_k7oc3"]
+
+[resource]
+albedo_texture = ExtResource("1_k7oc3")
