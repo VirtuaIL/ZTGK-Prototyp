@@ -225,6 +225,15 @@ func _process(delta: float) -> void:
 		if _wild_timer <= 0.0:
 			queue_free()
 
+
+func _is_cheese_wheel_open() -> bool:
+	var mgr = _mgr
+	if mgr == null or not is_instance_valid(mgr):
+		mgr = get_tree().get_first_node_in_group("rat_manager")
+	if mgr != null and mgr.has_method("is_cheese_wheel_open"):
+		return bool(mgr.call("is_cheese_wheel_open"))
+	return false
+
 func _physics_process(delta: float) -> void:
 	if is_wild:
 		_process_wild_physics(delta)

@@ -1,0 +1,217 @@
+[gd_scene format=3 uid="uid://bqtpkion2k0wx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_CheeseWheelPanel"]
+bg_color = Color(0.08, 0.08, 0.1, 0.9)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="CheeseWheelRoot" type="Control" unique_id=511916313]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Overlay" type="ColorRect" parent="." unique_id=489100951]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.25)
+
+[node name="Title" type="Label" parent="." unique_id=1712407234]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -171.0
+offset_right = 150.0
+offset_bottom = -135.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 24
+text = "Modifiery"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="." unique_id=615658530]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -166.0
+offset_top = 135.0
+offset_right = 174.0
+offset_bottom = 163.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "Przytrzymaj Q, wybierz kierunek, puść Q"
+horizontal_alignment = 1
+
+[node name="Timer" type="Label" parent="." unique_id=795795207]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -130.0
+offset_top = -16.0
+offset_right = 150.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "Brak aktywnego sera"
+horizontal_alignment = 1
+
+[node name="RedCard" type="PanelContainer" parent="." unique_id=826525353]
+custom_minimum_size = Vector2(148, 84)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -68.0
+offset_top = -124.0
+offset_right = 80.0
+offset_bottom = -29.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_CheeseWheelPanel")
+
+[node name="Margin" type="MarginContainer" parent="RedCard" unique_id=1450350869]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="RedCard/Margin" unique_id=796613358]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Title" type="Label" parent="RedCard/Margin/VBox" unique_id=366533650]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.28, 0.28, 1)
+theme_override_font_sizes/font_size = 18
+text = "Czerwony"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="RedCard/Margin/VBox" unique_id=1854108964]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.28, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
+text = "Najbardziej ofensywny ser."
+horizontal_alignment = 1
+
+[node name="GreenCard" type="PanelContainer" parent="." unique_id=968741092]
+custom_minimum_size = Vector2(148, 84)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -216.0
+offset_top = 24.0
+offset_right = -2.0
+offset_bottom = 119.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_CheeseWheelPanel")
+
+[node name="Margin" type="MarginContainer" parent="GreenCard" unique_id=644186787]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="GreenCard/Margin" unique_id=1632187356]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Title" type="Label" parent="GreenCard/Margin/VBox" unique_id=1318642772]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.95, 0.42, 1)
+theme_override_font_sizes/font_size = 18
+text = "Zielony"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="GreenCard/Margin/VBox" unique_id=476558222]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.32, 0.95, 0.42, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
+text = "Gaz i kontrola terenu."
+horizontal_alignment = 1
+
+[node name="BlueCard" type="PanelContainer" parent="." unique_id=1973577343]
+custom_minimum_size = Vector2(148, 84)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 222.0
+offset_bottom = 119.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_CheeseWheelPanel")
+
+[node name="Margin" type="MarginContainer" parent="BlueCard" unique_id=746673907]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="BlueCard/Margin" unique_id=703561881]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Title" type="Label" parent="BlueCard/Margin/VBox" unique_id=1066017608]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.62, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Niebieski"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="BlueCard/Margin/VBox" unique_id=983114332]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.62, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
+text = "Elektryczny atak dystansowy."
+horizontal_alignment = 1

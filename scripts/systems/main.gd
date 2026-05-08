@@ -72,6 +72,8 @@ var _debug_last_level_state: String = ""
 @export var tutorial_player_unlock_count: int = 8
 var tutorial_rats_collected: int = 0
 var tutorial_player_unlocked: bool = false
+var tutorial_combat_intro_seen: bool = false
+var tutorial_combat_intro_completed: bool = false
 @export var dungeon_key_required_count: int = 3
 var collected_dungeon_keys: int = 0
 var _dungeon_key_counter_label: Label = null
@@ -141,6 +143,7 @@ func _init_game() -> void:
 	_rebuild_level_bounds()
 	set_current_level(current_level_id)
 	_update_tutorial_player_state()
+	_sync_tutorial_combat_intro()
 	_log_level_debug_state("init")
 	
 	rat_manager.setup_player(player)
@@ -213,6 +216,8 @@ func _bind_hud_nodes() -> void:
 		indicator_root.add_child(dungeon_key_door_indicator)
 
 	_dungeon_key_counter_label = game_hud.get_node_or_null("HUDRoot/DungeonKeyCounter/Label") as Label
+	if goal_label == null:
+		_setup_goal_ui()
 	# if _dungeon_key_counter_label == null:
 	# 	_dungeon_key_counter_label = Label.new()
 	# 	_dungeon_key_counter_label.name = "DungeonKeyCounter"
@@ -923,6 +928,7 @@ func _update_mode_ui() -> void:
 func _process(delta: float) -> void:
 	_current_level_active_time += delta
 	_sync_tutorial_unlock_from_rats()
+	_sync_tutorial_combat_intro()
 	_update_rat_count_ui()
 	_update_objective_ui()
 	_update_buff_ui()
@@ -969,7 +975,10 @@ func _process(delta: float) -> void:
 		
 	# ── Camera follow ──
 	var cam := get_viewport().get_camera_3d()
-	if cam and player:
+	var cheese_wheel_open := false
+	if rat_manager and rat_manager.has_method("is_cheese_wheel_open"):
+		cheese_wheel_open = bool(rat_manager.call("is_cheese_wheel_open"))
+	if cam and player and not cheese_wheel_open:
 		# Focus point: between player and cursor world pos (closer to player)
 		var focus := player.position
 		var mouse_pos := get_viewport().get_mouse_position()
@@ -1369,6 +1378,20 @@ func register_tutorial_rat_collection(_rat: Node = null) -> void:
 	_sync_tutorial_unlock_from_rats()
 
 
+func _sync_tutorial_combat_intro() -> void:
+	if current_level_id != 3:
+		tutorial_combat_intro_seen = false
+		return
+
+	tutorial_combat_intro_seen = true
+	if tutorial_combat_intro_completed:
+		return
+
+	if rat_manager != null and rat_manager.has_method("has_active_cheese") and rat_manager.has_active_cheese():
+		tutorial_combat_intro_completed = true
+		_update_tutorial_goal_ui()
+
+
 func _sync_tutorial_unlock_from_rats() -> void:
 	if tutorial_player_unlocked or current_level_id != 1:
 		return
@@ -1413,6 +1436,10 @@ func _update_tutorial_goal_ui() -> void:
 		return
 	if current_level_id == 1 and not tutorial_player_unlocked:
 		goal_label.text = "Zbierz %d szczurów, aby odblokować ruch." % tutorial_player_unlock_count
+	elif current_level_id == 3 and not tutorial_combat_intro_completed:
+		goal_label.text = "Przeciągnij LPM po szczurach, aby atakować. Zbierz czerwony ser i naciśnij Q, aby wybrać czerwony modifier hordy."
+	elif current_level_id == 3 and tutorial_combat_intro_completed:
+		goal_label.text = "Atakuj szczury przeciągając LPM. Q otwiera kolo czerwonego modifiera hordy."
 	elif collected_dungeon_keys >= dungeon_key_required_count:
 		goal_label.text = "Masz komplet kluczy. Podejdz do glownych drzwi."
 	else:
@@ -1473,6 +1500,7 @@ func set_current_level(level_id: int) -> void:
 		_refresh_level_activity()
 		_update_level_doors()
 		_update_tutorial_player_state()
+		_sync_tutorial_combat_intro()
 		_log_level_debug_state("refresh")
 		return
 	current_level_id = level_id
@@ -1483,6 +1511,7 @@ func set_current_level(level_id: int) -> void:
 	_refresh_level_activity()
 	_update_level_doors()
 	_update_tutorial_player_state()
+	_sync_tutorial_combat_intro()
 	_log_level_debug_state("level_changed")
 	
 	if rat_manager != null and rat_manager.has_method("soft_reset_all_rats"):
@@ -1754,7 +1783,7 @@ func consume_dungeon_keys(amount: int) -> bool:
 func _update_dungeon_key_ui() -> void:
 	if _dungeon_key_counter_label == null:
 		return
-	_dungeon_key_counter_label.text = "Klucze: %d/%d" % [collected_dungeon_keys, dungeon_key_required_count]
+	_dungeon_key_counter_label.text = " %d/%d" % [collected_dungeon_keys, dungeon_key_required_count]
 
 
 func _maybe_spawn_dungeon_key_for_level(level_id: int, force_spawn: bool = false) -> void:

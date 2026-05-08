@@ -2,6 +2,7 @@ extends Node3D
 
 const SoundWaveScene := preload("res://scenes/effects/sound_wave.tscn")
 const CHEESE_WHEEL_ACTION := &"open_cheese_wheel"
+const CHEESE_WHEEL_SCENE := preload("res://scenes/ui/cheese_wheel.tscn")
 
 enum CheeseType { RED, GREEN, BLUE }
 
@@ -96,6 +97,7 @@ var _cheese_buff_label: Label = null
 var _cheese_counter_labels: Dictionary = {}
 var _cheese_wheel_root: Control = null
 var _cheese_wheel_cards: Dictionary = {}
+var _cheese_wheel_card_styles: Dictionary = {}
 var _cheese_wheel_card_titles: Dictionary = {}
 var _cheese_wheel_card_bodies: Dictionary = {}
 var _cheese_wheel_title: Label = null
@@ -248,105 +250,46 @@ func _update_cheese_inventory_ui() -> void:
 
 
 func _create_cheese_wheel_ui(parent: Control) -> void:
-	_cheese_wheel_root = Control.new()
-	_cheese_wheel_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_cheese_wheel_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_cheese_wheel_root.visible = false
-	parent.add_child(_cheese_wheel_root)
-
-	var overlay := ColorRect.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0.0, 0.0, 0.0, 0.25)
-	_cheese_wheel_root.add_child(overlay)
-
-	_cheese_wheel_title = Label.new()
-	_cheese_wheel_title.set_anchors_preset(Control.PRESET_CENTER)
-	_cheese_wheel_title.position = Vector2(-140.0, -170.0)
-	_cheese_wheel_title.size = Vector2(280.0, 36.0)
-	_cheese_wheel_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_cheese_wheel_title.add_theme_font_size_override("font_size", 24)
-	_cheese_wheel_title.add_theme_color_override("font_outline_color", Color.BLACK)
-	_cheese_wheel_title.add_theme_constant_override("outline_size", 5)
-	_cheese_wheel_root.add_child(_cheese_wheel_title)
-
-	_cheese_wheel_hint = Label.new()
-	_cheese_wheel_hint.set_anchors_preset(Control.PRESET_CENTER)
-	_cheese_wheel_hint.position = Vector2(-170.0, 126.0)
-	_cheese_wheel_hint.size = Vector2(340.0, 28.0)
-	_cheese_wheel_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_cheese_wheel_hint.add_theme_font_size_override("font_size", 16)
-	_cheese_wheel_hint.add_theme_color_override("font_outline_color", Color.BLACK)
-	_cheese_wheel_hint.add_theme_constant_override("outline_size", 4)
-	_cheese_wheel_root.add_child(_cheese_wheel_hint)
-
-	_cheese_wheel_timer_label = Label.new()
-	_cheese_wheel_timer_label.set_anchors_preset(Control.PRESET_CENTER)
-	_cheese_wheel_timer_label.position = Vector2(-140.0, -16.0)
-	_cheese_wheel_timer_label.size = Vector2(280.0, 32.0)
-	_cheese_wheel_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_cheese_wheel_timer_label.add_theme_font_size_override("font_size", 20)
-	_cheese_wheel_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_cheese_wheel_timer_label.add_theme_constant_override("outline_size", 4)
-	_cheese_wheel_root.add_child(_cheese_wheel_timer_label)
-
-	var specs := {
-		CheeseType.RED: {"offset": Vector2(0.0, -88.0), "title": "Czerwony", "hint": "obrazenia"},
-		CheeseType.GREEN: {"offset": Vector2(-112.0, 56.0), "title": "Zielony", "hint": "gaz"},
-		CheeseType.BLUE: {"offset": Vector2(112.0, 56.0), "title": "Niebieski", "hint": "elektryczne"},
+	if CHEESE_WHEEL_SCENE == null:
+		return
+	var wheel := CHEESE_WHEEL_SCENE.instantiate()
+	var root := wheel as Control
+	if root == null:
+		return
+	_cheese_wheel_root = root
+	parent.add_child(root)
+	root.visible = false
+	_cheese_wheel_title = root.get_node_or_null("Title") as Label
+	_cheese_wheel_hint = root.get_node_or_null("Hint") as Label
+	_cheese_wheel_timer_label = root.get_node_or_null("Timer") as Label
+	_cheese_wheel_cards = {
+		CheeseType.RED: root.get_node_or_null("RedCard") as PanelContainer,
+		CheeseType.GREEN: root.get_node_or_null("GreenCard") as PanelContainer,
+		CheeseType.BLUE: root.get_node_or_null("BlueCard") as PanelContainer,
 	}
-	for type in specs.keys():
-		var card := PanelContainer.new()
-		card.set_anchors_preset(Control.PRESET_CENTER)
-		card.position = specs[type]["offset"] - Vector2(74.0, 42.0)
-		card.custom_minimum_size = Vector2(148.0, 96.0)
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.08, 0.08, 0.1, 0.9)
-		style.border_width_left = 3
-		style.border_width_top = 3
-		style.border_width_right = 3
-		style.border_width_bottom = 3
-		style.corner_radius_top_left = 20
-		style.corner_radius_top_right = 20
-		style.corner_radius_bottom_left = 20
-		style.corner_radius_bottom_right = 20
-		style.border_color = _get_cheese_color(type)
-		card.add_theme_stylebox_override("panel", style)
-
-		var margin := MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 12)
-		margin.add_theme_constant_override("margin_top", 10)
-		margin.add_theme_constant_override("margin_right", 12)
-		margin.add_theme_constant_override("margin_bottom", 10)
-		card.add_child(margin)
-
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.add_theme_constant_override("separation", 4)
-		margin.add_child(vbox)
-
-		var title := Label.new()
-		title.name = "Title"
-		title.text = specs[type]["title"]
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.add_theme_font_size_override("font_size", 18)
-		title.add_theme_color_override("font_color", _get_cheese_color(type))
-		title.add_theme_color_override("font_outline_color", Color.BLACK)
-		title.add_theme_constant_override("outline_size", 4)
-		vbox.add_child(title)
-
-		var body := Label.new()
-		body.name = "Body"
-		body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		body.add_theme_font_size_override("font_size", 13)
-		body.add_theme_color_override("font_outline_color", Color.BLACK)
-		body.add_theme_constant_override("outline_size", 3)
-		body.text = "x0\n%s" % specs[type]["hint"]
-		vbox.add_child(body)
-
-		_cheese_wheel_root.add_child(card)
-		_cheese_wheel_cards[type] = card
-		_cheese_wheel_card_titles[type] = title
-		_cheese_wheel_card_bodies[type] = body
+	_cheese_wheel_card_styles.clear()
+	_cheese_wheel_card_titles = {
+		CheeseType.RED: root.get_node_or_null("RedCard/Margin/VBox/Title") as Label,
+		CheeseType.GREEN: root.get_node_or_null("GreenCard/Margin/VBox/Title") as Label,
+		CheeseType.BLUE: root.get_node_or_null("BlueCard/Margin/VBox/Title") as Label,
+	}
+	_cheese_wheel_card_bodies = {
+		CheeseType.RED: root.get_node_or_null("RedCard/Margin/VBox/Body") as Label,
+		CheeseType.GREEN: root.get_node_or_null("GreenCard/Margin/VBox/Body") as Label,
+		CheeseType.BLUE: root.get_node_or_null("BlueCard/Margin/VBox/Body") as Label,
+	}
+	for type in _cheese_wheel_cards.keys():
+		var card := _cheese_wheel_cards[type] as PanelContainer
+		if card == null:
+			continue
+		var base_style := card.get_theme_stylebox("panel") as StyleBoxFlat
+		if base_style == null:
+			continue
+		var unique_style := base_style.duplicate() as StyleBoxFlat
+		if unique_style == null:
+			continue
+		card.add_theme_stylebox_override("panel", unique_style)
+		_cheese_wheel_card_styles[type] = unique_style
 
 
 func _set_cheese_wheel_open(open: bool) -> void:
@@ -356,6 +299,10 @@ func _set_cheese_wheel_open(open: bool) -> void:
 	if not open:
 		_cheese_wheel_selected_type = -1
 	_update_cheese_wheel_ui()
+
+
+func is_cheese_wheel_open() -> bool:
+	return _cheese_wheel_open
 
 
 func _confirm_cheese_wheel_selection() -> void:
@@ -395,7 +342,7 @@ func _update_cheese_wheel_ui() -> void:
 	if _cheese_wheel_root == null:
 		return
 	if _cheese_wheel_title != null:
-		_cheese_wheel_title.text = "Kolo serow"
+		_cheese_wheel_title.text = "Modifiery"
 	if _cheese_wheel_hint != null:
 		_cheese_wheel_hint.text = "Przytrzymaj Q, wybierz kierunek, pusc Q"
 	if _cheese_wheel_timer_label != null:
@@ -409,21 +356,19 @@ func _update_cheese_wheel_ui() -> void:
 		var card := _cheese_wheel_cards[type] as PanelContainer
 		var title := _cheese_wheel_card_titles.get(type, null) as Label
 		var body := _cheese_wheel_card_bodies.get(type, null) as Label
+		var style := _cheese_wheel_card_styles.get(type, null) as StyleBoxFlat
 		if card == null:
 			continue
-		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
+		var selected : bool = _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese()
 		if style != null:
-			var selected : int = _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese()
 			style.bg_color = _get_cheese_color(type) if selected else Color(0.08, 0.08, 0.1, 0.9)
 			style.border_color = _get_cheese_color(type)
 		if title != null:
-			title.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
+			title.modulate = Color.BLACK if selected else Color.WHITE
 		if body != null:
-			var available := int(cheese_inventory.get(type, 0))
-			var collected := int(cheese_total_collected.get(type, 0))
 			var status := "aktywny" if active_cheese_type == type and has_active_cheese() else "gotowy"
-			body.text = "dost. x%d\nzebr. x%d\n%s" % [available, collected, status]
-			body.modulate = Color.BLACK if _cheese_wheel_open and type == _cheese_wheel_selected_type and not has_active_cheese() else Color.WHITE
+			body.text = "%s\n%s" % [String(body.text).split("\n")[0], status]
+			body.modulate = Color.BLACK if selected else Color.WHITE
 
 # Drawing & Blob
 var built_positions: Dictionary = {}
@@ -1083,6 +1028,9 @@ func _process(delta: float) -> void:
 			_sync_cheese_buff_timers()
 	if _cheese_wheel_open:
 		_refresh_cheese_wheel_selection()
+		_update_cheese_inventory_ui()
+		_update_cheese_wheel_ui()
+		return
 	if gas_emit_per_second > 0.0:
 		_gas_emit_budget = min(gas_emit_budget_max, _gas_emit_budget + gas_emit_per_second * delta)
 

@@ -87,6 +87,7 @@ var attack_prepare_timer: float = 0.0
 var attack_marker: MeshInstance3D = null
 @export var attack_flash_duration: float = 0.14
 var _attack_flash_timer: float = 0.0
+var _tutorial3_static_until_hit: bool = false
 
 var damage_cooldowns: Dictionary = {}
 var _knockback: Vector3 = Vector3.ZERO
@@ -133,6 +134,14 @@ func _ready() -> void:
 	_update_hp_bar()
 	_create_blood_particles()
 
+	var current_scene := get_tree().current_scene
+	if current_scene != null:
+		var current_level_variant: Variant = current_scene.get("current_level_id")
+		if current_level_variant is int and int(current_level_variant) == 3:
+			_tutorial3_static_until_hit = true
+			ai_state = AIState.PASSIVE
+			velocity = Vector3.ZERO
+
 	if randf() <= shield_chance:
 		var shield = ShieldScene.instantiate()
 		# Add as child to properly inherit transforms 
@@ -157,6 +166,14 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if not is_inside_tree():
+		return
+
+	var rat_manager := get_tree().get_first_node_in_group("rat_manager")
+	if rat_manager != null and rat_manager.has_method("is_cheese_wheel_open") and bool(rat_manager.call("is_cheese_wheel_open")):
+		velocity = Vector3.ZERO
+		current_attack = AttackType.NONE
+		if attack_marker != null:
+			attack_marker.visible = false
 		return
 		
 	if is_stuck_in_blob:
@@ -675,7 +692,13 @@ func is_dead() -> bool:
 func take_damage(amount: float, source_id: int = -1, hit_pos: Vector3 = Vector3.ZERO, text_color: Color = Color.WHITE) -> void:
 	
 	if _is_dead or ai_state == AIState.PASSIVE:
-		return
+		if _tutorial3_static_until_hit:
+			_tutorial3_static_until_hit = false
+			ai_state = AIState.WANDER
+			_has_wander_target = false
+			_wander_pause_timer = 0.0
+		else:
+			return
 	if source_id >= 0:
 		if damage_cooldowns.has(source_id):
 			return
